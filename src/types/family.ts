@@ -12,10 +12,11 @@ export interface Family {
 	email: string
 	status: 'active' | 'inactive' | 'block'
 	preferredLanguage: string
-	createdAt?: string
-	updatedAt?: string
 	familyTypeName?: string
 	teamCategoryName?: string
+	identityTypeName?: string
+	createdAt?: Date
+	updatedAt?: Date
 }
 
 export interface FamilyResponse {

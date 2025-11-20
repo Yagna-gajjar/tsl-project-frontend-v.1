@@ -124,7 +124,7 @@ export function TableToolbar<T>({
 						className="h-8 w-full"
 					/>
 				)
-			default: 
+			default:
 				return null
 		}
 	}
@@ -149,159 +149,159 @@ export function TableToolbar<T>({
 					)}
 				</div>
 				<div className="flex items-center gap-2">
-				<Popover>
-					<PopoverTrigger asChild>
-						<Button variant="outline" size="sm" className="h-9 border-dashed bg-transparent">
-							<Filter className="mr-2 h-4 w-4" />
-							Filter
-							{activeFilterCount > 0 && (
-								<>
-									<Separator orientation="vertical" className="mx-2 h-4" />
-									<Badge variant="secondary" className="rounded-sm px-1 font-normal lg:hidden">
-										{activeFilterCount}
-									</Badge>
-									<div className="hidden space-x-1 lg:flex">
-										{activeFilterCount > 2 ? (
-											<Badge variant="secondary" className="rounded-sm px-1 font-normal">
-												{activeFilterCount} selected
-											</Badge>
-										) : (
-											columns
-												.filter((col) => filters[String(col.key)])
-												.map((col) => (
-													<Badge variant="secondary" key={String(col.key)} className="rounded-sm px-1 font-normal">
-														{col.header}
-													</Badge>
-												))
-										)}
-									</div>
-								</>
-							)}
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent className="w-[280px] p-4" align="start">
-						<div className="space-y-4">
-							<h4 className="font-medium leading-none">Filters</h4>
-							<div className="space-y-4">
-								{columns
-									.filter((col) => col.filterType)
-									.map((col) => (
-										<div key={String(col.key)} className="space-y-2">
-											<label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-												{col.header}
-											</label>
-											{renderFilterInput(col)}
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button variant="outline" size="sm" className="h-9 border-dashed bg-transparent">
+								<Filter className="mr-2 h-4 w-4" />
+								Filter
+								{activeFilterCount > 0 && (
+									<>
+										<Separator orientation="vertical" className="mx-2 h-4" />
+										<Badge variant="secondary" className="rounded-sm px-1 font-normal lg:hidden">
+											{activeFilterCount}
+										</Badge>
+										<div className="hidden space-x-1 lg:flex">
+											{activeFilterCount > 2 ? (
+												<Badge variant="secondary" className="rounded-sm px-1 font-normal">
+													{activeFilterCount} selected
+												</Badge>
+											) : (
+												columns
+													.filter((col) => filters[String(col.key)])
+													.map((col) => (
+														<Badge variant="secondary" key={String(col.key)} className="rounded-sm px-1 font-normal">
+															{col.header}
+														</Badge>
+													))
+											)}
 										</div>
-									))}
+									</>
+								)}
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent className="w-[280px] p-4" align="start">
+							<div className="space-y-4">
+								<h4 className="font-medium leading-none">Filters</h4>
+								<div className="space-y-4">
+									{columns
+										.filter((col) => col.filterType)
+										.map((col) => (
+											<div key={String(col.key)} className="space-y-2">
+												<label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+													{col.header}
+												</label>
+												{renderFilterInput(col)}
+											</div>
+										))}
+								</div>
+								{activeFilterCount > 0 && (
+									<Button
+										variant="ghost"
+										className="w-full justify-center text-primary"
+										onClick={() => {
+											columns.forEach((col) => {
+												if (col.filterType) onFilterChange(String(col.key), "")
+											})
+										}}
+									>
+										Clear filters
+									</Button>
+								)}
 							</div>
-							{activeFilterCount > 0 && (
-								<Button
-									variant="ghost"
-									className="w-full justify-center text-primary"
-									onClick={() => {
-										columns.forEach((col) => {
-											if (col.filterType) onFilterChange(String(col.key), "")
-										})
-									}}
-								>
-									Clear filters
-								</Button>
-							)}
-						</div>
-					</PopoverContent>
-				</Popover>
+						</PopoverContent>
+					</Popover>
 
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="outline" size="sm" className="h-9 ml-2 bg-transparent">
-							<ArrowUpDown className="mr-2 h-4 w-4" />
-							Sort
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="outline" size="sm" className="h-9 ml-2 bg-transparent">
+								<ArrowUpDown className="mr-2 h-4 w-4" />
+								Sort
+								{sortConfig && (
+									<>
+										<Separator orientation="vertical" className="mx-2 h-4" />
+										<Badge variant="secondary" className="rounded-sm px-1 font-normal">
+											{columns.find((c) => String(c.key) === sortConfig.key)?.header}
+											{sortConfig.direction === "asc" ? " ↑" : " ↓"}
+										</Badge>
+									</>
+								)}
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start" className="w-[200px]">
+							<DropdownMenuLabel>Sort by</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							<DropdownMenuRadioGroup
+								value={sortConfig?.key}
+								onValueChange={(val) =>
+									onSortChange(val, sortConfig?.key === val && sortConfig.direction === "asc" ? "desc" : "asc")
+								}
+							>
+								{columns
+									.filter((col) => col.sortable)
+									.map((col) => (
+										<DropdownMenuRadioItem key={String(col.key)} value={String(col.key)}>
+											{col.header}
+											{sortConfig?.key === String(col.key) && (
+												<span className="ml-auto text-muted-foreground">
+													{sortConfig.direction === "asc" ? " (Asc)" : " (Desc)"}
+												</span>
+											)}
+										</DropdownMenuRadioItem>
+									))}
+							</DropdownMenuRadioGroup>
 							{sortConfig && (
 								<>
-									<Separator orientation="vertical" className="mx-2 h-4" />
-									<Badge variant="secondary" className="rounded-sm px-1 font-normal">
-										{columns.find((c) => String(c.key) === sortConfig.key)?.header}
-										{sortConfig.direction === "asc" ? " ↑" : " ↓"}
-									</Badge>
+									<DropdownMenuSeparator />
+									<DropdownMenuCheckboxItem
+										checked={sortConfig.direction === "asc"}
+										onCheckedChange={(checked) => onSortChange(sortConfig.key, checked ? "asc" : "desc")}
+									>
+										Ascending
+									</DropdownMenuCheckboxItem>
+									<DropdownMenuCheckboxItem
+										checked={sortConfig.direction === "desc"}
+										onCheckedChange={(checked) => onSortChange(sortConfig.key, checked ? "desc" : "asc")}
+									>
+										Descending
+									</DropdownMenuCheckboxItem>
+									<DropdownMenuSeparator />
+									<DropdownMenuCheckboxItem
+										checked={false}
+										onCheckedChange={() => onSortChange("", "asc")} // Hack to clear sort, ideally we'd have a clear button or handle null
+										className="text-red-500 focus:text-red-500"
+									>
+										Clear Sort
+									</DropdownMenuCheckboxItem>
 								</>
 							)}
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="start" className="w-[200px]">
-						<DropdownMenuLabel>Sort by</DropdownMenuLabel>
-						<DropdownMenuSeparator />
-						<DropdownMenuRadioGroup
-							value={sortConfig?.key}
-							onValueChange={(val) =>
-								onSortChange(val, sortConfig?.key === val && sortConfig.direction === "asc" ? "desc" : "asc")
-							}
-						>
-							{columns
-								.filter((col) => col.sortable)
-								.map((col) => (
-									<DropdownMenuRadioItem key={String(col.key)} value={String(col.key)}>
-										{col.header}
-										{sortConfig?.key === String(col.key) && (
-											<span className="ml-auto text-muted-foreground">
-												{sortConfig.direction === "asc" ? " (Asc)" : " (Desc)"}
-											</span>
-										)}
-									</DropdownMenuRadioItem>
-								))}
-						</DropdownMenuRadioGroup>
-						{sortConfig && (
-							<>
-								<DropdownMenuSeparator />
-								<DropdownMenuCheckboxItem
-									checked={sortConfig.direction === "asc"}
-									onCheckedChange={(checked) => onSortChange(sortConfig.key, checked ? "asc" : "desc")}
-								>
-									Ascending
-								</DropdownMenuCheckboxItem>
-								<DropdownMenuCheckboxItem
-									checked={sortConfig.direction === "desc"}
-									onCheckedChange={(checked) => onSortChange(sortConfig.key, checked ? "desc" : "asc")}
-								>
-									Descending
-								</DropdownMenuCheckboxItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuCheckboxItem
-									checked={false}
-									onCheckedChange={() => onSortChange("", "asc")} // Hack to clear sort, ideally we'd have a clear button or handle null
-									className="text-red-500 focus:text-red-500"
-								>
-									Clear Sort
-								</DropdownMenuCheckboxItem>
-							</>
-						)}
-					</DropdownMenuContent>
-				</DropdownMenu>
+						</DropdownMenuContent>
+					</DropdownMenu>
 
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="outline" size="sm" className="ml-auto h-9 flex bg-transparent">
-							<SlidersHorizontal className="mr-2 h-4 w-4" />
-							View
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="w-[150px]">
-						<DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-						<DropdownMenuSeparator />
-						{columns.map((column) => {
-							const columnKey = String(column.key)
-							return (
-								<DropdownMenuCheckboxItem
-									key={columnKey}
-									className="capitalize"
-									checked={visibleColumns.has(columnKey)}
-									onCheckedChange={() => onColumnToggle(columnKey)}
-								>
-									{column.header}
-								</DropdownMenuCheckboxItem>
-							)
-						})}
-					</DropdownMenuContent>
-				</DropdownMenu>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="outline" size="sm" className="ml-auto h-9 flex bg-transparent">
+								<SlidersHorizontal className="mr-2 h-4 w-4" />
+								View
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-[150px]">
+							<DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							{columns.map((column) => {
+								const columnKey = String(column.key)
+								return (
+									<DropdownMenuCheckboxItem
+										key={columnKey}
+										className="capitalize"
+										checked={visibleColumns.has(columnKey)}
+										onCheckedChange={() => onColumnToggle(columnKey)}
+									>
+										{column.header}
+									</DropdownMenuCheckboxItem>
+								)
+							})}
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</div>
 		</div>

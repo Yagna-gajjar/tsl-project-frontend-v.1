@@ -3,28 +3,8 @@ import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { Badge } from "@/components/ui/badge";
 import { getFamilies, deleteFamily } from "@/api/family.api";
-
-// Family Interface
-interface Family {
-  familyId: number;
-  familyName: string;
-  familyTypeId: number;
-  teamCategoryId: number | null;
-  identityTypeId: number;
-  profession: string;
-  professionDetails: string;
-  designation: string;
-  emergencyContact: string;
-  remarks: string;
-  email: string;
-  status: string;
-  preferredLanguage: string;
-  createdAt: string;
-  updatedAt: string;
-  familyTypeName?: string;
-  teamCategoryName?: string;
-  identityTypeName?: string;
-}
+import type { Family } from "@/types/family";
+import type { Response } from "@/types/response";
 
 export default function FamilyTable() {
   const [data, setData] = useState<Family[]>([]);
@@ -40,7 +20,7 @@ export default function FamilyTable() {
     console.log("function calling ring ring...");
     try {
       setLoading(true);
-      const res = await getFamilies();
+      const res: Response = await getFamilies();
       console.log(res, "-----");
       setData(res.data || []);
     } catch (error) {
@@ -61,7 +41,7 @@ export default function FamilyTable() {
       header: "Family Name",
       sortable: true,
       filterType: "text",
-      render: (row) => (
+      render: (row: Family) => (
         <div className="flex flex-col">
           <span className="font-medium">{row.familyName}</span>
           <span className="text-xs text-muted-foreground">{row.email}</span>
@@ -73,21 +53,21 @@ export default function FamilyTable() {
       header: "Family Type",
       sortable: true,
       filterType: "text",
-      render: (row) => <Badge>{row.familyTypeName || "-"}</Badge>,
+      render: (row:Family) => <Badge>{row.familyTypeName || "-"}</Badge>,
     },
     {
       key: "teamCategoryName",
       header: "Team Category",
       sortable: true,
       filterType: null,
-      render: (row) => row.teamCategoryName || "-",
+      render: (row:Family) => row.teamCategoryName || "-",
     },
     {
       key: "identityTypeName",
       header: "Identity",
       sortable: true,
       filterType: "text",
-      render: (row) => row.identityTypeName || "-",
+      render: (row: Family) => row.identityTypeName || "-",
     },
     {
       key: "status",
@@ -98,7 +78,7 @@ export default function FamilyTable() {
         { label: "Active", value: "active" },
         { label: "Inactive", value: "inactive" },
       ],
-      render: (row) => (
+      render: (row: Family) => (
         <Badge variant={row.status === "active" ? "default" : "secondary"}>
           {row.status}
         </Badge>
@@ -109,7 +89,7 @@ export default function FamilyTable() {
       header: "Created",
       sortable: true,
       filterType: null,
-      render: (row) => new Date(row.createdAt).toLocaleDateString(),
+      render: (row: Family) => row.createdAt?.toLocaleDateString() || "-",
     },
   ];
 
@@ -158,7 +138,7 @@ export default function FamilyTable() {
       </div>
 
       <DataTable
-        loading={loading}
+        isLoading={loading}
         data={paginatedData}
         columns={columns}
         pagination={{
@@ -171,8 +151,8 @@ export default function FamilyTable() {
         onFilterChange={(key, value) =>
           setFilters((prev) => ({ ...prev, [key]: value }))
         }
-        onView={(row) => console.log("View", row)}
-        onEdit={(row) => console.log("Edit", row)}
+        onView={(row: Family) => console.log("View", row)}
+        onEdit={(row: Family) => console.log("Edit", row)}
         onDelete={(id: any) => handleDelete(id)}
       />
     </div>

@@ -1,5 +1,6 @@
 import type { TeamCategory } from "@/types/teamCategory";
 import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface TeamCategoriesQuery {
     page?: number;
@@ -14,8 +15,7 @@ export interface TeamCategoriesQuery {
 
 const TEAM_CATEGORY_BASE = import.meta.env.VITE_APP_API_URL + '/team-category';
 
-// GET
-export function getTeamCategories(params: TeamCategoriesQuery = {}): Promise<TeamCategory[]> {
+export function getTeamCategories(params: TeamCategoriesQuery = {}): Promise<Response> {
     const qs = toQueryString({
         page: params.page ?? 1,
         limit: params.limit ?? 20,
@@ -27,33 +27,29 @@ export function getTeamCategories(params: TeamCategoriesQuery = {}): Promise<Tea
         access: params.access
     });
 
-    return request<TeamCategory[]>(`${TEAM_CATEGORY_BASE}${qs}`);
+    return request<Response>(`${TEAM_CATEGORY_BASE}${qs}`);
 }
 
-// GET BY ID
-export function getTeamCategoriesByID(id: number): Promise<TeamCategory> {
-    return request<TeamCategory>(`${TEAM_CATEGORY_BASE}/${id}`)
+export function getTeamCategoriesByID(id: number): Promise<Response> {
+    return request<Response>(`${TEAM_CATEGORY_BASE}/${id}`)
 }
 
-// POST
-export function createTeamCategories(payload: TeamCategory): Promise<TeamCategory> {
-    return request<TeamCategory>(TEAM_CATEGORY_BASE, {
+export function createTeamCategories(payload: TeamCategory): Promise<Response> {
+    return request<Response>(TEAM_CATEGORY_BASE, {
         method: 'POST',
         body: JSON.stringify(payload),
     })
 }
 
-// PUT
-export function editTeamCategories(id: number, payload: Partial<TeamCategory>): Promise<TeamCategory> {
-    return request<TeamCategory>(`${TEAM_CATEGORY_BASE}/${id}`, {
+export function editTeamCategories(id: number, payload: Partial<TeamCategory>): Promise<Response> {
+    return request<Response>(`${TEAM_CATEGORY_BASE}/${id}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
     })
 }
 
-// DELETE
-export function deleteTeamCategories(id: number): Promise<TeamCategory> {
-    return request<TeamCategory>(`${TEAM_CATEGORY_BASE}/${id}`, {
+export function deleteTeamCategories(id: number): Promise<Response> {
+    return request<Response>(`${TEAM_CATEGORY_BASE}/${id}`, {
         method: 'DELETE'
     })
 }

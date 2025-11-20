@@ -1,6 +1,7 @@
 
 import type { Family } from '@/types/family'
 import { request, toQueryString, type SortOrder } from './helper';
+import type { Response } from '@/types/response';
 
 export interface FamiliesQuery {
 	page?: number;
@@ -23,7 +24,7 @@ export interface FamiliesQuery {
 const FAMILY_BASE = import.meta.env.VITE_APP_API_URL + '/family'
 
 // GET
-export function getFamilies(params: FamiliesQuery = {}): Promise<Family> {
+export function getFamilies(params: FamiliesQuery = {}): Promise<Response> {
 	// backend expects sortBy and sortOrder or sortBy & sortOrder names — match your backend query names
 	const qs = toQueryString({
 		page: params.page ?? 1,
@@ -43,17 +44,17 @@ export function getFamilies(params: FamiliesQuery = {}): Promise<Family> {
 		createdTo: params.createdTo
 	});
 
-	return request<Family>(`${FAMILY_BASE}${qs}`);
+	return request<Response>(`${FAMILY_BASE}${qs}`);
 }
 
 // GET BY ID
-export function getFamilyById(id: number): Promise<Family> {
-	return request<Family>(`${FAMILY_BASE}/${id}`)
+export function getFamilyById(id: number): Promise<Response> {
+	return request<Response>(`${FAMILY_BASE}/${id}`)
 }
 
 // POST
-export function createFamily(payload: Family): Promise<Family> {
-	return request<Family>(FAMILY_BASE, {
+export function createFamily(payload: Family): Promise<Response> {
+	return request<Response>(FAMILY_BASE, {
 		method: 'POST',
 		body: JSON.stringify(payload),
 	})
@@ -63,8 +64,8 @@ export function createFamily(payload: Family): Promise<Family> {
 export function updateFamily(
 	id: number,
 	payload: Partial<Family>
-): Promise<Family> {
-	return request<Family>(`${FAMILY_BASE}/${id}`, {
+): Promise<Response> {
+	return request<Response>(`${FAMILY_BASE}/${id}`, {
 		method: 'PUT',
 		body: JSON.stringify(payload),
 	})
