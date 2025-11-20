@@ -155,11 +155,10 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                   <Link
                     to={item.href!}
                     onClick={handleNavClick}
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-all group no-underline ${
-                      isActive(item.href)
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all group no-underline ${isActive(item.href)
                         ? "bg-primary/20 text-primary border border-primary/50"
                         : "text-muted-foreground hover:text-primary hover:bg-accent"
-                    }`}
+                      }`}
                   >
                     <item.icon
                       size={20}
@@ -185,11 +184,10 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                             key={sub.label}
                             to={sub.href}
                             onClick={handleNavClick}
-                            className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all no-underline ${
-                              isActive(sub.href)
+                            className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all no-underline ${isActive(sub.href)
                                 ? "text-primary bg-primary/10 font-medium"
                                 : "text-foreground/60 hover:text-primary hover:bg-accent"
-                            }`}
+                              }`}
                           >
                             <div className="w-2 h-2 rounded-full bg-primary/50" />
                             {sub.label}

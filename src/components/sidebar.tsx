@@ -22,13 +22,13 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Family", href: "/projects", icon: User2 },
-  { name: "Billing", href: "/billing", icon: Receipt },
-  { name: "Member", href: "/invoices", icon: User },
-  { name: "Academy", href: "/clients", icon: HomeIcon },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Payments", href: "/payments", icon: CreditCard },
+	{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+	{ name: "Family", href: "/projects", icon: User2 },
+	{ name: "Billing", href: "/billing", icon: Receipt },
+	{ name: "Member", href: "/invoices", icon: User },
+	{ name: "Academy", href: "/clients", icon: HomeIcon },
+	{ name: "Reports", href: "/reports", icon: BarChart3 },
+	{ name: "Payments", href: "/payments", icon: CreditCard },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {
@@ -86,7 +86,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
 				<nav className="space-y-2">
 					{navigationItems.map((item) => {
-						const isActive = location.pathname.indexOf(item.href)!=-1
+						const isActive = location.pathname.indexOf(item.href) != -1
 						const Icon = item.icon
 
 						return (

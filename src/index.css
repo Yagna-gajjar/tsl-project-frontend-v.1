@@ -50,18 +50,22 @@
 }
 
 @layer base {
+
   /* Custom scrollbar styles */
   ::-webkit-scrollbar {
     width: 12px;
     background: hsl(var(--muted));
   }
+
   ::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
     border-radius: 8px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--accent));
   }
+
   ::-webkit-scrollbar-corner {
     background: hsl(var(--muted));
   }

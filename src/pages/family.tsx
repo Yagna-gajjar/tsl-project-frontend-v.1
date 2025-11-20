@@ -121,7 +121,7 @@ export default function FamilyTable() {
       header: "Family Name",
       sortable: true,
       filterType: "text",
-      render: (row) => (
+      render: (row: Family) => (
         <div className="flex flex-col">
           <span className="font-medium">{row.familyName}</span>
           <span className="text-xs text-muted-foreground">{row.email}</span>
@@ -161,7 +161,7 @@ export default function FamilyTable() {
         { label: "Active", value: "active" },
         { label: "Inactive", value: "inactive" },
       ],
-      render: (row) => (
+      render: (row: Family) => (
         <Badge variant={row.status === "active" ? "default" : "secondary"}>
           {row.status}
         </Badge>
@@ -172,7 +172,7 @@ export default function FamilyTable() {
       header: "Created",
       sortable: true,
       filterType: null,
-      render: (row) => new Date(row.createdAt).toLocaleDateString(),
+      render: (row: Family) => new Date(row?.createdAt || "").toLocaleDateString() || "-",
     },
   ];
 

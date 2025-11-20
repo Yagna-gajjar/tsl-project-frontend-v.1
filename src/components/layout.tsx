@@ -5,9 +5,9 @@ import Sidebar from "./sidebar"
 import { Outlet } from "react-router-dom"
 
 export default function Layout() {
-	const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
-	return (
+  return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Fixed Navbar */}
       <div className="fixed top-0 left-0 right-0 z-40">
