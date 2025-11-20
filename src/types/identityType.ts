@@ -1,8 +1,8 @@
 export interface IdentityType {
-	identityTypeId: number;
+	identityTypeId?: number;
 	familyTypeId: number;
-	identityTypeName: string;
 	teamCategoryId?: number;
+	identityTypeName: string;
 	discount: number;
 	createdAt?: Date;
 	updatedAt?: Date;

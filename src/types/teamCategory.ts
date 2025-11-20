@@ -1,8 +1,8 @@
 export interface TeamCategory {
-	teamCategoryId: number;
+	teamCategoryId?: number;
 	categoryName: string;
 	shortName?: string;
-	access?: string;
+	access?: 'active' | 'inactive' | 'block';
 	details?: string;
 	createdAt?: Date;
 	updatedAt?: Date;

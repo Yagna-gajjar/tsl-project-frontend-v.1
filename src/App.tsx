@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound"
 import Signup from "./pages/Signup"
 import { AuthProvider } from "./contexts/authContext";
 import PageNotFound from "./pages/NotFound"
+import FamilyTable from "./pages/family";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/" element={<Layout />}>
                 <Route index element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/family" element={<FamilyTable />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/billing" element={<Billing />} />
                 <Route path="/invoices" element={<Invoices />} />
@@ -39,12 +41,11 @@ export default function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
-                
-              </Routes>
+            </Routes>
           </Router>
           <Toaster />
         </AuthProvider>
       </ConfirmationProvider>
     </ThemeProvider>
-  )
+  );
 }
