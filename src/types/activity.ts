@@ -1,9 +1,7 @@
-import { ActivityCategory } from "./enums";
-
 export interface Activity {
 	activityId: number;
 	activityName: string;
-	activityType: ActivityCategory;
+	activityType: 'art' | 'child development' | 'fitness' | 'performing arts' | 'recreation' | 'self development' | 'services' | 'sports' | 'tsl charges';
 	description?: string;
 	activeCourses: number;
 	availableCoaches: number;
