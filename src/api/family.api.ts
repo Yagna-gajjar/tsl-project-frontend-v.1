@@ -17,18 +17,14 @@ export interface FamiliesQuery {
 	familyTypeId?: number | string;
 	teamCategoryId?: number | string;
 	preferredLanguage?: string;
-	createdFrom?: string; // ISO date
-	createdTo?: string;   // ISO date
 }
 
 const FAMILY_BASE = import.meta.env.VITE_APP_API_URL + '/family'
 
-// GET
 export function getFamilies(params: FamiliesQuery = {}): Promise<Response> {
-	// backend expects sortBy and sortOrder or sortBy & sortOrder names — match your backend query names
 	const qs = toQueryString({
 		page: params.page ?? 1,
-		limit: params.limit ?? 20,
+		limit: params.limit ?? 10,
 		sortBy: params.sortBy ?? 'familyId',
 		sortOrder: params.sortOrder ?? 'ASC',
 		search: params.search,
@@ -39,20 +35,16 @@ export function getFamilies(params: FamiliesQuery = {}): Promise<Response> {
 		identityTypeId: params.identityTypeId,
 		familyTypeId: params.familyTypeId,
 		teamCategoryId: params.teamCategoryId,
-		preferredLanguage: params.preferredLanguage,
-		createdFrom: params.createdFrom,
-		createdTo: params.createdTo
+		preferredLanguage: params.preferredLanguage
 	});
 
 	return request<Response>(`${FAMILY_BASE}${qs}`);
 }
 
-// GET BY ID
 export function getFamilyById(id: number): Promise<Response> {
 	return request<Response>(`${FAMILY_BASE}/${id}`)
 }
 
-// POST
 export function createFamily(payload: Family): Promise<Response> {
 	return request<Response>(FAMILY_BASE, {
 		method: 'POST',
@@ -60,7 +52,6 @@ export function createFamily(payload: Family): Promise<Response> {
 	})
 }
 
-// PUT
 export function updateFamily(
 	id: number,
 	payload: Partial<Family>
@@ -71,7 +62,6 @@ export function updateFamily(
 	})
 }
 
-// DELETE
 export function deleteFamily(id: number): Promise<Family> {
 	return request<Family>(`${FAMILY_BASE}/${id}`, {
 		method: 'DELETE',

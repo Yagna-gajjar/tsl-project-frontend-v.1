@@ -18,7 +18,7 @@ const TEAM_CATEGORY_BASE = import.meta.env.VITE_APP_API_URL + '/team-category';
 export function getTeamCategories(params: TeamCategoriesQuery = {}): Promise<Response> {
     const qs = toQueryString({
         page: params.page ?? 1,
-        limit: params.limit ?? 20,
+        limit: params.limit ?? 10,
         sortBy: params.sortBy ?? 'teamCategoryId',
         sortOrder: params.sortOrder ?? 'ASC',
         search: params.search,
