@@ -1,4 +1,4 @@
-export interface FamilyTypeResponse {
+export interface Response {
 	success: boolean
 	message: string
 	data: any | null

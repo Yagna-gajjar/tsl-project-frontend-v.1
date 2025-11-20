@@ -42,7 +42,7 @@ export function getFamilies(params: FamiliesQuery = {}): Promise<Family> {
 	  createdFrom: params.createdFrom,
 	  createdTo: params.createdTo
 	});
-  
+	
 	return request<Family>(`${FAMILY_BASE}${qs}`);
 }  
 

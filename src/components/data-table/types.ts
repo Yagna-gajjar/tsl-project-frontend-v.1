@@ -29,7 +29,7 @@ export interface DynamicTableProps<T> {
 	isLoading?: boolean
 	onSearchChange?: (value: string) => void
 	onFilterChange?: (key: string, value: any) => void
-	onSortChange?: (key: string, direction: "asc" | "desc") => void
+	onSortChange?: (key: string, direction: "ASC" | "DESC") => void
 	onView?: (row: T) => void
 	onEdit?: (row: T) => void
 	onDelete?: (id: string | number) => void

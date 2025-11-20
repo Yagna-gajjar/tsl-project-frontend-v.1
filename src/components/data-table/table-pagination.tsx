@@ -10,7 +10,7 @@ interface TablePaginationProps {
 }
 
 export function TablePagination({ pagination }: TablePaginationProps) {
-	const { page, limit, total, onPageChange, onPageSizeChange } = pagination
+	const { page, limit, total, onPageChange, onPageSizeChange } = pagination;
 	const totalPages = Math.ceil(total / limit)
 
 	if (!onPageChange) return null
