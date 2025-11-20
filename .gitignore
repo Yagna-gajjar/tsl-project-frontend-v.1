@@ -1,0 +1,130 @@
+.DS_Store
+npm-debug.log
+yarn-error.log
+.vscode
+.idea
+coverage
+*.log
+*.tsbuildinfo
+/build
+/.turbo
+/.next
+/out
+/.vercel
+/.netlify
+/.firebase
+/.expo
+/.expo-shared
+/.parcel-cache
+/.swc
+/.pnp.cjs
+/.pnp.js
+/.yalc
+/.husky/_/husky.sh
+/.github/workflows
+/.history
+/.vscode-test
+/.eslintcache
+/.stylelintcache
+/.wrangler
+/.parcelrc
+/.svelte-kit
+/.nuxt
+/.output
+/.vercel_build_output
+/.firebase-tools
+/.firebase-debug.log
+/.firebase
+/.firebaserc
+/.expo
+/.expo-shared
+/.expo-shared/assets.json
+/.expo-shared/rn-cli.config.js
+
+# Ignore environment variable files
+.env
+./.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+# Ignore log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# Ignore build output directories
+dist/
+build/
+out/
+coverage/
+# Ignore dependency directories
+node_modules/
+jspm_packages/
+# Ignore temporary files
+tmp/
+temp/
+*.tmp
+
+# Ignore test coverage directories
+coverage/
+/.nyc_output
+# Ignore package lock files
+package-lock.json
+yarn.lock
+
+# Ignore miscellaneous files
+*.pem
+*.p12
+*.crt
+*.key
+*.pfx
+*.bak
+*.old
+*.orig
+*.rej
+*.swp
+*.swo
+*.class
+*.war
+*.jar
+*.iml
+*.tsv
+*.dat
+*.seed
+*.pid
+*.seeded
+
+# Ignore Docker files
+docker-compose.override.yml
+docker-compose.dev.yml
+docker-compose.prod.yml
+docker-compose.test.yml
+docker-compose.local.yml
+.dockerignore
+Dockerfile.dev
+Dockerfile.test
+Dockerfile.prod
+Dockerfile.local
+
+# Ignore CI/CD configuration files
+.circleci/
+.gitlab-ci.yml
+.travis.yml
+.github/
+.gitlab/
+.azure-pipelines.yml
+.buildkite/
