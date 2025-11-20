@@ -89,7 +89,7 @@ export default function FamilyTable() {
       header: "Created",
       sortable: true,
       filterType: null,
-      render: (row: Family) => row.createdAt?.toLocaleDateString() || "-",
+      render: (row: Family) => new Date(row?.createdAt || "").toLocaleDateString() || "-",
     },
   ];
 

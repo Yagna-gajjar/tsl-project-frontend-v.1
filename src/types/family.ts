@@ -15,8 +15,8 @@ export interface Family {
 	familyTypeName?: string
 	teamCategoryName?: string
 	identityTypeName?: string
-	createdAt?: Date
-	updatedAt?: Date
+	createdAt?: string
+	updatedAt?: string
 }
 
 export interface FamilyResponse {
