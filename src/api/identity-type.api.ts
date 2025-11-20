@@ -30,36 +30,36 @@ export function getIdentityTypes(params: IdentityTypesQuery = {}): Promise<Ident
 
 // SPECIAL GET
 export function getIdentityTypesByCategoryAndFamily(teamCategoryId: number | null, familyTypeId: number): Promise<IdentityType[]> {
-	return request<IdentityType[]>(import.meta.env.VITE_APP_API_URL + '/identity-type/bycategoryandfamily' + toQueryString({
-	  familyTypeId,
-	  teamCategoryId: teamCategoryId === null ? 'null' : teamCategoryId
-	}));
-  }
+  return request<IdentityType[]>(import.meta.env.VITE_APP_API_URL + '/identity-type/bycategoryandfamily' + toQueryString({
+    familyTypeId,
+    teamCategoryId: teamCategoryId === null ? 'null' : teamCategoryId
+  }));
+}
 
 // GET BY ID
 export function gettIdentityTypesByID(id: number): Promise<IdentityType> {
-	return request<IdentityType>(`${IDENTITY_TYPE_BASE}/${id}`)
+  return request<IdentityType>(`${IDENTITY_TYPE_BASE}/${id}`)
 }
 
 // POST
 export function createtIdentityTypes(payload: IdentityType): Promise<IdentityType> {
-	return request<IdentityType>(IDENTITY_TYPE_BASE, {
-		method: 'POST',
-		body: JSON.stringify(payload),
-	})
+  return request<IdentityType>(IDENTITY_TYPE_BASE, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
 
 // PUT
-export function edittIdentityTypes(id: number,payload: Partial<IdentityType>): Promise<IdentityType> {
-	return request<IdentityType>(`${IDENTITY_TYPE_BASE}/${id}`, {
-		method: 'PUT',
-		body: JSON.stringify(payload),
-	})
+export function edittIdentityTypes(id: number, payload: Partial<IdentityType>): Promise<IdentityType> {
+  return request<IdentityType>(`${IDENTITY_TYPE_BASE}/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
 }
- 
+
 // DELETE
 export function deletetIdentityTypes(id: number): Promise<IdentityType> {
-	return request<IdentityType>(`${IDENTITY_TYPE_BASE}/${id}`, {
-		method: 'DELETE'
-	})
+  return request<IdentityType>(`${IDENTITY_TYPE_BASE}/${id}`, {
+    method: 'DELETE'
+  })
 }
