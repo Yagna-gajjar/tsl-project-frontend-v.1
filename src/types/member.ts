@@ -1,30 +1,22 @@
-import {
-	GenderEnum,
-	BloodGroupEnum,
-	StatusEnum,
-	IdProofEnum,
-	TransportModeEnum,
-} from "./enums";
-
 export interface Member {
-	memberId: number;
-	familyId?: number;
+	memberId?: number;
+	familyId: number;
 	memberFirstName: string;
 	memberMiddleName?: string;
 	memberLastName: string;
-	dob?: Date;
-	email?: string;
+	dob: Date;
+	email: string;
 	relationship?: string;
-	gender: GenderEnum;
-	bloodGroup?: BloodGroupEnum;
-	status: StatusEnum;
+	bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+	gender: 'male' | 'female' | 'other';
+	status: 'active' | 'inactive' | 'block';
 	schoolName?: string;
 	qualification?: string;
-	idProofType?: IdProofEnum;
+	idProofType?: 'aadhar card' | 'pan card' | 'voter id' | 'passport' | 'driving license' | 'other';
 	idProofNumber?: string;
 	contactNumber?: string;
-	transportMode?: TransportModeEnum;
-	addressId?: number;
+	transportMode: 'self drive' | 'parents' | 'van' | 'walking' | 'other';
+	addressId: number;
 	remarks?: string;
 	createdAt?: Date;
 	updatedAt?: Date;

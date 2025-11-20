@@ -1,5 +1,5 @@
 export interface Family {
-	familyId: number
+	familyId?: number
 	familyName: string
 	familyTypeId: number
 	teamCategoryId: number | null
@@ -8,12 +8,12 @@ export interface Family {
 	professionDetails: string
 	designation: string
 	emergencyContact: string
-	remarks: string
+	remarks?: string
 	email: string
-	status: string
+	status: 'active' | 'inactive' | 'block'
 	preferredLanguage: string
-	createdAt: string
-	updatedAt: string
+	createdAt?: string
+	updatedAt?: string
 	familyTypeName?: string
 	teamCategoryName?: string
 }
@@ -23,5 +23,3 @@ export interface FamilyResponse {
 	message: string
 	data: Family | Family[] | null
 }
-
-export type FamilyFormData = Omit<Family, 'familyId' | 'createdAt' | 'updatedAt'>
