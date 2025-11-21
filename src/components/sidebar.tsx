@@ -4,31 +4,31 @@ import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-	LayoutDashboard,
-	Receipt,
-	BarChart3,
-	CreditCard,
-	ChevronLeft,
-	ChevronRight,
-	User2,
-	HomeIcon,
-	User,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+  LayoutDashboard,
+  Receipt,
+  BarChart3,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+  HomeIcon,
+  User,
+  Users2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
-	onClose?: () => void
+  onClose?: () => void;
 }
 
 const navigationItems = [
-	{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-	{ name: "Family", href: "/projects", icon: User2 },
-	{ name: "Billing", href: "/billing", icon: Receipt },
-	{ name: "Member", href: "/invoices", icon: User },
-	{ name: "Academy", href: "/clients", icon: HomeIcon },
-	{ name: "Reports", href: "/reports", icon: BarChart3 },
-	{ name: "Payments", href: "/payments", icon: CreditCard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Family", href: "/family", icon: Users2 },
+  { name: "Billing", href: "/billing", icon: Receipt },
+  { name: "Member", href: "/invoices", icon: User },
+  { name: "Academy", href: "/clients", icon: HomeIcon },
+  { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Payments", href: "/payments", icon: CreditCard },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {

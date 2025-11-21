@@ -16,6 +16,10 @@ import Signup from "./pages/Signup"
 import { AuthProvider } from "./contexts/authContext";
 import PageNotFound from "./pages/NotFound"
 import FamilyTable from "./pages/family";
+import Settingt from "./pages/setting";
+import FamilyTypeTable from "./components/setting/family-type/family-typa-table";
+import TeamCategoryTable from "./components/setting/team-category/team-category-table";
+import IdentityTypeTable from "./components/setting/identity-type/identity-type-table";
 
 export default function App() {
   return (
@@ -40,6 +44,21 @@ export default function App() {
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="*" element={<NotFound />} />
+              </Route>
+              <Route path="/setting" element={<Settingt />}>
+                <Route
+                  path="/setting/family-type"
+                  element={<FamilyTypeTable />}
+                />
+                <Route
+                  path="/setting/team-category"
+                  element={<TeamCategoryTable />}
+                />
+                <Route
+                  path="/setting/identity-type"
+                  element={<IdentityTypeTable />}
+                />
+                <Route path="/setting/*" element={<NotFound />} />
               </Route>
             </Routes>
           </Router>

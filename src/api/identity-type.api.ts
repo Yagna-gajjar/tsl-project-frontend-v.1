@@ -10,11 +10,16 @@ export interface IdentityTypesQuery {
   search?: string;
   familyTypeId?: number | string;
   teamCategoryId?: number | string | 'null';
+  identityTypeName?: string | 'null';
+  discount?: number | 0;
 }
 
 const IDENTITY_TYPE_BASE = import.meta.env.VITE_APP_API_URL + '/identity-type';
 
 export function getIdentityTypes(params: IdentityTypesQuery = {}): Promise<Response> {
+
+  console.log(params," op00") 
+
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -22,7 +27,9 @@ export function getIdentityTypes(params: IdentityTypesQuery = {}): Promise<Respo
     order: params.order ?? 'ASC',
     search: params.search,
     familyTypeId: params.familyTypeId,
-    teamCategoryId: params.teamCategoryId
+    teamCategoryId: params.teamCategoryId,
+    identityTypeName: params.identityTypeName,
+    discount: params.discount
   });
 
   return request<Response>(`${IDENTITY_TYPE_BASE}${qs}`);
