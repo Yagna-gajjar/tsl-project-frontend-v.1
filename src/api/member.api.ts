@@ -9,11 +9,12 @@ export interface MembersQuery {
 	sortOrder?: SortOrder
 	search?: string
 
-	memberName?: string
+	memberFirstName?: string
 	gender?: string
 	age?: number | string
 	mobile?: string
 	email?: string
+	city?: string
 	status?: string
 
 	familyId?: number | string
@@ -35,20 +36,11 @@ export function getMembers(params: MembersQuery = {}): Promise<Response> {
 		sortOrder: params.sortOrder ?? 'ASC',
 		search: params.search,
 
-		memberName: params.memberName,
+		memberFirstName: params.memberFirstName,
 		gender: params.gender,
-		age: params.age,
 		mobile: params.mobile,
-		email: params.email,
 		status: params.status,
-
-		familyId: params.familyId,
-		familyTypeId: params.familyTypeId,
-		identityTypeId: params.identityTypeId,
-		teamCategoryId: params.teamCategoryId,
-
-		createdFrom: params.createdFrom,
-		createdTo: params.createdTo
+		city: params.city
 	})
 
 	return request<Response>(`${MEMBER_BASE}${qs}`)

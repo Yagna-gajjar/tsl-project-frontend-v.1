@@ -5,8 +5,6 @@ import Layout from "./components/layout"
 import Dashboard from "./pages/dashboard"
 import Projects from "./pages/projects"
 import Billing from "./pages/billing"
-import Invoices from "./pages/invoices"
-import Clients from "./pages/family"
 import Reports from "./pages/reports"
 import Payments from "./pages/payments"
 import { Toaster } from "./components/ui/toaster"
@@ -16,6 +14,7 @@ import Signup from "./pages/Signup"
 import { AuthProvider } from "./contexts/authContext";
 import PageNotFound from "./pages/NotFound"
 import FamilyTable from "./pages/family";
+import MemberTable from "./pages/member"
 
 export default function App() {
   return (
@@ -33,8 +32,8 @@ export default function App() {
                 <Route path="/family" element={<FamilyTable />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/billing" element={<Billing />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/clients" element={<Clients />} />
+                <Route path="/member" element={<MemberTable />} />
+                <Route path="/academy" element={<Billing />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/login" element={<LoginForm />} />
