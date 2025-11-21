@@ -4,7 +4,6 @@ import type { Column } from "@/components/data-table/types";
 import { Badge } from "@/components/ui/badge";
 
 import { getMembers, deleteMember } from "@/api/member.api";
-
 import type { Member } from "@/types/member";
 
 export default function MemberTable() {
@@ -21,7 +20,6 @@ export default function MemberTable() {
 	const [sortBy, setSortBy] = useState<string>("memberId");
 	const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
-	// Load members server-side
 	const loadData = useCallback(async () => {
 		try {
 			setIsLoading(true);
@@ -30,15 +28,14 @@ export default function MemberTable() {
 				page,
 				limit: pageSize,
 				sortBy,
-				sortOrder,
-				...filters, // send all active filters
+				sorting: sortOrder,
+				...filters,
 			});
 
 			const rows = res?.data ?? [];
 			const pagination = res?.pagination ?? null;
 
 			setData(Array.isArray(rows) ? rows : []);
-
 			setTotal(
 				pagination
 					? Number(pagination.total)
@@ -57,9 +54,7 @@ export default function MemberTable() {
 		loadData();
 	}, [loadData]);
 
-	// ---------------------------
-	// TABLE COLUMNS
-	// ---------------------------
+	// COLUMNS
 	const columns: Column<Member>[] = [
 		{
 			key: "memberId",
@@ -76,7 +71,6 @@ export default function MemberTable() {
 					<span className="font-medium">
 						{row.memberFirstName} {row.memberMiddleName ?? ""} {row.memberLastName}
 					</span>
-					<span className="text-xs text-muted-foreground">{row.email}</span>
 				</div>
 			),
 		},
@@ -135,7 +129,9 @@ export default function MemberTable() {
 			header: "DOB",
 			sortable: true,
 			render: (row) =>
-				row.dob ? new Date(row.dob).toLocaleDateString() : "-",
+				row.dob
+					? new Date(row.dob).toLocaleDateString()
+					: "-",
 		},
 		{
 			key: "contactNumber",
@@ -158,9 +154,7 @@ export default function MemberTable() {
 		},
 	];
 
-	// ---------------------------
-	// HANDLERS
-	// ---------------------------
+	// FILTER HANDLERS
 	const handleFilterChange = (key: string, value: any) => {
 		setPage(1);
 		setFilters((prev) => ({ ...prev, [key]: value }));
@@ -192,12 +186,16 @@ export default function MemberTable() {
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-bold">Members</h1>
-					<p className="text-muted-foreground">Manage all members.</p>
+					<p className="text-muted-foreground">
+						Manage all members.
+					</p>
 				</div>
 
 				<button
 					className="px-4 py-2 bg-primary text-white rounded-md"
-					onClick={() => console.log("Add Member")}
+					onClick={() =>
+						console.log("Add Member")
+					}
 				>
 					Add Member
 				</button>
