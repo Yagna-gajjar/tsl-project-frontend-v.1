@@ -55,7 +55,7 @@ export function DataTable<T>({
   const handleSort = (key: string, direction?: "asc" | "desc") => {
     if (!key) {
       setSortConfig(null);
-      onSortChange?.("", "asc"); // Clear sort
+      onSortChange?.("", "ASC");
       return;
     }
 
@@ -69,12 +69,9 @@ export function DataTable<T>({
       newDirection = "desc";
     }
     setSortConfig({ key, direction: newDirection });
-    // map to parent expected direction ("ASC"/"DESC")
     onSortChange?.(key, newDirection === "asc" ? "ASC" : "DESC");
   };
 
-  // Forward filter changes to parent immediately (no debounce here).
-  // Toolbar already handles batching and "Apply" UX.
   const sendFilterChange = (key: string, value: any) => {
     onFilterChange?.(key, value);
   };
@@ -87,12 +84,9 @@ export function DataTable<T>({
       newFilters[key] = value;
     }
     setFilters(newFilters);
-
-    // Immediately notify parent
     sendFilterChange(key, value);
   };
 
-  // Filter visible columns
   const displayColumns = useMemo(
     () => columns.filter((col) => visibleColumns.has(String(col.key))),
     [columns, visibleColumns]

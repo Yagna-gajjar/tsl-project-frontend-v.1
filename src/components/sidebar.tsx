@@ -22,13 +22,13 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Family", href: "/family", icon: Users2 },
-  { name: "Billing", href: "/billing", icon: Receipt },
-  { name: "Member", href: "/invoices", icon: User },
-  { name: "Academy", href: "/clients", icon: HomeIcon },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Payments", href: "/payments", icon: CreditCard },
+	{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+	{ name: "Family", href: "/family", icon: User2 },
+	{ name: "Billing", href: "/billing", icon: Receipt },
+	{ name: "Member", href: "/member", icon: User },
+	{ name: "Academy", href: "/academy", icon: HomeIcon },
+	{ name: "Reports", href: "/reports", icon: BarChart3 },
+	{ name: "Payments", href: "/payments", icon: CreditCard },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {

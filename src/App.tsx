@@ -5,8 +5,6 @@ import Layout from "./components/layout"
 import Dashboard from "./pages/dashboard"
 import Projects from "./pages/projects"
 import Billing from "./pages/billing"
-import Invoices from "./pages/invoices"
-import Clients from "./pages/family"
 import Reports from "./pages/reports"
 import Payments from "./pages/payments"
 import { Toaster } from "./components/ui/toaster"
@@ -20,6 +18,7 @@ import Settingt from "./pages/setting";
 import FamilyTypeTable from "./components/setting/family-type/family-typa-table";
 import TeamCategoryTable from "./components/setting/team-category/team-category-table";
 import IdentityTypeTable from "./components/setting/identity-type/identity-type-table";
+import MemberTable from "./pages/member"
 
 export default function App() {
   return (
@@ -37,8 +36,8 @@ export default function App() {
                 <Route path="/family" element={<FamilyTable />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/billing" element={<Billing />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/clients" element={<Clients />} />
+                <Route path="/member" element={<MemberTable />} />
+                <Route path="/academy" element={<Billing />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/login" element={<LoginForm />} />
