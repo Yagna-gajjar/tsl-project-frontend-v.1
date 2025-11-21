@@ -9,17 +9,14 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Fixed Navbar */}
       <div className="fixed top-0 left-0 right-0 z-40">
         <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       </div>
-
       <div className="flex">
         {/* Desktop Sidebar - Fixed */}
         <div className="hidden lg:block">
           <Sidebar />
         </div>
-
         {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
           {sidebarOpen && (
@@ -45,9 +42,8 @@ export default function Layout() {
         </AnimatePresence>
 
         {/* Main Content Area */}
-        <main className="flex-1 min-h-screen">
-          <div className="pt-16 h-screen overflow-y-auto">
-            <div className="p-4">
+        <main className="flex-1 h-screen overflow-auto p-4 w-[80%]">
+          <div className="pt-8" > {/* Spacer for Navbar */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -55,7 +51,6 @@ export default function Layout() {
               >
                 <Outlet />
               </motion.div>
-            </div>
           </div>
         </main>
       </div>

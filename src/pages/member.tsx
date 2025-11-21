@@ -10,7 +10,7 @@ export default function MemberTable() {
 	const [data, setData] = useState<Member[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 
-	// Pagination and sorting (server-side)
+	// Pagination + sorting
 	const [page, setPage] = useState<number>(1);
 	const [pageSize, setPageSize] = useState<number>(10);
 	const [total, setTotal] = useState<number>(0);
@@ -54,7 +54,6 @@ export default function MemberTable() {
 		loadData();
 	}, [loadData]);
 
-	// COLUMNS
 	const columns: Column<Member>[] = [
 		{
 			key: "memberId",
@@ -154,7 +153,6 @@ export default function MemberTable() {
 		},
 	];
 
-	// FILTER HANDLERS
 	const handleFilterChange = (key: string, value: any) => {
 		setPage(1);
 		setFilters((prev) => ({ ...prev, [key]: value }));
@@ -178,11 +176,8 @@ export default function MemberTable() {
 		}
 	};
 
-	// ---------------------------
-	// RENDER
-	// ---------------------------
 	return (
-		<div className="container mx-auto py-10 px-4 space-y-8">
+		<div className="mx-auto py-10 px-4 space-y-8">
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-bold">Members</h1>
