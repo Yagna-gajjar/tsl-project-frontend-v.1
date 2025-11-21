@@ -12,7 +12,7 @@ import {
   ChevronRight,
   HomeIcon,
   User,
-  Users2,
+  User2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

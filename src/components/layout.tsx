@@ -46,16 +46,14 @@ export default function Layout() {
 
         {/* Main Content Area */}
         <main className="flex-1 min-h-screen">
-          <div className="pt-16 h-screen overflow-y-auto">
-            <div className="p-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Outlet />
-              </motion.div>
-            </div>
+          <div className="p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Outlet />
+            </motion.div>
           </div>
         </main>
       </div>
