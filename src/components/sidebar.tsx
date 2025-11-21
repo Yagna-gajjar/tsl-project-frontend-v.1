@@ -10,15 +10,15 @@ import {
 	CreditCard,
 	ChevronLeft,
 	ChevronRight,
-	User2,
 	HomeIcon,
 	User,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+	User2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
-	onClose?: () => void
+	onClose?: () => void;
 }
 
 const navigationItems = [

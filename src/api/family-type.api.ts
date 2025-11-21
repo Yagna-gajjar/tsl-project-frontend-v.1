@@ -6,9 +6,10 @@ export interface FamilyTypesQuery {
     page?: number;
     limit?: number;
     sortBy?: string;
-    sorting?: SortOrder; // your backend sometimes uses 'sorting'
+    sorting?: SortOrder;
     search?: string;
-    name?: string;
+    familyTypeName?: string;
+    maxMembers?: number;
 }
 
 const FAMILY_TYPE_BASE = import.meta.env.VITE_APP_API_URL + '/family-type';
@@ -19,7 +20,9 @@ export function getFamilyTypes(params: FamilyTypesQuery = {}): Promise<FamilyTyp
         limit: params.limit ?? 10,
         sortBy: params.sortBy ?? 'familyTypeId',
         sorting: params.sorting ?? (params.sorting ?? 'ASC'),
-        search: params.search ?? params.name
+        search: params.search ?? params.familyTypeName,
+        familyTypeName: params.familyTypeName ?? undefined,
+        maxMembers : params.maxMembers ?? 10000,
     });
 
     return request<FamilyType[]>(`${FAMILY_TYPE_BASE}${qs}`);

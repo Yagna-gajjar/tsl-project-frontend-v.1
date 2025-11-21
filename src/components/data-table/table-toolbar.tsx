@@ -189,7 +189,6 @@ export function TableToolbar<T>({
           </Select>
         );
       }
-
       case "date":
         return (
           <Popover>
@@ -353,7 +352,7 @@ export function TableToolbar<T>({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-[320px] h-[400px] p-4 overflow-auto"
+              className="max-w-[320px] max-h-[400px] p-4 overflow-auto"
               align="start"
             >
               <div className="space-y-4">
