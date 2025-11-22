@@ -43,14 +43,16 @@ export default function Layout() {
 
         {/* Main Content Area */}
         <main className="flex-1 h-screen overflow-auto p-4 w-[80%]">
-          <div className="pt-8" > {/* Spacer for Navbar */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Outlet />
-              </motion.div>
+          <div className="pt-16">
+            {" "}
+            {/* Spacer for Navbar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Outlet />
+            </motion.div>
           </div>
         </main>
       </div>

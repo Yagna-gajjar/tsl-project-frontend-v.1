@@ -166,249 +166,295 @@ export default function Dashboard() {
 	}
 
 	return (
-		<div className="space-y-6">
-			{/* Header */}
-			<motion.div
-				initial={{ opacity: 0, y: 20 }}
-				animate={controls}
-				className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4"
-			>
-				<div>
-					<h1 className="text-3xl font-bold text-foreground">Construction Dashboard</h1>
-					<p className="text-muted-foreground">Monitor your construction operations in real-time</p>
-				</div>
-				<div className="relative flex items-center gap-2 w-full sm:w-auto">
-					<Search className="absolute left-3 text-muted-foreground pointer-events-none" />
-					<Input
-						type="search"
-						placeholder="Search tasks, projects..."
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						className="w-full sm:max-w-md pl-10"
-					/>
-				</div>
-			</motion.div>
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={controls}
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Construction Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Monitor your construction operations in real-time
+          </p>
+        </div>
+        <div className="relative flex items-center gap-2 w-full sm:w-auto">
+          <Search className="absolute left-3 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Search tasks, projects..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:max-w-md pl-10"
+          />
+        </div>
+      </motion.div>
 
-			{/* Main Stats */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-				{stats.map((stat, index) => {
-					const Icon = stat.icon
-					return (
-						<motion.div
-							key={stat.title}
-							initial={{ opacity: 0, y: 20, scale: 0.9 }}
-							animate={{ opacity: 1, y: 0, scale: 1 }}
-							transition={{ duration: 0.5, delay: index * 0.1 }}
-							whileHover={{ scale: 1.02, y: -2 }}
-							className="group"
-						>
-							<Card className="hover:shadow-lg transition-all duration-300 border-l-2 border-l-primary">
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-									<motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.6 }}>
-										<Icon className={`h-5 w-5 ${stat.color}`} />
-									</motion.div>
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">{stat.value}</div>
-									<div className="flex items-center space-x-1 text-xs text-muted-foreground">
-										<TrendingUp className={`h-3 w-3 ${stat.trend === "up" ? "text-green-500" : "text-red-500"}`} />
-										<span>{stat.change}</span>
-									</div>
-									<div className="mt-2">
-										<Progress value={Math.abs(stat.percentage)} className="h-1" />
-									</div>
-								</CardContent>
-							</Card>
-						</motion.div>
-					)
-				})}
-			</div>
+      {/* Main Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div
+              key={stat.title}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="group"
+            >
+              <Card className="hover:shadow-lg transition-all duration-300 border-l-2 border-l-primary">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {stat.title}
+                  </CardTitle>
+                  <motion.div
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Icon className={`h-5 w-5 ${stat.color}`} />
+                  </motion.div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                    <TrendingUp
+                      className={`h-3 w-3 ${
+                        stat.trend === "up" ? "text-green-500" : "text-red-500"
+                      }`}
+                    />
+                    <span>{stat.change}</span>
+                  </div>
+                  <div className="mt-2">
+                    <Progress
+                      value={Math.abs(stat.percentage)}
+                      className="h-1"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </div>
 
-			{/* Charts Row */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Revenue Chart */}
-				<motion.div
-					initial={{ opacity: 0, x: -20 }}
-					animate={{ opacity: 1, x: 0 }}
-					transition={{ duration: 0.6, delay: 0.3 }}
-				>
-					<Card className="hover:shadow-lg transition-shadow duration-300">
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<BarChart3 className="h-5 w-5" />
-								Financial Overview
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<ResponsiveContainer width="100%" height={300}>
-								<AreaChart data={revenueData}>
-									<CartesianGrid strokeDasharray="3 3" />
-									<XAxis dataKey="month" />
-									<YAxis />
-									<Tooltip formatter={(value) => [`$${value.toLocaleString()}`, ""]} />
-									<Area type="monotone" dataKey="revenue" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
-									<Area type="monotone" dataKey="profit" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
-								</AreaChart>
-							</ResponsiveContainer>
-						</CardContent>
-					</Card>
-				</motion.div>
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Chart */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Financial Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value) => [`$${value.toLocaleString()}`, ""]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
+                    fillOpacity={0.3}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="profit"
+                    stroke="#10b981"
+                    fill="#10b981"
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-				{/* Project Status Chart */}
-				<motion.div
-					initial={{ opacity: 0, x: 20 }}
-					animate={{ opacity: 1, x: 0 }}
-					transition={{ duration: 0.6, delay: 0.4 }}
-				>
-					<Card className="hover:shadow-lg transition-shadow duration-300">
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Building2 className="h-5 w-5" />
-								Project Status Distribution
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<ResponsiveContainer width="100%" height={300}>
-								<PieChart>
-									<Pie
-										data={projectStatusData}
-										cx="50%"
-										cy="50%"
-										outerRadius={80}
-										dataKey="value"
-										label={({ name, value }) => `${name}: ${value}`}
-									>
-										{projectStatusData.map((entry, index) => (
-											<Cell key={`cell-${index}`} fill={entry.color} />
-										))}
-									</Pie>
-									<Tooltip />
-								</PieChart>
-							</ResponsiveContainer>
-						</CardContent>
-					</Card>
-				</motion.div>
-			</div>
+        {/* Project Status Chart */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Project Status Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={projectStatusData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {projectStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
-			{/* Equipment Status & Tasks */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Equipment Status */}
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6, delay: 0.6 }}
-				>
-					<Card className="hover:shadow-lg transition-shadow duration-300">
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Truck className="h-5 w-5" />
-								Equipment Status
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className="space-y-4">
-								{equipmentData.map((equipment, index) => (
-									<motion.div
-										key={equipment.name}
-										initial={{ opacity: 0, x: -20 }}
-										animate={{ opacity: 1, x: 0 }}
-										transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
-										className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-									>
-										<div>
-											<div className="font-medium">{equipment.name}</div>
-											<div className="text-sm text-muted-foreground">
-												{equipment.active}/{equipment.total} active
-											</div>
-										</div>
-										<div className="text-right">
-											<div className="font-medium">{equipment.utilization}%</div>
-											<Progress value={equipment.utilization} className="w-20 h-2" />
-										</div>
-									</motion.div>
-								))}
-							</div>
-						</CardContent>
-					</Card>
-				</motion.div>
+      {/* Equipment Status & Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Equipment Status */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5" />
+                Equipment Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {equipmentData.map((equipment, index) => (
+                  <motion.div
+                    key={equipment.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  >
+                    <div>
+                      <div className="font-medium">{equipment.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {equipment.active}/{equipment.total} active
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">
+                        {equipment.utilization}%
+                      </div>
+                      <Progress
+                        value={equipment.utilization}
+                        className="w-20 h-2"
+                      />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-				{/* Upcoming Tasks */}
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6, delay: 0.7 }}
-				>
-					<Card className="hover:shadow-lg transition-shadow duration-300">
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Clock className="h-5 w-5" />
-								Upcoming Tasks
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className="space-y-3">
-								{filteredTasks.map((task, index) => (
-									<motion.div
-										key={task.id}
-										initial={{ opacity: 0, x: 20 }}
-										animate={{ opacity: 1, x: 0 }}
-										transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
-										className="flex items-start justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
-									>
-										<div className="flex-1">
-											<div className="font-medium text-sm">{task.task}</div>
-											<div className="text-xs text-muted-foreground">{task.project}</div>
-										</div>
-										<div className="flex items-center gap-2">
-											<Badge className={getPriorityColor(task.priority)} variant="secondary">
-												{task.priority}
-											</Badge>
-											<span className="text-xs text-muted-foreground">{task.due}</span>
-										</div>
-									</motion.div>
-								))}
-							</div>
-						</CardContent>
-					</Card>
-				</motion.div>
-			</div>
+        {/* Upcoming Tasks */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Upcoming Tasks
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {filteredTasks.map((task, index) => (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
+                    className="flex items-start justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{task.task}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {task.project}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        className={getPriorityColor(task.priority)}
+                        variant="secondary"
+                      >
+                        {task.priority}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {task.due}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
-			{/* Recent Activities */}
-			<motion.div
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.6, delay: 0.8 }}
-			>
-				<Card className="hover:shadow-lg transition-shadow duration-300">
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<Activity className="h-5 w-5" />
-							Recent Activities
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-3">
-							{recentActivities.map((activity, index) => (
-								<motion.div
-									key={activity.id}
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.4, delay: 0.9 + index * 0.05 }}
-									className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
-								>
-									{getActivityIcon(activity.type)}
-									<div className="flex-1">
-										<div className="font-medium text-sm">{activity.action}</div>
-										<div className="text-xs text-muted-foreground">{activity.project}</div>
-									</div>
-									<span className="text-xs text-muted-foreground">{activity.time}</span>
-								</motion.div>
-							))}
-						</div>
-					</CardContent>
-				</Card>
-			</motion.div>
-		</div>
-	)
+      {/* Recent Activities */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.8 }}
+      >
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Recent Activities
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {recentActivities.map((activity, index) => (
+                <motion.div
+                  key={activity.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.9 + index * 0.05 }}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
+                >
+                  {getActivityIcon(activity.type)}
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{activity.action}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {activity.project}
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {activity.time}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
 }

@@ -40,7 +40,7 @@ export function getMembers(params: MembersQuery = {}): Promise<Response> {
 		gender: params.gender,
 		mobile: params.mobile,
 		status: params.status,
-		city: params.city
+		city: params.city,
 	})
 
 	return request<Response>(`${MEMBER_BASE}${qs}`)

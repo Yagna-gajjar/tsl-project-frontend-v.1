@@ -1,23 +1,35 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { Button } from "@/components/ui/button";
-import { getTeamCategories, deleteTeamCategories } from "@/api/team-category.api";
-import type { TeamCategory } from "@/types/teamCategory";
 import { format } from "date-fns";
 
-export default function TeamCategoryTable() {
+import {
+  getTeamCategories,
+  deleteTeamCategories,
+} from "@/api/team-category.api";
+import type { TeamCategory } from "@/types/teamCategory";
+import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+
+type Props = {
+  onView?: (row: TeamCategory) => void;
+  onEdit?: (row: TeamCategory) => void;
+  refreshKey?: number;
+};
+
+export default function TeamCategoryTable({
+  onView,
+  onEdit,
+  refreshKey,
+}: Props) {
   const [data, setData] = useState<TeamCategory[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // server state
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
-  // query state
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [sortBy, setSortBy] = useState<string>("teamCategoryId");
@@ -26,7 +38,7 @@ export default function TeamCategoryTable() {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res : any = await getTeamCategories({
+      const res: any = await getTeamCategories({
         page,
         limit,
         sortBy,
@@ -37,8 +49,8 @@ export default function TeamCategoryTable() {
         access: filters.access ?? undefined,
       } as any);
 
-      const rowsRaw = res?.data ?? [];
-      const rows = (rowsRaw as any[]).map((r) => ({
+      const rowsRaw = res?.data ?? res ?? [];
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
@@ -57,7 +69,58 @@ export default function TeamCategoryTable() {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, refreshKey]);
+
+  const handleSearchChange = (q: string) => {
+    setPage(1);
+    setSearch(q);
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    setPage(1);
+    setFilters((prev) => {
+      const next = { ...prev };
+      if (value === "" || value === null || value === undefined)
+        delete next[key];
+      else next[key] = value;
+      return next;
+    });
+  };
+
+  const handleSortChange = (key: string, direction: "ASC" | "DESC") => {
+    setSortBy(key || "teamCategoryId");
+    setSortOrder(direction || "ASC");
+    setPage(1);
+  };
+
+  const handlePageChange = (p: number) => setPage(p);
+  // Delete dialog state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
+  // When user clicks "Delete" in the table
+  const handleDelete = (id?: number) => {
+    if (id === undefined || id === null) return;
+    setDeleteId(id);
+    setDeleteOpen(true); // open your AlertDialog
+  };
+
+  // When user confirms delete in the dialog
+  const handleDeleteConfirmed = async () => {
+    if (!deleteId) return;
+    try {
+      setLoadingDelete(true);
+      await deleteTeamCategories(deleteId);
+      await loadData(); // refresh table
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setLoadingDelete(false);
+      setDeleteOpen(false);
+      setDeleteId(null);
+    }
+  };
 
   const columns: Column<TeamCategory>[] = [
     {
@@ -85,7 +148,12 @@ export default function TeamCategoryTable() {
       key: "access",
       header: "Access",
       sortable: true,
-      filterType: null,
+      filterType: "select",
+      filterOptions: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Block", value: "block" },
+      ],
       render: (r) => r.access ?? "-",
     },
     {
@@ -104,54 +172,8 @@ export default function TeamCategoryTable() {
     },
   ];
 
-  // DataTable callbacks
-  const handleSearchChange = (q: string) => {
-    setPage(1);
-    setSearch(q);
-  };
-
-  const handleFilterChange = (key: string, value: any) => {
-    setPage(1);
-    setFilters((prev) => {
-      const next = { ...prev };
-      if (value === "" || value === null || value === undefined)
-        delete next[key];
-      else next[key] = value;
-      return next;
-    });
-  };
-
-  const handleSortChange = (key: string, direction: "ASC" | "DESC") => {
-    setSortBy(key || "teamCategoryId");
-    setSortOrder(direction || "ASC");
-    setPage(1);
-  };
-
-  const handlePageChange = (p: number) => setPage(p);
-
-  const handleDelete = async (id: string | number) => {
-    const ok = confirm("Delete this team category?");
-    if (!ok) return;
-    try {
-      await deleteTeamCategories(Number(id));
-      loadData();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleView = (row: TeamCategory) => console.log("view", row);
-  const handleEdit = (row: TeamCategory) => console.log("edit", row);
-
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Team Categories</h2>
-        <Button onClick={() => console.log("Add team category clicked")}>
-          Add Team Category
-        </Button>
-      </div>
-
+    <div>
       <DataTable<TeamCategory>
         data={data}
         columns={columns}
@@ -160,15 +182,30 @@ export default function TeamCategoryTable() {
           page,
           limit,
           total,
-          onPageChange: handlePageChange
+          onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onView={(row) => onView?.(row)}
+        onEdit={(row) => onEdit?.(row)}
+        onDelete={(id) => handleDelete(id)}
         idKey={"teamCategoryId"}
+      />
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => {
+          if (!loadingDelete) {
+            setDeleteOpen(false);
+            setDeleteId(null);
+          }
+        }}
+        onConfirm={handleDeleteConfirmed}
+        title="Delete Team Category?"
+        description="Are you sure you want to delete this Team Category? This action cannot be undone."
+        confirmText={loadingDelete ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        variant="destructive"
       />
     </div>
   );

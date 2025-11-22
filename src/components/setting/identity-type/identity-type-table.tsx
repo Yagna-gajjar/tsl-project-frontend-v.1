@@ -1,49 +1,49 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
 import type { IdentityType } from "@/types/identityType";
 import type { FamilyType } from "@/types/familyType";
 import type { TeamCategory } from "@/types/teamCategory";
 
-// Replace these imports with your actual api functions (you mentioned getIdentityTypes earlier)
 import { getIdentityTypes, deleteIdentityTypes } from "@/api/identity-type.api";
 import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
+import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 
 type SelectOption = { label: string; value: string | number };
 
-export default function IdentityTypeTable() {
+export default function IdentityTypeTable({
+  refreshKey,
+  onView,
+  onEdit,
+}: {
+  refreshKey?: number;
+  onView?: (row: IdentityType) => void;
+  onEdit?: (row: IdentityType) => void;
+}) {
   const [data, setData] = useState<IdentityType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // server state
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
-  // query state
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [sortBy, setSortBy] = useState<string>("identityTypeId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
-  // dropdown options for filters
   const [familyOptions, setFamilyOptions] = useState<SelectOption[]>([]);
   const [teamOptions, setTeamOptions] = useState<SelectOption[]>([]);
 
-  // Load family types and team categories for select filters
   const loadFilterOptions = useCallback(async () => {
     try {
-      const fRes = await getFamilyTypes({ page: 1, limit: 100 } as any);
-      // handle both array or { data, pagination } responses
-      const fRows: FamilyType[] = Array.isArray(fRes)
-        ? (fRes as any)
-        : fRes?.data ?? [];
+      const fRes: any = await getFamilyTypes({ page: 1, limit: 500 } as any);
+      const fRows: FamilyType[] = Array.isArray(fRes) ? fRes : fRes?.data ?? [];
       setFamilyOptions(
         (fRows || []).map((f) => ({
           label: f.familyTypeName,
@@ -56,53 +56,36 @@ export default function IdentityTypeTable() {
     }
 
     try {
-      const tRes = await getTeamCategories({ page: 1, limit: 100 } as any);
+      const tRes: any = await getTeamCategories({ page: 1, limit: 500 } as any);
       const tRows: TeamCategory[] = Array.isArray(tRes)
-        ? (tRes as any)
+        ? tRes
         : tRes?.data ?? [];
-      setTeamOptions(
-        (tRows || []).map((t) => ({
-          label: t.categoryName,
-          value: t.teamCategoryId ?? "",
-        }))
-      );
-      // include a `null` option if backend supports teamCategoryId=null meaning 'none'
-      setTeamOptions((prev) => [
-        { label: "No category (null)", value: "null" },
-        ...prev,
-      ]);
+      const opts = (tRows || []).map((t) => ({
+        label: t.categoryName,
+        value: t.teamCategoryId ?? "",
+      }));
+      setTeamOptions([{ label: "No category (null)", value: "null" }, ...opts]);
     } catch (e) {
       console.warn("Failed to load team categories", e);
-      setTeamOptions([]);
+      setTeamOptions([{ label: "No category (null)", value: "null" }]);
     }
   }, []);
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-
-      // Build API params from state
-      const params: any = {
-        page,
-        limit,
-        sortBy,
-        order: sortOrder,
-      };
+      const params: any = { page, limit, sortBy, order: sortOrder };
       if (search) params.search = search;
-      // toolbar sends numeric values (kept types) — pass them if present
       if (filters.familyTypeId !== undefined)
         params.familyTypeId = filters.familyTypeId;
       if (filters.teamCategoryId !== undefined)
-            params.teamCategoryId = filters.teamCategoryId;
-    if (filters.discount !== undefined) params.discount = filters.discount;
+        params.teamCategoryId = filters.teamCategoryId;
+      if (filters.discount !== undefined) params.discount = filters.discount;
 
-    const res: any = await getIdentityTypes(params);
+      const res: any = await getIdentityTypes(params);
 
-      // support both array and { data, pagination } shapes
-      const rowsRaw: any[] = Array.isArray(res)
-        ? (res as any)
-        : res?.data ?? [];
-      const rows = (rowsRaw || []).map((r) => ({
+      const rowsRaw: any[] = Array.isArray(res) ? res : res?.data ?? [];
+      const rows = (rowsRaw || []).map((r: any) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
@@ -129,9 +112,8 @@ export default function IdentityTypeTable() {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, refreshKey]);
 
-  // Table columns. Keep UI unchanged; only configure columns + filter types.
   const columns: Column<IdentityType>[] = [
     {
       key: "identityTypeName",
@@ -149,9 +131,7 @@ export default function IdentityTypeTable() {
       header: "Family Type",
       sortable: true,
       filterType: "select",
-      filterOptions: [
-        ...familyOptions.map((o) => ({ label: o.label, value: o.value })),
-      ],
+      filterOptions: familyOptions,
       render: (r) => {
         const ft = familyOptions.find(
           (f) => String(f.value) === String(r.familyTypeId)
@@ -164,13 +144,11 @@ export default function IdentityTypeTable() {
       header: "Team Category",
       sortable: true,
       filterType: "select",
-      filterOptions: [
-        { label: "No category (null)", value: "null" },
-        ...teamOptions.map((o) => ({ label: o.label, value: o.value })),
-      ],
+      filterOptions: teamOptions,
       render: (r) => {
         if (r.teamCategoryId === null || r.teamCategoryId === undefined)
           return "-";
+        if (String(r.teamCategoryId) === "null") return "No category";
         const t = teamOptions.find(
           (t) => String(t.value) === String(r.teamCategoryId)
         );
@@ -182,7 +160,8 @@ export default function IdentityTypeTable() {
       header: "Discount",
       sortable: true,
       filterType: "number",
-      render: (r) => (typeof r.discount === "number" ? `${r.discount}` : "-"),
+      render: (r) =>
+        typeof r.discount === "number" ? String(r.discount) : "-",
     },
     {
       key: "createdAt",
@@ -193,7 +172,6 @@ export default function IdentityTypeTable() {
     },
   ];
 
-  // DataTable callbacks
   const handleSearchChange = (q: string) => {
     setPage(1);
     setSearch(q);
@@ -201,9 +179,6 @@ export default function IdentityTypeTable() {
 
   const handleFilterChange = (key: string, value: any) => {
     setPage(1);
-
-    // For select control the toolbar sends "all" or "null" (string) or numeric / typed value.
-    // Normalize:
     const normalized =
       value === "" || value === null || value === undefined
         ? undefined
@@ -212,7 +187,6 @@ export default function IdentityTypeTable() {
         : value === "null"
         ? "null"
         : value;
-
     setFilters((prev) => {
       const next = { ...prev };
       if (normalized === undefined) delete next[key];
@@ -226,53 +200,66 @@ export default function IdentityTypeTable() {
     setSortOrder(direction || "ASC");
     setPage(1);
   };
-
   const handlePageChange = (p: number) => setPage(p);
 
-  const handleDelete = async (id: string | number) => {
-    const ok = confirm("Delete this identity type?");
-    if (!ok) return;
+  // Delete dialog state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
+  // When user clicks "Delete" in the table
+  const handleDelete = (id?: number) => {
+    if (id === undefined || id === null) return;
+    setDeleteId(id);
+    setDeleteOpen(true); // open your AlertDialog
+  };
+
+  // When user confirms delete in the dialog
+  const handleDeleteConfirmed = async () => {
+    if (!deleteId) return;
     try {
-      if (typeof deleteIdentityTypes === "function") {
-        await deleteIdentityTypes(Number(id));
-        loadData();
-      } else {
-        console.warn("deleteIdentityType API not available");
-      }
+      setLoadingDelete(true);
+      await deleteIdentityTypes(deleteId);
+      await loadData(); // refresh table
     } catch (err) {
-      console.error(err);
+      console.error("Delete failed:", err);
+    } finally {
+      setLoadingDelete(false);
+      setDeleteOpen(false);
+      setDeleteId(null);
     }
   };
 
-  const handleView = (row: IdentityType) => console.log("view", row);
-  const handleEdit = (row: IdentityType) => console.log("edit", row);
-
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Identity Types</h2>
-        <Button onClick={() => console.log("Add identity type clicked")}>
-          Add Identity Type
-        </Button>
-      </div>
-
+    <div>
       <DataTable<IdentityType>
         data={data}
         columns={columns}
         isLoading={isLoading}
-        pagination={{
-          page,
-          limit,
-          total,
-          onPageChange: handlePageChange
-        }}
+        pagination={{ page, limit, total, onPageChange: handlePageChange }}
         onSearchChange={handleSearchChange}
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onView={(row) => onView?.(row)}
+        onEdit={(row) => onEdit?.(row)}
+        onDelete={(id) => handleDelete(id)}
         idKey={"identityTypeId"}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => {
+          if (!loadingDelete) {
+            setDeleteOpen(false);
+            setDeleteId(null);
+          }
+        }}
+        onConfirm={handleDeleteConfirmed}
+        title="Delete identity Type?"
+        description="Are you sure you want to delete this identity type? This action cannot be undone."
+        confirmText={loadingDelete ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        variant="destructive"
       />
     </div>
   );

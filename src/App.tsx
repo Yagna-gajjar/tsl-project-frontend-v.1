@@ -13,12 +13,12 @@ import NotFound from "./pages/NotFound"
 import Signup from "./pages/Signup"
 import { AuthProvider } from "./contexts/authContext";
 import PageNotFound from "./pages/NotFound"
-import FamilyTable from "./pages/family";
-import Settingt from "./pages/setting";
-import FamilyTypeTable from "./components/setting/family-type/family-typa-table";
-import TeamCategoryTable from "./components/setting/team-category/team-category-table";
-import IdentityTypeTable from "./components/setting/identity-type/identity-type-table";
-import MemberTable from "./pages/member"
+import Setting from "./pages/setting";
+import FamilyPage from "./pages/family";
+import MemberPage from "./pages/member";
+import FamilyTypePage from "@/components/setting/family-type/family-type";
+import TeamCategoryPage from "@/components/setting/team-category/team-category";
+import IdentityTypePage from "@/components/setting/identity-type/identity-type";
 
 export default function App() {
   return (
@@ -33,10 +33,10 @@ export default function App() {
               <Route path="/" element={<Layout />}>
                 <Route index element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/family" element={<FamilyTable />} />
+                <Route path="/family" element={<FamilyPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/billing" element={<Billing />} />
-                <Route path="/member" element={<MemberTable />} />
+                <Route path="/member" element={<MemberPage />} />
                 <Route path="/academy" element={<Billing />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/payments" element={<Payments />} />
@@ -44,18 +44,18 @@ export default function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
-              <Route path="/setting" element={<Settingt />}>
+              <Route path="/setting" element={<Setting />}>
                 <Route
                   path="/setting/family-type"
-                  element={<FamilyTypeTable />}
+                  element={<FamilyTypePage />}
                 />
                 <Route
                   path="/setting/team-category"
-                  element={<TeamCategoryTable />}
+                  element={<TeamCategoryPage />}
                 />
                 <Route
                   path="/setting/identity-type"
-                  element={<IdentityTypeTable />}
+                  element={<IdentityTypePage />}
                 />
                 <Route path="/setting/*" element={<NotFound />} />
               </Route>

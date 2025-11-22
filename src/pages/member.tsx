@@ -1,211 +1,80 @@
-import { useEffect, useState, useCallback } from "react";
-import { DataTable } from "@/components/data-table/data-table";
-import type { Column } from "@/components/data-table/types";
-import { Badge } from "@/components/ui/badge";
+"use client";
 
-import { getMembers, deleteMember } from "@/api/member.api";
+import React, { useState } from "react";
+import MemberTable from "@/components/members/member-table";
+import MemberFormModal from "@/components/members/member-form-modal";
+import MemberViewModal from "@/components/members/member-view-modal";
 import type { Member } from "@/types/member";
 
-export default function MemberTable() {
-  const [data, setData] = useState<Member[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export default function MemberPage() {
+  // Read familyId from URL (safe to run in client)
+  const queryParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const familyId = queryParams.get("familyId");
+  const initialFamilyId = familyId ? Number(familyId) : undefined;
 
-	// Pagination + sorting
-	const [page, setPage] = useState<number>(1);
-	const [pageSize, setPageSize] = useState<number>(10);
-	const [total, setTotal] = useState<number>(0);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editRow, setEditRow] = useState<Member | null>(null);
 
-  // Filters
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [sortBy, setSortBy] = useState<string>("memberId");
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewData, setViewData] = useState<Member | null>(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      setIsLoading(true);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+  const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
-      const res: any = await getMembers({
-        page,
-        limit: pageSize,
-        sortBy,
-        sortOrder: sortOrder,
-        ...filters,
-      });
-
-      const rows = res?.data ?? [];
-      const pagination = res?.pagination ?? null;
-
-      setData(Array.isArray(rows) ? rows : []);
-      setTotal(pagination ? Number(pagination.total) : rows.length);
-    } catch (error) {
-      console.error("Failed to load members", error);
-      setData([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, pageSize, sortBy, sortOrder, filters]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-	const columns: Column<Member>[] = [
-		{
-			key: "memberId",
-			header: "ID",
-			sortable: true,
-		},
-		{
-			key: "memberFirstName",
-			header: "Name",
-			sortable: true,
-			filterType: "text",
-			render: (row:any) => (
-				<div className="flex flex-col">
-					<span className="font-medium">
-						{row.memberFirstName} {row.memberMiddleName ?? ""} {row.memberLastName}
-					</span>
-				</div>
-			),
-		},
-		{
-			key: "gender",
-			header: "Gender",
-			sortable: true,
-			filterType: "select",
-			filterOptions: [
-				{ label: "Male", value: "male" },
-				{ label: "Female", value: "female" },
-				{ label: "Other", value: "other" },
-			],
-			render: (row) => row.gender,
-		},
-		{
-			key: "familyId",
-			header: "Family",
-			sortable: true,
-			render: (row:any) => row.familyName ?? `#${row.familyId}`,
-		},
-		{
-			key: "city",
-			header: "City",
-			sortable: false,
-			filterType: "text",
-			render: (row:any) =>
-				row.city ? `${row.city}` : `#${row.addressId}`,
-		},
-		{
-			key: "status",
-			header: "Status",
-			sortable: true,
-			filterType: "select",
-			filterOptions: [
-				{ label: "Active", value: "active" },
-				{ label: "Inactive", value: "inactive" },
-				{ label: "Block", value: "block" },
-			],
-			render: (row) => (
-				<Badge
-					variant={
-						row.status === "active"
-							? "default"
-							: row.status === "inactive"
-								? "secondary"
-								: "destructive"
-					}
-				>
-					{row.status}
-				</Badge>
-			),
-		},
-		{
-			key: "dob",
-			header: "DOB",
-			sortable: true,
-			render: (row) =>
-				row.dob
-					? new Date(row.dob).toLocaleDateString()
-					: "-",
-		},
-		{
-			key: "contactNumber",
-			header: "Contact",
-			sortable: false,
-		},
-		{
-			key: "relationship",
-			header: "Relationship",
-			sortable: false,
-		},
-		{
-			key: "createdAt",
-			header: "Created",
-			sortable: false,
-			render: (row) =>
-				row.createdAt
-					? new Date(row.createdAt).toLocaleDateString()
-					: "-",
-		},
-	];
-
-	const handleFilterChange = (key: string, value: any) => {
-		setPage(1);
-		setFilters((prev) => ({ ...prev, [key]: value }));
-	};
-
-  const handleSortChange = (key: string, direction: "ASC" | "DESC") => {
-    setSortBy(key);
-    setSortOrder(direction);
-    setPage(1);
+  const openForm = (row?: Member | null) => {
+    setEditRow(row ?? null);
+    setFormOpen(true);
   };
 
-  const handleDelete = async (id: string | number) => {
-    const ok = confirm("Delete this member?");
-    if (!ok) return;
-
-    try {
-      await deleteMember(Number(id));
-      loadData();
-    } catch (error) {
-      console.error("Delete failed:", error);
-    }
+  const openView = (row: Member) => {
+    setViewData(row);
+    setViewOpen(true);
   };
 
-	return (
-		<div className="mx-auto py-10 px-4 space-y-8">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="text-2xl font-bold">Members</h1>
-					<p className="text-muted-foreground">
-						Manage all members.
-					</p>
-				</div>
+  return (
+    <div className="mx-auto px-4 space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Members</h1>
+          <p className="text-muted-foreground">Manage all members.</p>
+        </div>
 
         <button
           className="px-4 py-2 bg-primary text-white rounded-md"
-          onClick={() => console.log("Add Member")}
+          onClick={() => openForm(null)}
         >
           Add Member
         </button>
       </div>
 
-      <DataTable
-        isLoading={isLoading}
-        data={data}
-        columns={columns}
-        pagination={{
-          page,
-          limit: pageSize,
-          total,
-          onPageChange: setPage,
+      {/* Pass initialFamilyId and handlers to table (table no longer renders the view modal) */}
+      <MemberTable
+        onOpenForm={openForm}
+        onOpenView={openView}
+        refreshKey={refreshKey}
+        initialFamilyId={initialFamilyId}
+      />
+
+      <MemberFormModal
+        isOpen={formOpen}
+        onClose={() => setFormOpen(false)}
+        initialData={editRow}
+        onSaved={() => {
+          bumpRefresh();
         }}
-        onFilterChange={handleFilterChange}
-        onSortChange={handleSortChange}
-        onView={(row) => console.log("view", row)}
-        onEdit={(row) => console.log("edit", row)}
-        onDelete={(id) => handleDelete(id)}
-        idKey="memberId"
+      />
+
+      {/* Page-level Member view modal */}
+      <MemberViewModal
+        isOpen={viewOpen}
+        onClose={() => {
+          setViewOpen(false);
+          setViewData(null);
+        }}
+        item={viewData}
       />
     </div>
   );

@@ -32,7 +32,7 @@ export interface DynamicTableProps<T> {
 	onSortChange?: (key: string, direction: "ASC" | "DESC") => void
 	onView?: (row: T) => void
 	onEdit?: (row: T) => void
-	onDelete?: (id: string | number) => void
+	onDelete?: (id: number | undefined) => void
 	// Helper to extract ID for delete action if not provided in a specific way
 	idKey?: keyof T
 }

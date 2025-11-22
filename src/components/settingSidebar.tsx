@@ -67,7 +67,7 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="text-lg flex items-center gap-2 px-4 py-2 bg-blue-200 w-fit rounded-xl font-semibold text-foreground mb-6"
+                className="text-lg flex items-center gap-2 px-4 py-2 bg-accent text-blue-600 w-fit rounded-xl font-semibold mb-6"
               >
                 <ArrowLeftFromLineIcon className="h-5 w-5 flex-shrink-0" /> Back
               </motion.h2>
@@ -80,7 +80,7 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                 transition={{ duration: 0.2 }}
                 className="h-6 mb-6"
               >
-                <ArrowLeftFromLineIcon className="h-8 w-8 flex-shrink-0 bg-blue-200 px-2 py-1 rounded-xl" />{" "}
+                <ArrowLeftFromLineIcon className="h-8 w-8 flex-shrink-0  bg-accent text-blue-600 px-2 py-1 rounded-xl" />{" "}
               </motion.div>
             )}
           </AnimatePresence>
@@ -103,7 +103,7 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                   className={cn(
                     "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
                     isActive
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-blue-600 text-background"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent",
                     !isExpanded && "justify-center"
                   )}

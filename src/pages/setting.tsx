@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Outlet } from "react-router-dom";
 import SettingSidebar from "@/components/settingSidebar";
 
-export default function Settingt() {
+export default function Setting() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -40,7 +40,7 @@ export default function Settingt() {
 
         {/* Main Content Area */}
         <main className="flex-1 min-h-screen">
-          <div className="pt-16 h-screen overflow-y-auto">
+          <div className="h-screen overflow-y-auto pt-4">
             <div className="p-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

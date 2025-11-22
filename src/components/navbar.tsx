@@ -68,10 +68,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               navigate("/");
             }}
           >
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">
-                CM
-              </span>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-background font-bold text-sm">CM</span>
             </div>
             <span className="font-bold text-xl hidden sm:block">
               Construction
@@ -124,41 +122,45 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuItem>
-                <Link
-                  to={"/setting/family-type"}
-                  className="flex flex-col space-y-1 w-full"
-                >
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate("/setting/family-type");
+                }}
+              >
+                <p className="flex flex-col space-y-1 w-full">
                   <p className="text-sm font-medium">Settings</p>
                   {/* <p className="text-xs text-muted-foreground">2 minutes ago</p> */}
-                </Link>
+                </p>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link
-                  to={"/setting/family-type"}
-                  className="flex flex-col space-y-1"
-                >
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate("/setting/family-type");
+                }}
+              >
+                <p className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">Family Types</p>
                   {/* <p className="text-xs text-muted-foreground">2 minutes ago</p> */}
-                </Link>
+                </p>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link
-                  to={"/setting/team-category"}
-                  className="flex flex-col space-y-1"
-                >
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate("/setting/team-category");
+                }}
+              >
+                <p className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">Team Category Types</p>
                   {/* <p className="text-xs text-muted-foreground">1 hour ago</p> */}
-                </Link>
+                </p>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link
-                  to={"/setting/identity-type"}
-                  className="flex flex-col space-y-1"
-                >
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate("/setting/identity-type");
+                }}
+              >
+                <p className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">Identity Types</p>
                   {/* <p className="text-xs text-muted-foreground">3 hours ago</p> */}
-                </Link>
+                </p>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

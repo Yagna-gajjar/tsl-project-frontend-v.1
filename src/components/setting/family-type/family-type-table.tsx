@@ -1,23 +1,29 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { Button } from "@/components/ui/button";
-import { getFamilyTypes, deleteFamilyTypes } from "@/api/family-type.api";
-import type { FamilyType } from "@/types/familyType";
 import { format } from "date-fns";
 
-export default function FamilyTypeTable() {
+import { getFamilyTypes, deleteFamilyTypes } from "@/api/family-type.api";
+import type { FamilyType } from "@/types/familyType";
+import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+
+type Props = {
+  onView?: (row: FamilyType) => void;
+  onEdit?: (row: FamilyType) => void;
+  refreshKey?: number;
+};
+
+export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<FamilyType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // server state
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
-  // query state
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [sortBy, setSortBy] = useState<string>("familyTypeId");
@@ -36,10 +42,8 @@ export default function FamilyTypeTable() {
         maxMembers: filters.maxMembers ?? 10000,
       } as any);
 
-      // normalize rows
-      const rowsRaw = res?.data ?? [];
-      // convert createdAt/updatedAt to Date objects to match your FamilyType type
-      const rows = (rowsRaw as any[]).map((r) => ({
+      const rowsRaw = res?.data ?? res ?? [];
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
@@ -59,7 +63,7 @@ export default function FamilyTypeTable() {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, refreshKey]);
 
   const columns: Column<FamilyType>[] = [
     {
@@ -88,7 +92,7 @@ export default function FamilyTypeTable() {
       header: "Max Members",
       sortable: true,
       filterType: "number",
-      render: (r) => r.maxMembers ?? null,
+      render: (r) => r.maxMembers ?? "-",
     },
     {
       key: "createdAt",
@@ -99,7 +103,6 @@ export default function FamilyTypeTable() {
     },
   ];
 
-  // DataTable callbacks — each updates local state then reloads
   const handleSearchChange = (q: string) => {
     setPage(1);
     setSearch(q);
@@ -124,29 +127,33 @@ export default function FamilyTypeTable() {
 
   const handlePageChange = (p: number) => setPage(p);
 
-  const handleDelete = async (id: string | number) => {
-    const ok = confirm("Delete this family type?");
-    if (!ok) return;
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
+  const handleDelete = (id?: number) => {
+    if (id === undefined || id === null) return;
+    setDeleteId(id);
+    setDeleteOpen(true); // open your AlertDialog
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteId) return;
     try {
-      await deleteFamilyTypes(Number(id));
-      loadData();
+      setLoadingDelete(true);
+      await deleteFamilyTypes(deleteId);
+      await loadData(); // refresh table
     } catch (err) {
-      console.error(err);
+      console.error("Delete failed:", err);
+    } finally {
+      setLoadingDelete(false);
+      setDeleteOpen(false);
+      setDeleteId(null);
     }
   };
 
-  const handleView = (row: FamilyType) => console.log("view", row);
-  const handleEdit = (row: FamilyType) => console.log("edit", row);
-
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Family Types</h2>
-        <Button onClick={() => console.log("Add family type clicked")}>
-          Add Family Type
-        </Button>
-      </div>
-
+    <div>
       <DataTable<FamilyType>
         data={data}
         columns={columns}
@@ -155,15 +162,30 @@ export default function FamilyTypeTable() {
           page,
           limit,
           total,
-          onPageChange: handlePageChange
+          onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onView={(row) => onView?.(row)}
+        onEdit={(row) => onEdit?.(row)}
+        onDelete={(id : number | undefined) => handleDelete(id)}
         idKey={"familyTypeId"}
+      />
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => {
+          if (!loadingDelete) {
+            setDeleteOpen(false);
+            setDeleteId(null);
+          }
+        }}
+        onConfirm={handleDeleteConfirmed}
+        title="Delete Family Type?"
+        description="Are you sure you want to delete this family type? This action cannot be undone."
+        confirmText={loadingDelete ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        variant="destructive"
       />
     </div>
   );

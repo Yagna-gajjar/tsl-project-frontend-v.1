@@ -90,35 +90,39 @@ export default function Sidebar({ onClose }: SidebarProps) {
 						const Icon = item.icon
 
 						return (
-							<motion.div key={item.name} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-								<Link
-									to={item.href}
-									onClick={onClose}
-									className={cn(
-										"flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
-										isActive
-											? "bg-primary text-primary-foreground"
-											: "text-muted-foreground hover:text-foreground hover:bg-accent",
-										!isExpanded && "justify-center",
-									)}
-								>
-									<Icon className="h-5 w-5 flex-shrink-0" />
-									<AnimatePresence>
-										{isExpanded && (
-											<motion.span
-												initial={{ opacity: 0, width: 0 }}
-												animate={{ opacity: 1, width: "auto" }}
-												exit={{ opacity: 0, width: 0 }}
-												transition={{ duration: 0.2 }}
-												className="font-medium whitespace-nowrap overflow-hidden"
-											>
-												{item.name}
-											</motion.span>
-										)}
-									</AnimatePresence>
-								</Link>
-							</motion.div>
-						)
+              <motion.div
+                key={item.name}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  to={item.href}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
+                    isActive
+                      ? "bg-blue-600 text-background"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                    !isExpanded && "justify-center"
+                  )}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="font-medium whitespace-nowrap overflow-hidden"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              </motion.div>
+            );
 					})}
 				</nav>
 			</div>

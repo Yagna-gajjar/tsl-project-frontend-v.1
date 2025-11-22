@@ -361,7 +361,7 @@ export function TableToolbar<T>({
                   {activeFilterCount > 0 && (
                     <Button
                       variant="ghost"
-                      className="w-1/2 bg-blue-100 justify-center text-primary"
+                      className="w-1/2 bg-blue-100 justify-center text-blue-600"
                       onClick={clearAllFilters}
                     >
                       Clear filters

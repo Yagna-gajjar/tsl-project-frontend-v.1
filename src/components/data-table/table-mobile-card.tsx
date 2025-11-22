@@ -7,12 +7,12 @@ import type { Column } from "./types"
 import { motion } from "framer-motion"
 
 interface TableMobileCardProps<T> {
-	data: T[]
-	columns: Column<T>[]
-	onView?: (row: T) => void
-	onEdit?: (row: T) => void
-	onDelete?: (id: string | number) => void
-	idKey?: keyof T
+  data: T[];
+  columns: Column<T>[];
+  onView?: (row: T) => void;
+  onEdit?: (row: T) => void;
+  onDelete?: (id: number | undefined) => void;
+  idKey?: keyof T;
 }
 
 export function TableMobileCard<T>({
