@@ -41,6 +41,8 @@ export function getMembers(params: MembersQuery = {}): Promise<Response> {
 		mobile: params.mobile,
 		status: params.status,
 		city: params.city,
+
+		familyId: params.familyId
 	})
 
 	return request<Response>(`${MEMBER_BASE}${qs}`)
