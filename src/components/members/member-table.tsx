@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { getMembers, deleteMember } from "@/api/member.api";
 import type { Member } from "@/types/member";
+import { format } from "date-fns";
 
 type Props = {
   onOpenForm: (row?: Member | null) => void;
@@ -84,16 +85,28 @@ export default function MemberTable({
   }, [initialFamilyId]);
 
   const columns: Column<Member>[] = [
-    { key: "memberId", header: "ID", sortable: true },
+    // { key: "memberId", header: "ID", sortable: true },
     {
       key: "memberFirstName",
-      header: "Name",
+      header: "First Name",
       sortable: true,
       filterType: "text",
       render: (row: any) => (
         <div className="flex flex-col">
           <span className="font-medium">
             {row.memberFirstName} {row.memberMiddleName ?? ""}{" "}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "memberLastName",
+      header: "Last Name",
+      sortable: true,
+      filterType: "text",
+      render: (row: any) => (
+        <div className="flex flex-col">
+          <span className="font-medium">
             {row.memberLastName}
           </span>
         </div>
@@ -115,14 +128,14 @@ export default function MemberTable({
       key: "familyId",
       header: "Family",
       sortable: true,
-      render: (row: any) => row.familyName ?? `#${row.familyId}`,
+      render: (row: any) => row.familyName ?? `-`,
     },
     {
       key: "city",
       header: "City",
       sortable: false,
       filterType: "text",
-      render: (row: any) => (row.city ? `${row.city}` : `#${row.addressId}`),
+      render: (row: any) => (row.city ? `${row.city}` : `-`),
     },
     {
       key: "status",
@@ -152,7 +165,7 @@ export default function MemberTable({
       key: "dob",
       header: "DOB",
       sortable: true,
-      render: (row) => (row.dob ? new Date(row.dob).toLocaleDateString() : "-"),
+      render: (row) => (row.dob ? format(row?.dob, "dd MMM yyyy") : "-"),
     },
     { key: "contactNumber", header: "Contact", sortable: false },
     { key: "relationship", header: "Relationship", sortable: false },
@@ -161,7 +174,7 @@ export default function MemberTable({
       header: "Created",
       sortable: false,
       render: (row) =>
-        row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+        row.createdAt ? format(row?.createdAt,"dd MMM yyyy") || "-" : "-",
     },
   ];
 

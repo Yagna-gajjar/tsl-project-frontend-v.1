@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import MemberTable from "@/components/members/member-table";
 import MemberFormModal from "@/components/members/member-form-modal";
 import MemberViewModal from "@/components/members/member-view-modal";
@@ -42,12 +42,12 @@ export default function MemberPage() {
           <p className="text-muted-foreground">Manage all members.</p>
         </div>
 
-        <button
+        {/* <button
           className="px-4 py-2 bg-primary text-white rounded-md"
           onClick={() => openForm(null)}
         >
           Add Member
-        </button>
+        </button> */}
       </div>
 
       {/* Pass initialFamilyId and handlers to table (table no longer renders the view modal) */}

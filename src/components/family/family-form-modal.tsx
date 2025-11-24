@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
@@ -54,7 +52,7 @@ export function FamilyFormModal({
   const [familyTypeOptions, setFamilyTypeOptions] = useState<Option[]>([]);
   const [teamCategoryOptions, setTeamCategoryOptions] = useState<Option[]>([]);
   const [identityTypeOptions, setIdentityTypeOptions] = useState<Option[]>([]);
-
+  const [itRows, setItRows] = useState([]);
   // field-level errors shown in the form
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -81,7 +79,7 @@ export function FamilyFormModal({
         const ftRows = Array.isArray(norm(ft)) ? norm(ft) : [];
         const tcRows = Array.isArray(norm(tc)) ? norm(tc) : [];
         const itRows = Array.isArray(norm(it)) ? norm(it) : [];
-
+        setItRows(itRows);
         setFamilyTypeOptions(
           ftRows.map((r: any) => ({
             label: r.familyTypeName,
@@ -94,12 +92,6 @@ export function FamilyFormModal({
             value: r.teamCategoryId,
           }))
         );
-        setIdentityTypeOptions(
-          itRows.map((r: any) => ({
-            label: r.identityTypeName,
-            value: r.identityTypeId,
-          }))
-        );
       } catch (e) {
         console.warn("dropdown load failed", e);
       } finally {
@@ -107,6 +99,17 @@ export function FamilyFormModal({
       }
     })();
   }, [isOpen]);
+
+  useEffect(()=>{
+    console.log(itRows,"ppp", values);
+    setIdentityTypeOptions(
+      itRows.filter((r: any) => r.familyTypeId === Number(values.familyTypeId))
+        .map((r: any) => ({
+          label: r.identityTypeName,
+          value: r.identityTypeId,
+        }))
+    );
+  },[values]);
 
   // determine whether selected family type is "team" (case-insensitive)
   const showTeamCategory = useMemo(() => {
@@ -122,7 +125,6 @@ export function FamilyFormModal({
     if (!showTeamCategory && values.teamCategoryId) {
       setValues((p) => ({ ...p, teamCategoryId: undefined }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTeamCategory]);
 
   const onChange = (field: keyof Family, val: any) => {
@@ -259,7 +261,7 @@ export function FamilyFormModal({
     } finally {
       setIsSubmitting(false);
     }
-    
+
   }, [values, isEdit, initialData, onClose, onSaved]);
 
   const fields = useMemo(() => {
@@ -337,7 +339,7 @@ export function FamilyFormModal({
           />
           <div className="flex-1 overflow-y-auto">
             <FormContent
-              fields={fields}
+              fields={fields as any}
               values={values}
               errors={fieldErrors}
               loading={loading}

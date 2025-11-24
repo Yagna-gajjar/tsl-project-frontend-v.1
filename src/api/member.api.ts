@@ -10,6 +10,7 @@ export interface MembersQuery {
 	search?: string
 
 	memberFirstName?: string
+	memberLastName?: string
 	gender?: string
 	age?: number | string
 	mobile?: string
@@ -37,6 +38,7 @@ export function getMembers(params: MembersQuery = {}): Promise<Response> {
 		search: params.search,
 
 		memberFirstName: params.memberFirstName,
+		memberLastName: params.memberLastName,
 		gender: params.gender,
 		mobile: params.mobile,
 		status: params.status,

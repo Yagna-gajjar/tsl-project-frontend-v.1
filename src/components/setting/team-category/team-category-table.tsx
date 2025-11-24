@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
@@ -106,13 +104,12 @@ export default function TeamCategoryTable({
     setDeleteOpen(true); // open your AlertDialog
   };
 
-  // When user confirms delete in the dialog
   const handleDeleteConfirmed = async () => {
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
       await deleteTeamCategories(deleteId);
-      await loadData(); // refresh table
+      await loadData();
     } catch (err) {
       console.error("Delete failed:", err);
     } finally {
@@ -150,9 +147,10 @@ export default function TeamCategoryTable({
       sortable: true,
       filterType: "select",
       filterOptions: [
-        { label: "Active", value: "active" },
-        { label: "Inactive", value: "inactive" },
-        { label: "Block", value: "block" },
+        { label: "Full", value: "full" },
+        { label: "Ground", value: "ground" },
+        { label: "Area", value: "area" },
+        { label: "Office", value: "office" },
       ],
       render: (r) => r.access ?? "-",
     },
@@ -168,7 +166,7 @@ export default function TeamCategoryTable({
       header: "Created",
       sortable: true,
       filterType: null,
-      render: (r) => (r.createdAt ? format(r.createdAt, "yyyy-MM-dd") : "-"),
+      render: (r) => (r.createdAt ? format(r.createdAt, "dd MMM yyyy") : "-"),
     },
   ];
 

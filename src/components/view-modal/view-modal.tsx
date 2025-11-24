@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ModalHeader } from "./modal-header"
 import { ModalContent } from "./modal-content"
-import { ModalFooter } from "./modal-footer"
 import type { ViewModalProps, ViewModalState, FieldConfig } from "./types"
 import { motion, AnimatePresence } from "framer-motion"
 

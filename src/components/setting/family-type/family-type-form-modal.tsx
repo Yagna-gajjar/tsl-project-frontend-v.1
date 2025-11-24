@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -8,12 +6,10 @@ import { FormContent } from "@/components/form-modal/form-content";
 
 import {
   createFamilyType,
-  editFamilyType,
-  getFamilyTypes,
+  editFamilyType
 } from "@/api/family-type.api";
 import type { FamilyType } from "@/types/familyType";
 import { toast } from "@/hooks/use-toast";
-import { log } from "util";
 
 type Props = {
   isOpen: boolean;
@@ -52,7 +48,12 @@ export function FamilyTypeFormModal({
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof FamilyType, val: any) => {
+    if (field === "prefix") {
+      val = String(val).toUpperCase();
+    }
+
     setValues((p) => ({ ...p, [field]: val }));
+
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
       const copy = { ...prev };
@@ -60,6 +61,7 @@ export function FamilyTypeFormModal({
       return copy;
     });
   };
+
 
   const validate = () => {
     const errs: Record<string, string> = {};

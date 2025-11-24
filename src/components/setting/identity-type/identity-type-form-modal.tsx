@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
@@ -18,6 +16,7 @@ import {
 import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
 import { toast } from "@/hooks/use-toast";
+import { IdCard } from "lucide-react";
 
 type Option = { label: string; value: any };
 
@@ -141,9 +140,11 @@ export function IdentityTypeFormModal({
     }
     if (values.discount !== undefined && values.discount !== null) {
       const d = Number(values.discount);
-      if (!Number.isFinite(d) || d < 0)
-        errs.discount = "Discount must be a non-negative number";
+      if (!Number.isFinite(d) || d <= -0.001 || d >= 100.001) {
+        errs.discount = "Discount must be greater than 0 and less than 100";
+      }
     }
+
     return errs;
   };
 
@@ -156,10 +157,9 @@ export function IdentityTypeFormModal({
       setIsSubmitting(false);
       return;
     }
-
     try {
       const payload: Partial<IdentityType> = {
-        identityTypeName: String(values.identityTypeName ?? "").trim(),
+        identityTypeName: String(values.identityTypeName ?? "null").trim(),
         familyTypeId: values.familyTypeId ?? undefined,
         teamCategoryId:
           values.teamCategoryId === undefined
@@ -211,7 +211,6 @@ export function IdentityTypeFormModal({
       const message = err?.message ?? "Failed to save";
       setError(message);
 
-      // ERROR TOAST
       toast({
         title: "Save failed",
         description: message,
@@ -220,7 +219,7 @@ export function IdentityTypeFormModal({
     } finally {
       setIsSubmitting(false);
     }
-    
+
   }, [values, isEdit, initialData, onClose, onSaved]);
 
   const fields = useMemo(
@@ -260,6 +259,7 @@ export function IdentityTypeFormModal({
         <div className="flex flex-col max-h-[90vh] overflow-hidden">
           <FormHeader
             title={isEdit ? "Edit Identity Type" : "Add Identity Type"}
+            icon={<IdCard />}
             onClose={onClose}
           />
           <div className="flex-1 overflow-y-auto">

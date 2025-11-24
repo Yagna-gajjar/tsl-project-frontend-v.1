@@ -1,5 +1,3 @@
-"use client"
-
 import { motion } from "framer-motion"
 import { Home, ArrowLeft, Wrench, HardHat, Bubbles } from "lucide-react"
 import { Button } from "@/components/ui/button"

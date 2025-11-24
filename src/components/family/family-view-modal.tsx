@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ViewModal,
   type FieldConfig,
@@ -9,6 +7,21 @@ import type { Family } from "@/types/family";
 import { Badge } from "@/components/ui/badge";
 import MemberFormModal from "../members/member-form-modal";
 import { useNavigate } from "react-router-dom";
+import {
+  Plus,
+  Users,
+  Calendar,
+  BadgeInfo,
+  User,
+  Type,
+  Briefcase,
+  FileText,
+  Phone,
+  StickyNote,
+  Mail,
+  Languages,
+  Clock,
+} from "lucide-react";
 
 type Props = {
   isOpen: boolean;
@@ -16,17 +29,17 @@ type Props = {
   item?: Family | null;
 };
 
-const baseViewFields: FieldConfig<Family>[] = [
+const baseViewFields: FieldConfig<Family | any>[] = [
   {
     key: "addMember",
     label: "Expand Family",
     type: "button",
+    icon: Plus,
     button: {
       label: "Add Member",
       variant: "default",
       size: "sm",
       span: 1,
-      // onClick will be injected in the component to open Member form with family prefill
       onClick: undefined,
     },
   },
@@ -34,28 +47,31 @@ const baseViewFields: FieldConfig<Family>[] = [
     key: "viewMember",
     label: "View All Members",
     type: "button",
+    icon: Users,
     button: {
       label: "View Member",
       variant: "default",
       size: "sm",
       span: 1,
-      // onClick will be injected in the component to open Member form with family prefill
       onClick: undefined,
     },
   },
-  { key: "familyName", label: "Family Name" },
-  { key: "familyTypeName", label: "Family Type" },
-  { key: "teamCategoryName", label: "Team Category" },
-  { key: "identityTypeName", label: "Identity Type" },
-  { key: "profession", label: "Profession" },
-  { key: "professionDetails", label: "Profession Details" },
-  { key: "designation", label: "Designation" },
-  { key: "emergencyContact", label: "Emergency Contact" },
-  { key: "remarks", label: "Remarks" },
-  { key: "email", label: "Email" },
+
+  { key: "familyName", label: "Family Name", icon: User },
+  { key: "familyTypeName", label: "Family Type", icon: Type },
+  { key: "teamCategoryName", label: "Team Category", icon: Users },
+  { key: "identityTypeName", label: "Identity Type", icon: BadgeInfo },
+  { key: "profession", label: "Profession", icon: Briefcase },
+  { key: "professionDetails", label: "Profession Details", icon: FileText },
+  { key: "designation", label: "Designation", icon: Type },
+  { key: "emergencyContact", label: "Emergency Contact", icon: Phone },
+  { key: "remarks", label: "Remarks", icon: StickyNote },
+  { key: "email", label: "Email", icon: Mail },
+
   {
     key: "status",
     label: "Status",
+    icon: BadgeInfo,
     render: (value: any) =>
       typeof value === "string" ? (
         <Badge variant={value === "active" ? "default" : "secondary"}>
@@ -65,15 +81,19 @@ const baseViewFields: FieldConfig<Family>[] = [
         String(value ?? "-")
       ),
   },
-  { key: "preferredLanguage", label: "Preferred Language" },
+
+  { key: "preferredLanguage", label: "Preferred Language", icon: Languages },
+
   {
     key: "createdAt",
     label: "Created At",
+    icon: Calendar,
     render: (value: any) => (value ? new Date(value).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
+    icon: Clock,
     render: (value: any) => (value ? new Date(value).toLocaleString() : "-"),
   },
 ];
@@ -137,7 +157,7 @@ export default function FamilyViewModal({ isOpen, onClose, item }: Props) {
       <ViewModal<Family>
         isOpen={isOpen}
         onClose={onClose}
-        itemId={item?.familyId}
+        itemId={Number(item?.familyId)}
         fetchFn={fetchFn}
         fields={fields as any}
         title="View Family"

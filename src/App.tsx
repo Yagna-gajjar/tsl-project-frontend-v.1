@@ -12,7 +12,6 @@ import LoginForm from "./components/login-form"
 import NotFound from "./pages/NotFound"
 import Signup from "./pages/Signup"
 import { AuthProvider } from "./contexts/authContext";
-import PageNotFound from "./pages/NotFound"
 import Setting from "./pages/setting";
 import FamilyPage from "./pages/family";
 import MemberPage from "./pages/member";
@@ -27,7 +26,7 @@ export default function App() {
         <AuthProvider>
           <Router>
             <Routes>
-              <Route path="/404error" element={<PageNotFound />} />
+              <Route path="/404error" element={<NotFound />} />
             </Routes>
             <Routes>
               <Route path="/" element={<Layout />}>

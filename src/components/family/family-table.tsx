@@ -1,15 +1,14 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { Badge } from "@/components/ui/badge";
 import { getFamilies, deleteFamily } from "@/api/family.api";
-import { deleteFamilyTypes, getFamilyTypes } from "@/api/family-type.api";
+import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
 import { getIdentityTypes } from "@/api/identity-type.api";
 import type { Family } from "@/types/family";
 import { ConfirmDialog } from "../dialogs/confirm-dialog";
+import { format } from "date-fns";
 
 type SelectOption = { label: string; value: any };
 
@@ -164,7 +163,7 @@ export default function FamilyTable({
     {
       key: "familyTypeId",
       header: "Family Type",
-      sortable: true,
+      sortable: false,
       filterType: "select",
       filterOptions: familyTypeOptions,
       render: (row) => <Badge>{row.familyTypeName || "-"}</Badge>,
@@ -172,7 +171,7 @@ export default function FamilyTable({
     {
       key: "teamCategoryId",
       header: "Team Category",
-      sortable: true,
+      sortable: false,
       filterType: "select",
       filterOptions: teamCategoryOptions,
       render: (row) => row.teamCategoryName || "-",
@@ -193,6 +192,7 @@ export default function FamilyTable({
       filterOptions: [
         { label: "Active", value: "active" },
         { label: "Inactive", value: "inactive" },
+        { label: "Block", value: "block" },
       ],
       render: (row) => (
         <Badge
@@ -214,7 +214,7 @@ export default function FamilyTable({
       sortable: true,
       filterType: null,
       render: (row: Family) =>
-        new Date(row?.createdAt || "").toLocaleDateString() || "-",
+        row.createdAt ? format(row?.createdAt, "dd MMM yyyy") || "-" : "-",
     },
   ];
 

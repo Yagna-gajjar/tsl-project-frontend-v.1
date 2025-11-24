@@ -1,9 +1,6 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
 import { getFamilyTypes, deleteFamilyTypes } from "@/api/family-type.api";
@@ -74,9 +71,6 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => (
         <div className="flex flex-col">
           <span className="font-medium">{r.familyTypeName}</span>
-          <span className="text-xs text-muted-foreground">
-            {r.prefix ?? "-"}
-          </span>
         </div>
       ),
     },
@@ -99,7 +93,7 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
       header: "Created",
       sortable: true,
       filterType: null,
-      render: (r) => (r.createdAt ? format(r.createdAt, "yyyy-MM-dd") : "-"),
+      render: (r) => (r.createdAt ? format(r.createdAt, "dd MMM yyyy") : "-"),
     },
   ];
 

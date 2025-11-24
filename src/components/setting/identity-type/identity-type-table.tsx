@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
@@ -81,6 +79,8 @@ export default function IdentityTypeTable({
       if (filters.teamCategoryId !== undefined)
         params.teamCategoryId = filters.teamCategoryId;
       if (filters.discount !== undefined) params.discount = filters.discount;
+      if (filters.identityTypeName !== undefined)
+        params.identityTypeName = filters.identityTypeName;
 
       const res: any = await getIdentityTypes(params);
 
@@ -168,7 +168,7 @@ export default function IdentityTypeTable({
       header: "Created",
       sortable: true,
       filterType: null,
-      render: (r) => (r.createdAt ? format(r.createdAt, "yyyy-MM-dd") : "-"),
+      render: (r) => (r.createdAt ? format(r.createdAt, "dd MMM yyyy") : "-"),
     },
   ];
 

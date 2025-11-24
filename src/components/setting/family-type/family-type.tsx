@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import { useState } from "react";
 import FamilyTypeTable from "./family-type-table";
 import FamilyTypeViewModal from "./family-type-view-modal";
 import FamilyTypeFormModal from "./family-type-form-modal";

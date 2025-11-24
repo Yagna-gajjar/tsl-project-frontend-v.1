@@ -1,8 +1,14 @@
-"use client";
-
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { TeamCategory } from "@/types/teamCategory";
+import {
+  Layers,
+  Text,
+  Key,
+  FileText,
+  Calendar,
+  Clock,
+} from "lucide-react";
 
 type Props = {
   isOpen: boolean;
@@ -11,19 +17,21 @@ type Props = {
 };
 
 const fields = [
-  { key: "teamCategoryId", label: "ID" },
-  { key: "categoryName", label: "Category" },
-  { key: "shortName", label: "Short Name" },
-  { key: "access", label: "Access" },
-  { key: "details", label: "Details" },
+  { key: "categoryName", label: "Category", icon: Layers },
+  { key: "shortName", label: "Short Name", icon: Text },
+  { key: "access", label: "Access", icon: Key },
+  { key: "details", label: "Details", icon: FileText },
+
   {
     key: "createdAt",
     label: "Created At",
+    icon: Calendar,
     render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
+    icon: Clock,
     render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
   },
 ];
@@ -45,7 +53,7 @@ export default function TeamCategoryViewModal({
     <ViewModal<TeamCategory>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={item?.teamCategoryId}
+      itemId={Number(item?.teamCategoryId)}
       fetchFn={fetchFn}
       fields={fields as any}
       title="View Team Category"

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import FamilyTable from "@/components/family/family-table";
 import FamilyFormModal from "@/components/family/family-form-modal";
 import FamilyViewModal from "@/components/family/family-view-modal";
 import type { Family } from "@/types/family";
-import MemberFormModal from "@/components/members/member-form-modal";
 
 export default function FamilyPage() {
   const [viewOpen, setViewOpen] = useState(false);

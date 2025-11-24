@@ -7,30 +7,53 @@ import {
   Users,
   Layers,
   IdCard,
-  ArrowLeftFromLineIcon,
+  ArrowLeft,
+  ChevronDown,
+  Home,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
-interface navigationItems {
+interface SubMenuItem {
+  label: string;
+  href: string;
   icon: React.ElementType;
-  name: string;
-  href?: string;
-  submenu?: { label: string; href: string }[];
 }
 
-const navigationItems = [
-  { name: "Family Type", href: "/setting/family-type", icon: Users },
-  { name: "Team Category", href: "/setting/team-category", icon: Layers },
-  { name: "Identity Type", href: "/setting/identity-type", icon: IdCard },
+interface NavigationItem {
+  name: string;
+  icon: React.ElementType;
+  submenu: SubMenuItem[];
+}
+
+const navigationItems: NavigationItem[] = [
+  {
+    name: "Family Settings",
+    icon: Home,
+    submenu: [
+      { label: "Family Type", href: "/setting/family-type", icon: Users },
+      { label: "Team Category", href: "/setting/team-category", icon: Layers },
+      { label: "Identity Type", href: "/setting/identity-type", icon: IdCard },
+    ],
+  },
 ];
 
 export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    "Family Settings": true,
+  });
   const location = useLocation();
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  const toggleSection = (sectionName: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName],
+    }));
   };
 
   return (
@@ -39,8 +62,8 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
       animate={{ x: 0 }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
       className={cn(
-        "bg-card border-r mt-1 border-border h-screen transition-all duration-300 ease-in-out relative",
-        isExpanded ? "w-64" : "w-16"
+        "bg-gradient-to-b from-card to-card/95 border-r border-border/50 h-screen transition-all duration-300 ease-in-out relative shadow-lg",
+        isExpanded ? "w-72" : "w-20"
       )}
     >
       {/* Toggle Button */}
@@ -48,85 +71,205 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
         variant="ghost"
         size="icon"
         onClick={toggleExpanded}
-        className="absolute -right-3 bg-red-800 top-12 z-50 h-6 w-6 rounded-full border border-border bg-background shadow-md hidden lg:flex"
+        className="absolute -right-3 top-16 z-50 h-7 w-7 rounded-full border-2 border-border bg-background shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 hidden lg:flex items-center justify-center"
       >
         {isExpanded ? (
-          <ChevronLeft className="h-3 w-3" />
+          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
         )}
       </Button>
 
-      <div className="p-4">
-        <Link to={"/dashboard"}>
+      <div className="p-4 h-full flex flex-col">
+        {/* Back Button */}
+        <Link to="/dashboard" className="mb-8">
           <AnimatePresence mode="wait">
             {isExpanded ? (
-              <motion.h2
+              <motion.div
                 key="expanded"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="text-lg flex items-center gap-2 px-4 py-2 bg-accent text-blue-600 w-fit rounded-xl font-semibold mb-6"
+                className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 group"
               >
-                <ArrowLeftFromLineIcon className="h-5 w-5 flex-shrink-0" /> Back
-              </motion.h2>
+                <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-200" />
+                <span>Back to Dashboard</span>
+              </motion.div>
             ) : (
               <motion.div
                 key="collapsed"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="h-6 mb-6"
+                className="flex justify-center"
               >
-                <ArrowLeftFromLineIcon className="h-8 w-8 flex-shrink-0  bg-accent text-blue-600 px-2 py-1 rounded-xl" />{" "}
+                <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110">
+                  <ArrowLeft className="h-5 w-5" />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </Link>
 
-        <nav className="space-y-2">
-          {navigationItems.map((item) => {
-            const isActive = location.pathname.indexOf(item.href) != -1;
-            const Icon = item.icon;
+        {/* Settings Title */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="mb-6 px-2"
+            >
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Settings
+              </h3>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Navigation */}
+        <nav className="space-y-2 flex-1 overflow-y-auto">
+          {navigationItems.map((section) => {
+            const SectionIcon = section.icon;
+            const isSectionExpanded = expandedSections[section.name];
 
             return (
-              <motion.div
-                key={item.name}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Link
-                  to={item.href}
-                  onClick={onClose}
+              <div key={section.name} className="space-y-1">
+                {/* Section Header */}
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => isExpanded && toggleSection(section.name)}
                   className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
-                    isActive
-                      ? "bg-blue-600 text-background"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200",
+                    "hover:bg-accent/50 group",
                     !isExpanded && "justify-center"
                   )}
                 >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <div className="flex items-center gap-3">
+                    <div className="p-1.5 rounded-md bg-blue-600/10 text-blue-600 group-hover:bg-blue-600/20 transition-colors duration-200">
+                      <SectionIcon className="h-4 w-4" />
+                    </div>
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: "auto" }}
+                          exit={{ opacity: 0, width: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="font-semibold text-sm whitespace-nowrap overflow-hidden text-foreground"
+                        >
+                          {section.name}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   <AnimatePresence>
                     {isExpanded && (
-                      <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: "auto" }}
-                        exit={{ opacity: 0, width: 0 }}
+                      <motion.div
+                        initial={{ opacity: 0, rotate: -90 }}
+                        animate={{
+                          opacity: 1,
+                          rotate: isSectionExpanded ? 0 : -90
+                        }}
+                        exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="font-medium whitespace-nowrap overflow-hidden"
                       >
-                        {item.name}
-                      </motion.span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                      </motion.div>
                     )}
                   </AnimatePresence>
-                </Link>
-              </motion.div>
+                </motion.button>
+
+                {/* Submenu Items */}
+                <AnimatePresence>
+                  {(isSectionExpanded || !isExpanded) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={cn(
+                        "space-y-1",
+                        isExpanded ? "ml-3 pl-6 border-l-2 border-border/30" : "ml-0"
+                      )}
+                    >
+                      {section.submenu.map((item) => {
+                        const isActive = location.pathname === item.href;
+                        const ItemIcon = item.icon;
+
+                        return (
+                          <motion.div
+                            key={item.href}
+                            whileHover={{ x: isExpanded ? 2 : 0, scale: !isExpanded ? 1.05 : 1 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Link
+                              to={item.href}
+                              onClick={onClose}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
+                                isActive
+                                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-accent/70",
+                                !isExpanded && "justify-center"
+                              )}
+                            >
+                              <ItemIcon className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-transform duration-200",
+                                isActive && "scale-110"
+                              )} />
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.span
+                                    initial={{ opacity: 0, width: 0 }}
+                                    animate={{ opacity: 1, width: "auto" }}
+                                    exit={{ opacity: 0, width: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="text-sm font-medium whitespace-nowrap overflow-hidden"
+                                  >
+                                    {item.label}
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                              {isActive && isExpanded && (
+                                <motion.div
+                                  layoutId="activeIndicator"
+                                  className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
+                                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                />
+                              )}
+                            </Link>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             );
           })}
         </nav>
+
+        {/* Footer Info */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="mt-auto pt-4 px-2 border-t border-border/50"
+            >
+              <p className="text-xs text-muted-foreground text-center">
+                Settings Configuration
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -92,8 +90,6 @@ export function TeamCategoryFormModal({
     if (!values.categoryName || String(values.categoryName).trim() === "") {
       errs.categoryName = "Category name is required";
     }
-    const mm = values.maxMembers as any;
-    // team category doesn't have maxMembers field; just ensure shortName length if provided
     if (values.shortName && String(values.shortName).length > 50) {
       errs.shortName = "Short name too long (max 50 chars)";
     }
@@ -115,7 +111,7 @@ export function TeamCategoryFormModal({
       const payload: Partial<TeamCategory> = {
         categoryName: String(values.categoryName ?? "").trim(),
         shortName: values.shortName ?? "",
-        access: values.access ?? "",
+        access: values.access ?? "active",
         details: values.details ?? "",
       };
 
