@@ -175,10 +175,10 @@ export default function Dashboard() {
       >
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Construction Dashboard
+            TSL Dashboard
           </h1>
           <p className="text-muted-foreground">
-            Monitor your construction operations in real-time
+            Monitor your TSL operations in real-time
           </p>
         </div>
         <div className="relative flex items-center gap-2 w-full sm:w-auto">

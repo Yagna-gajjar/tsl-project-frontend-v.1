@@ -103,7 +103,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               <span className="text-background font-bold text-sm">CM</span>
             </div>
             <span className="font-bold text-xl hidden sm:block">
-              Construction
+              TSL
             </span>
           </motion.div>
         </div>

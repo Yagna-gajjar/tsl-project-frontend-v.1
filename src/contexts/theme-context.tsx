@@ -25,7 +25,7 @@ const initialState: ThemeProviderState = {
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({ children, defaultTheme = "system", ...props }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem("construction-ui-theme") as Theme) || defaultTheme)
+	const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem("tsl-ui-theme") as Theme) || defaultTheme)
 
 	useEffect(() => {
 		const root = window.document.documentElement
@@ -36,13 +36,13 @@ export function ThemeProvider({ children, defaultTheme = "system", ...props }: T
 	const toggleTheme = () => {
 		const newTheme = theme === "light" ? "dark" : "light"
 		setTheme(newTheme)
-		localStorage.setItem("construction-ui-theme", newTheme)
+		localStorage.setItem("tsl-ui-theme", newTheme)
 	}
 
 	const value = {
 		theme,
 		setTheme: (theme: Theme) => {
-			localStorage.setItem("construction-ui-theme", theme)
+			localStorage.setItem("tsl-ui-theme", theme)
 			setTheme(theme)
 		},
 		toggleTheme,

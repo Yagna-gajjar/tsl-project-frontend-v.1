@@ -24,7 +24,7 @@ export function GlobalLoader({ message = "Loading...", size = "md" }: GlobalLoad
 	return (
     <div className="flex flex-col items-center justify-center space-y-4">
       <div className={`flex items-center ${containerClasses[size]}`}>
-        {/* Animated construction icons */}
+        {/* Animated TSL icons */}
         <motion.div
           animate={{
             rotate: [0, 360],
