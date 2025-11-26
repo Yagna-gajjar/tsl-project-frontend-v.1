@@ -39,19 +39,19 @@ export default function App() {
                 <Route path="/family" element={<FamilyPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route
-                  path="/infrastructure & Configurations"
+                  path="/infrastructure-Configurations"
                   element={
-                    <Navigate to="/infrastructure & Configurations/facility" />
+                    <Navigate to="/infrastructure-configurations/facility" />
                   }
                 />
                 <Route path="/member" element={<MemberPage />} />
                 <Route path="/academy" element={<Billing />} />
                 <Route
-                  path="/infrastructure & Configurations/facility"
+                  path="/infrastructure-configurations/facility"
                   element={<FacilityPage />}
                 />
                 <Route
-                  path="/infrastructure & Configurations/area"
+                  path="/infrastructure-configurations/area"
                   element={<AreaPage />}
                 />
                 <Route path="/reports" element={<Reports />} />

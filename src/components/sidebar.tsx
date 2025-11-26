@@ -14,8 +14,9 @@ import {
   User,
   User2,
   ChevronDown,
-  MapIcon,
+  LandPlot,
   Building2,
+  MapPinned,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -56,18 +57,18 @@ const navigationItems: NavigationItem[] = [
   },
   {
     name: "infrastructure & Configurations",
-    href: "/infrastructure & Configurations",
+    href: "/infrastructure-configurations",
     icon: Building2,
     submenu: [
       {
         label: "Facility",
-        icon: Building2,
-        href: "/infrastructure & Configurations/facility",
+        icon: MapPinned,
+        href: "/infrastructure-configurations/facility",
       },
       {
         label: "Area",
-        icon: MapIcon,
-        href: "/infrastructure & Configurations/area",
+        icon: LandPlot,
+        href: "/infrastructure-configurations/area",
       },
     ],
   },
