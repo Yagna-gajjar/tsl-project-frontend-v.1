@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   ChevronDown,
   Home,
+  Menu,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,8 @@ interface SubMenuItem {
 interface NavigationItem {
   name: string;
   icon: React.ElementType;
-  submenu: SubMenuItem[];
+  submenu: SubMenuItem[] | null;
+  href?: string;
 }
 
 const navigationItems: NavigationItem[] = [
@@ -36,82 +38,112 @@ const navigationItems: NavigationItem[] = [
       { label: "Identity Type", href: "/setting/identity-type", icon: IdCard },
     ],
   },
+  {
+    name: "Common Lookups",
+    icon: Layers,
+    submenu: null,
+    href: "/setting/common-lookups",
+  },
 ];
 
 export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({
     "Family Settings": true,
   });
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
   };
 
   const toggleSection = (sectionName: string) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
       [sectionName]: !prev[sectionName],
     }));
   };
 
-  return (
-    <motion.div
-      initial={{ x: -300 }}
-      animate={{ x: 0 }}
-      transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className={cn(
-        "bg-gradient-to-b from-card to-card/95 border-r border-border/50 h-screen transition-all duration-300 ease-in-out relative shadow-lg",
-        isExpanded ? "w-72" : "w-20"
-      )}
-    >
-      {/* Toggle Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={toggleExpanded}
-        className="absolute -right-3 top-16 z-50 h-7 w-7 rounded-full border-2 border-border bg-background shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 hidden lg:flex items-center justify-center"
-      >
-        {isExpanded ? (
-          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        )}
-      </Button>
+  const handleSectionClick = (section: NavigationItem) => {
+    // If the main section has an href, navigate there.
+    if (section.href) {
+      navigate(section.href);
+      if (onClose) onClose();
+      // also close mobile drawer if open
+      setMobileOpen(false);
+      return;
+    }
 
+    // Otherwise, only toggle when the sidebar is expanded (preserve original behavior).
+    if (isExpanded) {
+      toggleSection(section.name);
+    }
+  };
+
+  // call when a submenu link clicked
+  const handleLinkClick = () => {
+    if (onClose) onClose();
+    setMobileOpen(false);
+  };
+
+  /**************************************
+   * Sidebar inner content (shared)
+   **************************************/
+  function SidebarContent() {
+    return (
       <div className="p-4 h-full flex flex-col">
-        {/* Back Button */}
-        <Link to="/dashboard" className="mb-8">
-          <AnimatePresence mode="wait">
-            {isExpanded ? (
-              <motion.div
-                key="expanded"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 group"
-              >
-                <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-200" />
-                <span>Back to Dashboard</span>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="collapsed"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
-                className="flex justify-center"
-              >
-                <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110">
-                  <ArrowLeft className="h-5 w-5" />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </Link>
+        {/* Toggle Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleExpanded}
+          className="absolute -right-3 top-16 z-50 h-7 w-7 rounded-full border-2 border-border bg-background shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 hidden lg:flex items-center justify-center"
+        >
+          {isExpanded ? (
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          )}
+        </Button>
+
+        <div className="mb-8">
+          {/* Back Button */}
+          <Link to="/dashboard">
+            <AnimatePresence mode="wait">
+              {isExpanded ? (
+                <motion.div
+                  key="expanded"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 group"
+                >
+                  <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-200" />
+                  <span>Back to Dashboard</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="collapsed"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex justify-center"
+                >
+                  <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110">
+                    <ArrowLeft className="h-5 w-5" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Link>
+        </div>
 
         {/* Settings Title */}
         <AnimatePresence>
@@ -142,7 +174,7 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
-                  onClick={() => isExpanded && toggleSection(section.name)}
+                  onClick={() => handleSectionClick(section)}
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200",
                     "hover:bg-accent/50 group",
@@ -173,12 +205,14 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                         initial={{ opacity: 0, rotate: -90 }}
                         animate={{
                           opacity: 1,
-                          rotate: isSectionExpanded ? 0 : -90
+                          rotate: isSectionExpanded ? 0 : -90,
                         }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                        {section.submenu ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                        ) : null}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -194,22 +228,27 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                       transition={{ duration: 0.2 }}
                       className={cn(
                         "space-y-1",
-                        isExpanded ? "ml-3 pl-6 border-l-2 border-border/30" : "ml-0"
+                        isExpanded
+                          ? "ml-3 pl-6 border-l-2 border-border/30"
+                          : "ml-0"
                       )}
                     >
-                      {section.submenu.map((item) => {
+                      {section.submenu?.map((item) => {
                         const isActive = location.pathname === item.href;
                         const ItemIcon = item.icon;
 
                         return (
                           <motion.div
                             key={item.href}
-                            whileHover={{ x: isExpanded ? 2 : 0, scale: !isExpanded ? 1.05 : 1 }}
+                            whileHover={{
+                              x: isExpanded ? 2 : 0,
+                              scale: !isExpanded ? 1.05 : 1,
+                            }}
                             whileTap={{ scale: 0.98 }}
                           >
                             <Link
                               to={item.href}
-                              onClick={onClose}
+                              onClick={handleLinkClick}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
                                 isActive
@@ -218,10 +257,12 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                                 !isExpanded && "justify-center"
                               )}
                             >
-                              <ItemIcon className={cn(
-                                "h-4 w-4 flex-shrink-0 transition-transform duration-200",
-                                isActive && "scale-110"
-                              )} />
+                              <ItemIcon
+                                className={cn(
+                                  "h-4 w-4 flex-shrink-0 transition-transform duration-200",
+                                  isActive && "scale-110"
+                                )}
+                              />
                               <AnimatePresence>
                                 {isExpanded && (
                                   <motion.span
@@ -239,7 +280,11 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                                 <motion.div
                                   layoutId="activeIndicator"
                                   className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
-                                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 300,
+                                    damping: 30,
+                                  }}
                                 />
                               )}
                             </Link>
@@ -271,6 +316,78 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    );
+  }
+
+  /**************************************
+   * Render
+   **************************************/
+  return (
+    <>
+      {/* Mobile hamburger button */}
+      <div className="lg:hidden">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open settings sidebar"
+          className="fixed top-4 left-4 z-60"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Desktop sidebar (unchanged) */}
+      <motion.div
+        initial={{ x: -300 }}
+        animate={{ x: 0 }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        className={cn(
+          "hidden lg:flex bg-gradient-to-b from-card to-card/95 border-r border-border/50 h-screen transition-all duration-300 ease-in-out relative shadow-lg",
+          isExpanded ? "w-72" : "w-20"
+        )}
+      >
+        <SidebarContent />
+      </motion.div>
+
+      {/* Mobile drawer + overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setMobileOpen(false);
+                if (onClose) onClose();
+              }}
+              className="fixed inset-0 z-40 bg-black"
+              aria-hidden="true"
+            />
+
+            {/* drawer */}
+            <motion.aside
+              key="mobile-drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className={cn(
+                "fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-card to-card/95 border-r border-border/50 shadow-lg w-72",
+                // keep same mobile width as expanded desktop
+                "lg:hidden"
+              )}
+              role="dialog"
+              aria-modal="true"
+            >
+              <SidebarContent />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

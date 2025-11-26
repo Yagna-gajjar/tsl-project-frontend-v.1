@@ -10,7 +10,7 @@ export default function Setting() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="flex">
         {/* Desktop Sidebar - Fixed */}
-        <div className="hidden lg:block">
+        <div className="block">
           <SettingSidebar />
         </div>
 
@@ -39,7 +39,7 @@ export default function Setting() {
         </AnimatePresence>
 
         {/* Main Content Area */}
-        <main className="flex-1 min-h-screen">
+        <main className="flex-1 min-h-screen mt-12 lg:mt-0">
           <div className="h-screen overflow-y-auto pt-4">
             <div className="p-4">
               <motion.div

@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { getFamilyTypes, deleteFamilyTypes } from "@/api/family-type.api";
 import type { FamilyType } from "@/types/familyType";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
-
+import { toast } from "@/hooks/use-toast";
 type Props = {
   onView?: (row: FamilyType) => void;
   onEdit?: (row: FamilyType) => void;
@@ -135,10 +135,19 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      await deleteFamilyTypes(deleteId);
+      const res = await deleteFamilyTypes(deleteId);
+
+      if (res?.success == false) {
+        throw new Error(res?.message || "Failed to delete");
+      }
+
       await loadData(); // refresh table
     } catch (err) {
-      console.error("Delete failed:", err);
+      toast({
+        title: "Error",
+        description: "Failed to delete family type.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingDelete(false);
       setDeleteOpen(false);
@@ -163,7 +172,7 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
         onSortChange={handleSortChange}
         onView={(row) => onView?.(row)}
         onEdit={(row) => onEdit?.(row)}
-        onDelete={(id : number | undefined) => handleDelete(id)}
+        onDelete={(id: number | undefined) => handleDelete(id)}
         idKey={"familyTypeId"}
       />
       <ConfirmDialog
