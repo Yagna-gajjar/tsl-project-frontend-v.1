@@ -1,106 +1,215 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Link, useLocation } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-	LayoutDashboard,
-	Receipt,
-	BarChart3,
-	CreditCard,
-	ChevronLeft,
-	ChevronRight,
-	HomeIcon,
-	User,
-	User2,
+  LayoutDashboard,
+  Receipt,
+  BarChart3,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+  HomeIcon,
+  User,
+  User2,
+  ChevronDown,
+  MapIcon,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface SidebarProps {
-	onClose?: () => void;
+interface SubMenuItem {
+  label: string;
+  href: string;
+  icon?: React.ElementType;
 }
 
-const navigationItems = [
-	{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-	{ name: "Family", href: "/family", icon: User2 },
-	{ name: "Billing", href: "/billing", icon: Receipt },
-	{ name: "Member", href: "/member", icon: User },
-	{ name: "Academy", href: "/academy", icon: HomeIcon },
-	{ name: "Reports", href: "/reports", icon: BarChart3 },
-	{ name: "Payments", href: "/payments", icon: CreditCard },
+interface NavigationItem {
+  name: string;
+  href?: string;
+  icon: React.ElementType;
+  submenu?: SubMenuItem[] | null;
+}
+
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+const navigationItems: NavigationItem[] = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  {
+    name: "Family",
+    icon: User2,
+    href: "/family",
+  },
+  {
+    name: "Billing",
+    href: "/billing",
+    icon: Receipt,
+  },
+  {
+    name: "Member",
+    icon: User,
+    href: "/member",
+  },
+  {
+    name: "infrastructure & Configurations",
+    href: "/infrastructure & Configurations",
+    icon: Building2,
+    submenu: [
+      {
+        label: "Facility",
+        icon: Building2,
+        href: "/infrastructure & Configurations/facility",
+      },
+      {
+        label: "Area",
+        icon: MapIcon,
+        href: "/infrastructure & Configurations/area",
+      },
+    ],
+  },
+  { name: "Academy", href: "/academy", icon: HomeIcon },
+  { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Payments", href: "/payments", icon: CreditCard },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {
-	const [isExpanded, setIsExpanded] = useState(true)
-	const location = useLocation()
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({
+    // default expand the Family section (optional)
+    Family: true,
+  });
+  const location = useLocation();
 
-	const toggleExpanded = () => {
-		setIsExpanded(!isExpanded)
-	}
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
 
-	return (
-		<motion.div
-			initial={{ x: -300 }}
-			animate={{ x: 0 }}
-			transition={{ type: "spring", damping: 30, stiffness: 300 }}
-			className={cn(
-				"bg-card border-r mt-1 border-border h-screen transition-all duration-300 ease-in-out relative",
-				isExpanded ? "w-64" : "w-16",
-			)}
-		>
-			{/* Toggle Button */}
-			<Button
-				variant="ghost"
-				size="icon"
-				onClick={toggleExpanded}
-				className="absolute -right-3 bg-red-800 top-12 z-50 h-6 w-6 rounded-full border border-border bg-background shadow-md hidden lg:flex"
-			>
-				{isExpanded ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-			</Button>
+  const toggleSection = (name: string) => {
+    setExpandedSections((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
 
-			<div className="p-4">
-				<AnimatePresence mode="wait">
-					{isExpanded ? (
-						<motion.h2
-							key="expanded"
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.2 }}
-							className="text-lg font-semibold text-foreground mb-6"
-						>
-							Navigation
-						</motion.h2>
-					) : (
-						<motion.div
-							key="collapsed"
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.2 }}
-							className="h-6 mb-6"
-						/>
-					)}
-				</AnimatePresence>
+  const handleSectionClick = (item: NavigationItem) => {
+    // If the item has an href and no submenu, Link will handle navigation.
+    // If the item has a submenu, toggle when expanded.
+    if (item.submenu && isExpanded) {
+      toggleSection(item.name);
+    }
+  };
 
-				<nav className="space-y-2">
-					{navigationItems.map((item) => {
-						const isActive = location.pathname.indexOf(item.href) != -1
-						const Icon = item.icon
+  return (
+    <motion.div
+      initial={{ x: -300 }}
+      animate={{ x: 0 }}
+      transition={{ type: "spring", damping: 30, stiffness: 300 }}
+      className={cn(
+        "bg-card border-r mt-1 border-border h-screen transition-all duration-300 ease-in-out relative",
+        isExpanded ? "w-64" : "w-16"
+      )}
+    >
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleExpanded}
+        className="absolute -right-3 bg-red-800 top-12 z-50 h-6 w-6 rounded-full border border-border bg-background shadow-md hidden lg:flex"
+      >
+        {isExpanded ? (
+          <ChevronLeft className="h-3 w-3" />
+        ) : (
+          <ChevronRight className="h-3 w-3" />
+        )}
+      </Button>
 
-						return (
-              <motion.div
-                key={item.name}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Link
-                  to={item.href}
-                  onClick={onClose}
+      <div className="p-4">
+        <AnimatePresence mode="wait">
+          {isExpanded ? (
+            <motion.h2
+              key="expanded"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="text-lg font-semibold text-foreground mb-6"
+            >
+              Navigation
+            </motion.h2>
+          ) : (
+            <motion.div
+              key="collapsed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="h-6 mb-6"
+            />
+          )}
+        </AnimatePresence>
+
+        <nav className="space-y-2">
+          {navigationItems.map((item) => {
+            const isActiveTop = item.href
+              ? location.pathname.indexOf(item.href) !== -1
+              : false;
+            const hasSubmenu =
+              Array.isArray(item.submenu) && item.submenu.length > 0;
+            const isSectionExpanded = expandedSections[item.name];
+
+            const Icon = item.icon;
+
+            // If item has a direct href and no submenu, render as Link (navigates)
+            if (item.href && !hasSubmenu) {
+              return (
+                <motion.div
+                  key={item.name}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Link
+                    to={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
+                      isActiveTop
+                        ? "bg-blue-600 text-background"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                      !isExpanded && "justify-center"
+                    )}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: "auto" }}
+                          exit={{ opacity: 0, width: 0 }}
+                          transition={{ duration: 0.18 }}
+                          className="font-medium whitespace-nowrap overflow-hidden"
+                        >
+                          {item.name}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
+                </motion.div>
+              );
+            }
+
+            // Otherwise (has submenu or no href), render header as button that toggles submenu when expanded
+            return (
+              <div key={item.name} className="space-y-1">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleSectionClick(item)}
                   className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
-                    isActive
+                    "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
+                    isActiveTop
                       ? "bg-blue-600 text-background"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent",
                     !isExpanded && "justify-center"
@@ -113,19 +222,114 @@ export default function Sidebar({ onClose }: SidebarProps) {
                         initial={{ opacity: 0, width: 0 }}
                         animate={{ opacity: 1, width: "auto" }}
                         exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.18 }}
                         className="font-medium whitespace-nowrap overflow-hidden"
                       >
                         {item.name}
                       </motion.span>
                     )}
                   </AnimatePresence>
-                </Link>
-              </motion.div>
+
+                  <AnimatePresence>
+                    {isExpanded && hasSubmenu && (
+                      <motion.div
+                        initial={{ opacity: 0, rotate: -90 }}
+                        animate={{
+                          opacity: 1,
+                          rotate: isSectionExpanded ? 0 : -90,
+                        }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="ml-auto"
+                      >
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+
+                {/* Submenu */}
+                <AnimatePresence>
+                  {(isSectionExpanded || !isExpanded) && hasSubmenu && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className={cn(
+                        "space-y-1",
+                        isExpanded
+                          ? "ml-3 pl-6 border-l-2 border-border/30"
+                          : "ml-0"
+                      )}
+                    >
+                      {item.submenu!.map((sub) => {
+                        const isActive =
+                          location.pathname.indexOf(sub.href) !== -1;
+                        const SubIcon = sub.icon ?? Icon;
+
+                        return (
+                          <motion.div
+                            key={sub.href}
+                            whileHover={{
+                              x: isExpanded ? 2 : 0,
+                              scale: !isExpanded ? 1.05 : 1,
+                            }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Link
+                              to={sub.href}
+                              onClick={onClose}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
+                                isActive
+                                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                                !isExpanded && "justify-center"
+                              )}
+                            >
+                              <SubIcon
+                                className={cn(
+                                  "h-4 w-4 flex-shrink-0",
+                                  isActive && "scale-110"
+                                )}
+                              />
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.span
+                                    initial={{ opacity: 0, width: 0 }}
+                                    animate={{ opacity: 1, width: "auto" }}
+                                    exit={{ opacity: 0, width: 0 }}
+                                    transition={{ duration: 0.18 }}
+                                    className="text-sm font-medium whitespace-nowrap overflow-hidden"
+                                  >
+                                    {sub.label}
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                              {isActive && isExpanded && (
+                                <motion.div
+                                  layoutId="activeIndicator"
+                                  className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 300,
+                                    damping: 30,
+                                  }}
+                                />
+                              )}
+                            </Link>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             );
-					})}
-				</nav>
-			</div>
-		</motion.div>
-	)
+          })}
+        </nav>
+      </div>
+    </motion.div>
+  );
 }

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-export default function Invoices() {
+export default function Facalities() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -7,7 +7,7 @@ export default function Invoices() {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      <h1>Invoices</h1>
+      <h1>Facalities</h1>
     </motion.div>
   );
 }

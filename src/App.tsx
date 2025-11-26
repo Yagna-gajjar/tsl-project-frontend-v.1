@@ -4,13 +4,13 @@ import { ConfirmationProvider } from "./contexts/confirmation-context"
 import Layout from "./components/layout"
 import Dashboard from "./pages/dashboard"
 import Projects from "./pages/projects"
-import Billing from "./pages/billing"
-import Reports from "./pages/reports"
-import Payments from "./pages/payments"
-import { Toaster } from "./components/ui/toaster"
-import LoginForm from "./components/login-form"
-import NotFound from "./pages/NotFound"
-import Signup from "./pages/Signup"
+import EnumsPage from "./pages/enums";
+import Reports from "./pages/reports";
+import Payments from "./pages/payments";
+import { Toaster } from "./components/ui/toaster";
+import LoginForm from "./components/login-form";
+import NotFound from "./pages/NotFound";
+import Signup from "./pages/Signup";
 import { AuthProvider } from "./contexts/authContext";
 import Setting from "./pages/setting";
 import FamilyPage from "./pages/family";
@@ -18,6 +18,10 @@ import MemberPage from "./pages/member";
 import FamilyTypePage from "@/components/setting/family-type/family-type";
 import TeamCategoryPage from "@/components/setting/team-category/team-category";
 import IdentityTypePage from "@/components/setting/identity-type/identity-type";
+import ActivityPage from "@/components/setting/activity/activity";
+import FacilityPage from "@/pages/facility";
+import AreaPage from "@/pages/area";
+import Billing from "./pages/billing";
 
 export default function App() {
   return (
@@ -34,9 +38,22 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/family" element={<FamilyPage />} />
                 <Route path="/projects" element={<Projects />} />
-                <Route path="/billing" element={<Billing />} />
+                <Route
+                  path="/infrastructure & Configurations"
+                  element={
+                    <Navigate to="/infrastructure & Configurations/facility" />
+                  }
+                />
                 <Route path="/member" element={<MemberPage />} />
                 <Route path="/academy" element={<Billing />} />
+                <Route
+                  path="/infrastructure & Configurations/facility"
+                  element={<FacilityPage />}
+                />
+                <Route
+                  path="/infrastructure & Configurations/area"
+                  element={<AreaPage />}
+                />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/login" element={<LoginForm />} />
@@ -56,6 +73,8 @@ export default function App() {
                   path="/setting/identity-type"
                   element={<IdentityTypePage />}
                 />
+                <Route path="/setting/activity" element={<ActivityPage />} />
+                <Route path="/setting/common-lookups" element={<EnumsPage />} />
                 <Route path="/setting/*" element={<NotFound />} />
               </Route>
             </Routes>

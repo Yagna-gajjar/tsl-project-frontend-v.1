@@ -44,6 +44,12 @@ const navigationItems: NavigationItem[] = [
     submenu: null,
     href: "/setting/common-lookups",
   },
+  {
+    name: "Activity",
+    icon: Menu,
+    submenu: null,
+    href: "/setting/activity",
+  },
 ];
 
 export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
