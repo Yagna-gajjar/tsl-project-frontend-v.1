@@ -2,60 +2,54 @@ import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 
-import { getAreas, deleteArea } from "@/api/area.api";
-import type { Area } from "@/types/area";
+import { getAcademies, deleteAcademy } from "@/api/academy.api";
+import type { Academy } from "@/types/academy";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Columns } from "lucide-react";
-import { Area } from "recharts";
 
 type Props = {
-  onView?: (row: Area) => void;
-  onEdit?: (row: Area) => void;
+  onView?: (row: Academy) => void;
+  onEdit?: (row: Academy) => void;
   refreshKey?: number;
 };
 
-export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
-  const [data, setData] = useState<Area[]>([]);
+export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
+  const [data, setData] = useState<Academy[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<
-    Record<string, string | number | undefined>
-  >({});
-  const [sortBy, setSortBy] = useState<string>("areaId");
+  const [filters, setFilters] = useState<Record<string, string | number | undefined>>({});
+  const [sortBy, setSortBy] = useState<string>("academyId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getAreas({
+      const res = await getAcademies({
         page,
         limit,
         sortBy,
-        sortOrder,
+        sortOrder: sortOrder,
         search: search || undefined,
-        areaName: filters.areaName as string | undefined,
-        facilityId: filters.facilityId as number | undefined,
+        academyName: filters.academyName as string | undefined,
+        academyType: filters.academyType as string | undefined,
       });
 
-      const rowsRaw = Array.isArray(res)
-        ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Area[])
-        : [];
+      const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as Academy[] : []);
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-      })) as Area[];
+        registrationDate: r.registrationDate ? new Date(r.registrationDate) : undefined,
+        discontinuedDate: r.discontinuedDate ? new Date(r.discontinuedDate) : undefined,
+      })) as Academy[];
 
       setData(rows);
     } catch (err) {
-      console.error("Failed to fetch areas", err);
+      console.error("Failed to fetch academies", err);
       setData([]);
     } finally {
       setIsLoading(false);
@@ -71,10 +65,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-  const handleFilterChange = (
-    filterKey: string,
-    value: string | number | undefined
-  ) => {
+  const handleFilterChange = (filterKey: string, value: string | number | undefined) => {
     setFilters((prev) => ({
       ...prev,
       [filterKey]: value || undefined,
@@ -93,38 +84,38 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const columns: Column<Area>[] = [
+  const columns: Column<Academy>[] = [
     {
-      key: "areaName",
-      header: "Area Name",
+      key: "academyName",
+      header: "Academy Name",
       sortable: true,
       filterType: "text",
       render: (r) => (
         <div className="flex flex-col">
-          <span className="font-medium">{r.areaName}</span>
+          <span className="font-medium">{r.academyName}</span>
         </div>
       ),
     },
     {
-      key: "facilityName",
-      header: "Facility",
+      key: "academyType",
+      header: "Type",
+      sortable: true,
+      filterType: null,
+      render: (r) => <span className="text-sm">{r.academyType || "-"}</span>,
+    },
+    {
+      key: "email",
+      header: "Email",
       sortable: false,
       filterType: null,
-      render: (r) => <span className="text-sm">{r.facilityName || "N/A"}</span>,
+      render: (r) => <span className="text-sm">{r.email || "-"}</span>,
     },
     {
-      key: "areaSQFT",
-      header: "Area SQFT",
-      sortable: true,
+      key: "contactNumber",
+      header: "Contact",
+      sortable: false,
       filterType: null,
-      render: (r) => <span className="text-sm">{r.areaSQFT || "-"}</span>,
-    },
-    {
-      key: "portion",
-      header: "Portion",
-      sortable: true,
-      filterType: null,
-      render: (r) => <span className="text-sm">{r.portion || "-"}</span>,
+      render: (r) => <span className="text-sm">{r.contactNumber || "-"}</span>,
     },
     {
       key: "createdAt",
@@ -140,10 +131,10 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
     if (id === undefined) return;
 
     try {
-      await deleteArea(id);
+      await deleteAcademy(id);
       toast({
         title: "Success",
-        description: "Area deleted successfully",
+        description: "Academy deleted successfully",
       });
       setDeleteId(null);
       setDeleteOpen(false);
@@ -151,7 +142,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
     } catch {
       toast({
         title: "Error",
-        description: "Failed to delete area",
+        description: "Failed to delete academy",
         variant: "destructive",
       });
     }
@@ -159,7 +150,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
 
   return (
     <div>
-      <DataTable<Area>
+      <DataTable<Academy>
         data={data}
         columns={columns}
         isLoading={isLoading}
@@ -178,7 +169,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteId(id ?? null);
           setDeleteOpen(true);
         }}
-        idKey={"areaId"}
+        idKey={"academyId"}
       />
       <ConfirmDialog
         isOpen={deleteOpen}
@@ -187,8 +178,8 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteId(null);
         }}
         onConfirm={() => handleDelete(deleteId ?? undefined)}
-        title="Delete Area?"
-        description="Are you sure you want to delete this area? This action cannot be undone."
+        title="Delete Academy?"
+        description="Are you sure you want to delete this academy? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"

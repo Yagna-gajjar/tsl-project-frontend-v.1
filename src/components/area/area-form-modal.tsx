@@ -5,14 +5,17 @@ import { FormContent } from "@/components/form-modal/form-content";
 
 import { createArea, updateArea } from "@/api/area.api";
 import type { Area } from "@/types/area";
-import { Dialog, DialogContent } from "../ui/dialog";
-
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { getFacilities } from "@/api/facility.api";
+import type { Response } from "@/types/response";
 type Props = {
   isOpen: boolean;
   initialData?: Area;
   onClose: () => void;
   onSave: () => void;
 };
+import { toast } from "@/hooks/use-toast";
+import type { Facility } from "@/types/facility";
 
 const empty: Area = {
   areaId: 0,
@@ -34,6 +37,35 @@ export default function AreaFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [facilityFields, setFacilityFields] = useState<[string, number][]>([]);
+
+  useEffect(() => {
+    // Fetch facility options for the select field
+    const fetchFacilities = async () => {
+      try {
+        const res: Response = await getFacilities({ limit: 1000 });
+        const data = Array.isArray(res?.data) ? (res.data as Facility[]) : [];
+        const options = data.map((f) => ({
+          label: String(f.facilityName ?? ""),
+          value: Number(f.facilityId ?? 0),
+        }));
+        // store as array of objects { label, value }
+        setFacilityFields(options as unknown as [string, number][]);
+        toast({
+          title: "Success",
+          description: "Facilities loaded successfully.",
+          variant: "success",
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to load facilities.",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchFacilities();
+  }, []);
 
   useEffect(() => {
     setValues({ ...empty, ...(initialData ?? {}) });
@@ -103,7 +135,13 @@ export default function AreaFormModal({
 
   const fields = [
     { name: "areaName", label: "Area Name", type: "text", required: true },
-    { name: "facilityId", label: "Facility", type: "number", required: true },
+    {
+      name: "facilityId",
+      label: "Facility",
+      type: "select",
+      options: facilityFields,
+      required: true,
+    },
     {
       name: "areaDimension",
       label: "Area Dimension",
@@ -131,35 +169,37 @@ export default function AreaFormModal({
       }}
     >
       <div>
-        <DialogContent className="max-w-lg gap-0 p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-          <FormHeader
-            title={initialData?.areaId ? "Edit Area" : "Add New Area"}
-            onClose={onClose}
-          />
-          <div className="">
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-            <FormContent
-              fields={fields}
-              values={values}
-              errors={fieldErrors}
-              loading={false}
-              error={error}
+        <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
+          <div className="flex flex-col max-h-[90vh] overflow-hidden">
+            <FormHeader
+              title={initialData?.areaId ? "Edit Area" : "Add New Area"}
+              onClose={onClose}
+            />
+            <div className="">
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+              <FormContent
+                fields={fields}
+                values={values}
+                errors={fieldErrors}
+                loading={false}
+                error={error}
+                isSubmitting={isSubmitting}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onChange={onChange as any}
+                layout="grid"
+              />
+            </div>
+            <FormFooter
+              onClose={onClose}
+              onSubmit={handleSubmit}
+              submitLabel={initialData?.areaId ? "Update" : "Create"}
               isSubmitting={isSubmitting}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onChange={onChange as any}
-              layout="grid"
             />
           </div>
-          <FormFooter
-            onClose={onClose}
-            onSubmit={handleSubmit}
-            submitLabel={initialData?.areaId ? "Update" : "Create"}
-            isSubmitting={isSubmitting}
-          />
         </DialogContent>
       </div>
     </Dialog>

@@ -44,7 +44,24 @@ export function isValidUrl(string: string): boolean {
   try {
     new URL(string)
     return true
-  } catch (_) {
+  } catch {
     return false
+  }
+}
+
+export function formatDateForInput(date: string | Date | undefined): string {
+  if (!date) return "";
+  
+  try {
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return "";
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    
+    return `${year}-${month}-${day}`;
+  } catch {
+    return "";
   }
 }

@@ -69,11 +69,15 @@ export function FormFieldInput({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className={`min-h-24 focus:ring-blue-500 focus:border-blue-500 ${error ? "border-red-500" : ""}`}
+            className={`min-h-24 resize-none focus:ring-blue-500 focus:border-blue-500 ${
+              error ? "border-red-500" : ""
+            }`}
             aria-invalid={!!error}
-            aria-describedby={error ? `${name}-error` : description ? `${name}-desc` : undefined}
+            aria-describedby={
+              error ? `${name}-error` : description ? `${name}-desc` : undefined
+            }
           />
-        )
+        );
 
       case "select":
         return (

@@ -17,6 +17,7 @@ import {
   LandPlot,
   Building2,
   MapPinned,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,7 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   { name: "Academy", href: "/academy", icon: HomeIcon },
+  { name: "Coach", href: "/coach", icon: Users },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Payments", href: "/payments", icon: CreditCard },
 ];

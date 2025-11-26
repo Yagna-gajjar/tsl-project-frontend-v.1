@@ -20,4 +20,4 @@ export interface Member {
 	remarks?: string;
 	createdAt?: Date;
 	updatedAt?: Date;
-}
+}	

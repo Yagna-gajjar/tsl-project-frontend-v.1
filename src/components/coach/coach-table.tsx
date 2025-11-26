@@ -1,61 +1,54 @@
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-
-import { getAreas, deleteArea } from "@/api/area.api";
-import type { Area } from "@/types/area";
+import { getCoaches, deleteCoach } from "@/api/coach.api";
+import type { Coach } from "@/types/coach";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Columns } from "lucide-react";
-import { Area } from "recharts";
 
 type Props = {
-  onView?: (row: Area) => void;
-  onEdit?: (row: Area) => void;
+  onView?: (row: Coach) => void;
+  onEdit?: (row: Coach) => void;
   refreshKey?: number;
 };
 
-export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
-  const [data, setData] = useState<Area[]>([]);
+export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
+  const [data, setData] = useState<Coach[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<
-    Record<string, string | number | undefined>
-  >({});
-  const [sortBy, setSortBy] = useState<string>("areaId");
+  const [filters, setFilters] = useState<Record<string, string | number | undefined>>({});
+  const [sortBy, setSortBy] = useState<string>("coachId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getAreas({
+      const res = await getCoaches({
         page,
         limit,
         sortBy,
-        sortOrder,
+        sortOrder: sortOrder,
         search: search || undefined,
-        areaName: filters.areaName as string | undefined,
-        facilityId: filters.facilityId as number | undefined,
+        coachFirstName: filters.coachFirstName as string | undefined,
+        status: filters.status as string | undefined,
       });
 
-      const rowsRaw = Array.isArray(res)
-        ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Area[])
-        : [];
+      const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as Coach[] : []);
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-      })) as Area[];
+        dob: r.dob ? new Date(r.dob) : undefined,
+        joinDate: r.joinDate ? new Date(r.joinDate) : undefined,
+      })) as Coach[];
 
       setData(rows);
     } catch (err) {
-      console.error("Failed to fetch areas", err);
+      console.error("Failed to fetch coaches", err);
       setData([]);
     } finally {
       setIsLoading(false);
@@ -71,10 +64,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-  const handleFilterChange = (
-    filterKey: string,
-    value: string | number | undefined
-  ) => {
+  const handleFilterChange = (filterKey: string, value: string | number | undefined) => {
     setFilters((prev) => ({
       ...prev,
       [filterKey]: value || undefined,
@@ -93,38 +83,62 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const columns: Column<Area>[] = [
+  const columns: Column<Coach>[] = [
     {
-      key: "areaName",
-      header: "Area Name",
+      key: "coachFirstName",
+      header: "Coach Name",
       sortable: true,
       filterType: "text",
       render: (r) => (
         <div className="flex flex-col">
-          <span className="font-medium">{r.areaName}</span>
+          <span className="font-medium">
+            {r.coachFirstName} {r.coachLastName || ""}
+          </span>
+          <span className="text-xs text-gray-500">{r.email || "-"}</span>
         </div>
       ),
     },
     {
-      key: "facilityName",
-      header: "Facility",
+      key: "status",
+      header: "Status",
+      sortable: true,
+      filterType: "select",
+      filterOptions: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Suspended", value: "suspended" },
+      ],
+      render: (r) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            r.status === "active"
+              ? "bg-green-100 text-green-800"
+              : r.status === "inactive"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+          }`}
+        >
+          {r.status || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "contactNumber",
+      header: "Contact",
       sortable: false,
       filterType: null,
-      render: (r) => <span className="text-sm">{r.facilityName || "N/A"}</span>,
+      render: (r) => <span className="text-sm">{r.contactNumber || "-"}</span>,
     },
     {
-      key: "areaSQFT",
-      header: "Area SQFT",
+      key: "joinDate",
+      header: "Join Date",
       sortable: true,
       filterType: null,
-      render: (r) => <span className="text-sm">{r.areaSQFT || "-"}</span>,
-    },
-    {
-      key: "portion",
-      header: "Portion",
-      sortable: true,
-      filterType: null,
-      render: (r) => <span className="text-sm">{r.portion || "-"}</span>,
+      render: (r) => (
+        <span className="text-sm">
+          {r.joinDate ? new Date(r.joinDate).toLocaleDateString() : "-"}
+        </span>
+      ),
     },
     {
       key: "createdAt",
@@ -132,26 +146,24 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       filterType: null,
       render: (r) =>
-        r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US") : "-",
+        r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-",
     },
   ];
 
   const handleDelete = async (id: number | undefined) => {
-    if (id === undefined) return;
-
+    if (!id) return;
     try {
-      await deleteArea(id);
+      await deleteCoach(id);
       toast({
         title: "Success",
-        description: "Area deleted successfully",
+        description: "Coach deleted successfully",
       });
-      setDeleteId(null);
       setDeleteOpen(false);
       await loadData();
     } catch {
       toast({
         title: "Error",
-        description: "Failed to delete area",
+        description: "Failed to delete coach",
         variant: "destructive",
       });
     }
@@ -159,7 +171,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
 
   return (
     <div>
-      <DataTable<Area>
+      <DataTable<Coach>
         data={data}
         columns={columns}
         isLoading={isLoading}
@@ -178,7 +190,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteId(id ?? null);
           setDeleteOpen(true);
         }}
-        idKey={"areaId"}
+        idKey={"coachId"}
       />
       <ConfirmDialog
         isOpen={deleteOpen}
@@ -187,8 +199,8 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteId(null);
         }}
         onConfirm={() => handleDelete(deleteId ?? undefined)}
-        title="Delete Area?"
-        description="Are you sure you want to delete this area? This action cannot be undone."
+        title="Delete Coach?"
+        description="Are you sure you want to delete this coach? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"

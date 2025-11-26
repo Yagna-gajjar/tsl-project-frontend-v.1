@@ -15,6 +15,7 @@ import {
   Calendar,
 } from "lucide-react";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -43,13 +44,13 @@ const fields: FieldConfig<Area>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
   },
 ];
 
@@ -59,12 +60,12 @@ export default function AreaViewModal({ isOpen, areaId, onClose }: Props) {
       const useId = id ?? areaId;
       if (!useId) throw new Error("Area ID missing");
 
-      const res = await getAreaById(Number(useId));
+      const res: Response = await getAreaById(Number(useId));
 
       // normalize: API may return { success, data } or raw area
-      if (res && (res as any).data) return (res as any).data as Area;
+      if (res && res.data) return res.data as Area;
 
-      return res as Area;
+      return res;
     },
     [areaId]
   );
@@ -73,8 +74,8 @@ export default function AreaViewModal({ isOpen, areaId, onClose }: Props) {
     <ViewModal<Area>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={areaId}
-      fetchFn={fetchFn}
+      itemId={Number(areaId)}
+      fetchFn={fetchFn as any}
       fields={fields}
       title="View Area"
       layout="grid"

@@ -21,7 +21,8 @@ import IdentityTypePage from "@/components/setting/identity-type/identity-type";
 import ActivityPage from "@/components/setting/activity/activity";
 import FacilityPage from "@/pages/facility";
 import AreaPage from "@/pages/area";
-import Billing from "./pages/billing";
+import AcademyPage from "@/pages/academy";
+import CoachPage from "@/pages/coach";
 
 export default function App() {
   return (
@@ -45,7 +46,8 @@ export default function App() {
                   }
                 />
                 <Route path="/member" element={<MemberPage />} />
-                <Route path="/academy" element={<Billing />} />
+                <Route path="/academy" element={<AcademyPage />} />
+                <Route path="/coach" element={<CoachPage />} />
                 <Route
                   path="/infrastructure-configurations/facility"
                   element={<FacilityPage />}
