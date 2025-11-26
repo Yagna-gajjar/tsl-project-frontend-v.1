@@ -10,6 +10,7 @@ import {
 } from "@/api/facility.api";
 import type { Facility } from "@/types/facility";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -87,29 +88,55 @@ export function FacilityFormModal({
       const payload: Partial<Facility> = {
         facilityName: String(values.facilityName ?? "").trim(),
         facilityType: String(values.facilityType ?? "").trim(),
-        facilityDimension: values.facilityDimension ? String(values.facilityDimension).trim() : null,
+        facilityDimension: values.facilityDimension
+          ? String(values.facilityDimension).trim()
+          : null,
         areaSQFT: values.areaSQFT ? Number(values.areaSQFT) : null,
-        description: values.description ? String(values.description).trim() : null,
-        academicCapacity: values.academicCapacity ? Number(values.academicCapacity) : null,
-        recreationCapacity: values.recreationCapacity ? Number(values.recreationCapacity) : null,
-        eventCapacity: values.eventCapacity ? Number(values.eventCapacity) : null,
+        description: values.description
+          ? String(values.description).trim()
+          : null,
+        academicCapacity: values.academicCapacity
+          ? Number(values.academicCapacity)
+          : null,
+        recreationCapacity: values.recreationCapacity
+          ? Number(values.recreationCapacity)
+          : null,
+        eventCapacity: values.eventCapacity
+          ? Number(values.eventCapacity)
+          : null,
       };
 
+      let res: Response;
       if (isEdit && initialData?.facilityId) {
-        await updateFacility(Number(initialData.facilityId), payload);
+        res = await updateFacility(Number(initialData.facilityId), payload);
       } else {
-        await createFacility(payload as Facility);
+        res = await createFacility(payload as Facility);
       }
 
-      toast({
-        description: isEdit
-          ? "Facility updated successfully"
-          : "Facility created successfully",
-      });
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      const row = res?.data ?? res;
+
+      if (!ok) {
+        const msg = res?.message ?? "Failed to save";
+        setError(msg);
+
+        toast({
+          title: "Save failed",
+          description: msg,
+          variant: "destructive",
+        });
+
+        return;
+      }
       onSaved?.(values as Facility);
       onClose();
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to save facility";
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to save facility";
       setError(errorMsg);
       toast({
         variant: "destructive",

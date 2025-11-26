@@ -92,9 +92,11 @@ export function ActivityFormModal({
       }
 
       toast({
+        title: "Success",
         description: isEdit
           ? "Activity updated successfully"
           : "Activity created successfully",
+        variant: "success",
       });
       onSaved?.(values as Activity);
       onClose();

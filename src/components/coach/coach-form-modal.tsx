@@ -7,6 +7,7 @@ import { createCoach, updateCoach } from "@/api/coach.api";
 import type { Coach } from "@/types/coach";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -55,11 +56,11 @@ export default function CoachFormModal({
       baseValues.coachLastName = initialData.coachLastName;
       baseValues.email = initialData.email;
       baseValues.contactNumber = initialData.contactNumber;
-      baseValues.dob = initialData.dob 
-        ? formatDateForInput(initialData.dob) 
+      baseValues.dob = initialData.dob
+        ? formatDateForInput(initialData.dob)
         : undefined;
-      baseValues.joinDate = initialData.joinDate 
-        ? formatDateForInput(initialData.joinDate) 
+      baseValues.joinDate = initialData.joinDate
+        ? formatDateForInput(initialData.joinDate)
         : undefined;
       baseValues.remarks = initialData.remarks;
       baseValues.status = initialData.status;
@@ -107,7 +108,9 @@ export default function CoachFormModal({
     }
     if (!values.contactNumber || String(values.contactNumber).trim() === "") {
       errs.contactNumber = "Contact number is required";
-    } else if (!/^\d{10}$/.test(String(values.contactNumber).replace(/\D/g, ""))) {
+    } else if (
+      !/^\d{10}$/.test(String(values.contactNumber).replace(/\D/g, ""))
+    ) {
       errs.contactNumber = "Please enter a valid 10-digit contact number";
     }
     if (!values.dob) {
@@ -142,43 +145,76 @@ export default function CoachFormModal({
         email: values.email || undefined,
         contactNumber: values.contactNumber || undefined,
         dob: values.dob ? new Date(values.dob as unknown as string) : undefined,
-        joinDate: values.joinDate ? new Date(values.joinDate as unknown as string) : undefined,
+        joinDate: values.joinDate
+          ? new Date(values.joinDate as unknown as string)
+          : undefined,
         remarks: values.remarks || undefined,
-        status: (values.status as "active" | "inactive" | "suspended") || "active",
+        status:
+          (values.status as "active" | "inactive" | "suspended") || "active",
         gender: (values.gender as "male" | "female" | "other") || undefined,
-        bloodGroup: (values.bloodGroup as "b+" | "b-" | "a+" | "a-" | "o+" | "o-" | "ab+" | "ab-") || undefined,
+        bloodGroup:
+          (values.bloodGroup as
+            | "b+"
+            | "b-"
+            | "a+"
+            | "a-"
+            | "o+"
+            | "o-"
+            | "ab+"
+            | "ab-") || undefined,
         aadharCard: values.aadharCard || undefined,
         qualification: values.qualification || undefined,
         achievements: values.achievements || undefined,
         achievementsInDetails: values.achievementsInDetails || undefined,
         photo: values.photo || undefined,
       };
-
+      let res: Response;
       if (initialData?.coachId) {
-        await updateCoach(
+        res = await updateCoach(
           initialData.coachId,
           payload as Omit<Coach, "coachId" | "createdAt" | "updatedAt">
         );
       } else {
-        await createCoach(
+        res = await createCoach(
           payload as Omit<Coach, "coachId" | "createdAt" | "updatedAt">
         );
       }
+
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      const row = res?.data ?? res;
+
+      if (!ok) {
+        const msg = res?.message ?? "Failed to save";
+        setError(msg);
+
+        toast({
+          title: "Save failed",
+          description: msg,
+          variant: "destructive",
+        });
+
+        return;
+      }
+
       onSave();
-        onClose();
-        toast({
-            title: "Success",
-            description: initialData?.coachId
-                ? "Coach updated successfully"
-                : "Coach created successfully",
-            variant: "success",
-        });
+      onClose();
+      toast({
+        title: "Success",
+        description: initialData?.coachId
+          ? "Coach updated successfully"
+          : "Coach created successfully",
+        variant: "success",
+      });
     } catch (err) {
-        toast({
-            title: "Error",
-            description: "Failed to save coach.",
-            variant: "destructive",
-        });
+      toast({
+        title: "Error",
+        description: "Failed to save coach.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -297,9 +333,7 @@ export default function CoachFormModal({
         <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
           <div className="flex flex-col max-h-[90vh] overflow-hidden">
             <FormHeader
-              title={
-                initialData?.coachId ? "Edit Coach" : "Add New Coach"
-              }
+              title={initialData?.coachId ? "Edit Coach" : "Add New Coach"}
               onClose={onClose}
             />
             <div className="overflow-auto">
@@ -315,7 +349,12 @@ export default function CoachFormModal({
                 loading={false}
                 error={error}
                 isSubmitting={isSubmitting}
-                onChange={onChange as (field: keyof Coach, value: string | number) => void}
+                onChange={
+                  onChange as (
+                    field: keyof Coach,
+                    value: string | number
+                  ) => void
+                }
                 layout="grid"
               />
             </div>

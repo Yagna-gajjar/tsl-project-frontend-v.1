@@ -9,6 +9,7 @@ import { getIdentityTypes } from "@/api/identity-type.api";
 import { createFamily, updateFamily } from "@/api/family.api";
 import type { Family } from "@/types/family";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 
 type Option = { label: string; value: any };
 
@@ -100,16 +101,17 @@ export function FamilyFormModal({
     })();
   }, [isOpen]);
 
-  useEffect(()=>{
-    console.log(itRows,"ppp", values);
+  useEffect(() => {
+    console.log(itRows, "ppp", values);
     setIdentityTypeOptions(
-      itRows.filter((r: any) => r.familyTypeId === Number(values.familyTypeId))
+      itRows
+        .filter((r: any) => r.familyTypeId === Number(values.familyTypeId))
         .map((r: any) => ({
           label: r.identityTypeName,
           value: r.identityTypeId,
         }))
     );
-  },[values]);
+  }, [values]);
 
   // determine whether selected family type is "team" (case-insensitive)
   const showTeamCategory = useMemo(() => {
@@ -212,7 +214,7 @@ export function FamilyFormModal({
         return;
       }
 
-      let res: any;
+      let res: Response;
       if (isEdit && initialData?.familyId) {
         res = await updateFamily(Number(initialData.familyId), payload);
       } else {
@@ -261,7 +263,6 @@ export function FamilyFormModal({
     } finally {
       setIsSubmitting(false);
     }
-
   }, [values, isEdit, initialData, onClose, onSaved]);
 
   const fields = useMemo(() => {

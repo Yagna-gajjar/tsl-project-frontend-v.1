@@ -100,6 +100,19 @@ export default function AcademyFormModal({
     if (!values.academyName || String(values.academyName).trim() === "") {
       errs.academyName = "Academy name is required";
     }
+    if (!values.contactNumber || String(values.contactNumber).trim() === "") {
+      errs.contactNumber = "Contact number is required";
+    } else if (!/^\d+$/.test(values.contactNumber)) {
+      errs.contactNumber = "Contact number must be numeric";
+    }
+    if (!values.email || String(values.email).trim() === "") {
+      errs.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(values.email)) {
+      errs.email = "Email is invalid";
+    }
+    if (!values.registrationDate) {
+      errs.registrationDate = "Registration date is required";
+    }
     return errs;
   }, [values]);
 
@@ -149,20 +162,20 @@ export default function AcademyFormModal({
         );
       }
       onSave();
-        onClose();
-        toast({
-            title: "Success",
-            description: initialData?.academyId
-                ? "Academy updated successfully"
-                : "Academy created successfully",
-            variant: "success",
-        });
+      onClose();
+      toast({
+        title: "Success",
+        description: initialData?.academyId
+          ? "Academy updated successfully"
+          : "Academy created successfully",
+        variant: "success",
+      });
     } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to load facilities.",
-          variant: "destructive",
-        });
+      toast({
+        title: "Error",
+        description: "Failed to load facilities.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -193,7 +206,7 @@ export default function AcademyFormModal({
       type: "text",
       required: true,
     },
-    { name: "email", label: "Email", type: "email", required: false },
+    { name: "email", label: "Email", type: "email", required: true },
     { name: "instagram", label: "Instagram", type: "text", required: false },
     { name: "facebook", label: "Facebook", type: "text", required: false },
     { name: "youtube", label: "YouTube", type: "text", required: false },

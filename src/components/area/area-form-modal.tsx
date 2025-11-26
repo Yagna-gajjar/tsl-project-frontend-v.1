@@ -114,14 +114,35 @@ export default function AreaFormModal({
         portion: values.portion ? Number(values.portion) : undefined,
         groundAreaPart: values.groundAreaPart || undefined,
       };
-
+      let res: Response;
       if (initialData?.areaId) {
-        await updateArea(initialData.areaId, payload);
+        res = await updateArea(initialData.areaId, payload);
       } else {
-        await createArea(
+        res = await createArea(
           payload as Omit<Area, "areaId" | "createdAt" | "updatedAt">
         );
       }
+
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      const row = res?.data ?? res;
+
+      if (!ok) {
+        const msg = res?.message ?? "Failed to save";
+        setError(msg);
+
+        toast({
+          title: "Save failed",
+          description: msg,
+          variant: "destructive",
+        });
+
+        return;
+      }
+
       onSave();
       onClose();
     } catch (err) {
