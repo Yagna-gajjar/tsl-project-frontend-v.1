@@ -5,6 +5,8 @@ import { FormContent } from "@/components/form-modal/form-content";
 import { createCourse, updateCourse } from "@/api/course.api";
 import type { Course } from "@/types/course";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { getAcademies } from "@/api/academy.api";
+import { getActivities } from "@/api/activity.api";
 
 type Props = {
   isOpen: boolean;
@@ -40,15 +42,41 @@ export default function CourseFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [activityOptions, setActivityOptions] = useState([]);
+  const [academyOptions, setAcademyOptions] = useState([]);
 
   useEffect(() => {
-    if (initialData) {
-      setValues(initialData);
-    } else {
-      setValues(empty);
-    }
-    setFieldErrors({});
-    setError(null);
+    const loadData = async () => {
+      if (initialData) {
+        setValues(initialData);
+      } else {
+        setValues(empty);
+      }
+      setFieldErrors({});
+      setError(null);
+
+      const [resActivity, resAcademy] = await Promise.all([
+        getActivities(),
+        getAcademies(),
+      ]);
+      const activityopts = Array.isArray(resActivity.data)
+        ? resActivity.data.map((activity) => ({
+            value: activity.activityId,
+            label: activity.activityName,
+          }))
+        : [];
+
+      const academyopts = Array.isArray(resAcademy)
+        ? resAcademy.map((academy) => ({
+            value: academy.academyId,
+            label: academy.academyName,
+          }))
+        : [];
+      setActivityOptions(activityopts);
+      setAcademyOptions(academyopts);
+    };
+
+    loadData();
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof Course, val: string | number | boolean) => {
@@ -133,14 +161,16 @@ export default function CourseFormModal({
     },
     {
       name: "academyId",
-      label: "Academy ID",
-      type: "number",
+      label: "Academy Name",
+      type: "select",
+      options: academyOptions,
       required: false,
     },
     {
       name: "activityId",
-      label: "Activity ID",
-      type: "number",
+      label: "Activity Name",
+      type: "select",
+      options: activityOptions,
       required: false,
     },
     {
@@ -229,11 +259,7 @@ export default function CourseFormModal({
         <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
           <div className="flex flex-col max-h-[90vh] overflow-hidden">
             <FormHeader
-              title={
-                initialData?.courseId
-                  ? "Edit Course"
-                  : "Add New Course"
-              }
+              title={initialData?.courseId ? "Edit Course" : "Add New Course"}
               onClose={onClose}
             />
             <div className="overflow-auto">
@@ -249,7 +275,12 @@ export default function CourseFormModal({
                 loading={false}
                 error={error}
                 isSubmitting={isSubmitting}
-                onChange={onChange as (field: keyof Course, value: string | number | boolean) => void}
+                onChange={
+                  onChange as (
+                    field: keyof Course,
+                    value: string | number | boolean
+                  ) => void
+                }
                 layout="grid"
               />
             </div>

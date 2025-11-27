@@ -12,13 +12,13 @@ export interface CourseQuery {
   courseName?: string;
   status?: string;
   level?: string;
+  durationType?: string;
+  fees?: number;
 }
 
 const COURSE_BASE = import.meta.env.VITE_APP_API_URL + "/course";
 
-export function getCourses(
-  params: CourseQuery = {}
-): Promise<Course[]> {
+export function getCourses(params: CourseQuery = {}): Promise<Course[]> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -30,6 +30,8 @@ export function getCourses(
     courseName: params.courseName ?? undefined,
     status: params.status ?? undefined,
     level: params.level ?? undefined,
+    durationType: params.durationType ?? undefined,
+    fees: params.fees ?? undefined,
   });
 
   return request<Course[]>(`${COURSE_BASE}${qs}`);

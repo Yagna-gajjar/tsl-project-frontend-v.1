@@ -62,8 +62,6 @@ export default function CoachSkillFormModal({
           getCoaches(),
           getActivities(),
         ]);
-        console.log(resCoach);
-
         const coachOpts = Array.isArray(resCoach)
           ? resCoach.map((coach) => ({
               value: coach.coachId,

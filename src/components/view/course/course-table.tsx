@@ -5,18 +5,13 @@ import { getCourses, deleteCourse } from "@/api/course.api";
 import type { Course } from "@/types/course";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
-
 type Props = {
   onView?: (row: Course) => void;
   onEdit?: (row: Course) => void;
   refreshKey?: number;
 };
 
-export default function CourseTable({
-  onView,
-  onEdit,
-  refreshKey,
-}: Props) {
+export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -24,7 +19,9 @@ export default function CourseTable({
   const [limit] = useState<number>(20);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, string | number | undefined>>({});
+  const [filters, setFilters] = useState<
+    Record<string, string | number | undefined>
+  >({});
   const [sortBy, setSortBy] = useState<string>("courseId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
@@ -45,9 +42,15 @@ export default function CourseTable({
         courseName: filters.courseName as string | undefined,
         status: filters.status as string | undefined,
         level: filters.level as string | undefined,
+        durationType: filters.durationType as string | undefined,
+        fees: filters.fees as number | undefined,
       });
 
-      const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as Course[] : []);
+      const rowsRaw = Array.isArray(res)
+        ? res
+        : Array.isArray((res as Record<string, unknown>)?.data)
+        ? ((res as Record<string, unknown>).data as Course[])
+        : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -76,7 +79,10 @@ export default function CourseTable({
     setPage(1);
   };
 
-  const handleFilterChange = (filterKey: string, value: string | number | undefined) => {
+  const handleFilterChange = (
+    filterKey: string,
+    value: string | number | undefined
+  ) => {
     setFilters((prev) => ({
       ...prev,
       [filterKey]: value || undefined,
@@ -116,25 +122,39 @@ export default function CourseTable({
       key: "courseName",
       render: (row: Course) => row.courseName || "-",
       sortable: true,
+      filterType: "text",
     },
     {
       header: "Level",
       key: "level",
       render: (row: Course) => row.level || "-",
+      filterType: "select",
+      filterOptions: [
+        { value: "beginner", label: "Beginner" },
+        { value: "advance", label: "Advance" },
+        { value: "pro", label: "Pro" },
+      ],
     },
     {
       header: "Status",
       key: "status",
+      filterType: "select",
+      filterOptions: [
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+      ],
       render: (row: Course) => {
         const status = row.status || "active";
         const statusColor =
           status === "active"
             ? "bg-green-100 text-green-800"
             : status === "inactive"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800";
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-red-100 text-red-800";
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
+          >
             {status}
           </span>
         );
@@ -143,17 +163,27 @@ export default function CourseTable({
     {
       header: "Fees",
       key: "fees",
+      sortable: true,
+      filterType: "number",
+
       render: (row: Course) => `Rs. ${row.fees || "0.00"}`,
     },
     {
       header: "Duration",
       key: "durationType",
+      filterType: "select",
+      filterOptions: [
+        { value: "fixed_days", label: "Fixed days" },
+        { value: "session_count", label: "Session Count" },
+        { value: "calendar", label: "Calendar" },
+      ],
       render: (row: Course) => row.durationType || "-",
     },
     {
       header: "Created",
       key: "createdAt",
-      render: (row: Course) => (row.createdAt ? row.createdAt.toLocaleDateString() : "-"),
+      render: (row: Course) =>
+        row.createdAt ? row.createdAt.toLocaleDateString() : "-",
       sortable: true,
     },
   ];
