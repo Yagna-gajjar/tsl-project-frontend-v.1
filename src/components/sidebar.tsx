@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  Receipt,
   BarChart3,
   CreditCard,
   ChevronLeft,
@@ -19,6 +18,7 @@ import {
   MapPinned,
   Users,
   Award,
+  BookA,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -48,9 +48,9 @@ const navigationItems: NavigationItem[] = [
     href: "/family",
   },
   {
-    name: "Billing",
-    href: "/billing",
-    icon: Receipt,
+    name: "Courses",
+    href: "/courses",
+    icon: BookA,
   },
   {
     name: "Member",
@@ -170,9 +170,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
         <nav className="space-y-2">
           {navigationItems.map((item) => {
-            const isActiveTop = item.href
-              ? location.pathname.startsWith(item.href + "/")
-              : false;
             const hasSubmenu =
               Array.isArray(item.submenu) && item.submenu.length > 0;
             const isSectionExpanded = expandedSections[item.name];
@@ -192,7 +189,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                     onClick={onClose}
                     className={cn(
                       "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
-                      isActiveTop
+                      location.pathname.startsWith(item.href + "/")
                         ? "bg-blue-600 text-background"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent",
                       !isExpanded && "justify-center"
@@ -226,7 +223,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                   onClick={() => handleSectionClick(item)}
                   className={cn(
                     "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
-                    isActiveTop
+                    location.pathname.startsWith(item.href + "/")
                       ? "bg-blue-600 text-background"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent",
                     !isExpanded && "justify-center"
@@ -261,7 +258,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                       >
                         <ChevronDown
                           className={`h-4 w-4 ${
-                            isActiveTop
+                            location.pathname.startsWith(item.href + "/")
                               ? "text-background"
                               : "text-muted-foreground"
                           }`}

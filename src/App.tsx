@@ -25,6 +25,7 @@ import AcademyPage from "@/pages/academy";
 import CoachPage from "@/pages/coach";
 import AcademyCoachPage from "@/pages/academyCoach";
 import CoachSkillPage from "@/pages/coachSkill";
+import CoursePage from "@/pages/course";
 
 export default function App() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
                   path="/staff-management/coach-skills"
                   element={<CoachSkillPage />}
                 />
+                <Route path="/courses" element={<CoursePage />} />
                 <Route
                   path="/infrastructure-configurations/facility"
                   element={<FacilityPage />}
