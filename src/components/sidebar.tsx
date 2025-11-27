@@ -175,7 +175,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
             const isSectionExpanded = expandedSections[item.name];
 
             const Icon = item.icon;
-
             // If item has a direct href and no submenu, render as Link (navigates)
             if (item.href && !hasSubmenu) {
               return (
@@ -189,7 +188,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                     onClick={onClose}
                     className={cn(
                       "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
-                      location.pathname.startsWith(item.href + "/")
+                      location.pathname === item.href
                         ? "bg-blue-600 text-background"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent",
                       !isExpanded && "justify-center"
@@ -257,11 +256,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
                         className="ml-auto"
                       >
                         <ChevronDown
-                          className={`h-4 w-4 ${
-                            location.pathname.startsWith(item.href + "/")
+                          className={`h-4 w-4 ${location.pathname.startsWith(item.href + "/")
                               ? "text-background"
                               : "text-muted-foreground"
-                          }`}
+                            }`}
                         />
                       </motion.div>
                     )}
