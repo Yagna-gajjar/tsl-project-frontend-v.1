@@ -43,6 +43,10 @@ export default function CoachSkillTable({
         coachId: filters.coachId as number | undefined,
         activityId: filters.activityId as number | undefined,
         experience: filters.experience as string | undefined,
+        coachFirstName: filters.coachFirstName as string | undefined,
+        activityName: filters.activityName as string | undefined,
+        currentInterest: filters.currentInterest as string | undefined,
+        currentlyInTeam: filters.currentlyInTeam as string | undefined,
       });
 
       const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as CoachSkill[] : []);

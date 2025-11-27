@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import { get } from "http";
 import { getActivities } from "@/api/activity.api";
+import { getCoaches } from "@/api/coach.api";
 
 type Props = {
   isOpen: boolean;
@@ -58,25 +59,27 @@ export default function CoachSkillFormModal({
 
         // Fetch both APIs parallel (faster + cleaner)
         const [resCoach, resActivity] = await Promise.all([
-          getCoachSkills(),
+          getCoaches(),
           getActivities(),
         ]);
-        const coachOpts = Array.isArray(resCoach.data)
-          ? resCoach.data.map((coach) => ({
+        console.log(resCoach);
+
+        const coachOpts = Array.isArray(resCoach)
+          ? resCoach.map((coach) => ({
               value: coach.coachId,
               label: `${coach.coachFirstName} ${coach.coachLastName}`,
             }))
           : [];
-        
+
         const activityOpts = Array.isArray(resActivity.data)
           ? resActivity.data.map((activity) => ({
               value: activity.activityId,
               label: `${activity.activityName}`,
-            })) 
+            }))
           : [];
 
         setCoachOptions(coachOpts);
-        
+
         setActivityOptions(activityOpts);
       } catch (err: any) {
         console.error("Error loading data:", err);
@@ -94,9 +97,11 @@ export default function CoachSkillFormModal({
     };
     loadData();
   }, [initialData, isOpen]);
-  
 
-  const onChange = (field: keyof CoachSkill, val: string | number | boolean) => {
+  const onChange = (
+    field: keyof CoachSkill,
+    val: string | number | boolean
+  ) => {
     setValues((p) => ({ ...p, [field]: val }));
 
     setFieldErrors((prev) => {
@@ -125,9 +130,15 @@ export default function CoachSkillFormModal({
     setIsSubmitting(true);
     setError(null);
     const errs = validate();
+
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       setIsSubmitting(false);
+      toast({
+        title: "Error",
+        description: "Please fix the errors in the form.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -141,26 +152,33 @@ export default function CoachSkillFormModal({
         currentlyInTeam: values.currentlyInTeam || undefined,
         wantsUsToManageBookings: Boolean(values.wantsUsToManageBookings),
         detailsOfChargesExpected: values.detailsOfChargesExpected || undefined,
-        detailsOfServicesAvailable: values.detailsOfServicesAvailable || undefined,
+        detailsOfServicesAvailable:
+          values.detailsOfServicesAvailable || undefined,
       };
       let res: Response;
       if (initialData?.coachSkillId) {
         res = await updateCoachSkill(
           initialData.coachSkillId,
-          payload as Omit<CoachSkill, "coachSkillId" | "createdAt" | "updatedAt">
+          payload as Omit<
+            CoachSkill,
+            "coachSkillId" | "createdAt" | "updatedAt"
+          >
         );
-        
-      const ok =
-        typeof res?.success !== "undefined"
-          ? res.success === true || String(res.success) === "true"
-          : true;
+
+        const ok =
+          typeof res?.success !== "undefined"
+            ? res.success === true || String(res.success) === "true"
+            : true;
 
         if (!ok) {
           throw new Error("Failed to update coach skill");
         }
       } else {
-        res =  await createCoachSkill(
-          payload as Omit<CoachSkill, "coachSkillId" | "createdAt" | "updatedAt">
+        res = await createCoachSkill(
+          payload as Omit<
+            CoachSkill,
+            "coachSkillId" | "createdAt" | "updatedAt"
+          >
         );
         const ok =
           typeof res?.success !== "undefined"
@@ -172,16 +190,20 @@ export default function CoachSkillFormModal({
       }
       toast({
         title: "Success",
-        description: `Coach skill ${initialData?.coachSkillId ? "updated" : "created"} successfully.`,
+        description: `Coach skill ${
+          initialData?.coachSkillId ? "updated" : "created"
+        } successfully.`,
         variant: "success",
       });
-      
+
       onSave();
       onClose();
     } catch (err) {
       toast({
         title: "Error",
-        description: `Failed to ${initialData?.coachSkillId ? "update" : "create"} coach skill.`,
+        description: `Failed to ${
+          initialData?.coachSkillId ? "update" : "create"
+        } coach skill.`,
         variant: "destructive",
       });
     } finally {
@@ -191,7 +213,7 @@ export default function CoachSkillFormModal({
 
   const fields = [
     {
-      name: "coachName",
+      name: "coachId",
       label: "Coach Name",
       type: "select",
       options: coachOptions,
@@ -282,7 +304,12 @@ export default function CoachSkillFormModal({
                 loading={false}
                 error={error}
                 isSubmitting={isSubmitting}
-                onChange={onChange as (field: keyof CoachSkill, value: string | number | boolean) => void}
+                onChange={
+                  onChange as (
+                    field: keyof CoachSkill,
+                    value: string | number | boolean
+                  ) => void
+                }
                 layout="grid"
               />
             </div>
