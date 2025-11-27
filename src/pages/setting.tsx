@@ -2,15 +2,20 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Outlet } from "react-router-dom";
 import SettingSidebar from "@/components/settingSidebar";
+import { Menu } from "lucide-react";
 
 export default function Setting() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <motion.div
+      className="min-h-screen bg-background text-foreground"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
       <div className="flex">
         {/* Desktop Sidebar - Fixed */}
-        <div className="block">
+        <div className="hidden lg:block">
           <SettingSidebar />
         </div>
 
@@ -39,20 +44,21 @@ export default function Setting() {
         </AnimatePresence>
 
         {/* Main Content Area */}
-        <main className="flex-1 min-h-screen mt-12 lg:mt-0">
-          <div className="h-screen overflow-y-auto pt-4">
-            <div className="p-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Outlet />
-              </motion.div>
-            </div>
+        <main className="flex-1 h-screen overflow-auto w-[80%]">
+          <div
+            onClick={() => {
+              setSidebarOpen(true);
+            }}
+            className="lg:hidden px-5 border-b border-border/50 py-3  `"
+          >
+            <Menu className="h-5 w-5 text-foreground" />
+          </div>
+          <div className="pt-5 px-2">
+            {/* Spacer for Navbar */}
+            <Outlet />
           </div>
         </main>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { getMembers, deleteMember } from "@/api/member.api";
 import type { Member } from "@/types/member";
 import { format } from "date-fns";
+import type { Response } from "@/types/response";
 
 type Props = {
   onOpenForm: (row?: Member | null) => void;
@@ -193,7 +194,17 @@ export default function MemberTable({
     const ok = confirm("Delete this member?");
     if (!ok) return;
     try {
-      await deleteMember(Number(id));
+       const res: Response = await deleteMember(Number(id));
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      if (!ok) {
+        throw new Error(
+          (res as Record<string, any>)?.message || "Failed to delete member"
+        );
+      }
       // re-fetch after delete
       await fetchMembers();
     } catch (error) {

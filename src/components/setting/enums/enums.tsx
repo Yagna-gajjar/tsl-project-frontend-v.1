@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import EnumsTable from "@/components/enums/enums-table";
-import EnumsFormModal from "@/components/enums/enums-form-modal";
-import EnumsViewModal from "@/components/enums/enums-view-modal";
+import EnumsTable from "@/components/setting/enums/enums-table";
+import EnumsFormModal from "@/components/setting/enums/enums-form-modal";
+import EnumsViewModal from "@/components/setting/enums/enums-view-modal";
 import type { Enums } from "@/types/enums";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function EnumsPage() {
   const [viewOpen, setViewOpen] = useState(false);
@@ -41,15 +43,14 @@ export default function EnumsPage() {
           </p>
         </div>
 
-        <div>
-          <button
-            onClick={() => openForm(null)}
-            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium shadow-sm bg-primary text-white hover:opacity-90"
-            type="button"
-          >
-            Add Enum
-          </button>
-        </div>
+        <Button
+          size="lg"
+          onClick={() => openForm()}
+          className="flex items-center gap-2 px-4 py-2"
+        >
+          <Plus className="w-5 h-5" />
+          Add Enum
+        </Button>
       </div>
 
       <EnumsTable

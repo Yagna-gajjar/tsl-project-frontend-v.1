@@ -11,6 +11,7 @@ import { getIdentityTypes, deleteIdentityTypes } from "@/api/identity-type.api";
 import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import type { Response } from "@/types/response";
 
 type SelectOption = { label: string; value: string | number };
 
@@ -219,7 +220,20 @@ export default function IdentityTypeTable({
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      await deleteIdentityTypes(deleteId);
+      const res: Response = await deleteIdentityTypes(deleteId);
+
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      if (!ok) {
+        throw new Error(
+          (res as Record<string, any>)?.message ||
+            "Failed to delete identity type"
+        );
+      }
+
       await loadData(); // refresh table
     } catch (err) {
       console.error("Delete failed:", err);

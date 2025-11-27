@@ -7,6 +7,7 @@ import { getFacilities, deleteFacility } from "@/api/facility.api";
 import type { Facility } from "@/types/facility";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 
 type Props = {
   onView?: (row: Facility) => void;
@@ -140,7 +141,17 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      await deleteFacility(deleteId);
+      const res: Response = await deleteFacility(deleteId);
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+            : true;
+
+      if (!ok) {
+        throw new Error(
+          (res as Record<string, any>)?.message || "Failed to delete facility"
+        );
+      }
       await loadData();
     } catch {
       toast({

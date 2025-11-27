@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import type { Academy } from "@/types/academy";
-import AcademyTable from "../components/academy/academy-table";
-import AcademyFormModal from "../components/academy/academy-form-modal";
-import AcademyViewModal from "../components/academy/academy-view-modal";
+import AcademyTable from "@/components/view/academy/academy-table";
+import AcademyFormModal from "@/components/view/academy/academy-form-modal";
+import AcademyViewModal from "@/components/view/academy/academy-view-modal";
+import { Button } from "@/components/ui/button";
 
 export default function AcademyPage() {
   const [viewOpen, setViewOpen] = useState(false);
@@ -34,16 +35,20 @@ export default function AcademyPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Academy Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Academy Management
+          </h1>
           <p className="text-gray-500 mt-2">Manage all academies</p>
         </div>
-        <button
+
+        <Button
+          size="lg"
           onClick={() => openForm()}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2"
         >
           <Plus className="w-5 h-5" />
           Add Academy
-        </button>
+        </Button>
       </div>
 
       <div className="bg-white rounded-lg">

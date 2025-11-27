@@ -4,7 +4,7 @@ import { ConfirmationProvider } from "./contexts/confirmation-context"
 import Layout from "./components/layout"
 import Dashboard from "./pages/dashboard"
 import Projects from "./pages/projects"
-import EnumsPage from "./pages/enums";
+import EnumsPage from "./components/setting/enums/enums";
 import Reports from "./pages/reports";
 import Payments from "./pages/payments";
 import { Toaster } from "./components/ui/toaster";
@@ -23,6 +23,8 @@ import FacilityPage from "@/pages/facility";
 import AreaPage from "@/pages/area";
 import AcademyPage from "@/pages/academy";
 import CoachPage from "@/pages/coach";
+import AcademyCoachPage from "@/pages/academyCoach";
+import CoachSkillPage from "@/pages/coachSkill";
 
 export default function App() {
   return (
@@ -47,7 +49,15 @@ export default function App() {
                 />
                 <Route path="/member" element={<MemberPage />} />
                 <Route path="/academy" element={<AcademyPage />} />
-                <Route path="/coach" element={<CoachPage />} />
+                <Route path="/staff-management/coach" element={<CoachPage />} />
+                <Route
+                  path="/staff-management/academy-coaches"
+                  element={<AcademyCoachPage />}
+                />
+                <Route
+                  path="/staff-management/coach-skills"
+                  element={<CoachSkillPage />}
+                />
                 <Route
                   path="/infrastructure-configurations/facility"
                   element={<FacilityPage />}

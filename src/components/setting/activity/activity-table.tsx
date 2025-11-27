@@ -7,6 +7,7 @@ import { getActivities, deleteActivity } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 
 type Props = {
   onView?: (row: Activity) => void;
@@ -120,12 +121,12 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-    const handleSortChange = (column: string, direction: "ASC" | "DESC") => {
-      if(column === "") {
-        setSortBy("activityId");
-        setSortOrder("ASC");
-        return;
-      }
+  const handleSortChange = (column: string, direction: "ASC" | "DESC") => {
+    if (column === "") {
+      setSortBy("activityId");
+      setSortOrder("ASC");
+      return;
+    }
     setSortBy(column);
     setSortOrder(direction);
     setPage(1);
@@ -147,7 +148,17 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      await deleteActivity(deleteId);
+      const res: Response = await deleteActivity(deleteId);
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      if (!ok) {
+        throw new Error(
+          (res as Record<string, any>)?.message || "Failed to delete activity"
+        );
+      }
       await loadData();
     } catch (err) {
       toast({

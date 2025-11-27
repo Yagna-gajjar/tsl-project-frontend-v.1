@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import type { Coach } from "@/types/coach";
-import CoachTable from "@/components/view/coach/coach-table";
-import CoachFormModal from "@/components/view/coach/coach-form-modal";
-import CoachViewModal from "@/components/view/coach/coach-view-modal";
+import type { CoachSkill } from "@/types/coachSkill";
+import CoachSkillTable from "@/components/view/coachSkill/coachSkill-table";
+import CoachSkillFormModal from "@/components/view/coachSkill/coachSkill-form-modal";
+import CoachSkillViewModal from "@/components/view/coachSkill/coachSkill-view-modal";
 import { Button } from "@/components/ui/button";
 
-export default function CoachPage() {
+export default function CoachSkillPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const [editRow, setEditRow] = useState<Coach>();
+  const [editRow, setEditRow] = useState<CoachSkill>();
   const [viewData, setViewData] = useState<number>();
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -17,12 +17,12 @@ export default function CoachPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const openView = (row: Coach) => {
-    setViewData(row.coachId);
+  const openView = (row: CoachSkill) => {
+    setViewData(row.coachSkillId);
     setViewOpen(true);
   };
 
-  const openForm = (row?: Coach) => {
+  const openForm = (row?: CoachSkill) => {
     setEditRow(row);
     setFormOpen(true);
   };
@@ -35,8 +35,10 @@ export default function CoachPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Coach Management</h1>
-          <p className="text-gray-500 mt-2">Manage all coaches</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Coach Skills Management
+          </h1>
+          <p className="text-gray-500 mt-2">Manage coach skills and expertise</p>
         </div>
 
         <Button
@@ -45,19 +47,19 @@ export default function CoachPage() {
           className="flex items-center gap-2 px-4 py-2"
         >
           <Plus className="w-5 h-5" />
-          Add Coach
+          Add Coach Skill
         </Button>
       </div>
 
       <div className="bg-white rounded-lg">
-        <CoachTable
+        <CoachSkillTable
           onView={openView}
           onEdit={openForm}
           refreshKey={refreshKey}
         />
       </div>
 
-      <CoachFormModal
+      <CoachSkillFormModal
         isOpen={formOpen}
         initialData={editRow}
         onClose={() => {
@@ -67,9 +69,9 @@ export default function CoachPage() {
         onSave={handleSaved}
       />
 
-      <CoachViewModal
+      <CoachSkillViewModal
         isOpen={viewOpen}
-        coachId={viewData}
+        coachSkillId={viewData}
         onClose={() => {
           setViewOpen(false);
           setViewData(undefined);

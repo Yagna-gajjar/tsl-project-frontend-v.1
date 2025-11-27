@@ -59,9 +59,8 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
   >({
     "Family Settings": true,
   });
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const location = useLocation();
+  const location = useLocation(); 
   const navigate = useNavigate();
 
   const toggleExpanded = () => {
@@ -80,8 +79,6 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
     if (section.href) {
       navigate(section.href);
       if (onClose) onClose();
-      // also close mobile drawer if open
-      setMobileOpen(false);
       return;
     }
 
@@ -90,33 +87,30 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
       toggleSection(section.name);
     }
   };
-
-  // call when a submenu link clicked
-  const handleLinkClick = () => {
-    if (onClose) onClose();
-    setMobileOpen(false);
-  };
-
-  /**************************************
-   * Sidebar inner content (shared)
-   **************************************/
-  function SidebarContent() {
-    return (
-      <div className="p-4 h-full flex flex-col">
-        {/* Toggle Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleExpanded}
-          className="absolute -right-3 top-16 z-50 h-7 w-7 rounded-full border-2 border-border bg-background shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 hidden lg:flex items-center justify-center"
-        >
-          {isExpanded ? (
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          )}
-        </Button>
-
+  return (
+    <motion.div
+      initial={{ x: -300 }}
+      animate={{ x: 0 }}
+      transition={{ type: "spring", damping: 30, stiffness: 300 }}
+      className={cn(
+        "bg-card border-r mt-1 border-border h-screen transition-all duration-300 ease-in-out relative",
+        isExpanded ? "w-72" : "w-16"
+      )}
+    >
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleExpanded}
+        className="absolute -right-3 bg-red-800 top-16 z-50 h-6 w-6 rounded-full border border-border bg-background shadow-md hidden lg:flex"
+      >
+        {isExpanded ? (
+          <ChevronLeft className="h-3 w-3" />
+        ) : (
+          <ChevronRight className="h-3 w-3" />
+        )}
+      </Button>
+      <div className="p-5">
         <div className="mb-8">
           {/* Back Button */}
           <Link to="/dashboard">
@@ -151,62 +145,85 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
           </Link>
         </div>
 
-        {/* Settings Title */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="mb-6 px-2"
-            >
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Settings
-              </h3>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <nav className="space-y-2">
+          {navigationItems.map((item) => {
+            const isActiveTop = item.href
+              ? location.pathname.indexOf(item.href) !== -1
+              : false;
+            const hasSubmenu =
+              Array.isArray(item.submenu) && item.submenu.length > 0;
+            const isSectionExpanded = expandedSections[item.name];
 
-        {/* Navigation */}
-        <nav className="space-y-2 flex-1 overflow-y-auto">
-          {navigationItems.map((section) => {
-            const SectionIcon = section.icon;
-            const isSectionExpanded = expandedSections[section.name];
-
-            return (
-              <div key={section.name} className="space-y-1">
-                {/* Section Header */}
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={() => handleSectionClick(section)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200",
-                    "hover:bg-accent/50 group",
-                    !isExpanded && "justify-center"
-                  )}
+            const Icon = item.icon;
+            if (item.href && !hasSubmenu) {
+              return (
+                <motion.div
+                  key={item.name}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-1.5 rounded-md bg-blue-600/10 text-blue-600 group-hover:bg-blue-600/20 transition-colors duration-200">
-                      <SectionIcon className="h-4 w-4" />
-                    </div>
+                  <Link
+                    to={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
+                      isActiveTop
+                        ? "bg-blue-600 text-background"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                      !isExpanded && "justify-center"
+                    )}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
                     <AnimatePresence>
                       {isExpanded && (
                         <motion.span
                           initial={{ opacity: 0, width: 0 }}
                           animate={{ opacity: 1, width: "auto" }}
                           exit={{ opacity: 0, width: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="font-semibold text-sm whitespace-nowrap overflow-hidden text-foreground"
+                          transition={{ duration: 0.18 }}
+                          className="font-medium whitespace-nowrap overflow-hidden"
                         >
-                          {section.name}
+                          {item.name}
                         </motion.span>
                       )}
                     </AnimatePresence>
-                  </div>
+                  </Link>
+                </motion.div>
+              );
+            }
+
+            // Otherwise (has submenu or no href), render header as button that toggles submenu when expanded
+            return (
+              <div key={item.name} className="space-y-1">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleSectionClick(item)}
+                  className={cn(
+                    "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200",
+                    isActiveTop
+                      ? "bg-blue-600 text-background"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                    !isExpanded && "justify-center"
+                  )}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" />
                   <AnimatePresence>
                     {isExpanded && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="font-medium whitespace-nowrap overflow-hidden"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence>
+                    {isExpanded && hasSubmenu && (
                       <motion.div
                         initial={{ opacity: 0, rotate: -90 }}
                         animate={{
@@ -214,24 +231,23 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                           rotate: isSectionExpanded ? 0 : -90,
                         }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.18 }}
+                        className="ml-auto"
                       >
-                        {section.submenu ? (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
-                        ) : null}
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </motion.button>
 
-                {/* Submenu Items */}
+                {/* Submenu */}
                 <AnimatePresence>
-                  {(isSectionExpanded || !isExpanded) && (
+                  {isSectionExpanded && hasSubmenu && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.18 }}
                       className={cn(
                         "space-y-1",
                         isExpanded
@@ -239,13 +255,14 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                           : "ml-0"
                       )}
                     >
-                      {section.submenu?.map((item) => {
-                        const isActive = location.pathname === item.href;
-                        const ItemIcon = item.icon;
+                      {item.submenu!.map((sub) => {
+                        const isActive =
+                          location.pathname.indexOf(sub.href) !== -1;
+                        const SubIcon = sub.icon ?? Icon;
 
                         return (
                           <motion.div
-                            key={item.href}
+                            key={sub.href}
                             whileHover={{
                               x: isExpanded ? 2 : 0,
                               scale: !isExpanded ? 1.05 : 1,
@@ -253,19 +270,19 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                             whileTap={{ scale: 0.98 }}
                           >
                             <Link
-                              to={item.href}
-                              onClick={handleLinkClick}
+                              to={sub.href}
+                              onClick={onClose}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
                                 isActive
                                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                                  : "text-muted-foreground hover:text-foreground hover:bg-accent/70",
+                                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
                                 !isExpanded && "justify-center"
                               )}
                             >
-                              <ItemIcon
+                              <SubIcon
                                 className={cn(
-                                  "h-4 w-4 flex-shrink-0 transition-transform duration-200",
+                                  "h-4 w-4 flex-shrink-0",
                                   isActive && "scale-110"
                                 )}
                               />
@@ -275,10 +292,10 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                                     initial={{ opacity: 0, width: 0 }}
                                     animate={{ opacity: 1, width: "auto" }}
                                     exit={{ opacity: 0, width: 0 }}
-                                    transition={{ duration: 0.2 }}
+                                    transition={{ duration: 0.18 }}
                                     className="text-sm font-medium whitespace-nowrap overflow-hidden"
                                   >
-                                    {item.label}
+                                    {sub.label}
                                   </motion.span>
                                 )}
                               </AnimatePresence>
@@ -304,96 +321,9 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
             );
           })}
         </nav>
-
-        {/* Footer Info */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.2 }}
-              className="mt-auto pt-4 px-2 border-t border-border/50"
-            >
-              <p className="text-xs text-muted-foreground text-center">
-                Settings Configuration
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
-    );
-  }
-
-  /**************************************
-   * Render
-   **************************************/
-  return (
-    <>
-      {/* Mobile hamburger button */}
-      <div className="lg:hidden">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open settings sidebar"
-          className="fixed top-4 left-4 z-60"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {/* Desktop sidebar (unchanged) */}
-      <motion.div
-        initial={{ x: -300 }}
-        animate={{ x: 0 }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className={cn(
-          "hidden lg:flex bg-gradient-to-b from-card to-card/95 border-r border-border/50 h-screen transition-all duration-300 ease-in-out relative shadow-lg",
-          isExpanded ? "w-72" : "w-20"
-        )}
-      >
-        <SidebarContent />
-      </motion.div>
-
-      {/* Mobile drawer + overlay */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            {/* backdrop */}
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => {
-                setMobileOpen(false);
-                if (onClose) onClose();
-              }}
-              className="fixed inset-0 z-40 bg-black"
-              aria-hidden="true"
-            />
-
-            {/* drawer */}
-            <motion.aside
-              key="mobile-drawer"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className={cn(
-                "fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-card to-card/95 border-r border-border/50 shadow-lg w-72",
-                // keep same mobile width as expanded desktop
-                "lg:hidden"
-              )}
-              role="dialog"
-              aria-modal="true"
-            >
-              <SidebarContent />
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+    </motion.div>
   );
 }
+
+

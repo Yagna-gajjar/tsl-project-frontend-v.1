@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import FamilyTable from "@/components/family/family-table";
-import FamilyFormModal from "@/components/family/family-form-modal";
-import FamilyViewModal from "@/components/family/family-view-modal";
+import FamilyTable from "@/components/view/family/family-table";
+import FamilyFormModal from "@/components/view/family/family-form-modal";
+import FamilyViewModal from "@/components/view/family/family-view-modal";
 import type { Family } from "@/types/family";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function FamilyPage() {
   const [viewOpen, setViewOpen] = useState(false);
@@ -37,15 +39,14 @@ export default function FamilyPage() {
           </p>
         </div>
 
-        <div>
-          <button
-            onClick={() => openForm(null)}
-            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium shadow-sm bg-primary text-white hover:opacity-90"
-            type="button"
-          >
-            Add Family
-          </button>
-        </div>
+        <Button
+          size="lg"
+          onClick={() => openForm()}
+          className="flex items-center gap-2 px-4 py-2"
+        >
+          <Plus className="w-5 h-5" />
+          Add Family
+        </Button>
       </div>
 
       <FamilyTable

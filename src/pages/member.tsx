@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import MemberTable from "@/components/members/member-table";
-import MemberFormModal from "@/components/members/member-form-modal";
-import MemberViewModal from "@/components/members/member-view-modal";
+import MemberTable from "@/components/view/members/member-table";
+import MemberFormModal from "@/components/view/members/member-form-modal";
+import MemberViewModal from "@/components/view/members/member-view-modal";
 import type { Member } from "@/types/member";
 
 export default function MemberPage() {

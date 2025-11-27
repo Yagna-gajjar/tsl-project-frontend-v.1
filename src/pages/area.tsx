@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import type { Area } from "@/types/area";
-import AreaTable from "../components/area/area-table";
-import AreaFormModal from "../components/area/area-form-modal";
-import AreaViewModal from "../components/area/area-view-modal";
+import AreaTable from "@/components/view/area/area-table";
+import AreaFormModal from "@/components/view/area/area-form-modal";
+import AreaViewModal from "@/components/view/area/area-view-modal";
+import { Button } from "@/components/ui/button";
 
 export default function AreaPage() {
   const [viewOpen, setViewOpen] = useState(false);
@@ -37,13 +38,14 @@ export default function AreaPage() {
           <h1 className="text-3xl font-bold text-gray-900">Area Management</h1>
           <p className="text-gray-500 mt-2">Manage all facility areas</p>
         </div>
-        <button
+        <Button
+          size="lg"
           onClick={() => openForm()}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2"
         >
           <Plus className="w-5 h-5" />
           Add Area
-        </button>
+        </Button>
       </div>
 
       <div className="bg-white rounded-lg">

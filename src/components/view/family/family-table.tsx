@@ -7,8 +7,9 @@ import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
 import { getIdentityTypes } from "@/api/identity-type.api";
 import type { Family } from "@/types/family";
-import { ConfirmDialog } from "../dialogs/confirm-dialog";
+import { ConfirmDialog } from "../../dialogs/confirm-dialog";
 import { format } from "date-fns";
+import type { Response } from "@/types/response";
 
 type SelectOption = { label: string; value: any };
 
@@ -250,7 +251,17 @@ export default function FamilyTable({
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      await deleteFamily(deleteId);
+      const res: Response = await deleteFamily(deleteId);
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      if (!ok) {
+        throw new Error(
+          (res as Record<string, any>)?.message || "Failed to delete family"
+        );
+      }
       await loadData(); // refresh table
     } catch (err) {
       console.error("Delete failed:", err);

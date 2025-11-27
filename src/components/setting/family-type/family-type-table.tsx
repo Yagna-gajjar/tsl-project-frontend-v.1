@@ -7,6 +7,7 @@ import { getFamilyTypes, deleteFamilyTypes } from "@/api/family-type.api";
 import type { FamilyType } from "@/types/familyType";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 type Props = {
   onView?: (row: FamilyType) => void;
   onEdit?: (row: FamilyType) => void;
@@ -135,10 +136,18 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      const res = await deleteFamilyTypes(deleteId);
+      const res: Response = await deleteFamilyTypes(deleteId);
 
-      if (res?.success == false) {
-        throw new Error(res?.message || "Failed to delete");
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      if (!ok) {
+        throw new Error(
+          (res as Record<string, any>)?.message ||
+            "Failed to delete family type"
+        );
       }
 
       await loadData(); // refresh table

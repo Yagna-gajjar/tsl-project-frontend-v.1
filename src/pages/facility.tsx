@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import FacilityTable from "../components/facility/facility-table";
-import FacilityFormModal from "../components/facility/facility-form-modal";
-import FacilityViewModal from "../components/facility/facility-view-modal";
+import FacilityTable from "@/components/view/facility/facility-table";
+import FacilityFormModal from "@/components/view/facility/facility-form-modal";
+import FacilityViewModal from "@/components/view/facility/facility-view-modal";
 import type { Facility } from "@/types/facility";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function FacilityPage() {
   const [viewOpen, setViewOpen] = useState(false);
@@ -37,15 +39,14 @@ export default function FacilityPage() {
           </p>
         </div>
 
-        <div>
-          <button
-            onClick={() => openForm(null)}
-            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium shadow-sm bg-primary text-white hover:opacity-90"
-            type="button"
-          >
-            Add Facility
-          </button>
-        </div>
+        <Button
+          size="lg"
+          onClick={() => openForm()}
+          className="flex items-center gap-2 px-4 py-2"
+        >
+          <Plus className="w-5 h-5" />
+          Add Facility
+        </Button>
       </div>
 
       <FacilityTable

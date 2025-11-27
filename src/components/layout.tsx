@@ -5,10 +5,15 @@ import Sidebar from "./sidebar"
 import { Outlet } from "react-router-dom"
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <motion.div
+      className="min-h-screen bg-background text-foreground"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
       <div className="fixed top-0 left-0 right-0 z-40">
         <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       </div>
@@ -17,6 +22,7 @@ export default function Layout() {
         <div className="hidden lg:block">
           <Sidebar />
         </div>
+
         {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
           {sidebarOpen && (
@@ -44,18 +50,11 @@ export default function Layout() {
         {/* Main Content Area */}
         <main className="flex-1 h-screen overflow-auto p-4 w-[80%]">
           <div className="pt-16">
-            {" "}
             {/* Spacer for Navbar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Outlet />
-            </motion.div>
+            <Outlet />
           </div>
         </main>
       </div>
-    </div>
+    </motion.div>
   );
 }

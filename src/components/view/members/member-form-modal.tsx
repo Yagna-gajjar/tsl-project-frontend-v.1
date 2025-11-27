@@ -9,7 +9,7 @@ import { FormContent } from "@/components/form-modal/form-content";
 import { createMember, updateMember } from "@/api/member.api";
 import type { Member } from "@/types/member";
 import { toast } from "@/hooks/use-toast";
-import type { FormFieldConfig } from "../form-modal/types";
+import type { FormFieldConfig } from "../../form-modal/types";
 
 type Props = {
   isOpen: boolean;

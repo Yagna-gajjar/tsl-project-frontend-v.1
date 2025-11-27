@@ -18,6 +18,7 @@ import {
   Building2,
   MapPinned,
   Users,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -74,7 +75,20 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   { name: "Academy", href: "/academy", icon: HomeIcon },
-  { name: "Coach", href: "/coach", icon: Users },
+  {
+    name: "Staff Management",
+    href: "/staff-management",
+    icon: Users,
+    submenu: [
+      { label: "Coach", href: "/staff-management/coach", icon: Users },
+      { label: "Skills", href: "/staff-management/coach-skills", icon: Award },
+      {
+        label: "Academy Coaches",
+        href: "/staff-management/academy-coaches",
+        icon: Users,
+      },
+    ],
+  },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Payments", href: "/payments", icon: CreditCard },
 ];
@@ -157,7 +171,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <nav className="space-y-2">
           {navigationItems.map((item) => {
             const isActiveTop = item.href
-              ? location.pathname.indexOf(item.href) !== -1
+              ? location.pathname.startsWith(item.href + "/")
               : false;
             const hasSubmenu =
               Array.isArray(item.submenu) && item.submenu.length > 0;
@@ -245,7 +259,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
                         transition={{ duration: 0.18 }}
                         className="ml-auto"
                       >
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        <ChevronDown
+                          className={`h-4 w-4 ${
+                            isActiveTop
+                              ? "text-background"
+                              : "text-muted-foreground"
+                          }`}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -253,7 +273,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
                 {/* Submenu */}
                 <AnimatePresence>
-                  {(isSectionExpanded || !isExpanded) && hasSubmenu && (
+                  {isSectionExpanded && hasSubmenu && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -267,10 +287,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                       )}
                     >
                       {item.submenu!.map((sub) => {
-                        const isActive =
-                          location.pathname.indexOf(sub.href) !== -1;
                         const SubIcon = sub.icon ?? Icon;
-
                         return (
                           <motion.div
                             key={sub.href}
@@ -285,7 +302,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                               onClick={onClose}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group",
-                                isActive
+                                location.pathname === sub.href
                                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
                                   : "text-muted-foreground hover:text-foreground hover:bg-accent",
                                 !isExpanded && "justify-center"
@@ -294,7 +311,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                               <SubIcon
                                 className={cn(
                                   "h-4 w-4 flex-shrink-0",
-                                  isActive && "scale-110"
+                                  location.pathname === sub.href && "scale-110"
                                 )}
                               />
                               <AnimatePresence>
@@ -310,7 +327,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                                   </motion.span>
                                 )}
                               </AnimatePresence>
-                              {isActive && isExpanded && (
+                              {location.pathname === sub.href && isExpanded && (
                                 <motion.div
                                   layoutId="activeIndicator"
                                   className="ml-auto w-1.5 h-1.5 rounded-full bg-white"

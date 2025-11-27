@@ -9,6 +9,7 @@ import {
 } from "@/api/team-category.api";
 import type { TeamCategory } from "@/types/teamCategory";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import type { Response } from "@/types/response";
 
 type Props = {
   onView?: (row: TeamCategory) => void;
@@ -108,7 +109,19 @@ export default function TeamCategoryTable({
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      await deleteTeamCategories(deleteId);
+      const res: Response = await deleteTeamCategories(deleteId);
+      const ok =
+        typeof res?.success !== "undefined"
+          ? res.success === true || String(res.success) === "true"
+          : true;
+
+      if (!ok) {
+        throw new Error(
+          (res as Record<string, any>)?.message ||
+            "Failed to delete team category"
+        );
+      }
+
       await loadData();
     } catch (err) {
       console.error("Delete failed:", err);
