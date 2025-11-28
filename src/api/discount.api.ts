@@ -9,6 +9,7 @@ export interface DiscountQuery {
   search?: string;
   courseId?: number;
   status?: string;
+  aboveUnits?: number;
   courseName?: string;
 }
 
@@ -24,6 +25,7 @@ export function getDiscounts(params: DiscountQuery = {}): Promise<Discount[]> {
     courseId: params.courseId ?? undefined,
     status: params.status ?? undefined,
     courseName: params.courseName ?? undefined,
+    aboveUnits: params.aboveUnits ?? undefined,
   });
 
   return request<Discount[]>(`${DISCOUNT_BASE}${qs}`);

@@ -12,11 +12,7 @@ type Props = {
   refreshKey?: number;
 };
 
-export default function EnrollmentTable({
-  onView,
-  onEdit,
-  refreshKey,
-}: Props) {
+export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -45,17 +41,17 @@ export default function EnrollmentTable({
         academyId: filters.academyId as number | undefined,
         courseId: filters.courseId as number | undefined,
         memberId: filters.memberId as number | undefined,
-          status: filters.status as string | undefined,
-          memberFirstName: filters.memberFirstName as string | undefined,
-          academyName: filters.academyName as string | undefined,
-            courseName: filters.courseName as string | undefined,
+        status: filters.status as string | undefined,
+        memberFirstName: filters.memberFirstName as string | undefined,
+        academyName: filters.academyName as string | undefined,
+        courseName: filters.courseName as string | undefined,
       });
 
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray((res as Record<string, unknown>)?.data)
-          ? ((res as Record<string, unknown>).data as Enrollment[])
-          : [];
+        ? ((res as Record<string, unknown>).data as Enrollment[])
+        : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         enrollmentDate: r.enrollmentDate
@@ -130,31 +126,18 @@ export default function EnrollmentTable({
     {
       header: "Enrollment ID",
       key: "enrollmentId",
-      render: (row: Enrollment) => row.enrollmentId || "-",
+      render: (row: Enrollment) => row.enrollmentId ?? "-",
       sortable: true,
     },
     {
-      header: "Academy Name",
-      key: "academyName",
-      sortable: true,
-      render: (row: Enrollment) => row.academyName || "-",
-      filterType: "text",
-    },
-    {
-      header: "Member Name",
-      key: "memberFirstName",
-      sortable: true,
+      header: "Enrollment Date",
+      key: "enrollmentDate",
       render: (row: Enrollment) =>
-        row.memberFirstName + " " + row.memberLastName || "-",
-      filterType: "text",
-    },
-    {
-      header: "Course Name",
-      key: "courseName",
+        row.enrollmentDate
+          ? new Date(row.enrollmentDate).toLocaleDateString()
+          : "-",
       sortable: true,
-      render: (row: Enrollment) => row.courseName || "-",
-      filterType: "text",
-      },
+    },
     {
       header: "Start Date",
       key: "startDate",
@@ -163,13 +146,97 @@ export default function EnrollmentTable({
       sortable: true,
     },
     {
+      header: "End Date",
+      key: "endDate",
+      render: (row: Enrollment) =>
+        row.endDate ? new Date(row.endDate).toLocaleDateString() : "-",
+      sortable: true,
+    },
+    {
+      header: "Academy Name",
+      key: "academyName",
+      render: (row: Enrollment) => row.academyName || "-",
+      sortable: true,
+      filterType: "text",
+    },
+    {
+      header: "Course Name",
+      key: "courseName",
+      render: (row: Enrollment) => row.courseName || "-",
+      sortable: true,
+      filterType: "text",
+    },
+    {
+      header: "Member Name",
+      key: "memberFirstName",
+      render: (row: Enrollment) =>
+        (row.memberFirstName || "") +
+        (row.memberLastName ? " " + row.memberLastName : ""),
+      sortable: true,
+      filterType: "text",
+    },
+    {
+      header: "Discount ID",
+      key: "discountId",
+      render: (row: Enrollment) => row.discountId ?? "-",
+      sortable: true,
+    },
+    {
+      header: "Free Days",
+      key: "freeDays",
+      render: (row: Enrollment) => row.freeDays ?? 0,
+      sortable: true,
+    },
+    {
+      header: "Session Units",
+      key: "sessionUnits",
+      render: (row: Enrollment) => row.sessionUnits ?? 0,
+      sortable: true,
+    },
+    {
+      header: "Number Of Days",
+      key: "numberOfDays",
+      render: (row: Enrollment) => row.numberOfDays ?? 0,
+      sortable: true,
+    },
+    {
+      header: "Discounted Amount",
+      key: "discountedAmount",
+      render: (row: Enrollment) =>
+        `Rs. ${Number((row as any).discountedAmount ?? 0).toFixed(2)}`,
+      sortable: true,
+    },
+    {
+      header: "Commited Amount",
+      key: "commitedAmount",
+      render: (row: Enrollment) =>
+        `Rs. ${Number((row as any).commitedAmount ?? 0).toFixed(2)}`,
+      sortable: true,
+    },
+    {
+      header: "Open Enrollment",
+      key: "openEnrollment",
+      render: (row: Enrollment) => (row.openEnrollment ? "Yes" : "No"),
+      sortable: true,
+      filterType: "select",
+      filterOptions: [
+        { value: "true", label: "Yes" },
+        { value: "false", label: "No" },
+      ],
+    },
+    {
+      header: "Remarks",
+      key: "remarks",
+      render: (row: Enrollment) => row.remarks || "-",
+    },
+    {
       header: "Status",
       key: "status",
       filterType: "select",
       filterOptions: [
         { value: "active", label: "Active" },
-        { value: "close", label: "Close" },
-        { value: "changed", label: "Changed" },
+        { value: "inactive", label: "Inactive" },
+        { value: "completed", label: "Completed" },
       ],
       render: (row: Enrollment) => {
         const status = row.status || "active";
@@ -187,12 +254,20 @@ export default function EnrollmentTable({
           </span>
         );
       },
+      sortable: true,
     },
     {
-      header: "Amount",
-      key: "committedAmount",
+      header: "Created At",
+      key: "createdAt",
       render: (row: Enrollment) =>
-        `Rs. ${Number(row.committedAmount)?.toFixed(2) || "0.00"}`,
+        row.createdAt ? new Date(row.createdAt).toLocaleString() : "-",
+      sortable: true,
+    },
+    {
+      header: "Updated At",
+      key: "updatedAt",
+      render: (row: Enrollment) =>
+        row.updatedAt ? new Date(row.updatedAt).toLocaleString() : "-",
       sortable: true,
     },
   ];

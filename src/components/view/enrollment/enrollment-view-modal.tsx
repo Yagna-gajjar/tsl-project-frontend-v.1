@@ -22,8 +22,12 @@ type Props = {
 const fields: FieldConfig<Enrollment>[] = [
   { key: "enrollmentId", label: "Enrollment ID", icon: Hash },
   { key: "academyId", label: "Academy ID", icon: Hash },
+  { key: "academyName", label: "Academy Name", icon: BookOpen },
   { key: "courseId", label: "Course ID", icon: BookOpen },
+  { key: "courseName", label: "Course Name", icon: BookOpen },
   { key: "memberId", label: "Member ID", icon: Users },
+  { key: "memberFirstName", label: "Member First Name", icon: Users },
+  { key: "memberLastName", label: "Member Last Name", icon: Users },
   {
     key: "enrollmentDate",
     label: "Enrollment Date",
@@ -51,16 +55,17 @@ const fields: FieldConfig<Enrollment>[] = [
         v === "active"
           ? "text-green-600"
           : v === "inactive"
-            ? "text-yellow-600"
-            : "text-blue-600";
+          ? "text-yellow-600"
+          : "text-blue-600";
       return <span className={statusColor}>{v || "unknown"}</span>;
     },
   },
   { key: "freeDays", label: "Free Days", icon: Hash },
   { key: "sessionUnits", label: "Session Units", icon: Hash },
+  { key: "numberOfDays", label: "Number Of Days", icon: Hash },
   {
-    key: "discountAmount",
-    label: "Discount Amount",
+    key: "discountedAmount",
+    label: "Discounted Amount",
     icon: DollarSign,
     render: (v) => {
       const amount = v as number;
@@ -68,8 +73,8 @@ const fields: FieldConfig<Enrollment>[] = [
     },
   },
   {
-    key: "committedAmount",
-    label: "Committed Amount",
+    key: "commitedAmount",
+    label: "Commited Amount",
     icon: DollarSign,
     render: (v) => {
       const amount = v as number;
@@ -82,7 +87,7 @@ const fields: FieldConfig<Enrollment>[] = [
     icon: CheckCircle,
     render: (v) => (v ? "Yes" : "No"),
   },
-  { key: "remark", label: "Remark", icon: FileText },
+  { key: "remarks", label: "Remarks", icon: FileText },
   {
     key: "createdAt",
     label: "Created At",
