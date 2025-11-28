@@ -1,29 +1,35 @@
-"use client"
+"use client";
 
-import type { ReactNode } from "react"
-import { motion } from "framer-motion"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import type { FieldType } from "./types"
+import type { ReactNode } from "react";
+import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { FieldType } from "./types";
 
 interface FormFieldInputProps {
-  type: FieldType
-  name: string
-  label: string
-  value: any
-  onChange: (value: any) => void
-  placeholder?: string
-  description?: string
-  required?: boolean
-  error?: string
-  options?: Array<{ label: string; value: any }>
-  icon?: ReactNode
-  disabled?: boolean
-  className?: string
-  index: number
+  type: FieldType;
+  name: string;
+  label: string;
+  value: any;
+  onChange: (value: any) => void;
+  placeholder?: string;
+  description?: string;
+  required?: boolean;
+  error?: string;
+  options?: Array<{ label: string; value: any }>;
+  icon?: ReactNode;
+  disabled?: boolean;
+  className?: string;
+  index: number;
 }
 
 export function FormFieldInput({
@@ -52,12 +58,12 @@ export function FormFieldInput({
         duration: 0.3,
       },
     }),
-  }
+  };
 
   const errorVariants = {
     hidden: { opacity: 0, height: 0 },
     visible: { opacity: 1, height: "auto" },
-  }
+  };
 
   const renderInput = () => {
     switch (type) {
@@ -81,12 +87,20 @@ export function FormFieldInput({
 
       case "select":
         return (
-          <Select value={String(value || "")} onValueChange={onChange} disabled={disabled}>
+          <Select
+            value={String(value || "")}
+            onValueChange={onChange}
+            disabled={disabled}
+          >
             <SelectTrigger
-              className={`focus:ring-blue-500 focus:border-blue-500 ${error ? "border-red-500" : ""}`}
+              className={`focus:ring-blue-500 focus:border-blue-500 ${
+                error ? "border-red-500" : ""
+              }`}
               aria-invalid={!!error}
             >
-              <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}`} />
+              <SelectValue
+                placeholder={placeholder || `Select ${label.toLowerCase()}`}
+              />
             </SelectTrigger>
             <SelectContent>
               {options?.map((opt) => (
@@ -96,7 +110,80 @@ export function FormFieldInput({
               ))}
             </SelectContent>
           </Select>
-        )
+        );
+
+      case "multiselect": {
+        const selectedArray = Array.isArray(value) ? value : [];
+
+        const selectedLabels =
+          options
+            ?.filter((opt) => selectedArray.includes(opt.value))
+            .map((o) => o.label)
+            .join(", ") || "";
+
+        return (
+          <div className="relative">
+            {/* Trigger */}
+            <button
+              type="button"
+              disabled={disabled}
+              className={`w-full flex justify-between items-center px-3 py-2 border rounded text-left
+                    ${error ? "border-red-500" : "border-input"}
+                    ${
+                      disabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
+              onClick={(e) => {
+                const menu = e.currentTarget.nextElementSibling;
+                if (menu) menu.classList.toggle("hidden");
+              }}
+            >
+              <span
+                className={`truncate ${
+                  selectedLabels ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {selectedLabels ||
+                  placeholder ||
+                  `Select ${label.toLowerCase()}`}
+              </span>
+              <span className="text-sm">▾</span>
+            </button>
+
+            {/* Dropdown (absolute, no space used) */}
+            <div className="hidden absolute z-50 mt-1 w-full max-h-60 overflow-auto bg-background border rounded shadow-lg p-2">
+              {options?.map((opt) => {
+                const checked = selectedArray.includes(opt.value);
+                return (
+                  <label
+                    key={opt.value}
+                    htmlFor={`${name}-${String(opt.value)}`}
+                    className="flex items-center gap-3 px-2 py-1 rounded hover:bg-muted cursor-pointer"
+                  >
+                    <Checkbox
+                      id={`${name}-${String(opt.value)}`}
+                      checked={checked}
+                      onCheckedChange={(c) => {
+                        const isChecked = Boolean(c);
+                        const current = [...selectedArray];
+                        if (isChecked) {
+                          if (!current.includes(opt.value)) {
+                            onChange([...current, opt.value]);
+                          }
+                        } else {
+                          onChange(current.filter((v) => v !== opt.value));
+                        }
+                      }}
+                    />
+                    <span className="text-sm">{opt.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
 
       case "checkbox":
         return (
@@ -113,7 +200,7 @@ export function FormFieldInput({
               {label}
             </Label>
           </div>
-        )
+        );
 
       default:
         return (
@@ -125,13 +212,17 @@ export function FormFieldInput({
             placeholder={placeholder}
             disabled={disabled}
             required={required}
-            className={`focus:ring-blue-500 focus:border-blue-500 ${error ? "border-red-500" : ""}`}
+            className={`focus:ring-blue-500 focus:border-blue-500 ${
+              error ? "border-red-500" : ""
+            }`}
             aria-invalid={!!error}
-            aria-describedby={error ? `${name}-error` : description ? `${name}-desc` : undefined}
+            aria-describedby={
+              error ? `${name}-error` : description ? `${name}-desc` : undefined
+            }
           />
-        )
+        );
     }
-  }
+  };
 
   if (type === "checkbox") {
     return (
@@ -160,7 +251,7 @@ export function FormFieldInput({
           </motion.p>
         )}
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -173,7 +264,10 @@ export function FormFieldInput({
     >
       <div className="flex items-center gap-2">
         {icon && <span className="text-blue-500">{icon}</span>}
-        <Label htmlFor={name} className={`text-sm font-medium ${error ? "text-red-500" : ""}`}>
+        <Label
+          htmlFor={name}
+          className={`text-sm font-medium ${error ? "text-red-500" : ""}`}
+        >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
@@ -196,5 +290,5 @@ export function FormFieldInput({
         </motion.p>
       )}
     </motion.div>
-  )
+  );
 }

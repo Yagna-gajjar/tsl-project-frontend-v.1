@@ -1,18 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { getCourses, deleteCourse } from "@/api/course.api";
-import type { Course } from "@/types/course";
+import { getEnrollments, deleteEnrollment } from "@/api/enrollment.api";
+import type { Enrollment } from "@/types/enrollment";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+
 type Props = {
-  onView?: (row: Course) => void;
-  onEdit?: (row: Course) => void;
+  onView?: (row: Enrollment) => void;
+  onEdit?: (row: Enrollment) => void;
   refreshKey?: number;
 };
 
-export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
-  const [data, setData] = useState<Course[]>([]);
+export default function EnrollmentTable({
+  onView,
+  onEdit,
+  refreshKey,
+}: Props) {
+  const [data, setData] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
@@ -22,7 +27,7 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const [filters, setFilters] = useState<
     Record<string, string | number | undefined>
   >({});
-  const [sortBy, setSortBy] = useState<string>("courseId");
+  const [sortBy, setSortBy] = useState<string>("enrollmentId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -31,32 +36,40 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getCourses({
+      const res = await getEnrollments({
         page,
         limit,
         sortBy,
         sortOrder: sortOrder,
         search: search || undefined,
         academyId: filters.academyId as number | undefined,
-        activityId: filters.activityId as number | undefined,
-        courseName: filters.courseName as string | undefined,
-        status: filters.status as string | undefined,
+        courseId: filters.courseId as number | undefined,
+        memberId: filters.memberId as number | undefined,
+          status: filters.status as string | undefined,
+          memberFirstName: filters.memberFirstName as string | undefined,
+          academyName: filters.academyName as string | undefined,
+            courseName: filters.courseName as string | undefined,
       });
 
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Course[])
-        : [];
+          ? ((res as Record<string, unknown>).data as Enrollment[])
+          : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
+        enrollmentDate: r.enrollmentDate
+          ? new Date(r.enrollmentDate)
+          : undefined,
+        startDate: r.startDate ? new Date(r.startDate) : undefined,
+        endDate: r.endDate ? new Date(r.endDate) : undefined,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-      })) as Course[];
+      })) as Enrollment[];
 
       setData(rows);
     } catch {
-      console.error("Failed to fetch courses");
+      console.error("Failed to fetch enrollments");
       setData([]);
     } finally {
       setIsLoading(false);
@@ -96,126 +109,97 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await deleteCourse(deleteId);
-      setData((prev) => prev.filter((c) => c.courseId !== deleteId));
+      await deleteEnrollment(deleteId);
+      setData((prev) => prev.filter((e) => e.enrollmentId !== deleteId));
       toast({
         title: "Success",
-        description: "Course deleted successfully",
+        description: "Enrollment deleted successfully",
       });
       setDeleteOpen(false);
       setDeleteId(null);
     } catch {
       toast({
         title: "Error",
-        description: "Failed to delete course",
+        description: "Failed to delete enrollment",
         variant: "destructive",
       });
     }
   };
 
-  const columns: Column<Course>[] = [
+  const columns: Column<Enrollment>[] = [
     {
-      header: "Course Name",
-      key: "courseName",
-      render: (row: Course) => row.courseName || "-",
+      header: "Enrollment ID",
+      key: "enrollmentId",
+      render: (row: Enrollment) => row.enrollmentId || "-",
       sortable: true,
-      filterType: "text",
     },
     {
       header: "Academy Name",
       key: "academyName",
-      render: (row: Course) => row.academyName || "-",
       sortable: true,
+      render: (row: Enrollment) => row.academyName || "-",
       filterType: "text",
     },
     {
-      header: "Activity Name",
-      key: "activityName",
-      render: (row: Course) => row.activityName || "-",
+      header: "Member Name",
+      key: "memberFirstName",
       sortable: true,
+      render: (row: Enrollment) =>
+        row.memberFirstName + " " + row.memberLastName || "-",
       filterType: "text",
     },
     {
-      header: "Introduction Date",
-      key: "introductionDate",
-      render: (row: Course) =>
-        row.introductionDate ? row.introductionDate.toDateString() : "-",
+      header: "Course Name",
+      key: "courseName",
       sortable: true,
-      hidden: true,
-    },
-    {
-      header: "Course Type",
-      key: "typeOfCourse",
-      render: (row: Course) => row.typeOfCourse || "-",
+      render: (row: Enrollment) => row.courseName || "-",
       filterType: "text",
-    },
+      },
     {
-      header: "Min Enrollment Unit",
-      key: "minEnrollmentUnit",
-      render: (row: Course) => row.minEnrollmentUnit || "-",
-      hidden: true,
-    },
-    {
-      header: "Total Parallel Batches",
-      key: "totalParallelBatches",
-      render: (row: Course) => row.totalParallelBatches || "-",
-      hidden: true,
-    },
-    {
-      header: "Classification Type",
-      key: "classificationType",
-      render: (row: Course) => row.classificationType || "-",
-    },
-    {
-      header: "Charging Pattern",
-      key: "chargingPattern",
-      render: (row: Course) => row.chargingPattern || "-",
-    },
-    {
-      header: "Session Minutes",
-      key: "sessionMinutes",
-      render: (row: Course) => row.sessionMinutes || "-",
-    },
-    {
-      header: "No. Of Days In Week",
-      key: "noOfDaysInWeek",
-      render: (row: Course) => row.noOfDaysInWeek || "-",
-    },
-    {
-      header: "Week Days",
-      key: "weekDays",
-      render: (row: Course) => row.weekDays || "-",
-    },
-    {
-      header: "Unit Rate",
-      key: "unitRate",
-      render: (row: Course) => row.unitRate || "-",
-    },
-    {
-      header: "Batch Capacity",
-      key: "batchCapacity",
-      render: (row: Course) => row.batchCapacity || "-",
-    },
-    {
-      header: "Age Range",
-      key: "minAge",
-      render: (row: Course) => row.minAge + " - " + row.maxAge || "-",
-    },
-    {
-      header: "Gender",
-      key: "gender",
-      render: (row: Course) => row.gender || "-",
+      header: "Start Date",
+      key: "startDate",
+      render: (row: Enrollment) =>
+        row.startDate ? new Date(row.startDate).toLocaleDateString() : "-",
+      sortable: true,
     },
     {
       header: "Status",
       key: "status",
-      render: (row: Course) => row.status || "-",
+      filterType: "select",
+      filterOptions: [
+        { value: "active", label: "Active" },
+        { value: "close", label: "Close" },
+        { value: "changed", label: "Changed" },
+      ],
+      render: (row: Enrollment) => {
+        const status = row.status || "active";
+        const statusColor =
+          status === "active"
+            ? "bg-green-100 text-green-800"
+            : status === "inactive"
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-blue-100 text-blue-800";
+        return (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Amount",
+      key: "committedAmount",
+      render: (row: Enrollment) =>
+        `Rs. ${Number(row.committedAmount)?.toFixed(2) || "0.00"}`,
+      sortable: true,
     },
   ];
 
   return (
     <div>
-      <DataTable<Course>
+      <DataTable<Enrollment>
         data={data}
         columns={columns}
         isLoading={isLoading}
@@ -230,11 +214,11 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
         onSortChange={handleSortChange}
         onView={(row) => onView?.(row)}
         onEdit={(row) => onEdit?.(row)}
-        onDelete={(courseId: number | undefined) => {
-          setDeleteId(courseId ?? null);
+        onDelete={(enrollmentId: number | undefined) => {
+          setDeleteId(enrollmentId ?? null);
           setDeleteOpen(true);
         }}
-        idKey={"courseId"}
+        idKey={"enrollmentId"}
       />
       <ConfirmDialog
         isOpen={deleteOpen}
@@ -243,8 +227,8 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteId(null);
         }}
         onConfirm={handleDelete}
-        title="Delete Course?"
-        description="Are you sure you want to delete this course? This action cannot be undone."
+        title="Delete Enrollment?"
+        description="Are you sure you want to delete this enrollment? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"

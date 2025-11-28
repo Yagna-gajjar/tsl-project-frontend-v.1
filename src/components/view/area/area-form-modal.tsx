@@ -51,11 +51,6 @@ export default function AreaFormModal({
         }));
         // store as array of objects { label, value }
         setFacilityFields(options as unknown as [string, number][]);
-        toast({
-          title: "Success",
-          description: "Facilities loaded successfully.",
-          variant: "success",
-        });
       } catch (err) {
         toast({
           title: "Error",

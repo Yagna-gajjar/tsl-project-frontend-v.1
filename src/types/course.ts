@@ -2,17 +2,28 @@ export interface Course {
   courseId: number;
   academyId?: number;
   activityId?: number;
+  introductionDate: Date;
+  suspendDate?: Date;
   courseName: string;
-  description?: string;
-  durationType: string;
-  durationDays?: number;
-  sessionCount?: number;
-  daysPerWeek?: number;
-  level?: string;
-  gender?: string;
-  ageGroup?: string;
-  status?: string;
-  fees: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  // typeOfCourse: "Booking" | "Charges" | "Training"; (we will use this after, not now)
+  typeOfCourse: string;
+  minEnrollmentUnit: number;
+  totalParallelBatches: number;
+  classificationType: "Member Credits" | "Fees Only";
+  chargingPattern: "Unit" | "Day" | "Session";
+  sessionMinutes: number;
+  noOfDaysInWeek: number;
+  weekDays: number;
+  unitRate: number;
+  batchCapacity: number;
+  minAge: number;
+  maxAge: number;
+  gender: "Male" | "Female" | "Couple" | "Open";
+  status: "active" | "suspended";
+  createdAt: Date;
+  updatedAt: Date;
+
+  academyName?: string;
+  activityName?: string;
 }
+ 

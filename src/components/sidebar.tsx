@@ -53,6 +53,16 @@ const navigationItems: NavigationItem[] = [
     icon: BookA,
   },
   {
+    name: "Enrollment",
+    href: "/enrollment",
+    icon: BookA,
+  },
+  {
+    name: "Discount",
+    href: "/discount",
+    icon: CreditCard,
+  },
+  {
     name: "Member",
     icon: User,
     href: "/member",
