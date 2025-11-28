@@ -1,11 +1,32 @@
 "use client"
 
-import { Bell, LogIn, Menu, Moon, Settings, Sun, User, Users, Layers, ChevronRight, Home, IdCard } from "lucide-react"
-import { motion } from "framer-motion"
-import { useTheme } from "../contexts/theme-context"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/contexts/authContext"
+import {
+  Bell,
+  LogIn,
+  Menu,
+  Moon,
+  Settings,
+  Sun,
+  User,
+  Users,
+  Layers,
+  ChevronRight,
+  Home,
+  IdCard,
+  Activity,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { useTheme } from "../contexts/theme-context";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/authContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -16,7 +37,8 @@ interface NavbarProps {
 interface SettingsGroup {
   category: string;
   icon: React.ElementType;
-  items: {
+  href?: string;
+  items?: {
     label: string;
     href: string;
     icon: React.ElementType;
@@ -29,19 +51,24 @@ const settingsMenu: SettingsGroup[] = [
     icon: Home,
     items: [
       { label: "Family Types", href: "/setting/family-type", icon: Users },
-      { label: "Team Categories", href: "/setting/team-category", icon: Layers },
+      {
+        label: "Team Categories",
+        href: "/setting/team-category",
+        icon: Layers,
+      },
       { label: "Identity Types", href: "/setting/identity-type", icon: IdCard },
     ],
   },
-  // Add more setting groups here in the future
-  // {
-  //   category: "System Settings",
-  //   icon: Settings,
-  //   items: [
-  //     { label: "Preferences", href: "/setting/preferences", icon: Sliders },
-  //     { label: "Notifications", href: "/setting/notifications", icon: Bell },
-  //   ],
-  // },
+  {
+    category: "Common Lookups",
+    icon: Settings,
+    href: "/setting/common-lookups",
+  },
+  {
+    category: "Activity Settings",
+    icon: Activity,
+    href: "/setting/activity",
+  },
 ];
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
@@ -102,9 +129,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-background font-bold text-sm">CM</span>
             </div>
-            <span className="font-bold text-xl hidden sm:block">
-              TSL
-            </span>
+            <span className="font-bold text-xl hidden sm:block">TSL</span>
           </motion.div>
         </div>
 
@@ -163,40 +188,50 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
                 return (
                   <div key={group.category}>
-                    {groupIndex > 0 && <DropdownMenuSeparator className="my-2" />}
+                    {groupIndex > 0 && (
+                      <DropdownMenuSeparator className="my-2" />
+                    )}
 
                     {/* Category Header */}
-                    <div className="px-2 py-1.5 mb-1">
+                    <DropdownMenuItem
+                      key={group.href}
+                      onClick={() => (group.href ? navigate(group.href) : null)}
+                      className="px-2 py-1.5 mb-1"
+                    >
                       <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                         <div className="p-1 rounded-md bg-blue-600/10">
                           <GroupIcon className="h-3.5 w-3.5 text-blue-600" />
                         </div>
                         <span>{group.category}</span>
                       </div>
-                    </div>
+                    </DropdownMenuItem>
 
                     {/* Category Items */}
-                    <div className="space-y-0.5 ml-2 pl-3 border-l-2 border-border/30">
-                      {group.items.map((item) => {
-                        const ItemIcon = item.icon;
+                    {group.items && (
+                      <div className="space-y-0.5 ml-2 pl-3 border-l-2 border-border/30">
+                        {group.items.map((item) => {
+                          const ItemIcon = item.icon;
 
-                        return (
-                          <DropdownMenuItem
-                            key={item.href}
-                            onClick={() => navigate(item.href)}
-                            className="cursor-pointer rounded-md px-2 py-2 hover:bg-accent/70 transition-colors group"
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center gap-2.5">
-                                <ItemIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                <span className="text-sm font-medium">{item.label}</span>
+                          return (
+                            <DropdownMenuItem
+                              key={item.href}
+                              onClick={() => navigate(item.href)}
+                              className="cursor-pointer rounded-md px-2 py-2 hover:bg-accent/70 transition-colors group"
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2.5">
+                                  <ItemIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                  <span className="text-sm font-medium">
+                                    {item.label}
+                                  </span>
+                                </div>
+                                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
-                              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </div>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -209,7 +244,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 className="cursor-pointer rounded-md px-2 py-2 hover:bg-accent/70 transition-colors"
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-sm font-medium text-blue-600">View All Settings</span>
+                  <span className="text-sm font-medium text-blue-600">
+                    View All Settings
+                  </span>
                   <ChevronRight className="h-4 w-4 text-blue-600" />
                 </div>
               </DropdownMenuItem>

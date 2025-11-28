@@ -477,11 +477,16 @@ export default function EnrollmentFormModal({
 
       // wait for the API call to finish
       const discounts = await getDiscountDate();
-      if (discounts && Array.isArray(discounts) && discounts[0]) {
-        const discount = discounts[0];
+      
+      if (
+        discounts &&
+        Array.isArray(discounts.data) &&
+        discounts.data.length > 0
+      ) {
+        const discount = discounts.data[0];
+
         const finalAmount =
           (baseCommitedAmount * discount.discountPercentage) / 100;
-        console.log(finalAmount, " final amount");
         setValues((p) => ({
           ...p,
           commitedAmount: baseCommitedAmount - finalAmount,
