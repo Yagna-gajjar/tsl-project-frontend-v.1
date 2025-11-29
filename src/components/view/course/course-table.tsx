@@ -41,9 +41,6 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
         activityId: filters.activityId as number | undefined,
         courseName: filters.courseName as string | undefined,
         status: filters.status as string | undefined,
-        level: filters.level as string | undefined,
-        durationType: filters.durationType as string | undefined,
-        fees: filters.fees as number | undefined,
       });
 
       const rowsRaw = Array.isArray(res)
@@ -125,66 +122,94 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
       filterType: "text",
     },
     {
-      header: "Level",
-      key: "level",
-      render: (row: Course) => row.level || "-",
-      filterType: "select",
-      filterOptions: [
-        { value: "beginner", label: "Beginner" },
-        { value: "advance", label: "Advance" },
-        { value: "pro", label: "Pro" },
-      ],
+      header: "Academy Name",
+      key: "academyName",
+      render: (row: Course) => row.academyName || "-",
+      sortable: true,
+      filterType: "text",
+    },
+    {
+      header: "Activity Name",
+      key: "activityName",
+      render: (row: Course) => row.activityName || "-",
+      sortable: true,
+      filterType: "text",
+    },
+    {
+      header: "Introduction Date",
+      key: "introductionDate",
+      render: (row: Course) =>
+        row.introductionDate ? row.introductionDate.toDateString() : "-",
+      sortable: true,
+      hidden: true,
+    },
+    {
+      header: "Course Type",
+      key: "typeOfCourse",
+      render: (row: Course) => row.typeOfCourse || "-",
+      filterType: "text",
+    },
+    {
+      header: "Min Enrollment Unit",
+      key: "minEnrollmentUnit",
+      render: (row: Course) => row.minEnrollmentUnit || "-",
+      hidden: true,
+    },
+    {
+      header: "Total Parallel Batches",
+      key: "totalParallelBatches",
+      render: (row: Course) => row.totalParallelBatches || "-",
+      hidden: true,
+    },
+    {
+      header: "Classification Type",
+      key: "classificationType",
+      render: (row: Course) => row.classificationType || "-",
+    },
+    {
+      header: "Charging Pattern",
+      key: "chargingPattern",
+      render: (row: Course) => row.chargingPattern || "-",
+    },
+    {
+      header: "Session Minutes",
+      key: "sessionMinutes",
+      render: (row: Course) => row.sessionMinutes || "-",
+    },
+    {
+      header: "No. Of Days In Week",
+      key: "noOfDaysInWeek",
+      render: (row: Course) => row.noOfDaysInWeek || "-",
+    },
+    {
+      header: "Week Days",
+      key: "weekDays",
+      render: (row: Course) => row.weekDays || "-",
+    },
+    {
+      header: "Unit Rate",
+      key: "unitRate",
+      render: (row: Course) => row.unitRate || "-",
+    },
+    {
+      header: "Batch Capacity",
+      key: "batchCapacity",
+      render: (row: Course) => row.batchCapacity || "-",
+    },
+    {
+      header: "Age Range",
+      key: "minAge",
+      render: (row: Course) => row.minAge + " - " + row.maxAge || "-",
+    },
+    {
+      header: "Gender",
+      key: "gender",
+      render: (row: Course) => row.gender || "-",
     },
     {
       header: "Status",
       key: "status",
-      filterType: "select",
-      filterOptions: [
-        { value: "active", label: "Active" },
-        { value: "inactive", label: "Inactive" },
-      ],
-      render: (row: Course) => {
-        const status = row.status || "active";
-        const statusColor =
-          status === "active"
-            ? "bg-green-100 text-green-800"
-            : status === "inactive"
-            ? "bg-yellow-100 text-yellow-800"
-            : "bg-red-100 text-red-800";
-        return (
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
-          >
-            {status}
-          </span>
-        );
-      },
-    },
-    {
-      header: "Fees",
-      key: "fees",
-      sortable: true,
-      filterType: "number",
-
-      render: (row: Course) => `Rs. ${row.fees || "0.00"}`,
-    },
-    {
-      header: "Duration",
-      key: "durationType",
-      filterType: "select",
-      filterOptions: [
-        { value: "fixed_days", label: "Fixed days" },
-        { value: "session_count", label: "Session Count" },
-        { value: "calendar", label: "Calendar" },
-      ],
-      render: (row: Course) => row.durationType || "-",
-    },
-    {
-      header: "Created",
-      key: "createdAt",
-      render: (row: Course) =>
-        row.createdAt ? row.createdAt.toLocaleDateString() : "-",
-      sortable: true,
+      render: (row: Course) => row.status || "-",
     },
   ];
 
