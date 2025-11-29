@@ -12,4 +12,7 @@ export interface AcademyCoach {
   thumbprint?: string;
   createdAt?: Date;
   updatedAt?: Date;
+
+  coachFirstName?: string;
+  coachLastName?: string;
 }
