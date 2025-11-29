@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
@@ -72,6 +72,9 @@ export default function EnrollmentFormModal({
   const [memberOptions, setMemberOptions] = useState<SelectOption[]>([]);
   const [courseArray, setCourseArray] = useState<Course[]>([]);
 
+  // store baseline original endDate from incoming initialData so freeDays changes don't compound
+  const initialEndDateRef = useRef<string | undefined>(undefined);
+
   // derived value: minUnits of selected course
   const minUnits = useMemo(() => {
     const course = courseArray.find(
@@ -94,6 +97,7 @@ export default function EnrollmentFormModal({
     const rate = course ? Number((course as any).unitRate ?? 1) : 1;
     return Math.max(1, Number.isFinite(rate) ? rate : 1);
   }, [courseArray, values.courseId]);
+
   // load static data (academies, members) and initial courses if editing
   useEffect(() => {
     if (!isOpen) return;
@@ -133,7 +137,11 @@ export default function EnrollmentFormModal({
         }
 
         // set initial values after loading so dates are consistent
-        setValues(initialData ? mapIncoming(initialData) : { ...EMPTY });
+        const mapped = initialData ? mapIncoming(initialData) : { ...EMPTY };
+        setValues(mapped);
+
+        // set baseline endDate for edit-mode freeDays calculations (only when editing)
+        initialEndDateRef.current = mapped.endDate;
       } catch (e) {
         console.error(e);
         toast({
@@ -147,6 +155,8 @@ export default function EnrollmentFormModal({
     load();
     return () => {
       mounted = false;
+      // clear baseline when modal closes to avoid stale value
+      initialEndDateRef.current = undefined;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -217,6 +227,7 @@ export default function EnrollmentFormModal({
         numberOfDays: minUnits,
       }));
     }
+    // Note: this effect intentionally does not touch initialEndDateRef
   }, [values.startDate, minUnits]);
 
   // when course changes, update committed amount (fees) and ensure courses loaded
@@ -311,6 +322,59 @@ export default function EnrollmentFormModal({
       return;
     }
 
+    // ------------------------------------------------------------------
+    // Special handler for freeDays (only present in edit mode)
+    // - Use baseline initialEndDateRef.current when available
+    // - Set endDate = baseline + freeDays
+    // - Do NOT change numberOfDays
+    // ------------------------------------------------------------------
+    if (field === "freeDays") {
+      const freeDaysNumber = Number(val) || 0;
+
+      if (initialEndDateRef.current) {
+        // parse baseline endDate (expected 'yyyy-MM-dd' or Date-like)
+        let baseEndDate: Date | null = null;
+        try {
+          baseEndDate = initialEndDateRef.current
+            ? parseISO(initialEndDateRef.current)
+            : null;
+        } catch {
+          baseEndDate = values.endDate
+            ? typeof values.endDate === "string"
+              ? parseISO(values.endDate)
+              : new Date(values.endDate as any)
+            : null;
+        }
+
+        if (baseEndDate) {
+          // New end date = baseline end date + freeDays
+          const newEnd = addDays(baseEndDate, freeDaysNumber);
+          const newEndStr = format(newEnd, "yyyy-MM-dd");
+          setValues((p) => ({
+            ...p,
+            freeDays: freeDaysNumber,
+            endDate: newEndStr,
+            // numberOfDays intentionally unchanged
+          }));
+        } else {
+          // fallback: just set freeDays
+          setValues((p) => ({ ...p, freeDays: freeDaysNumber }));
+        }
+      } else {
+        // not editing existing enrollment — keep previous behavior: set freeDays but don't alter numberOfDays here
+        setValues((p) => ({ ...p, freeDays: freeDaysNumber }));
+      }
+
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy["freeDays"];
+        return copy;
+      });
+
+      return;
+    }
+
+    // generic fallback for other fields
     setValues((p) => ({ ...p, [field]: val }));
     setFieldErrors((prev) => {
       const copy = { ...prev };
@@ -428,9 +492,30 @@ export default function EnrollmentFormModal({
       type: "date",
       required: true,
     },
-    { name: "startDate", label: "Start Date", type: "date", required: true },
-    { name: "endDate", label: "End Date", type: "date", required: false },
-    { name: "freeDays", label: "Free Days", type: "number", required: false },
+    {
+      name: "startDate",
+      label: "Start Date",
+      type: "date",
+      required: true,
+      disabled: initialData ? true : false,
+    },
+    {
+      name: "endDate",
+      label: "End Date",
+      type: "date",
+      required: false,
+      disabled: initialData ? true : false,
+    },
+    ...(initialData
+      ? [
+          {
+            name: "freeDays",
+            label: "Free Days",
+            type: "number",
+            required: false,
+          },
+        ]
+      : []),
     {
       name: "sessionUnits",
       label: "Session Units",

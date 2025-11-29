@@ -19,6 +19,7 @@ import {
   Users,
   Award,
   BookA,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,11 @@ const navigationItems: NavigationItem[] = [
     name: "Courses",
     href: "/courses",
     icon: BookA,
+  },
+  {
+    name: "Batch",
+    href: "/batch",
+    icon: Layers,
   },
   {
     name: "Enrollment",

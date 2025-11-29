@@ -28,6 +28,7 @@ import CoachSkillPage from "@/pages/coachSkill";
 import CoursePage from "@/pages/course";
 import EnrollmentPage from "./pages/enrollment";
 import DiscountPage from "./pages/discount";
+import BatchPage from "./pages/batch";
 
 export default function App() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
                   element={<CoachSkillPage />}
                 />
                 <Route path="/courses" element={<CoursePage />} />
+                <Route path="/batch" element={<BatchPage />} />
                 <Route
                   path="/infrastructure-configurations/facility"
                   element={<FacilityPage />}

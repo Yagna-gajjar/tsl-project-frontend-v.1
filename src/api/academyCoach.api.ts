@@ -10,9 +10,11 @@ export interface AcademyCoachQuery {
   coachName?: string;
   academyName?: string;
   designation?: string;
+  academyId?: number;
 }
 
-const ACADEMY_COACH_BASE = import.meta.env.VITE_APP_API_URL + "/academy-coaches";
+const ACADEMY_COACH_BASE =
+  import.meta.env.VITE_APP_API_URL + "/academy-coaches";
 
 export function getAcademyCoaches(
   params: AcademyCoachQuery = {}
@@ -26,6 +28,7 @@ export function getAcademyCoaches(
     coachName: params.coachName ?? undefined,
     academyName: params.academyName ?? undefined,
     designation: params.designation ?? undefined,
+    academyId: params.academyId ?? undefined,
   });
 
   return request<AcademyCoach[]>(`${ACADEMY_COACH_BASE}${qs}`);
