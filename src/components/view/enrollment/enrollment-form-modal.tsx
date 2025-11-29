@@ -50,7 +50,9 @@ const EMPTY = {
   openEnrollment: false,
   remarks: "",
   status: "active",
-} as unknown as Enrollment;
+  // default keep discounts enabled to preserve previous behavior
+  isDiscounted: true,
+} as unknown as Enrollment & { isDiscounted?: boolean };
 
 export default function EnrollmentFormModal({
   isOpen,
@@ -58,7 +60,9 @@ export default function EnrollmentFormModal({
   onClose,
   onSave,
 }: Props) {
-  const [values, setValues] = useState<Enrollment>(EMPTY);
+  const [values, setValues] = useState<Enrollment & { isDiscounted?: boolean }>(
+    EMPTY
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -148,11 +152,15 @@ export default function EnrollmentFormModal({
   }, [isOpen]);
 
   // helper: map server incoming enrollment to local shape (keeps date strings)
-  const mapIncoming = (e: Enrollment): Enrollment => ({
+  const mapIncoming = (
+    e: Enrollment
+  ): Enrollment & { isDiscounted?: boolean } => ({
     ...e,
     enrollmentDate: toISO(e.enrollmentDate as any) ?? todayISO(),
     startDate: toISO(e.startDate as any) ?? todayISO(),
     endDate: toISO(e.endDate as any),
+    // preserve any incoming flag or default to true
+    isDiscounted: (e as any).isDiscounted ?? true,
   });
 
   const loadCourses = useCallback(
@@ -223,7 +231,7 @@ export default function EnrollmentFormModal({
     }));
   }, [values.courseId, courseArray]);
 
-  const onChange = (field: keyof Enrollment, val: any) => {
+  const onChange = (field: keyof Enrollment | "isDiscounted", val: any) => {
     // academy change: load courses for academy and reset course selection
     if (field === "academyId") {
       const academyId = Number(val) || 0;
@@ -290,6 +298,17 @@ export default function EnrollmentFormModal({
         numberOfDays: Number(val),
         endDate: newEndDateStr,
       }));
+      return;
+    }
+
+    if (field === "isDiscounted") {
+      setValues((p) => ({ ...p, isDiscounted: Boolean(val) }));
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy["isDiscounted"];
+        return copy;
+      });
+      return;
     }
 
     setValues((p) => ({ ...p, [field]: val }));
@@ -327,22 +346,28 @@ export default function EnrollmentFormModal({
     }
 
     try {
-      const payload: Partial<Enrollment> = {
+      // include discount fields only when isDiscounted is true
+      const payload: Partial<Enrollment & { isDiscounted?: boolean }> = {
         academyId: Number(values.academyId),
         courseId: Number(values.courseId),
         memberId: Number(values.memberId),
         enrollmentDate: values.enrollmentDate,
         startDate: values.startDate,
         endDate: values.endDate || undefined,
-        discountId: values.discountId || undefined,
+        ...(values.isDiscounted
+          ? {
+              discountId: values.discountId || undefined,
+              discountedAmount: Number(values.discountedAmount) || 0,
+            }
+          : {}),
         freeDays: Number(values.freeDays) || 0,
         sessionUnits: Number(values.sessionUnits) || 0,
         numberOfDays: Number(values.numberOfDays) || 0,
-        discountedAmount: Number(values.discountedAmount) || 0,
         commitedAmount: Number(values.commitedAmount) || 0,
         openEnrollment: Boolean(values.openEnrollment) || false,
         remarks: values.remarks || undefined,
         status: values.status,
+        isDiscounted: Boolean(values.isDiscounted),
       };
 
       if (initialData?.enrollmentId) {
@@ -419,6 +444,18 @@ export default function EnrollmentFormModal({
       required: false,
     },
     {
+      name: "discountId",
+      label: "Discount ID",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "isDiscounted",
+      label: "do you want to apply discount",
+      type: "checkbox",
+      required: false,
+    },
+    {
       name: "discountedAmount",
       label: "Discounted Amount",
       type: "number",
@@ -453,6 +490,8 @@ export default function EnrollmentFormModal({
   ] as any;
 
   const getDiscountDate = useCallback(async () => {
+    // if user opted out, skip fetching discounts
+    if (!values.isDiscounted) return undefined;
     try {
       const discounts = await getDiscounts({
         courseId: values.courseId ? Number(values.courseId) : undefined,
@@ -468,16 +507,28 @@ export default function EnrollmentFormModal({
       console.error("Error fetching discounts:", error);
       return undefined;
     }
-  }, [values.courseId, values.numberOfDays]);
+  }, [values.courseId, values.numberOfDays, values.isDiscounted]);
 
   useEffect(() => {
     const load = async () => {
       // Calculate base committed amount
       const baseCommitedAmount = values.numberOfDays * unitAmount;
 
+      // if discounts disabled, clear discount fields and set base committed amount
+      if (!values.isDiscounted) {
+        setValues((p) => ({
+          ...p,
+          commitedAmount: baseCommitedAmount,
+          discountId: undefined,
+          discountedAmount: 0,
+        }));
+        return;
+      }
+
       // wait for the API call to finish
       const discounts = await getDiscountDate();
-      
+      console.log(discounts);
+
       if (
         discounts &&
         Array.isArray(discounts.data) &&
@@ -504,7 +555,7 @@ export default function EnrollmentFormModal({
     };
 
     load();
-  }, [values.numberOfDays, unitAmount, getDiscountDate]);
+  }, [values.numberOfDays, unitAmount, getDiscountDate, values.isDiscounted]);
 
   if (!isOpen) return null;
 

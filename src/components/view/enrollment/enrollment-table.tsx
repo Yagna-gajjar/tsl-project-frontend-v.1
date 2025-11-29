@@ -124,12 +124,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
 
   const columns: Column<Enrollment>[] = [
     {
-      header: "Enrollment ID",
-      key: "enrollmentId",
-      render: (row: Enrollment) => row.enrollmentId ?? "-",
-      sortable: true,
-    },
-    {
       header: "Enrollment Date",
       key: "enrollmentDate",
       render: (row: Enrollment) =>

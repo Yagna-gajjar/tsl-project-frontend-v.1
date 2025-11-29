@@ -119,12 +119,6 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
 
   const columns: Column<Discount>[] = [
     {
-      header: "Discount ID",
-      key: "discountId",
-      render: (row: Discount) => row.discountId || "-",
-      sortable: true,
-    },
-    {
       header: "Course",
       key: "courseName",
       render: (row: Discount) => row.courseName || `Course ${row.courseId}`,
