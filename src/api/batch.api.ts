@@ -12,9 +12,10 @@ export interface ActivityQuery {
   coachFirstName?: string;
   facilityName?: string;
   courseName?: string;
+  courseId?: number;
 }
 
-const BATCH_BASE = import.meta.env.VITE_APP_API_URL + '/batch';
+const BATCH_BASE = import.meta.env.VITE_APP_API_URL + "/batch";
 
 export function getBatch(params: ActivityQuery = {}): Promise<Batch[]> {
   const qs = toQueryString({
@@ -27,6 +28,7 @@ export function getBatch(params: ActivityQuery = {}): Promise<Batch[]> {
     coachFirstName: params.coachFirstName ?? undefined,
     facilityName: params.facilityName ?? undefined,
     courseName: params.courseName ?? undefined,
+    courseId: params.courseId ?? undefined,
   });
 
   return request<Batch[]>(`${BATCH_BASE}${qs}`);

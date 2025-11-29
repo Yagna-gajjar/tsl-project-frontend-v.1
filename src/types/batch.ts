@@ -1,5 +1,6 @@
 export interface Batch {
   batchId: number;
+  activityName: string;
   academyId: number;
   courseId: number;
   coachId: number;

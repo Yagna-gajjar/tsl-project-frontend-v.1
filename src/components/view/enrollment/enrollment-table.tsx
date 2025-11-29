@@ -45,6 +45,9 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         memberFirstName: filters.memberFirstName as string | undefined,
         academyName: filters.academyName as string | undefined,
         courseName: filters.courseName as string | undefined,
+        billingAmount: filters.billingAmount as number | undefined,
+        billingRate: filters.billingRate as number | undefined,
+        cndn: filters.cndn as number | undefined,
       });
 
       const rowsRaw = Array.isArray(res)
@@ -206,6 +209,38 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
       render: (row: Enrollment) =>
         `Rs. ${Number((row as any).commitedAmount ?? 0).toFixed(2)}`,
       sortable: true,
+    },
+    // --- new billing columns (minimal additions) ---
+    {
+      header: "Billing Amount",
+      key: "billingAmount",
+      render: (row: Enrollment) =>
+        `Rs. ${Number((row as any).billingAmount ?? 0).toFixed(2)}`,
+      sortable: true,
+      // optional: simple text filter if DataTable supports it from filterType
+      filterType: "number",
+    },
+    {
+      header: "Billing Rate",
+      key: "billingRate",
+      render: (row: Enrollment) =>
+        Number((row as any).billingRate ?? 0).toFixed(2),
+      sortable: true,
+      filterType: "number",
+    },
+    {
+      header: "CNDN",
+      key: "cndn",
+      render: (row: Enrollment) => (row as any).cndn ?? "-",
+      sortable: true,
+      filterType: null,
+    },
+    {
+      header: "Adjustments",
+      key: "adjustment",
+      render: (row: Enrollment) => (row as any).adjustment ?? "-",
+      sortable: false,
+      filterType: null,
     },
     {
       header: "Open Enrollment",
