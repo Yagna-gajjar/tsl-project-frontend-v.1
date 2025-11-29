@@ -12,7 +12,10 @@ import { toast } from "@/hooks/use-toast";
 import { format, addDays, parseISO, differenceInDays } from "date-fns";
 import type { Course } from "@/types/course";
 import { getDiscounts } from "@/api/discount.api";
+import { getBatch } from "@/api/batch.api";
 import type { Response } from "@/types/response";
+import { Batch } from "@/types/batch";
+
 type Props = {
   isOpen: boolean;
   initialData?: Enrollment;
@@ -47,12 +50,21 @@ const EMPTY = {
   numberOfDays: 0,
   discountedAmount: 0,
   commitedAmount: 0,
+  billingAmount: 0,
+  billingRate: 0,
+  cndn: undefined,
+  discountPercentage: 0,
   openEnrollment: false,
   remarks: "",
   status: "active",
   // default keep discounts enabled to preserve previous behavior
   isDiscounted: true,
-} as unknown as Enrollment & { isDiscounted?: boolean };
+  adjustment: 0,
+} as unknown as Enrollment & {
+  isDiscounted?: boolean;
+  discountPercentage?: number;
+  adjustment?: number;
+};
 
 export default function EnrollmentFormModal({
   isOpen,
@@ -60,9 +72,13 @@ export default function EnrollmentFormModal({
   onClose,
   onSave,
 }: Props) {
-  const [values, setValues] = useState<Enrollment & { isDiscounted?: boolean }>(
-    EMPTY
-  );
+  const [values, setValues] = useState<
+    Enrollment & {
+      isDiscounted?: boolean;
+      discountPercentage?: number;
+      adjustment?: number;
+    }
+  >(EMPTY);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +87,7 @@ export default function EnrollmentFormModal({
   const [courseOptions, setCourseOptions] = useState<SelectOption[]>([]);
   const [memberOptions, setMemberOptions] = useState<SelectOption[]>([]);
   const [courseArray, setCourseArray] = useState<Course[]>([]);
-
+  const [batches, SetBatched] = useState<Batch[]>([]);
   // store baseline original endDate from incoming initialData so freeDays changes don't compound
   const initialEndDateRef = useRef<string | undefined>(undefined);
 
@@ -164,13 +180,22 @@ export default function EnrollmentFormModal({
   // helper: map server incoming enrollment to local shape (keeps date strings)
   const mapIncoming = (
     e: Enrollment
-  ): Enrollment & { isDiscounted?: boolean } => ({
+  ): Enrollment & {
+    isDiscounted?: boolean;
+    discountPercentage?: number;
+    adjustment?: number;
+  } => ({
     ...e,
     enrollmentDate: toISO(e.enrollmentDate as any) ?? todayISO(),
     startDate: toISO(e.startDate as any) ?? todayISO(),
     endDate: toISO(e.endDate as any),
     // preserve any incoming flag or default to true
     isDiscounted: (e as any).isDiscounted ?? true,
+    discountPercentage: (e as any).discountPercentage ?? 0,
+    billingAmount: (e as any).billingAmount ?? 0,
+    billingRate: (e as any).billingRate ?? 0,
+    cndn: (e as any).cndn ?? undefined,
+    adjustment: (e as any).adjustment ?? 0,
   });
 
   const loadCourses = useCallback(
@@ -207,6 +232,35 @@ export default function EnrollmentFormModal({
     [values.courseId]
   );
 
+  // helper to compute billingRate and billingAmount given discountPercentage, cndn, numberOfDays, unitAmount
+  const computeBilling = (
+    discountPercentage: number,
+    cndnNumber: number | undefined,
+    numDays: number,
+    unitRate: number
+  ) => {
+    // discountPercentage is a percent (e.g., 10 for 10%)
+    const discPerc = Number(discountPercentage) || 0;
+    const cndnNumberSafe = Number(cndnNumber) || 0;
+    const days = numDays > 0 ? numDays : 1;
+
+    // billingRate formula provided: ((course.unitRate * discountPercentage)/100) - (cndn/numberOfDays)
+    const billingRateCalc = (unitRate * discPerc) / 100 - cndnNumberSafe / days;
+
+    // ensure billingRate is integer (round to nearest)
+    const billingRateRounded = Number.isFinite(billingRateCalc)
+      ? Math.round(billingRateCalc * 100) / 100 // Round to 2 decimal places
+      : 0;
+
+    // billingAmount uses the rounded billingRate so it stays consistent as integer * days
+    const billingAmountCalc = billingRateRounded * days;
+
+    return {
+      billingRate: billingRateRounded,
+      billingAmount: Number.isFinite(billingAmountCalc) ? billingAmountCalc : 0,
+    };
+  };
+
   // compute endDate string whenever startDate or selected course (minUnits) changes
   useEffect(() => {
     if (!values.startDate) return;
@@ -221,26 +275,61 @@ export default function EnrollmentFormModal({
     const computed = addDays(startDateObj, minUnits - 1);
     const computedStr = format(computed, "yyyy-MM-dd");
     if (values.endDate !== computedStr) {
-      setValues((p) => ({
+      // also compute billing here (commitedAmount must remain base)
+      const days = minUnits;
+      const baseCommitedAmount = days * unitAmount;
+      const { billingRate, billingAmount } = computeBilling(
+        Number(values.discountPercentage) || 0,
+        Number(values.cndn) || 0,
+        days,
+        unitAmount
+      );
+      const localBill = Math.ceil(billingAmount);
+      const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
+
+      setValues((p: any) => ({
         ...p,
         endDate: computedStr,
-        numberOfDays: minUnits,
+        numberOfDays: days,
+        billingRate,
+        billingAmount: localBill,
+        commitedAmount: baseCommitedAmount,
+        adjustment,
       }));
     }
     // Note: this effect intentionally does not touch initialEndDateRef
   }, [values.startDate, minUnits]);
 
-  // when course changes, update committed amount (fees) and ensure courses loaded
+  // when course changes, update committed amount (course.unitRate * numberOfDays) and ensure courses loaded
   useEffect(() => {
     if (!values.courseId) return;
     const course = courseArray.find(
       (c) => c.courseId === Number(values.courseId)
     );
+    const currentUnitRate = course
+      ? Number((course as any).unitRate ?? 1)
+      : unitAmount;
+    const days = Number(values.numberOfDays) || 0;
+    const baseCommitedAmount = days * currentUnitRate;
+    // recompute billing as well
+    const { billingRate, billingAmount } = computeBilling(
+      Number(values.discountPercentage) || 0,
+      Number(values.cndn) || 0,
+      days,
+      currentUnitRate
+    );
+
+    const localBill = Math.ceil(billingAmount);
+    const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
+
     setValues((p) => ({
       ...p,
-      commitedAmount: Number((course as any)?.fees) || p.commitedAmount || 0,
+      commitedAmount: baseCommitedAmount,
+      billingRate,
+      billingAmount: localBill,
+      adjustment,
     }));
-  }, [values.courseId, courseArray]);
+  }, [values.courseId, courseArray]); // unitAmount will update because courseArray changed
 
   const onChange = (field: keyof Enrollment | "isDiscounted", val: any) => {
     // academy change: load courses for academy and reset course selection
@@ -283,17 +372,52 @@ export default function EnrollmentFormModal({
         days = Math.max(minUnits, 1);
         const forcedEnd = addDays(startDateObj, days - 1); // end = start + minUnits - 1
         const forcedEndStr = format(forcedEnd, "yyyy-MM-dd");
-        setValues((p) => ({
+
+        // compute base committed amount (always unitRate * numberOfDays)
+        const baseCommitedAmount = days * unitAmount;
+        // compute billing regardless of discount checkbox (discountPercentage might be 0)
+        const { billingRate, billingAmount } = computeBilling(
+          Number(values.discountPercentage) || 0,
+          Number(values.cndn) || 0,
+          days,
+          unitAmount
+        );
+
+        const localBill = Math.ceil(billingAmount);
+        const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
+
+        setValues((p: any) => ({
           ...p,
           [field]: val,
           endDate: forcedEndStr,
           numberOfDays: days,
+          billingRate,
+          billingAmount: localBill,
+          commitedAmount: baseCommitedAmount,
+          adjustment,
         }));
         return;
       }
 
-      // otherwise just set the changed field and computed numberOfDays
-      setValues((p) => ({ ...p, [field]: val, numberOfDays: days }));
+      // otherwise just set the changed field and computed numberOfDays, and recompute billing
+      const baseCommitedAmount = days * unitAmount;
+      const { billingRate, billingAmount } = computeBilling(
+        Number(values.discountPercentage) || 0,
+        Number(values.cndn) || 0,
+        days,
+        unitAmount
+      );
+      const localBill = Math.ceil(billingAmount);
+      const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
+      setValues((p) => ({
+        ...p,
+        [field]: val,
+        numberOfDays: days,
+        billingRate,
+        billingAmount: localBill,
+        commitedAmount: baseCommitedAmount,
+        adjustment,
+      }));
       return;
     }
 
@@ -304,30 +428,67 @@ export default function EnrollmentFormModal({
           : new Date(values.startDate as any);
       const newEndDate = addDays(startDateObj, Number(val) - 1);
       const newEndDateStr = format(newEndDate, "yyyy-MM-dd");
-      setValues((p) => ({
+
+      // compute billing with new numberOfDays
+      const newDays = Number(val) || 0;
+      const baseCommitedAmount = newDays * unitAmount;
+      const { billingRate, billingAmount } = computeBilling(
+        Number(values.discountPercentage) || 0,
+        Number(values.cndn) || 0,
+        newDays,
+        unitAmount
+      );
+
+      const localBill = Math.ceil(billingAmount);
+      const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
+
+      setValues((p: any) => ({
         ...p,
         numberOfDays: Number(val),
         endDate: newEndDateStr,
+        billingRate,
+        billingAmount: localBill,
+        commitedAmount: baseCommitedAmount,
+        adjustment,
       }));
       return;
     }
 
     if (field === "isDiscounted") {
-      setValues((p) => ({ ...p, isDiscounted: Boolean(val) }));
+      // when toggling discount checkbox, we must still calculate billing (using discountPercentage or 0)
+      const newIsDiscounted = Boolean(val);
+      setValues((p) => ({ ...p, isDiscounted: newIsDiscounted }));
       setFieldErrors((prev) => {
         const copy = { ...prev };
         delete copy["isDiscounted"];
         return copy;
       });
+
+      // recompute billing using discountPercentage (if we have one) else 0
+      const days = Number(values.numberOfDays) || 0;
+      const discPerc = newIsDiscounted
+        ? Number(values.discountPercentage) || 0
+        : 0;
+      const { billingRate, billingAmount } = computeBilling(
+        discPerc,
+        Number(values.cndn) || 0,
+        days,
+        unitAmount
+      );
+      const baseCommitedAmount = days * unitAmount;
+      const localBill = Math.ceil(billingAmount);
+      const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
+
+      setValues((p) => ({
+        ...p,
+        billingRate,
+        billingAmount: localBill,
+        commitedAmount: baseCommitedAmount,
+        adjustment,
+      }));
       return;
     }
 
-    // ------------------------------------------------------------------
-    // Special handler for freeDays (only present in edit mode)
-    // - Use baseline initialEndDateRef.current when available
-    // - Set endDate = baseline + freeDays
-    // - Do NOT change numberOfDays
-    // ------------------------------------------------------------------
     if (field === "freeDays") {
       const freeDaysNumber = Number(val) || 0;
 
@@ -350,7 +511,7 @@ export default function EnrollmentFormModal({
           // New end date = baseline end date + freeDays
           const newEnd = addDays(baseEndDate, freeDaysNumber);
           const newEndStr = format(newEnd, "yyyy-MM-dd");
-          setValues((p) => ({
+          setValues((p: any) => ({
             ...p,
             freeDays: freeDaysNumber,
             endDate: newEndStr,
@@ -374,7 +535,73 @@ export default function EnrollmentFormModal({
       return;
     }
 
+    if (field === "cndn") {
+      const cndnNumber = Number(val) || 0;
+      const days = Number(values.numberOfDays) || 0;
+      // discountPercentage used only if isDiscounted true, otherwise 0
+      const discPerc = values.isDiscounted
+        ? Number(values.discountPercentage) || 0
+        : 0;
+      const { billingRate, billingAmount } = computeBilling(
+        discPerc,
+        cndnNumber,
+        days,
+        unitAmount
+      );
+
+      const baseCommitedAmount = days * unitAmount;
+      const localBill = Math.ceil(billingAmount);
+      const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
+
+      setValues((p) => ({
+        ...p,
+        cndn: cndnNumber,
+        billingRate,
+        billingAmount: localBill,
+        commitedAmount: baseCommitedAmount,
+        adjustment,
+      }));
+
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy["cndn"];
+        return copy;
+      });
+
+      return;
+    }
+    if (field === "batchId") {
+      const batchId = val ? Number(val) : 0;
+      setValues((p) => ({ ...p, batchId }));
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy["batchId"];
+        return copy;
+      });
+      return;
+    }
+
     // generic fallback for other fields
+    // if user edits discountedAmount or commitedAmount directly (rare), recompute adjustment
+    if (
+      field === "discountedAmount" ||
+      field === "commitedAmount" ||
+      field === "billingAmount"
+    ) {
+      const next = { ...(values as any), [field]: val };
+      const commited = Number(next.commitedAmount) || 0;
+      const discountAmt = Number(next.discountedAmount) || 0;
+      const billingAmt = Number(next.billingAmount) || 0;
+      const adjustment = commited - discountAmt - billingAmt;
+      setValues((p) => ({ ...p, [field]: val, adjustment }));
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[field as string];
+        return copy;
+      });
+      return;
+    }
+
     setValues((p) => ({ ...p, [field]: val }));
     setFieldErrors((prev) => {
       const copy = { ...prev };
@@ -389,6 +616,8 @@ export default function EnrollmentFormModal({
       errs.academyId = "Academy is required";
     if (!values.courseId || Number(values.courseId) === 0)
       errs.courseId = "Course is required";
+    if (!values.batchId || Number(values.batchId) === 0)
+      errs.courseId = "Batch is required";
     if (!values.memberId || Number(values.memberId) === 0)
       errs.memberId = "Member is required";
     if (!values.startDate) errs.startDate = "Start date is required";
@@ -432,7 +661,18 @@ export default function EnrollmentFormModal({
         remarks: values.remarks || undefined,
         status: values.status,
         isDiscounted: Boolean(values.isDiscounted),
+
+        // billing fields: use recomputed final values (guaranteed present)
+        billingAmount: values.billingAmount || 0, // integer
+        billingRate: values.billingRate || 0, // float
+        cndn:
+          (values as any).cndn === undefined || (values as any).cndn === null
+            ? undefined
+            : Number((values as any).cndn),
+        adjustment: values.adjustment || 0, // rounding delta (2 dp)
       };
+
+      console.log("Enrollment payload:", payload);
 
       if (initialData?.enrollmentId) {
         await updateEnrollment(initialData.enrollmentId, payload as any);
@@ -466,6 +706,13 @@ export default function EnrollmentFormModal({
 
   const fields = [
     {
+      name: "memberId",
+      label: "Member",
+      type: "select",
+      options: memberOptions,
+      required: true,
+    },
+    {
       name: "academyId",
       label: "Academy",
       type: "select",
@@ -480,10 +727,13 @@ export default function EnrollmentFormModal({
       required: true,
     },
     {
-      name: "memberId",
-      label: "Member",
+      name: "batchId",
+      label: "Batch",
       type: "select",
-      options: memberOptions,
+      options: batches.map((b) => ({
+        label: b.batchName,
+        value: Number(b.batchId),
+      })),
       required: true,
     },
     {
@@ -554,6 +804,36 @@ export default function EnrollmentFormModal({
       required: true,
       disabled: true,
     },
+    // --- billing fields (ui + logic wiring) ---
+    {
+      name: "billingAmount",
+      label: "Billing Amount",
+      type: "number",
+      required: false,
+      disabled: true, // computed
+    },
+    {
+      name: "billingRate",
+      label: "Billing Rate",
+      type: "number",
+      required: false,
+      disabled: true, // computed and integer
+    },
+    {
+      name: "cndn",
+      label: "CNDN",
+      type: "number",
+      required: false,
+    },
+    // --- adjustment field ---
+    {
+      name: "adjustment",
+      label: "Adjustment",
+      type: "number",
+      required: false,
+      disabled: true,
+    },
+    // --- end billing fields ---
     {
       name: "openEnrollment",
       label: "Open Enrollment",
@@ -575,7 +855,8 @@ export default function EnrollmentFormModal({
   ] as any;
 
   const getDiscountDate = useCallback(async () => {
-    // if user opted out, skip fetching discounts
+    // if user opted out, still try to fetch discounts? original code skipped when !values.isDiscounted.
+    // We keep that behavior (we won't fetch discounts when isDiscounted=false), but billing will still compute with discountPercentage=0.
     if (!values.isDiscounted) return undefined;
     try {
       const discounts = await getDiscounts({
@@ -596,52 +877,97 @@ export default function EnrollmentFormModal({
 
   useEffect(() => {
     const load = async () => {
-      // Calculate base committed amount
-      const baseCommitedAmount = values.numberOfDays * unitAmount;
+      // Calculate base committed amount (always course.unitRate * numberOfDays)
+      const baseCommitedAmount = Number(values.numberOfDays) * unitAmount;
 
-      // if discounts disabled, clear discount fields and set base committed amount
-      if (!values.isDiscounted) {
-        setValues((p) => ({
-          ...p,
-          commitedAmount: baseCommitedAmount,
-          discountId: undefined,
-          discountedAmount: 0,
-        }));
-        return;
+      // compute billing regardless of isDiscounted (use discountPercentage if present and isDiscounted true, else 0)
+      const discPerc = values.isDiscounted
+        ? Number(values.discountPercentage) || 0
+        : 0;
+
+      // If discounts enabled, fetch discount data and prefer its percentage (but do NOT overwrite commitedAmount)
+      if (values.isDiscounted) {
+        const discounts = await getDiscountDate();
+        if (
+          discounts &&
+          Array.isArray(discounts.data) &&
+          discounts.data.length > 0
+        ) {
+          const discount = discounts.data[0];
+          const usedDiscountPerc = Number(discount.discountPercentage) || 0;
+          const { billingRate, billingAmount } = computeBilling(
+            usedDiscountPerc,
+            Number(values.cndn) || 0,
+            Number(values.numberOfDays) || 0,
+            unitAmount
+          );
+          const discountedAmt = (baseCommitedAmount * usedDiscountPerc) / 100;
+          const localBill = Math.ceil(billingAmount);
+          const adjustment =
+            Math.round((localBill - billingAmount) * 100) / 100;
+
+          setValues((p) => ({
+            ...p,
+            // commitedAmount must remain base (unitRate * numberOfDays)
+            commitedAmount: baseCommitedAmount,
+            discountId: discount.discountId,
+            discountedAmount: discountedAmt,
+            discountPercentage: usedDiscountPerc,
+            billingRate,
+            billingAmount: localBill,
+            adjustment,
+          }));
+          return;
+        }
       }
 
-      // wait for the API call to finish
-      const discounts = await getDiscountDate();
-      console.log(discounts);
+      // default path (no discount applied or discounts not found)
+      const { billingRate, billingAmount } = computeBilling(
+        discPerc,
+        Number(values.cndn) || 0,
+        Number(values.numberOfDays) || 0,
+        unitAmount
+      );
+      const discountedAmt = values.isDiscounted
+        ? Number(values.discountedAmount) || 0
+        : 0;
+      const localBill = Math.ceil(billingAmount);
+      const adjustment = Math.round((localBill - billingAmount) * 100) / 100;
 
-      if (
-        discounts &&
-        Array.isArray(discounts.data) &&
-        discounts.data.length > 0
-      ) {
-        const discount = discounts.data[0];
-
-        const finalAmount =
-          (baseCommitedAmount * discount.discountPercentage) / 100;
-        setValues((p) => ({
-          ...p,
-          commitedAmount: baseCommitedAmount - finalAmount,
-          discountId: discount.discountId,
-          discountedAmount: finalAmount,
-        }));
-      } else {
-        setValues((p) => ({
-          ...p,
-          commitedAmount: baseCommitedAmount,
-          discountId: undefined,
-          discountedAmount: 0,
-        }));
-      }
+      setValues((p) => ({
+        ...p,
+        commitedAmount: baseCommitedAmount,
+        discountId: values.isDiscounted ? values.discountId : undefined,
+        discountedAmount: discountedAmt,
+        discountPercentage: discPerc,
+        billingRate,
+        billingAmount: localBill,
+        adjustment,
+      }));
     };
 
     load();
-  }, [values.numberOfDays, unitAmount, getDiscountDate, values.isDiscounted]);
+    // intentionally depends on numberOfDays, unitAmount, getDiscountDate, values.isDiscounted, and values.cndn
+  }, [values.numberOfDays, unitAmount, values.isDiscounted, values.cndn]);
 
+  useEffect(() => {
+    const getBatches = async () => {
+      try {
+        const res: Response = await getBatch({
+          courseId: Number(values.courseId),
+        });
+        const data = res.data || [];
+        SetBatched(data);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to load batches",
+          variant: "destructive",
+        });
+      }
+    };
+    getBatches();
+  }, [values.courseId]);
   if (!isOpen) return null;
 
   return (

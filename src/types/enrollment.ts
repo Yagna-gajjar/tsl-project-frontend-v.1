@@ -5,6 +5,7 @@ export interface Enrollment {
   endDate: Date;
   academyId: number;
   courseId: number;
+  batchId: number;
   memberId: number;
   discountId?: number;
   freeDays: number;
@@ -14,6 +15,10 @@ export interface Enrollment {
   commitedAmount: number;
   openEnrollment: boolean;
   status: string;
+  cndn: number;
+  billingRate: number;
+  billingAmount: number;
+  adjustment: number;
   remarks?: string;
   createdAt?: Date;
   updatedAt?: Date;

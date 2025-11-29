@@ -15,7 +15,7 @@ const API_URL = import.meta.env.VITE_APP_API_URL;
 
 async function getAcademies(params?: AcademyQuery) {
   try {
-    const url = `${API_URL}/academy?${toQueryString(params || {})}`;
+    const url = `${API_URL}/academy${toQueryString(params || {})}`;
     const response = await fetch(url);
     const data = await response.json();
 

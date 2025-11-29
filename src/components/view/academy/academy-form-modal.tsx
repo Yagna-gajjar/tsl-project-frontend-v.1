@@ -8,7 +8,8 @@ import { createAcademy, updateAcademy } from "@/api/academy.api";
 import type { Academy } from "@/types/academy";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-
+import { getEnumsByCategory } from "@/api/enums.api";
+import type { Response } from "@/types/response";
 type Props = {
   isOpen: boolean;
   initialData?: Academy;
@@ -46,14 +47,29 @@ export default function AcademyFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [activity, setActivity] = useState<any>([]);
+
+  const getAllActivity = async () => {
+    try {
+      const res: Response = await getEnumsByCategory("activity");
+      const data = res?.data || [];
+      setActivity(data);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch activities",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const baseValues: Record<string, unknown> = { ...empty };
     if (initialData) {
       baseValues.academyId = initialData.academyId;
       baseValues.academyType = initialData.academyType;
-      baseValues.registrationDate = initialData.registrationDate 
-        ? formatDateForInput(initialData.registrationDate) 
+      baseValues.registrationDate = initialData.registrationDate
+        ? formatDateForInput(initialData.registrationDate)
         : undefined;
       baseValues.academyName = initialData.academyName;
       baseValues.addressId = initialData.addressId;
@@ -68,23 +84,27 @@ export default function AcademyFormModal({
       baseValues.share_tsl = initialData.share_tsl;
       baseValues.share_expenses = initialData.share_expenses;
       baseValues.panCard = initialData.panCard;
-      baseValues.discontinuedDate = initialData.discontinuedDate 
-        ? formatDateForInput(initialData.discontinuedDate) 
+      baseValues.discontinuedDate = initialData.discontinuedDate
+        ? formatDateForInput(initialData.discontinuedDate)
         : undefined;
     }
+    getAllActivity();
     setValues(baseValues as unknown as Academy);
     setFieldErrors({});
     setError(null);
   }, [initialData, isOpen]);
-  
+
   const onChange = (field: keyof Academy, val: string | number) => {
     // Handle date formatting for date fields
     let value: string | number | undefined = val;
-    if ((field === "registrationDate" || field === "discontinuedDate") && typeof val === "string") {
+    if (
+      (field === "registrationDate" || field === "discontinuedDate") &&
+      typeof val === "string"
+    ) {
       // If the value is empty, set undefined, otherwise keep the string for the date input
       value = val === "" ? undefined : val;
     }
-    
+
     setValues((p) => ({ ...p, [field]: value }));
 
     setFieldErrors((prev) => {
@@ -191,7 +211,8 @@ export default function AcademyFormModal({
     {
       name: "academyType",
       label: "Academy Type",
-      type: "text",
+      type: "select",
+      options: activity.map((a) => ({ label: a.value, value: a.value })),
       required: false,
     },
     {
@@ -243,48 +264,53 @@ export default function AcademyFormModal({
 
   if (!isOpen) return null;
 
-    return (
-      <Dialog
-        open={isOpen} 
-        onOpenChange={(o) => {
-          if (!o) onClose();
-        }}
-      >
-        <div>
-          <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-            <div className="flex flex-col max-h-[90vh] overflow-hidden">
-              <FormHeader
-                title={
-                  initialData?.academyId ? "Edit Academy" : "Add New Academy"
-                }
-                onClose={onClose}
-              />
-              <div className="overflow-auto">
-                {error && (
-                  <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
-                    {error}
-                  </div>
-                )}
-                <FormContent
-                  fields={fields}
-                  values={values}
-                  errors={fieldErrors}
-                  loading={false}
-                  error={error}
-                  isSubmitting={isSubmitting}
-                  onChange={onChange as (field: keyof Academy, value: string | number) => void}
-                  layout="grid"
-                />
-              </div>
-              <FormFooter
-                onClose={onClose}
-                onSubmit={handleSubmit}
-                submitLabel={initialData?.academyId ? "Update" : "Create"}
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <div>
+        <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
+          <div className="flex flex-col max-h-[90vh] overflow-hidden">
+            <FormHeader
+              title={
+                initialData?.academyId ? "Edit Academy" : "Add New Academy"
+              }
+              onClose={onClose}
+            />
+            <div className="overflow-auto">
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+              <FormContent
+                fields={fields}
+                values={values}
+                errors={fieldErrors}
+                loading={false}
+                error={error}
                 isSubmitting={isSubmitting}
+                onChange={
+                  onChange as (
+                    field: keyof Academy,
+                    value: string | number
+                  ) => void
+                }
+                layout="grid"
               />
             </div>
-          </DialogContent>
-        </div>
-      </Dialog>
-    );
+            <FormFooter
+              onClose={onClose}
+              onSubmit={handleSubmit}
+              submitLabel={initialData?.academyId ? "Update" : "Create"}
+              isSubmitting={isSubmitting}
+            />
+          </div>
+        </DialogContent>
+      </div>
+    </Dialog>
+  );
 }

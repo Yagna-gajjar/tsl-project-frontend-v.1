@@ -7,6 +7,7 @@ import {
   DollarSign,
   CheckCircle,
   FileText,
+  Settings2,
 } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Enrollment } from "@/types/enrollment";
@@ -80,6 +81,37 @@ const fields: FieldConfig<Enrollment>[] = [
       const amount = v as number;
       return `Rs. ${Number(amount)?.toFixed(2) || "0.00"}`;
     },
+  },
+  // --- new billing fields ---
+  {
+    key: "billingAmount",
+    label: "Billing Amount",
+    icon: DollarSign,
+    render: (v) => {
+      const amount = v as number;
+      return `Rs. ${Number(amount)?.toFixed(2) || "0.00"}`;
+    },
+  },
+  {
+    key: "billingRate",
+    label: "Billing Rate",
+    icon: DollarSign,
+    render: (v) => {
+      const rate = v as number;
+      return Number(rate) ? Number(rate).toFixed(2) : "0.00";
+    },
+  },
+  {
+    key: "cndn",
+    label: "CNDN",
+    icon: Hash,
+    render: (v) => (v === undefined || v === null ? "-" : String(v)),
+  },
+  {
+    key: "adjustment",
+    label: "Adjustment",
+    icon: Settings2,
+    render: (v) => (v === undefined || v === null ? "-" : String(v)),
   },
   {
     key: "openEnrollment",

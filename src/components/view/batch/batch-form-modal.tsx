@@ -13,6 +13,8 @@ import { getAcademies } from "@/api/academy.api";
 import type { Batch } from "@/types/batch";
 import { toast } from "@/hooks/use-toast";
 import { format as dfFormat } from "date-fns";
+import { getEnumsByCategory } from "@/api/enums.api";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -29,8 +31,6 @@ export function BatchFormModal({
   onSaved,
   layout = "grid",
 }: Props) {
-  const isEdit = Boolean(initialData && initialData.batchId);
-
   // helper: convert incoming week code (e.g. 12 or "134") to array ["monday","tuesday"] etc.
   const numberToWeekArray = (code?: number | string | null): string[] => {
     if (code === undefined || code === null) return [];
@@ -84,15 +84,20 @@ export function BatchFormModal({
     }
     if (t instanceof Date) {
       if (Number.isNaN(t.getTime())) return undefined;
-      console.log("instance of date");
       return dfFormat(t, "HH:mm");
     }
     const maybeDate = new Date(t);
     if (!Number.isNaN(maybeDate.getTime())) {
-      console.log(maybeDate, "{+", dfFormat(maybeDate, "HH:mm"), "last valu");
       return dfFormat(maybeDate, "HH:mm");
     }
     return undefined;
+  };
+
+  const formatDateInput = (d: any): string | undefined => {
+    if (d === undefined || d === null) return undefined;
+    const dt = typeof d === "string" ? new Date(d) : d;
+    if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return undefined;
+    return dfFormat(dt, "yyyy-MM-dd");
   };
 
   const timeToMinutes = (t: any): number | null => {
@@ -102,25 +107,61 @@ export function BatchFormModal({
     if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
     return hh * 60 + mm;
   };
-  // safe format helpers (handle strings, Date or undefined)
-  const formatDateInput = (d: any): string | undefined => {
-    if (d === undefined || d === null) return undefined;
-    const dt = typeof d === "string" ? new Date(d) : d;
-    if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return undefined;
-    return dfFormat(dt, "yyyy-MM-dd");
+
+  // Add minutes to a time and return "HH:mm"
+  const addMinutesToTime = (
+    t: any,
+    minutesToAdd: number
+  ): string | undefined => {
+    const base = timeToMinutes(t);
+    if (base === null || !Number.isFinite(minutesToAdd)) return undefined;
+    let total = base + minutesToAdd;
+    const dayMinutes = 24 * 60;
+    total = ((total % dayMinutes) + dayMinutes) % dayMinutes; // wrap around day
+    const hh = Math.floor(total / 60);
+    const mm = total % 60;
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
   };
 
+  // safe format helpers (handle strings, Date or undefined)
   const formatTimeInput = (t: any): string | undefined => {
     if (t === undefined || t === null) return undefined;
     // if already "HH:mm" string, normalizeTimeToHHmm will handle; reuse it
     return normalizeTimeToHHmm(t);
   };
 
-  // NOTE: weekDays will be stored as array of weekday strings, e.g. ['monday','wednesday']
+  // Activity options (shape: { label, value }) to feed FormContent select
+  const [activityOptions, setActivityOptions] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
+
+  const getAllActivity = async () => {
+    try {
+      const response: Response = await getEnumsByCategory("activity");
+      const items = response?.data || [];
+
+      const mapped = (items as any[]).map((it: any) => {
+        const rawValue =
+          it?.id !== undefined ? Number(it.id) : String(it?.value ?? "");
+        const label = it?.value && String(it.value);
+        return { label, value: rawValue };
+      });
+      setActivityOptions(mapped);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch activities",
+        variant: "destructive",
+      });
+      setActivityOptions([]);
+    }
+  };
+
   const empty: Partial<Batch> = {
     batchName: initialData?.batchName ?? "",
     academyId: initialData?.academyId ?? undefined,
     courseId: initialData?.courseId ?? undefined,
+    activityName: initialData?.activityName ?? undefined,
     coachId: initialData?.coachId ?? undefined,
     facilityId: initialData?.facilityId ?? undefined,
     areaId: initialData?.areaId ?? undefined,
@@ -135,17 +176,24 @@ export function BatchFormModal({
     status: (initialData?.status ?? "active") as "active" | "suspended",
   };
 
+  const isEdit = Boolean(initialData && initialData.batchId);
   const [values, setValues] = useState<Partial<Batch>>(empty);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
+  // ⬇ changed type to also keep sessionMinutes & weekDays from course
   const [academies, setAcademies] = useState<
     Array<{ id: number; name: string }>
   >([]);
-  const [courses, setCourses] = useState<Array<{ id: number; name: string }>>(
-    []
-  );
+  const [courses, setCourses] = useState<
+    Array<{
+      id: number;
+      name: string;
+      sessionMinutes?: number;
+      weekDays?: number | string | null;
+    }>
+  >([]);
   const [coaches, setCoaches] = useState<Array<{ id: number; name: string }>>(
     []
   );
@@ -169,59 +217,15 @@ export function BatchFormModal({
     []
   );
 
-  // reset values when initialData changes or modal opens/closes
-  // reset values when initialData changes or modal opens/closes
-  useEffect(() => {
-    const mapped = {
-      ...empty,
-      // preserve other incoming fields if present but normalize date/time/weekDays
-      ...(initialData && {
-        batchName: initialData.batchName ?? empty.batchName,
-        academyId: initialData.academyId ?? empty.academyId,
-        courseId: initialData.courseId ?? empty.courseId,
-        coachId: initialData.coachId ?? empty.coachId,
-        facilityId: initialData.facilityId ?? empty.facilityId,
-        areaId: initialData.areaId ?? empty.areaId,
-        introduceDate:
-          formatDateInput(initialData?.introduceDate) ?? empty.introduceDate,
-        suspendedDate:
-          formatDateInput(initialData?.suspendedDate) ?? empty.suspendedDate,
-        startTime: formatTimeInput(initialData?.startTime) ?? empty.startTime,
-        endTime: formatTimeInput(initialData?.endTime) ?? empty.endTime,
-        weekDays:
-          numberToWeekArray(initialData?.weekDays as any) ?? empty.weekDays,
-        status: initialData?.status ?? empty.status,
-      }),
-    };
-
-    setValues(mapped);
-    setFieldErrors({});
-    setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData, isOpen]);
-
-  // load academies + facilities on open. Courses/coaches and areas are loaded filtered when an academy/facility is selected.
+  // load activities + facilities on open (academies will be fetched only when activityName is selected)
   useEffect(() => {
     if (!isOpen) return;
 
     const loadTopOptions = async () => {
       setLoadingOptions(true);
       try {
-        const [academiesData, facilitiesData] = await Promise.all([
-          getAcademies(),
-          getFacilities(),
-        ]);
-
-        // academies
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const academyArr = Array.isArray(
-          (academiesData as any)?.data ?? academiesData
-        )
-          ? (academiesData as any)?.data ?? academiesData
-          : [];
-        setAcademies(
-          academyArr.map((a: any) => ({ id: a.academyId, name: a.academyName }))
-        );
+        // Fetch facilities and activities now
+        const [facilitiesData] = await Promise.all([getFacilities()]);
 
         // facilities
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -234,10 +238,15 @@ export function BatchFormModal({
           facArr.map((f: any) => ({ id: f.facilityId, name: f.facilityName }))
         );
 
-        // if initialData has academyId or facilityId, load filtered lists
-        if (initialData?.academyId) {
-          await loadCoursesAndCoaches(initialData.academyId);
+        // fetch activities for the activity select
+        await getAllActivity();
+
+        // if editing and there's an activity present, load academies for that activity so academy field shows options
+        if (initialData?.activityName) {
+          await loadAcademiesByActivity(String(initialData.activityName));
         }
+
+        // if initialData has facilityId, load areas
         if (initialData?.facilityId) {
           await loadAreasByFacility(initialData.facilityId);
         }
@@ -257,12 +266,41 @@ export function BatchFormModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  // helper: load academies filtered by selected activityName
+  const loadAcademiesByActivity = useCallback(async (activityName?: string) => {
+    try {
+      // small UX: show loading while fetching academies
+      setLoadingOptions(true);
+      const academiesData = await getAcademies({
+        academyType: activityName,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const academyArr = Array.isArray(
+        (academiesData as any)?.data ?? academiesData
+      )
+        ? (academiesData as any)?.data ?? academiesData
+        : [];
+      setAcademies(
+        academyArr.map((a: any) => ({ id: a.academyId, name: a.academyName }))
+      );
+    } catch (err) {
+      console.error("Failed to load academies for activity:", err);
+      setAcademies([]);
+      toast({
+        title: "Error",
+        description: "Failed to load academies",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingOptions(false);
+    }
+  }, []);
+
   // helper: load courses and coaches filtered by academyId (academyId optional)
   const loadCoursesAndCoaches = useCallback(
     async (academyId?: number | string) => {
       try {
         const id = academyId ? Number(academyId) : undefined;
-        // assume getCourses and getAcademyCoaches accept an optional academyId param; if not, adapt accordingly
         const [coursesData, coachesData] = await Promise.all([
           getCourses({ academyId: id }),
           getAcademyCoaches({ academyId: id }),
@@ -283,8 +321,14 @@ export function BatchFormModal({
           ? coachesData
           : [];
 
+        // ⬇ keep extra data from course: sessionMinutes & weekDays
         setCourses(
-          coursesArr.map((c: any) => ({ id: c.courseId, name: c.courseName }))
+          coursesArr.map((c: any) => ({
+            id: c.courseId,
+            name: c.courseName,
+            sessionMinutes: c.sessionMinutes,
+            weekDays: c.weekDays,
+          }))
         );
         setCoaches(
           coachesArr.map((c: any) => ({
@@ -311,11 +355,10 @@ export function BatchFormModal({
     async (facilityId?: number | string) => {
       try {
         const id = facilityId ? Number(facilityId) : undefined;
-        // assume getAreas can accept facilityId filter, otherwise it will return all areas
         const areasData = await getAreas({ facilityId: id });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const areasArr = Array.isArray((areasData as any)?.data ?? areasData)
-          ? (areasData as any)?.data ?? areasData
+          ? (areasData as any).data ?? areasData
           : [];
         setAreas(
           areasArr.map((a: any) => ({ id: a.areaId, name: a.areaName }))
@@ -333,14 +376,68 @@ export function BatchFormModal({
     []
   );
 
-  // generic onChange: additional side-effects for selected academy & facility & weekDays multi-select
+  // reset values when initialData changes or modal opens/closes
+  useEffect(() => {
+    const mapped = {
+      ...empty,
+      ...(initialData && {
+        batchName: initialData.batchName ?? empty.batchName,
+        academyId: initialData.academyId ?? empty.academyId,
+        courseId: initialData.courseId ?? empty.courseId,
+        activityName: initialData.activityName ?? empty.activityName,
+        coachId: initialData.coachId ?? empty.coachId,
+        facilityId: initialData.facilityId ?? empty.facilityId,
+        areaId: initialData.areaId ?? empty.areaId,
+        introduceDate:
+          formatDateInput(initialData?.introduceDate) ?? empty.introduceDate,
+        suspendedDate:
+          formatDateInput(initialData?.suspendedDate) ?? empty.suspendedDate,
+        startTime: formatTimeInput(initialData?.startTime) ?? empty.startTime,
+        endTime: formatTimeInput(initialData?.endTime) ?? empty.endTime,
+        weekDays:
+          numberToWeekArray(initialData?.weekDays as any) ?? empty.weekDays,
+        status: initialData?.status ?? empty.status,
+      }),
+    };
+
+    getAllActivity();
+    setValues(mapped);
+    setFieldErrors({});
+    setError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, isOpen]);
+
+  // generic onChange: activityName, academy, course, facility, weekDays etc.
   const onChange = (field: keyof Batch, val: any) => {
-    // handle academy selection: reset course+coach, load filtered lists
+    // activity selection
+    if (field === "activityName") {
+      const activityName = val ? String(val) : undefined;
+      setValues((p) => ({
+        ...p,
+        activityName,
+        academyId: undefined,
+        courseId: undefined,
+        coachId: undefined,
+      }));
+      setAcademies([]);
+      if (activityName) {
+        loadAcademiesByActivity(activityName);
+      }
+      setFieldErrors((prev) => {
+        if (!prev.activityName) return prev;
+        const copy = { ...prev };
+        delete copy.activityName;
+        return copy;
+      });
+      return;
+    }
+
+    // academy selection
     if (field === "academyId") {
       const academyId = val ? Number(val) : undefined;
       setValues((p) => ({
         ...p,
-        academyId: academyId,
+        academyId,
         courseId: undefined,
         coachId: undefined,
       }));
@@ -354,10 +451,57 @@ export function BatchFormModal({
       return;
     }
 
-    // handle facility selection: reset area, load areas for facility
+    // course selection (OPTIONAL but with side-effects)
+    if (field === "courseId") {
+      const courseIdVal = val ? Number(val) : undefined;
+      const selectedCourse = courseIdVal
+        ? courses.find((c) => Number(c.id) === Number(courseIdVal))
+        : undefined;
+
+      setValues((prev) => {
+        // auto-fill weekDays from course.weekDays if available
+        let nextWeekDays = prev.weekDays;
+        if (selectedCourse && selectedCourse.weekDays != null) {
+          const auto = numberToWeekArray(selectedCourse.weekDays as any);
+          if (auto.length > 0) {
+            nextWeekDays = auto;
+          }
+        }
+
+        // if we already have startTime and course has sessionMinutes -> compute endTime
+        let nextEndTime = prev.endTime;
+        if (
+          selectedCourse &&
+          typeof selectedCourse.sessionMinutes === "number" &&
+          prev.startTime
+        ) {
+          nextEndTime = addMinutesToTime(
+            prev.startTime,
+            selectedCourse.sessionMinutes
+          );
+        }
+
+        return {
+          ...prev,
+          courseId: courseIdVal,
+          weekDays: nextWeekDays,
+          endTime: nextEndTime,
+        };
+      });
+
+      setFieldErrors((prev) => {
+        if (!prev.courseId) return prev;
+        const copy = { ...prev };
+        delete copy.courseId;
+        return copy;
+      });
+      return;
+    }
+
+    // facility selection
     if (field === "facilityId") {
       const facilityId = val ? Number(val) : undefined;
-      setValues((p) => ({ ...p, facilityId: facilityId, areaId: undefined }));
+      setValues((p) => ({ ...p, facilityId, areaId: undefined }));
       loadAreasByFacility(facilityId);
       setFieldErrors((prev) => {
         if (!prev.facilityId) return prev;
@@ -368,8 +512,8 @@ export function BatchFormModal({
       return;
     }
 
-    // courseId or coachId simple change
-    if (field === "courseId" || field === "coachId" || field === "areaId") {
+    // area / coach simple changes
+    if (field === "coachId" || field === "areaId") {
       setValues((p) => ({ ...p, [field]: val }));
       setFieldErrors((prev) => {
         if (!prev[field as string]) return prev;
@@ -380,7 +524,7 @@ export function BatchFormModal({
       return;
     }
 
-    // weekDays multi-select: set array of weekday strings
+    // weekDays multi-select
     if (field === "weekDays") {
       const newVal = Array.isArray(val) ? val : val ? [val] : [];
       setValues((p) => ({ ...p, weekDays: newVal }));
@@ -393,7 +537,44 @@ export function BatchFormModal({
       return;
     }
 
-    // default behavior (including time fields which can be string "HH:mm" or Date)
+    // special handling for startTime when course is selected
+    if (field === "startTime") {
+      const newStart = val;
+      setValues((prev) => {
+        let nextEndTime = prev.endTime;
+
+        if (prev.courseId) {
+          const selectedCourse = courses.find(
+            (c) => Number(c.id) === Number(prev.courseId)
+          );
+          if (
+            selectedCourse &&
+            typeof selectedCourse.sessionMinutes === "number"
+          ) {
+            nextEndTime = addMinutesToTime(
+              newStart,
+              selectedCourse.sessionMinutes
+            );
+          }
+        }
+
+        return {
+          ...prev,
+          startTime: newStart,
+          endTime: nextEndTime,
+        };
+      });
+
+      setFieldErrors((prev) => {
+        if (!prev.startTime) return prev;
+        const copy = { ...prev };
+        delete copy.startTime;
+        return copy;
+      });
+      return;
+    }
+
+    // default behavior (including endTime when no course is selected)
     setValues((p) => ({ ...p, [field]: val }));
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
@@ -408,11 +589,12 @@ export function BatchFormModal({
     if (!values.batchName || String(values.batchName).trim() === "") {
       errs.batchName = "Batch name is required";
     }
+    if (!values.activityName) {
+      errs.activityName = "Activity is required";
+    }
+    // courseId is OPTIONAL now → no error
     if (!values.academyId) {
       errs.academyId = "Academy is required";
-    }
-    if (!values.courseId) {
-      errs.courseId = "Course is required";
     }
     if (!values.coachId) {
       errs.coachId = "Coach is required";
@@ -496,24 +678,27 @@ export function BatchFormModal({
       const payload: Partial<Batch> = {
         batchName: String(values.batchName ?? "").trim(),
         academyId: Number(values.academyId),
-        courseId: Number(values.courseId),
+        // courseId is OPTIONAL now
+        courseId: values.courseId ? Number(values.courseId) : undefined,
         coachId: Number(values.coachId),
         facilityId: Number(values.facilityId),
         areaId: Number(values.areaId),
+        activityName: values.activityName
+          ? String(values.activityName)
+          : undefined,
         introduceDate: values.introduceDate
           ? new Date(values.introduceDate as any)
           : new Date(),
         suspendedDate: values.suspendedDate
           ? new Date(values.suspendedDate as any)
           : undefined,
-        // send times as "HH:mm" strings
         startTime: normalizedStart,
         endTime: normalizedEnd,
-        // send weekDays as numeric code (e.g. 12, 134) OR undefined if none
         weekDays: weekCode,
         status: values.status ?? "active",
       };
-      let res: ResResponse;
+
+      let res: any;
       if (isEdit && initialData?.batchId) {
         res = await editBatch(Number(initialData.batchId), payload);
         toast({
@@ -544,6 +729,8 @@ export function BatchFormModal({
           description: msg,
           variant: "destructive",
         });
+        setIsSubmitting(false);
+        return;
       }
 
       onSaved?.(values as Batch);
@@ -569,20 +756,27 @@ export function BatchFormModal({
       required: true,
     },
     {
+      name: "activityName",
+      label: "Activity",
+      type: "select",
+      options: activityOptions.map((a) => ({ label: a.label, value: a.label })),
+      required: true,
+    },
+    {
       name: "academyId",
       label: "Academy",
       type: "select",
       required: true,
       options: academies.map((a) => ({ label: a.name, value: String(a.id) })),
-      disabled: loadingOptions,
+      disabled: loadingOptions || !values.activityName,
     },
     {
       name: "courseId",
       label: "Course",
       type: "select",
-      required: true,
+      required: false, // ⬅ optional now
       options: courses.map((c) => ({ label: c.name, value: String(c.id) })),
-      disabled: loadingOptions,
+      disabled: loadingOptions || !values.academyId,
     },
     {
       name: "coachId",
@@ -590,7 +784,7 @@ export function BatchFormModal({
       type: "select",
       required: true,
       options: coaches.map((c) => ({ label: c.name, value: String(c.id) })),
-      disabled: loadingOptions,
+      disabled: loadingOptions || !values.academyId,
     },
     {
       name: "facilityId",
@@ -606,12 +800,12 @@ export function BatchFormModal({
       type: "select",
       required: true,
       options: areas.map((a) => ({ label: a.name, value: String(a.id) })),
-      disabled: loadingOptions,
+      disabled: loadingOptions || !values.facilityId,
     },
     {
       name: "weekDays",
       label: "Week Days",
-      type: "multiselect", // expects FormContent to support multiselect arrays
+      type: "multiselect",
       required: true,
       options: WEEKDAY_OPTIONS,
     },
@@ -626,6 +820,8 @@ export function BatchFormModal({
       label: "End Time",
       type: "time",
       required: true,
+      // ⬇ when course selected, endTime is controlled by sessionMinutes
+      disabled: !!values.courseId,
     },
     {
       name: "introduceDate",
