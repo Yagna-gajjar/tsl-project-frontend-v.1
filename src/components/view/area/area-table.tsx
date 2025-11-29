@@ -93,6 +93,27 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  const handleDelete = async (id: number | undefined) => {
+    if (id === undefined) return;
+
+    try {
+      await deleteArea(id);
+      toast({
+        title: "Success",
+        description: "Area deleted successfully",
+      });
+      setDeleteId(null);
+      setDeleteOpen(false);
+      await loadData();
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete area",
+        variant: "destructive",
+      });
+    }
+  };
+
   const columns: Column<Area>[] = [
     {
       key: "areaName",
@@ -136,26 +157,6 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
     },
   ];
 
-  const handleDelete = async (id: number | undefined) => {
-    if (id === undefined) return;
-
-    try {
-      await deleteArea(id);
-      toast({
-        title: "Success",
-        description: "Area deleted successfully",
-      });
-      setDeleteId(null);
-      setDeleteOpen(false);
-      await loadData();
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to delete area",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div>

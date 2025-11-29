@@ -1,5 +1,6 @@
 import type { Area } from "@/types/area";
-import { toQueryString } from "./helper";
+import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface AreasQuery {
   page?: number;
@@ -10,83 +11,52 @@ export interface AreasQuery {
   areaSQFT?: number;
   portion?: number;
   sortBy?: string;
-  sortOrder?: "ASC" | "DESC";
+  sorting?: SortOrder;
 }
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+const AREA_BASE = import.meta.env.VITE_APP_API_URL + "/area";
 
-async function getAreas(params?: AreasQuery) {
-  try {
-    const url = `${API_URL}/area?${toQueryString(params || {})}`;
-    const response = await fetch(url);
-    const data = await response.json();
+export function getAreas(params: AreasQuery = {}): Promise<Area[]> {
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 10,
+    sortBy: params.sortBy ?? "areaId",
+    sorting: params.sorting ?? "ASC",
+    search: params.search ?? params.areaName,
+    areaName: params.areaName ?? undefined,
+    facilityId: params.facilityId ?? undefined,
+    areaSQFT: params.areaSQFT ?? undefined,
+    portion: params.portion ?? undefined,
+  });
 
-    if (data.data && Array.isArray(data.data)) {
-      return data.data;
-    }
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.error("Error fetching areas:", err);
-    throw err;
-  }
+  return request<Area[]>(`${AREA_BASE}${qs}`);
 }
 
-async function getAreaById(id: number) {
-  try {
-    const url = `${API_URL}/area/${id}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error fetching area:", err);
-    throw err;
-  }
+export function getAreaById(id: number): Promise<Response> {
+  return request<Response>(`${AREA_BASE}/${id}`);
 }
 
-async function createArea(payload: Omit<Area, "areaId" | "createdAt" | "updatedAt">) {
-  try {
-    const url = `${API_URL}/area`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error creating area:", err);
-    throw err;
-  }
+export function createArea(
+  payload: Omit<Area, "areaId" | "createdAt" | "updatedAt">
+): Promise<Response> {
+  return request<Response>(AREA_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
-async function updateArea(id: number, payload: Partial<Area>) {
-  try {
-    const url = `${API_URL}/area/${id}`;
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error updating area:", err);
-    throw err;
-  }
+export function updateArea(
+  id: number,
+  payload: Partial<Area>
+): Promise<Response> {
+  return request<Response>(`${AREA_BASE}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
-async function deleteArea(id: number) {
-  try {
-    const url = `${API_URL}/area/${id}`;
-    const response = await fetch(url, {
-      method: "DELETE",
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error deleting area:", err);
-    throw err;
-  }
+export function deleteArea(id: number): Promise<Response> {
+  return request<Response>(`${AREA_BASE}/${id}`, {
+    method: "DELETE",
+  });
 }
-
-export { getAreas, getAreaById, createArea, updateArea, deleteArea };
