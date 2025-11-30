@@ -675,7 +675,6 @@ export default function EnrollmentFormModal({
       };
 
       console.log("Enrollment payload:", payload);
-      return;
 
       if (initialData?.enrollmentId) {
         await updateEnrollment(initialData.enrollmentId, payload as any);
