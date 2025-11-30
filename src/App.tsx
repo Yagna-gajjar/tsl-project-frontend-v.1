@@ -30,6 +30,7 @@ import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
 import EnrollmentDashborad from "./pages/enrollment-dashboard";
 import EnrollmentDashBoardPage from "./pages/enrollment-dashboard"
+import EnrollmentPage from "./pages/enrollment"
 
 export default function App() {
   return (
@@ -43,9 +44,9 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Layout />}>
                 <Route index element={<Navigate to="/dashboard" />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard" element={<EnrollmentDashBoardPage />} />
                 <Route path="/family" element={<FamilyPage />} />
-                <Route path="/enrollment" element={<EnrollmentDashBoardPage />} />
+                <Route path="/enrollment" element={<EnrollmentPage />} />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route

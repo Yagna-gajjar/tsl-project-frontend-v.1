@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 import { createEnrollment, updateEnrollment } from "@/api/enrollment.api";
 import type { Enrollment } from "@/types/enrollment";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getAcademies } from "@/api/academy.api";
 import { getCourseByAcademy } from "@/api/course.api";
 import { getMembers } from "@/api/member.api";
@@ -14,8 +12,7 @@ import type { Course } from "@/types/course";
 import { getDiscounts } from "@/api/discount.api";
 import { getBatch } from "@/api/batch.api";
 import type { Response } from "@/types/response";
-import { Batch } from "@/types/batch";
-import type { Activity } from "@/types/activity";
+import type { Batch } from "@/types/batch";
 import { getActivities } from "@/api/activity.api";
 
 type Props = {
@@ -92,7 +89,7 @@ export default function EnrollmentFormModal({
   const [batches, SetBatched] = useState<Batch[]>([]);
   const [activityOption, setActivityOption] = useState<SelectOption[]>([]);
   // store baseline original endDate from incoming initialData so freeDays changes don't compound
-  const initialEndDateRef = useRef<string | undefined>(undefined);
+  const initialEndDateRef = useRef<string | undefined | any>(undefined);
 
   // derived value: minUnits of selected course
   const minUnits = useMemo(() => {
@@ -101,10 +98,10 @@ export default function EnrollmentFormModal({
     );
     const n = course
       ? Number(
-          (course as any).minEnrollmentUnit ??
-            (course as any).minEnrollmentUnit ??
-            1
-        )
+        (course as any).minEnrollmentUnit ??
+        (course as any).minEnrollmentUnit ??
+        1
+      )
       : 1;
     return Math.max(1, Number.isFinite(n) ? n : 1);
   }, [courseArray, values.courseId]);
@@ -124,13 +121,13 @@ export default function EnrollmentFormModal({
     let mounted = true;
     const load = async () => {
       try {
-        const [resMember, resActivity] = await Promise.all([
+        const [resMember, resActivity] = await Promise.all<any>([
           getMembers(),
           getActivities(),
         ]);
 
-        const activityArr = Array.isArray(resActivity.data)
-          ? resActivity.data
+        const activityArr = Array.isArray(resActivity?.data)
+          ? resActivity?.data
           : [];
         if (!mounted) return;
         setActivityOption(
@@ -142,8 +139,8 @@ export default function EnrollmentFormModal({
         const memberArr = Array.isArray((resMember as any)?.data)
           ? (resMember as any).data
           : Array.isArray(resMember)
-          ? resMember
-          : [];
+            ? resMember
+            : [];
         if (!mounted) return;
         setMemberOptions(
           memberArr.map((m: any) => ({
@@ -250,8 +247,8 @@ export default function EnrollmentFormModal({
         const arr = Array.isArray((res as any)?.data)
           ? (res as any).data
           : Array.isArray(res)
-          ? res
-          : [];
+            ? res
+            : [];
 
         // map to SelectOption (adjust to string if your Select expects strings)
         const mapped = arr.map((a: any) => ({
@@ -728,9 +725,9 @@ export default function EnrollmentFormModal({
         endDate: values.endDate || undefined,
         ...(values.isDiscounted
           ? {
-              discountId: values.discountId || undefined,
-              discountedAmount: Number(values.discountedAmount) || 0,
-            }
+            discountId: values.discountId || undefined,
+            discountedAmount: Number(values.discountedAmount) || 0,
+          }
           : {}),
         freeDays: Number(values.freeDays) || 0,
         sessionUnits: Number(values.sessionUnits) || 0,
@@ -846,13 +843,13 @@ export default function EnrollmentFormModal({
     },
     ...(initialData
       ? [
-          {
-            name: "freeDays",
-            label: "Free Days",
-            type: "number",
-            required: false,
-          },
-        ]
+        {
+          name: "freeDays",
+          label: "Free Days",
+          type: "number",
+          required: false,
+        },
+      ]
       : []),
     {
       name: "sessionUnits",
@@ -975,7 +972,7 @@ export default function EnrollmentFormModal({
 
       // If discounts enabled, fetch discount data and prefer its percentage (but do NOT overwrite commitedAmount)
       if (values.isDiscounted) {
-        const discounts = await getDiscountDate();
+        const discounts: Response = await getDiscountDate();
         if (
           discounts &&
           Array.isArray(discounts.data) &&
@@ -1059,51 +1056,40 @@ export default function EnrollmentFormModal({
   if (!isOpen) return null;
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
-      <div>
-        <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-          <div className="flex flex-col max-h-[90vh] overflow-hidden">
-            <FormHeader
-              title={
-                initialData?.enrollmentId
-                  ? "Edit Enrollment"
-                  : "Add New Enrollment"
-              }
-              onClose={onClose}
-            />
-            <div className="overflow-auto">
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
-                  {error}
-                </div>
-              )}
-              <FormContent
-                fields={fields}
-                values={values}
-                errors={fieldErrors}
-                loading={false}
-                error={error}
-                isSubmitting={isSubmitting}
-                onChange={
-                  onChange as (field: keyof Enrollment, value: any) => void
-                }
-                layout="grid"
-              />
-            </div>
-            <FormFooter
-              onClose={onClose}
-              onSubmit={handleSubmit}
-              submitLabel={initialData?.enrollmentId ? "Update" : "Create"}
-              isSubmitting={isSubmitting}
-            />
+    <div className="flex flex-col max-h-[90vh] overflow-hidden">
+      {/* <FormHeader
+        title={
+          initialData?.enrollmentId
+            ? "Edit Enrollment"
+            : "Add New Enrollment"
+        }
+        onClose={onClose}
+      /> */}
+      <div className="overflow-auto">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+            {error}
           </div>
-        </DialogContent>
+        )}
+        <FormContent
+          fields={fields}
+          values={values}
+          errors={fieldErrors}
+          loading={false}
+          error={error}
+          isSubmitting={isSubmitting}
+          onChange={
+            onChange as (field: keyof Enrollment, value: any) => void
+          }
+          layout="grid"
+        />
       </div>
-    </Dialog>
+      <FormFooter
+        onClose={onClose}
+        onSubmit={handleSubmit}
+        submitLabel={initialData?.enrollmentId ? "Update" : "Create"}
+        isSubmitting={isSubmitting}
+      />
+    </div>
   );
 }
