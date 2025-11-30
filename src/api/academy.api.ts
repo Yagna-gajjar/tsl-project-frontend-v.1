@@ -1,90 +1,60 @@
 import type { Academy } from "@/types/academy";
-import { toQueryString } from "./helper";
+import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface AcademyQuery {
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sorting?: SortOrder;
   search?: string;
   academyName?: string;
   academyType?: string;
-  sortBy?: string;
-  sortOrder?: "ASC" | "DESC";
+  activityName?: string;
 }
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+const ACADEMY_BASE = import.meta.env.VITE_APP_API_URL + "/academy";
 
-async function getAcademies(params?: AcademyQuery) {
-  try {
-    const url = `${API_URL}/academy${toQueryString(params || {})}`;
-    const response = await fetch(url);
-    const data = await response.json();
+export function getAcademies(params: AcademyQuery = {}): Promise<Academy[]> {
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 10,
+    sortBy: params.sortBy ?? "academyId",
+    sorting: params.sorting ?? "ASC",
+    search: params.search ?? params.academyName,
+    academyName: params.academyName ?? undefined,
+    academyType: params.academyType ?? undefined,
+    activityName: params.activityName ?? undefined,
+  });
 
-    if (data.data && Array.isArray(data.data)) {
-      return data.data;
-    }
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.error("Error fetching academies:", err);
-    throw err;
-  }
+  return request<Academy[]>(`${ACADEMY_BASE}${qs}`);
 }
 
-async function getAcademyById(id: number) {
-  try {
-    const url = `${API_URL}/academy/${id}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error fetching academy:", err);
-    throw err;
-  }
+export function getAcademyById(id: number): Promise<Response> {
+  return request<Response>(`${ACADEMY_BASE}/${id}`);
 }
 
-async function createAcademy(payload: Omit<Academy, "academyId" | "createdAt" | "updatedAt">) {
-  try {
-    const url = `${API_URL}/academy`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error creating academy:", err);
-    throw err;
-  }
+export function createAcademy(
+  payload: Omit<Academy, "academyId" | "createdAt" | "updatedAt">
+): Promise<Response> {
+  return request<Response>(ACADEMY_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
-async function updateAcademy(id: number, payload: Partial<Academy>) {
-  try {
-    const url = `${API_URL}/academy/${id}`;
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error updating academy:", err);
-    throw err;
-  }
+export function updateAcademy(
+  id: number,
+  payload: Partial<Academy>
+): Promise<Response> {
+  return request<Response>(`${ACADEMY_BASE}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
-async function deleteAcademy(id: number) {
-  try {
-    const url = `${API_URL}/academy/${id}`;
-    const response = await fetch(url, {
-      method: "DELETE",
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error deleting academy:", err);
-    throw err;
-  }
+export function deleteAcademy(id: number): Promise<Response> {
+  return request<Response>(`${ACADEMY_BASE}/${id}`, {
+    method: "DELETE",
+  });
 }
-
-export { getAcademies, getAcademyById, createAcademy, updateAcademy, deleteAcademy };

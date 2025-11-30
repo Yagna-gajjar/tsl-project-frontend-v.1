@@ -15,6 +15,8 @@ import { getDiscounts } from "@/api/discount.api";
 import { getBatch } from "@/api/batch.api";
 import type { Response } from "@/types/response";
 import { Batch } from "@/types/batch";
+import type { Activity } from "@/types/activity";
+import { getActivities } from "@/api/activity.api";
 
 type Props = {
   isOpen: boolean;
@@ -88,6 +90,7 @@ export default function EnrollmentFormModal({
   const [memberOptions, setMemberOptions] = useState<SelectOption[]>([]);
   const [courseArray, setCourseArray] = useState<Course[]>([]);
   const [batches, SetBatched] = useState<Batch[]>([]);
+  const [activityOption, setActivityOption] = useState<SelectOption[]>([]);
   // store baseline original endDate from incoming initialData so freeDays changes don't compound
   const initialEndDateRef = useRef<string | undefined>(undefined);
 
@@ -121,20 +124,21 @@ export default function EnrollmentFormModal({
     let mounted = true;
     const load = async () => {
       try {
-        const [resAcademy, resMember] = await Promise.all([
-          getAcademies(),
+        const [resMember, resActivity] = await Promise.all([
           getMembers(),
+          getActivities(),
         ]);
 
-        const academyArr = Array.isArray(resAcademy) ? resAcademy : [];
+        const activityArr = Array.isArray(resActivity.data)
+          ? resActivity.data
+          : [];
         if (!mounted) return;
-        setAcademyOptions(
-          academyArr.map((a: any) => ({
-            value: a.academyId,
-            label: a.academyName,
+        setActivityOption(
+          activityArr.map((a: any) => ({
+            value: String(a.activityName),
+            label: a.activityName,
           }))
         );
-
         const memberArr = Array.isArray((resMember as any)?.data)
           ? (resMember as any).data
           : Array.isArray(resMember)
@@ -230,6 +234,55 @@ export default function EnrollmentFormModal({
       }
     },
     [values.courseId]
+  );
+  // helper: load academies filtered by activity and update academyOptions
+  const loadAcademiesByActivity = useCallback(
+    async (activityName?: string) => {
+      try {
+        console.log(activityName);
+
+        const res = await getAcademies({
+          academyType: activityName ? activityName : undefined,
+        });
+
+        console.log(res);
+
+        const arr = Array.isArray((res as any)?.data)
+          ? (res as any).data
+          : Array.isArray(res)
+          ? res
+          : [];
+
+        // map to SelectOption (adjust to string if your Select expects strings)
+        const mapped = arr.map((a: any) => ({
+          value: a.academyId,
+          label: a.academyName || a.name || `Academy ${a.academyId}`,
+        })) as SelectOption[];
+
+        setAcademyOptions(mapped);
+
+        // if there's exactly one academy, auto-select it and load courses for it
+        if (mapped.length === 1) {
+          const only = mapped[0];
+          setValues((p) => ({
+            ...p,
+            academyId: only.value,
+            courseId: 0, // reset course
+          }));
+          // load courses for that academy so courseOptions and courseArray fill
+          await loadCourses(Number(only.value));
+        }
+      } catch (e) {
+        console.error("Failed to load academies for activity:", e);
+        toast({
+          title: "Error",
+          description: "Failed to load academies.",
+          variant: "destructive",
+        });
+        setAcademyOptions([]);
+      }
+    },
+    [loadCourses]
   );
 
   // helper to compute billingRate and billingAmount given discountPercentage, cndn, numberOfDays, unitAmount
@@ -332,6 +385,31 @@ export default function EnrollmentFormModal({
   }, [values.courseId, courseArray]); // unitAmount will update because courseArray changed
 
   const onChange = (field: keyof Enrollment | "isDiscounted", val: any) => {
+    if (field === "activityName") {
+      const activityName = val || 0;
+      // set activity and clear dependent selects
+      setValues((p) => ({
+        ...p,
+        activityName,
+        academyId: 0,
+        courseId: 0,
+        batchId: 0,
+      }));
+
+      // clear any previous errors on academy/course
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy["activityName"];
+        delete copy["academyId"];
+        delete copy["courseId"];
+        return copy;
+      });
+
+      // load academies for selected activity (fire-and-forget)
+      void loadAcademiesByActivity(activityName);
+      return;
+    }
+
     // academy change: load courses for academy and reset course selection
     if (field === "academyId") {
       const academyId = Number(val) || 0;
@@ -671,7 +749,7 @@ export default function EnrollmentFormModal({
             ? undefined
             : Number((values as any).cndn),
         adjustment: values.adjustment || 0, // rounding delta (2 dp)
-        batchId: values.batchId || undefined
+        batchId: values.batchId || undefined,
       };
 
       console.log("Enrollment payload:", payload);
@@ -713,6 +791,13 @@ export default function EnrollmentFormModal({
       type: "select",
       options: memberOptions,
       required: true,
+    },
+    {
+      name: "activityName",
+      label: "Activity Name",
+      type: "select",
+      options: activityOption, // correct key
+      required: true, // correct key
     },
     {
       name: "academyId",
