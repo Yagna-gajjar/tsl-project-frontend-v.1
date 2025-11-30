@@ -26,10 +26,10 @@ import CoachPage from "@/pages/coach";
 import AcademyCoachPage from "@/pages/academyCoach";
 import CoachSkillPage from "@/pages/coachSkill";
 import CoursePage from "@/pages/course";
-import EnrollmentPage from "./pages/enrollment";
 import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
 import EnrollmentDashborad from "./pages/enrollment-dashboard";
+import EnrollmentDashBoardPage from "./pages/enrollment-dashboard"
 
 export default function App() {
   return (
@@ -45,7 +45,7 @@ export default function App() {
                 <Route index element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/family" element={<FamilyPage />} />
-                <Route path="/enrollment" element={<EnrollmentPage />} />
+                <Route path="/enrollment" element={<EnrollmentDashBoardPage />} />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route
