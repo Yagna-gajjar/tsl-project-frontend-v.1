@@ -280,8 +280,8 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
           <span
             className={`font-medium ${
               r.status === "active"
-                ? "bg-green-600/30 px-3 pb-1 rounded-lg text-green-600"
-                : "bg-red-600/30 px-2 pb-1 rounded-lg text-red-600"
+                ? "bg-green-600/30 px-3 w-fit pb-1 rounded-lg text-green-600"
+                : "bg-red-600/30 px-2 w-fit pb-1 rounded-lg text-red-600"
             }`}
           >
             {r.status}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import type { Enrollment } from "@/types/enrollment";
 import EnrollmentTable from "@/components/view/enrollment/enrollment-table";
-import EnrollmentFormModal from "@/components/view/enrollment/enrollment-form-modal";
+import EnrollmentFormModal from "@/components/view/enrollment-dashboard/enrollment-form-modal";
 import EnrollmentViewModal from "@/components/view/enrollment/enrollment-view-modal";
 import { Button } from "@/components/ui/button";
 

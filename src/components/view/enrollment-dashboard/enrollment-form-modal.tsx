@@ -578,6 +578,7 @@ export default function EnrollmentFormModal({
         delete copy["batchId"];
         return copy;
       });
+
       return;
     }
 
@@ -670,9 +671,11 @@ export default function EnrollmentFormModal({
             ? undefined
             : Number((values as any).cndn),
         adjustment: values.adjustment || 0, // rounding delta (2 dp)
+        batchId: values.batchId || undefined
       };
 
       console.log("Enrollment payload:", payload);
+      return;
 
       if (initialData?.enrollmentId) {
         await updateEnrollment(initialData.enrollmentId, payload as any);
@@ -731,7 +734,8 @@ export default function EnrollmentFormModal({
       label: "Batch",
       type: "select",
       options: batches.map((b) => ({
-        label: b.batchName,
+        // label: b.batchName,
+        label: b.batchName + "|" + b.startTime + " To " + b.endTime,
         value: Number(b.batchId),
       })),
       required: true,
