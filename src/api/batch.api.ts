@@ -2,7 +2,7 @@ import type { Batch } from '@/types/batch';
 import { request, toQueryString, type SortOrder } from './helper';
 import type { Response } from '@/types/response';
 
-export interface ActivityQuery {
+export interface BatchQuery {
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -17,7 +17,7 @@ export interface ActivityQuery {
 
 const BATCH_BASE = import.meta.env.VITE_APP_API_URL + "/batch";
 
-export function getBatch(params: ActivityQuery = {}): Promise<Batch[]> {
+export function getBatch(params: BatchQuery = {}): Promise<Batch[]> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,

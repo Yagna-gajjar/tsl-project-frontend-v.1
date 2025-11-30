@@ -29,6 +29,7 @@ import CoursePage from "@/pages/course";
 import EnrollmentPage from "./pages/enrollment";
 import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
+import EnrollmentDashborad from "./pages/enrollment-dashboard";
 
 export default function App() {
   return (
@@ -78,6 +79,10 @@ export default function App() {
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route
+                  path="/enrollment_dashboard"
+                  element={<EnrollmentDashborad />}
+                />
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route path="/setting" element={<Setting />}>

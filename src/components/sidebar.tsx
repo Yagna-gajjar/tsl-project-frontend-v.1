@@ -20,9 +20,14 @@ import {
   Award,
   BookA,
   Layers,
+  LayoutDashboardIcon,
+  BookAudio,
+  BookAIcon,
+  Book,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Dashboard from "@/pages/dashboard";
 
 interface SubMenuItem {
   label: string;
@@ -43,6 +48,11 @@ interface SidebarProps {
 
 const navigationItems: NavigationItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  {
+    name: "Enrollment Dashboard",
+    href: "/enrollment_dashboard",
+    icon: Book,
+  },
   {
     name: "Family",
     icon: User2,

@@ -94,7 +94,9 @@ export default function BatchViewModal({ isOpen, onClose, item }: Props) {
       if (!id) throw new Error("No batch ID");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await getBatchById(Number(id)) as any;
-      return response as Batch;
+      const resBatch = response.data;
+
+      return resBatch as Batch;
     },
     []
   );
