@@ -39,6 +39,8 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
         search: search || undefined,
         facilityName: filters.facilityName as string | undefined,
         facilityType: filters.facilityType as string | undefined,
+        areaSQFT: filters.areaSQFT as number | undefined,
+        academicCapacity: filters.capacity as number | undefined
       });
 
       const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as Facility[] : []);
@@ -145,7 +147,7 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
       const ok =
         typeof res?.success !== "undefined"
           ? res.success === true || String(res.success) === "true"
-            : true;
+          : true;
 
       if (!ok) {
         throw new Error(

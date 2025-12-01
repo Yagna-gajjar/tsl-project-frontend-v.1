@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { format } from "date-fns";
 import { getAllEnums, deleteEnum } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
@@ -65,62 +64,23 @@ export default function EnumsTable({ onView, onEdit, refreshKey }: Props) {
     async (opts?: { page?: number; limit?: number }) => {
       try {
         setIsLoading(true);
-        const res: Response = await getAllEnums();
+
+        const currentPage = opts?.page ?? page;
+        const currentLimit = opts?.limit ?? limit;
+
+        const res: Response = await getAllEnums({
+          page: currentPage,
+          limit: currentLimit,
+          search,
+          filters,
+          sortBy,
+          sortOrder
+        });
 
         const rowsRaw = Array.isArray(res?.data) ? res.data : [];
 
-        // Apply search + filters
-        const filtered = rowsRaw.filter((r: any) => {
-          // search applied against 'value' (existing behavior)
-          if (search) {
-            const val = String(r.value ?? "").toLowerCase();
-            if (!val.includes(search.toLowerCase())) return false;
-          }
-
-          // apply each filter (if present)
-          for (const key of Object.keys(filters)) {
-            const filterVal = filters[key];
-            if (
-              filterVal === null ||
-              filterVal === undefined ||
-              filterVal === ""
-            )
-              continue;
-
-            const rowVal = r[key];
-            // for string filters do substring match; otherwise strict equality
-            if (typeof filterVal === "string") {
-              if (
-                !String(rowVal ?? "")
-                  .toLowerCase()
-                  .includes(String(filterVal).toLowerCase())
-              ) {
-                return false;
-              }
-            } else {
-              if (String(rowVal) !== String(filterVal)) return false;
-            }
-          }
-
-          return true;
-        }) as Enums[];
-
-        // Sorting
-        const sorted = [...filtered];
-        if (sortBy) {
-          sorted.sort((a: any, b: any) =>
-            compareValues(a[sortBy], b[sortBy], sortOrder)
-          );
-        }
-
-        // Pagination (client-side)
-        const p = opts?.page ?? page;
-        const l = opts?.limit ?? limit;
-        const start = (p - 1) * l;
-        const paged = sorted.slice(start, start + l);
-
-        setData(paged);
-        setTotal(sorted.length);
+        setData(rowsRaw);
+        setTotal(res?.pagination?.total || 0);
       } catch (err) {
         console.error("Failed to fetch enums", err);
         setData([]);
@@ -131,6 +91,7 @@ export default function EnumsTable({ onView, onEdit, refreshKey }: Props) {
     },
     [search, filters, sortBy, sortOrder, page, limit]
   );
+
 
   // initial & dependency-driven load
   useEffect(() => {

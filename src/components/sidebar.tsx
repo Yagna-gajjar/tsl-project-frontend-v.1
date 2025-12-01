@@ -50,7 +50,7 @@ const navigationItems: NavigationItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   {
     name: "Enrollment Dashboard",
-    href: "/enrollment_dashboard",
+    href: "/enrollment-dashboard",
     icon: Book,
   },
   {

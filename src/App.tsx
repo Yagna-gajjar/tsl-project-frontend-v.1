@@ -44,7 +44,8 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Layout />}>
                 <Route index element={<Navigate to="/dashboard" />} />
-                <Route path="/dashboard" element={<EnrollmentDashBoardPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/enrollment-dashboard" element={<EnrollmentDashBoardPage />} />
                 <Route path="/family" element={<FamilyPage />} />
                 <Route path="/enrollment" element={<EnrollmentPage />} />
                 <Route path="/discount" element={<DiscountPage />} />

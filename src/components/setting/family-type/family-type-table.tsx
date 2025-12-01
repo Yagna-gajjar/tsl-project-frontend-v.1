@@ -34,10 +34,10 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
         page,
         limit,
         sortBy,
-        sorting: sortOrder,
+        sortOrder: sortOrder,
         search: search || undefined,
         familyTypeName: filters.familyTypeName ?? undefined,
-        maxMembers: filters.maxMembers ?? 10000,
+        maxMembers: filters.maxMembers ?? undefined,
       } as any);
 
       const rowsRaw = res?.data ?? res ?? [];

@@ -6,7 +6,7 @@ export interface FamilyTypesQuery {
     page?: number;
     limit?: number;
     sortBy?: string;
-    sorting?: SortOrder;
+    sortOrder?: SortOrder;
     search?: string;
     familyTypeName?: string;
     maxMembers?: number;
@@ -19,10 +19,10 @@ export function getFamilyTypes(params: FamilyTypesQuery = {}): Promise<FamilyTyp
         page: params.page ?? 1,
         limit: params.limit ?? 10,
         sortBy: params.sortBy ?? 'familyTypeId',
-        sorting: params.sorting ?? (params.sorting ?? 'ASC'),
+        sortOrder: params.sortOrder ?? (params.sortOrder ?? 'ASC'),
         search: params.search ?? params.familyTypeName,
         familyTypeName: params.familyTypeName ?? undefined,
-        maxMembers : params.maxMembers ?? 10000,
+        maxMembers : params.maxMembers,
     });
 
     return request<FamilyType[]>(`${FAMILY_TYPE_BASE}${qs}`);
