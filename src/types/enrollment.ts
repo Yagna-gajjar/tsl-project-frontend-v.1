@@ -27,4 +27,6 @@ export interface Enrollment {
   memberLastName?: string;
   courseName?: string;
   academyName?: string;
+  activityName?: string;
+  isDiscounted?: false;
 }
