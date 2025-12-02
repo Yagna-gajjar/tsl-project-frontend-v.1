@@ -1,5 +1,6 @@
 import type { Enrollment } from "@/types/enrollment";
 import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface EnrollmentQuery {
   page?: number;
@@ -11,9 +12,12 @@ export interface EnrollmentQuery {
   courseId?: number;
   memberId?: number;
   status?: string;
-    memberFirstName?: string;
-    academyName?: string;
-    courseName?: string;
+  memberFirstName?: string;
+  billingAmount?: number;
+  academyName?: string;
+  courseName?: string;
+  billingRate?: number;
+  cndn?: number;
 }
 
 const ENROLLMENT_BASE = import.meta.env.VITE_APP_API_URL + "/enrollment";
@@ -28,17 +32,17 @@ export function getEnrollments(params: EnrollmentQuery = {}): Promise<Enrollment
     academyId: params.academyId ?? undefined,
     courseId: params.courseId ?? undefined,
     memberId: params.memberId ?? undefined,
-      status: params.status ?? undefined,
-      memberFirstName: params.memberFirstName ?? undefined,
-      academyName: params.academyName ?? undefined,
-        courseName: params.courseName ?? undefined,
+    status: params.status ?? undefined,
+    memberFirstName: params.memberFirstName ?? undefined,
+    academyName: params.academyName ?? undefined,
+    courseName: params.courseName ?? undefined,
   });
 
   return request<Enrollment[]>(`${ENROLLMENT_BASE}${qs}`);
 }
 
-export function getEnrollmentById(id: number): Promise<Enrollment> {
-  return request<Enrollment>(`${ENROLLMENT_BASE}/${id}`);
+export function getEnrollmentById(id: number): Promise<Response> {
+  return request<Response>(`${ENROLLMENT_BASE}/${id}`);
 }
 
 export function createEnrollment(

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { FileText, AlertCircle } from "lucide-react";
-import type { Member } from "@/types/member";
-import type { Batch } from "@/types/batch";
-import { getBatch } from "@/api/batch.api";
-import EnrollmentFormModal from "@/components/view/enrollment-dashboard/enrollment-form-modal";
+import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import { FileText, AlertCircle } from "lucide-react"
+import type { Member } from "@/types/member"
+import type { Batch } from "@/types/batch"
+import { getBatch } from "@/api/batch.api"
+import EnrollmentFormNew from "../enrollment-form-new"
 
 interface EnrollmentPanelProps {
   selectedMemberId: number | null;
@@ -61,17 +61,12 @@ export default function EnrollmentPanel({
         console.error("getBatch error", err);
         setError("Failed to load batches");
       })
-      .finally(() => mounted);
+      .finally(() => mounted)
 
     return () => {
       mounted = false;
     };
   }, [selectedMemberId, memberDetails, onBatchSelect]);
-
-  const handleSaved = () => {
-    setFormOpen(false);
-    setEditRow(undefined);
-  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -116,15 +111,7 @@ export default function EnrollmentPanel({
         animate="visible"
       >
         <div className="max-w-2xl space-y-4">
-          <EnrollmentFormModal
-            isOpen={true}
-            initialData={editRow}
-            onClose={() => {
-              setFormOpen(false);
-              setEditRow(undefined);
-            }}
-            onSave={handleSaved}
-          />
+          <EnrollmentFormNew />
         </div>
       </motion.div>
 

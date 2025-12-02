@@ -5,6 +5,17 @@ import { getEnrollments, deleteEnrollment } from "@/api/enrollment.api";
 import type { Enrollment } from "@/types/enrollment";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { BookOpen, HelpCircle, Stethoscope, Users, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 
 type Props = {
   onView?: (row: Enrollment) => void;
@@ -28,6 +39,9 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [changeDialogOpen, setChangeDialogOpen] = useState(false);
+  const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
+  const navigate = useNavigate();
 
   const loadData = useCallback(async () => {
     try {
@@ -45,7 +59,7 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         memberFirstName: filters.memberFirstName as string | undefined,
         academyName: filters.academyName as string | undefined,
         courseName: filters.courseName as string | undefined,
-        billingAmount: filters.billingAmount as number | undefined,
+        billingAmount: filters?.billingAmount as undefined | undefined,
         billingRate: filters.billingRate as number | undefined,
         cndn: filters.cndn as number | undefined,
       });
@@ -53,8 +67,8 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Enrollment[])
-        : [];
+          ? ((res as Record<string, unknown>).data as Enrollment[])
+          : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         enrollmentDate: r.enrollmentDate
@@ -126,6 +140,21 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
   };
 
   const columns: Column<Enrollment>[] = [
+    {
+      header: "Change Enrollment",
+      key: "enrollmentChange",
+      render: (row: Enrollment) => (
+        <button
+          className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
+          onClick={() => {
+            setSelectedEnrollment(row);
+            setChangeDialogOpen(true);
+          }}
+        >
+          Change
+        </button>
+      ),
+    },
     {
       header: "Enrollment Date",
       key: "enrollmentDate",
@@ -273,8 +302,8 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
           status === "active"
             ? "bg-green-100 text-green-800"
             : status === "inactive"
-            ? "bg-yellow-100 text-yellow-800"
-            : "bg-blue-100 text-blue-800";
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-blue-100 text-blue-800";
         return (
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
@@ -300,6 +329,14 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
     },
   ];
+
+  const handleAction = (pathSegment: any) => {
+    if (!selectedEnrollment?.enrollmentId as any) return;
+
+    // Navigate to: /enrollment/123/change-course
+    navigate(`/enrollment/${selectedEnrollment?.enrollmentId}/${pathSegment}`);
+    setChangeDialogOpen(false); // Close modal
+  };
 
   return (
     <div>
@@ -337,6 +374,83 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         cancelText="Cancel"
         variant="destructive"
       />
+      <Dialog open={changeDialogOpen} onOpenChange={setChangeDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] w-[95%] rounded-xl p-6 bg-white border-0 shadow-2xl">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-2xl font-bold text-slate-900">
+              Manage Enrollment
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 text-base">
+              Choose an action to update your current enrollment status.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Action Grid - White & Blue Theme */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            {/* Option 1: Course Change */}
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
+              onClick={() => handleAction("course-change")}
+            >
+              <BookOpen className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Change Course</span>
+            </Button>
+
+            {/* Option 2: Batch Change */}
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
+              onClick={() => handleAction("batch-change")}
+            >
+              <Users className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Switch Batch</span>
+            </Button>
+
+            {/* Option 3: Medical Extension */}
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
+              onClick={() => handleAction("medical-extension")}
+            >
+              <Stethoscope className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Medical Extension</span>
+            </Button>
+
+            {/* Option 4: Other */}
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
+              onClick={() => handleAction("other")}
+            >
+              <HelpCircle className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Other Request</span>
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-100" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-slate-400">Or</span>
+            </div>
+          </div>
+
+          {/* Destructive/Final Action - Styled Black to stand out without using Red */}
+          <Button
+            className="w-full py-6 bg-slate-900 hover:bg-black text-white rounded-lg flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+            onClick={() => handleAction("cancel")}
+          >
+            <XCircle className="w-5 h-5 text-white" />
+            <span className="text-base font-medium">Cancel Enrollment</span>
+          </Button>
+
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

@@ -1,5 +1,5 @@
-export interface Response {
+export interface Response<T = unknown> {
 	success: boolean
 	message: string
-	data: any | null
+	data: T | null
 }
