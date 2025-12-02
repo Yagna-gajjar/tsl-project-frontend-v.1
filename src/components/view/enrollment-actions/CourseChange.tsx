@@ -28,7 +28,7 @@ const CourseChange = () => {
 	const [course, setCourse] = useState<Course[]>([]);
 	const [batches, setBatches] = useState<Batch[]>([]);
 	const [values, setValues] = useState<Enrollment>({
-		enrollmentId: id,
+		enrollmentId: Number(id),
 		memberId: oldEnrollment?.memberId || 0,
 		academyId: 0,
 		adjustment: 0,
@@ -56,7 +56,21 @@ const CourseChange = () => {
 	};
 
 	const handleSubmit = () => {
-		console.log(values);
+		try {
+			const res = fetch("http://localhost:9705/api/enrollment-change/demo",
+				{
+					body: JSON.stringify(values),
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					}
+				}
+			).then((r) => r.json());
+
+			console.log(res);
+		} catch (err) {
+			setError("Failed to submit!");
+		}
 	}
 	function calculateDays(startISO?: any, endISO?: any, inclusive = false) {
 		if (!startISO || !endISO) return 0; // or return null, throw error, etc.
@@ -148,11 +162,11 @@ const CourseChange = () => {
 		console.log(finalAmount, " amount");
 		setValues((prev: any) => ({
 			...prev,
-			billingRate: c.unitRate,
-			commitedAmount: days * c.unitRate,
+			billingRate: Number(c.unitRate),
+			commitedAmount: Number(days * c.unitRate),
 			numberOfDays: days,
 			discountedAmount: 0,
-			adjustment: adjust * c.unitRate,
+			adjustment: Number(adjust * c.unitRate),
 			endDate: endDate
 		}));
 
@@ -209,6 +223,11 @@ const CourseChange = () => {
 
 	useEffect(() => {
 		if (!values?.startDate || !oldEnrollment) return;
+
+		setValues((prev) => ({
+			...prev,
+			memberId: oldEnrollment.memberId,
+		}));
 
 		const diff = calculateDays(oldEnrollment.startDate, values.startDate);
 		console.log(diff + 1, " diff");
