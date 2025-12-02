@@ -1,72 +1,77 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { FileText, AlertCircle } from "lucide-react"
-import type { Member } from "@/types/member"
-import type { Batch } from "@/types/batch"
-import { getBatch } from "@/api/batch.api"
-import EnrollmentFormModal from "@/components/view/enrollment-dashboard/enrollment-form-modal"
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { FileText, AlertCircle } from "lucide-react";
+import type { Member } from "@/types/member";
+import type { Batch } from "@/types/batch";
+import { getBatch } from "@/api/batch.api";
+import EnrollmentFormModal from "@/components/view/enrollment-dashboard/enrollment-form-modal";
 
 interface EnrollmentPanelProps {
-  selectedMemberId: number | null
-  memberDetails: Member | null
-  selectedBatch: Batch | null
-  onBatchSelect: (batch: Batch | null) => void
+  selectedMemberId: number | null;
+  memberDetails: Member | null;
+  selectedBatch: Batch | null;
+  onBatchSelect: (batch: Batch | null) => void;
 }
 
 export default function EnrollmentPanel({
   selectedMemberId,
   memberDetails,
-  selectedBatch,
   onBatchSelect,
 }: EnrollmentPanelProps) {
-  const [batches, setBatches] = useState<Batch[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [editRow, setEditRow] = useState<Member | undefined>()
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [editRow, setEditRow] = useState<Member | undefined>();
 
   // Fetch batches when member selected
   useEffect(() => {
     if (!selectedMemberId) {
-      setBatches([])
-      onBatchSelect(null)
-      return
+      setBatches([]);
+      onBatchSelect(null);
+      return;
     }
 
-    let mounted = true
+    let mounted = true;
     getBatch({ limit: 200 })
       .then((res: any) => {
-        if (!mounted) return
-        const data: Batch[] = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : (res?.batches ?? [])
-        setBatches(data)
+        if (!mounted) return;
+        const data: Batch[] = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : res?.batches ?? [];
+        setBatches(data);
 
         // Auto-select batch if member has enrollment info
         const batchId =
           (memberDetails as any)?.enrollment?.batchId ??
           (memberDetails as any)?.currentEnrollment?.batchId ??
           (memberDetails as any)?.batchId ??
-          undefined
+          undefined;
 
         if (batchId) {
-          const found = data.find((b) => (b as any).batchId === batchId || (b as any).id === batchId)
-          if (found) onBatchSelect(found)
+          const found = data.find(
+            (b) => (b as any).batchId === batchId || (b as any).id === batchId
+          );
+          if (found) onBatchSelect(found);
         }
       })
       .catch((err) => {
-        console.error("getBatch error", err)
-        setError("Failed to load batches")
+        console.error("getBatch error", err);
+        setError("Failed to load batches");
       })
-      .finally(() => mounted && setLoadingBatches(false))
+      .finally(() => mounted);
 
     return () => {
-      mounted = false
-    }
-  }, [selectedMemberId, memberDetails, onBatchSelect])
+      mounted = false;
+    };
+  }, [selectedMemberId, memberDetails, onBatchSelect]);
 
   const handleSaved = () => {
-    setFormOpen(false)
-    setEditRow(undefined)
-  }
+    setFormOpen(false);
+    setEditRow(undefined);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -74,7 +79,7 @@ export default function EnrollmentPanel({
       opacity: 1,
       transition: { staggerChildren: 0.08 },
     },
-  }
+  };
 
   if (!selectedMemberId) {
     return (
@@ -91,11 +96,15 @@ export default function EnrollmentPanel({
           <FileText className="h-8 w-8 text-primary/60" />
         </motion.div>
         <p className="text-center">
-          <span className="block text-sm font-medium text-foreground">Select a member</span>
-          <span className="block text-xs text-muted-foreground mt-1">to view enrollment form</span>
+          <span className="block text-sm font-medium text-foreground">
+            Select a member
+          </span>
+          <span className="block text-xs text-muted-foreground mt-1">
+            to view enrollment form
+          </span>
         </p>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -111,14 +120,13 @@ export default function EnrollmentPanel({
             isOpen={true}
             initialData={editRow}
             onClose={() => {
-              setFormOpen(false)
-              setEditRow(undefined)
+              setFormOpen(false);
+              setEditRow(undefined);
             }}
             onSave={handleSaved}
           />
         </div>
       </motion.div>
-
 
       {error && (
         <motion.div
@@ -131,5 +139,5 @@ export default function EnrollmentPanel({
         </motion.div>
       )}
     </>
-  )
+  );
 }

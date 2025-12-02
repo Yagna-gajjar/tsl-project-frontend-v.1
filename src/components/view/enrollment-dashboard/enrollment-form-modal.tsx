@@ -123,7 +123,9 @@ export default function EnrollmentFormModal({
       try {
         const [resMember, resActivity] = await Promise.all<any>([
           getMembers(),
-          getActivities(),
+          getActivities({
+            limit: 100,
+          }),
         ]);
 
         const activityArr = Array.isArray(resActivity?.data)

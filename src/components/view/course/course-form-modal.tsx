@@ -77,7 +77,10 @@ export default function CourseFormModal({
       setError(null);
 
       const [resActivity, resAcademy] = await Promise.all([
-        getActivities(),
+        getActivities({
+          limit: 100,
+          page: 1,
+        }),
         getAcademies(),
       ]);
       const activityopts = Array.isArray(resActivity.data)
@@ -86,9 +89,8 @@ export default function CourseFormModal({
             label: activity.activityName,
           }))
         : [];
-
-      const academyopts = Array.isArray(resAcademy)
-        ? resAcademy.map((academy: any) => ({
+      const academyopts = Array.isArray(resAcademy.data)
+        ? resAcademy.data.map((academy: any) => ({
             value: academy.academyId,
             label: academy.academyName,
           }))

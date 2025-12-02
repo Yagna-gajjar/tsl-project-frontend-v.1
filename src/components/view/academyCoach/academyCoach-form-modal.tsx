@@ -72,9 +72,8 @@ export default function AcademyCoachFormModal({
 
         // Fetch dropdown data
         const res: Response = await getAcademies();
-
-        const academyoptions = Array.isArray(res)
-          ? res.map((academy: Record<string, unknown>) => ({
+        const academyoptions = Array.isArray(res.data)
+          ? res.data.map((academy: Record<string, unknown>) => ({
               value: academy.academyId,
               label: academy.academyName,
             }))
