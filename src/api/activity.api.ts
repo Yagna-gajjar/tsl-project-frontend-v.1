@@ -14,7 +14,7 @@ export interface ActivityQuery {
 
 const ACTIVITY_BASE = import.meta.env.VITE_APP_API_URL + '/activity';
 
-export function getActivities(params: ActivityQuery = {}): Promise<Activity[]> {
+export function getActivities(params: ActivityQuery = {}): Promise<Response<Activity>> {
     const qs = toQueryString({
         page: params.page ?? 1,
         limit: params.limit ?? 10,
@@ -25,7 +25,7 @@ export function getActivities(params: ActivityQuery = {}): Promise<Activity[]> {
         activityType: params.activityType ?? undefined,
     });
 
-    return request<Activity[]>(`${ACTIVITY_BASE}${qs}`);
+    return request<Response<Activity>>(`${ACTIVITY_BASE}${qs}`);
 }
 
 export function getActivityById(id: number): Promise<Response> {

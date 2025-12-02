@@ -29,4 +29,7 @@ export interface Enrollment {
   academyName?: string;
   activityName?: string;
   isDiscounted?: false;
+  remainingAmount?: number;
+  processingCharge?: number;
+  changeType?: string;
 }
