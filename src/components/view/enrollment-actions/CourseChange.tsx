@@ -73,7 +73,7 @@ const CourseChange = () => {
 	function addDaysToDate(startISO: string | Date | null | undefined, daysToAdd: number) {
 		if (!startISO) return null;
 
-		let startDate: Date;
+		let startDate: any;
 
 		if (isDate(startISO)) {
 			startDate = startISO;
@@ -145,7 +145,7 @@ const CourseChange = () => {
 		const finalAmount = values?.billingAmount - (values?.processingCharge || 0);
 		const { days, adjust } = AdjustDays(finalAmount / c.unitRate);
 		const endDate = addDaysToDate(new Date(values?.startDate), days)
-		console.log(endDate);
+		console.log(finalAmount, " amount");
 		setValues((prev: any) => ({
 			...prev,
 			billingRate: c.unitRate,
@@ -211,7 +211,8 @@ const CourseChange = () => {
 		if (!values?.startDate || !oldEnrollment) return;
 
 		const diff = calculateDays(oldEnrollment.startDate, values.startDate);
-		const usedAmount = oldEnrollment.billingRate * diff;
+		console.log(diff + 1, " diff");
+		const usedAmount = oldEnrollment.billingRate * (diff + 1);
 		const remaining = oldEnrollment.billingAmount - usedAmount;
 
 		setValues(prev => ({

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-export type FieldType = "text" | "email" | "password" | "number" | "textarea" | "select" | "checkbox" | "date"
+export type FieldType = "text" | "email" | "password" | "number" | "textarea" | "select" | "checkbox" | "date" | "multiselect"
 
 export interface FormFieldConfig<T extends Record<string, any>> {
   name: keyof T
