@@ -29,12 +29,10 @@ interface BottomSectionProps {
 
 export default function BottomSection({ selectedMemberId, historyData }: BottomSectionProps) {
 
-  // Debugging: check if data is arriving
   useEffect(() => {
     console.log("BottomSection received historyData:", historyData)
   }, [historyData])
 
-  // Helper: Format dates (e.g., "2025-12-01" -> "Dec 1, 2025")
   const formatDate = (dateString: string) => {
     if (!dateString) return ""
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -44,28 +42,22 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
     })
   }
 
-  // Helper: Calculate duration in days
   const getDuration = (start: string, end: string) => {
     const diff = new Date(end).getTime() - new Date(start).getTime()
     return Math.ceil(diff / (1000 * 60 * 60 * 24))
   }
 
-  // Helper: Get row background and border colors based on status
   const getRowStyles = (status: string, changeType: string | null) => {
-    // 1. Highlight "changed" status uniquely with right margin (padding effect) and amber theme
     if (status === "changed") {
       return "ml-12 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/10"
     }
 
     if (changeType === "course-change") {
-      // Blue tint for course changes
       return "bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800"
     }
     if (status === "active") {
-      // Clean white/dark for active items (stands out)
       return "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-md"
     }
-    // Gray/Muted for historical/other items
     return "bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-90"
   }
 
@@ -90,7 +82,6 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
       className="w-full h-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 transition-colors duration-300 overflow-y-auto"
     >
       <div className="p-6">
-        {/* Section Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
             <History className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -122,14 +113,11 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pl-3">
 
-                  {/* Left Column: Course Details */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      {/* Status Badge */}
                       <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${getBadgeStyles(item.status, item.changeType)}`}>
                         {item.changeType ? item.changeType.replace('-', ' ') : item.status}
                       </span>
-                      {/* ID Badge */}
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                         #{item.enrollmentId}
                       </span>
@@ -145,7 +133,6 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
                     </div>
                   </div>
 
-                  {/* Right Column: Financials & Dates */}
                   <div className="flex flex-col sm:items-end gap-1.5">
                     <div className="flex items-baseline gap-1">
                       <span className="text-sm text-slate-400 dark:text-slate-500 font-medium">INR</span>
@@ -169,9 +156,7 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
                   </div>
                 </div>
 
-                {/* Card Footer: Source & Duration */}
                 <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
-                  {/* Source Indicator */}
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-medium">
                     {item.source === 'EnrollmentChange' ? (
                       <ArrowRightLeft className="h-3.5 w-3.5" />
@@ -190,7 +175,6 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
             ))}
           </div>
         ) : (
-          /* Empty State */
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}

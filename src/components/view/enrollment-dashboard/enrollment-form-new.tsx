@@ -214,11 +214,10 @@ const EnrollmentFormNew = () => {
 			return;
 		}
 
-		if (!discount || !values.numberOfDays) return;
+		if (!discount || !values.numberOfDays || !debouncedCndn) return;
 
 		const unitRate = Number(selectedCourse?.unitRate ?? 0);
 		const percentage = Number(discount?.discountPercentage ?? 0);
-
 		const fp = Number(((unitRate * percentage) / 100).toFixed(2));
 		const sp = Number((debouncedCndn / values.numberOfDays).toFixed(2));
 		const effectiveBillingRate = Number((fp - sp).toFixed(2));
