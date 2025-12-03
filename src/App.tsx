@@ -28,11 +28,11 @@ import CoachSkillPage from "@/pages/coachSkill";
 import CoursePage from "@/pages/course";
 import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
-import EnrollmentDashborad from "./pages/enrollment-dashboard";
-import EnrollmentDashBoardPage from "./pages/enrollment-dashboard"
-import EnrollmentPage from "./pages/enrollment"
-import CourseChange from "./components/view/enrollment-actions/CourseChange"
-import BatchChange from "./components/view/enrollment-actions/BatchChange"
+import EnrollmentPage from "./pages/enrollment";
+import CourseChange from "./components/view/enrollment-actions/CourseChange";
+import BatchChange from "./components/view/enrollment-actions/BatchChange";
+import FreezeEnrollment from "./components/view/enrollment-actions/FreezeEnrollment";
+import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
 
 export default function App() {
   return (
@@ -47,11 +47,24 @@ export default function App() {
               <Route path="/" element={<Layout />}>
                 <Route index element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/enrollment-dashboard" element={<EnrollmentDashBoardPage />} />
+                <Route
+                  path="/enrollment-dashboard"
+                  element={<EnrollmentDashboard />}
+                />
                 <Route path="/family" element={<FamilyPage />} />
                 <Route path="/enrollment" element={<EnrollmentPage />} />
-                <Route path="/enrollment/:id/course-change" element={<CourseChange />} />
-                <Route path="/enrollment/:id/batch-change" element={<BatchChange />} />
+                <Route
+                  path="/enrollment/:id/course-change"
+                  element={<CourseChange />}
+                />
+                <Route
+                  path="/enrollment/:id/batch-change"
+                  element={<BatchChange />}
+                />
+                <Route
+                  path="/enrollment/:id/freeze-enrollment"
+                  element={<FreezeEnrollment />}
+                />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route
@@ -85,10 +98,6 @@ export default function App() {
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route
-                  path="/enrollment_dashboard"
-                  element={<EnrollmentDashborad />}
-                />
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route path="/setting" element={<Setting />}>

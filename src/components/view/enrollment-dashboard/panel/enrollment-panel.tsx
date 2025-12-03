@@ -6,10 +6,11 @@ import { FileText, AlertCircle } from "lucide-react"
 import type { Member } from "@/types/member"
 import type { Batch } from "@/types/batch"
 import { getBatch } from "@/api/batch.api"
-import EnrollmentFormNew from "../enrollment-form-new"
+import EnrollmentFormNew from "../enrollment-form-modal";
 
 interface EnrollmentPanelProps {
   selectedMemberId: number | null;
+  memberName: string | null;
   memberDetails: Member | null;
   selectedBatch: Batch | null;
   onBatchSelect: (batch: Batch | null) => void;
@@ -17,12 +18,12 @@ interface EnrollmentPanelProps {
 
 export default function EnrollmentPanel({
   selectedMemberId,
+  memberName,
   memberDetails,
   onBatchSelect,
 }: EnrollmentPanelProps) {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [editRow, setEditRow] = useState<Member | undefined>();
 
   // Fetch batches when member selected
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function EnrollmentPanel({
         console.error("getBatch error", err);
         setError("Failed to load batches");
       })
-      .finally(() => mounted)
+      .finally(() => mounted);
 
     return () => {
       mounted = false;
@@ -111,7 +112,10 @@ export default function EnrollmentPanel({
         animate="visible"
       >
         <div className="max-w-2xl space-y-4">
-          <EnrollmentFormNew />
+          <EnrollmentFormNew
+            memberId={selectedMemberId}
+            memberName={memberName}
+          />
         </div>
       </motion.div>
 

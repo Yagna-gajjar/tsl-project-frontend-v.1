@@ -1,74 +1,109 @@
-"use client"
+// src/components/EnrollmentDashboard/EnrollmentDashboard.tsx
 
-import type React from "react"
+"use client";
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { GripVertical } from "lucide-react"
-import type { Member } from "@/types/member"
-import type { Batch } from "@/types/batch"
-import TopSection from "./top-section"
-import BottomSection from "./bottom-section"
+import type React from "react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { GripVertical, ChevronUp, ChevronDown } from "lucide-react";
+import type { Member } from "@/types/member";
+import type { Batch } from "@/types/batch";
+// Ensure correct import path for your components
+import TopSection from "./top-section";
+import BottomSection from "./bottom-section";
+import { Button } from "@/components/ui/button";
 
 export default function EnrollmentDashboard() {
-  const [selectedFamilyId, setSelectedFamilyId] = useState<number | null>(null)
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null)
-  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null)
-  const [memberDetails, setMemberDetails] = useState<Member | null>(null)
-  const [topHeight, setTopHeight] = useState(65)
-  const [isDragging, setIsDragging] = useState(false)
+  const [selectedFamilyId, setSelectedFamilyId] = useState<number | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+  const [memberDetails, setMemberDetails] = useState<Member | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [middleview, setMiddleview] = useState<any>();
 
+  // State for the top panel height (default is 50%)
+  const [topHeight, setTopHeight] = useState(100);
+  // State to track if the BottomSection is expanded
+  const [isExpanded, setIsExpanded] = useState(false);
 
+  // --- Drag Handlers (No change needed here) ---
   const handleMouseDown = () => {
-    setIsDragging(true)
-  }
+    if (!isExpanded) {
+      setIsDragging(true);
+      document.body.style.userSelect = "none";
+    }
+  };
 
   const handleMouseUp = () => {
-    setIsDragging(false)
-  }
+    setIsDragging(false);
+    document.body.style.userSelect = "auto";
+  };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return
+    if (!isDragging || isExpanded) return;
 
-    const container = e.currentTarget as HTMLDivElement
-    const rect = container.getBoundingClientRect()
-    const newHeight = ((e.clientY - rect.top) / rect.height) * 100
+    const container = e.currentTarget as HTMLDivElement;
+    const rect = container.getBoundingClientRect();
+    const newHeight = ((e.clientY - rect.top) / rect.height) * 100;
 
     if (newHeight > 30 && newHeight < 80) {
-      setTopHeight(newHeight)
+      setTopHeight(newHeight);
     }
-  }
+  };
+  // ---------------------------------------------
 
+  const toggleExpand = () => {
+    setIsExpanded((prev) => !prev);
+  };
+
+  // --- Data Fetching Effect (kept as is) ---
   useEffect(() => {
     const fetchMember = async () => {
       try {
-        if (!selectedMemberId) return;
-        const data = await fetch(`http://localhost:9705/api/enrollment/${selectedMemberId}/middleview`, {
-          method: "GET"
-        }).then((res) => res.json());
-
-        console.log(data.data," ans");
+        if (!selectedMemberId) {
+          setMiddleview(null);
+          return;
+        }
+        const res = await fetch(
+          `http://localhost:9705/api/enrollment/${selectedMemberId}/middleview`,
+          { method: "GET" }
+        );
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
         setMiddleview(data.data);
+      } catch (err) {
+        console.error("Got error fetching middleview:", err);
+        setMiddleview(null);
       }
-      catch (err) {
-        console.log("Got error");
-      }
-    }
+    };
     fetchMember();
   }, [selectedMemberId]);
+  // ----------------------------------------
+
+  const topSectionTargetHeight = isExpanded ? "0%" : `${topHeight}%`;
+  const bottomSectionTargetHeight = isExpanded ? "100%" : `${100 - topHeight}%`;
+
+  const ExpandCollapseIcon = isExpanded ? ChevronDown : ChevronUp;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="h-screen flex flex-col overflow-hidden bg-background"
+      className="h-[87vh] flex flex-col overflow-hidden bg-background"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <div style={{ height: `${topHeight}%` }} className="flex overflow-hidden">
+      {/* 1. DYNAMICALLY SIZED TOP SECTION */}
+      <motion.div
+        className="flex overflow-hidden"
+        style={{ height: topSectionTargetHeight }}
+        animate={{ height: topSectionTargetHeight }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      >
         <TopSection
           selectedFamilyId={selectedFamilyId}
           selectedMemberId={selectedMemberId}
@@ -79,22 +114,43 @@ export default function EnrollmentDashboard() {
           onBatchSelect={setSelectedBatch}
           onMemberDetailsChange={setMemberDetails}
         />
-      </div>
-
-      <motion.div
-        onMouseDown={handleMouseDown}
-        className={`h-1.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent hover:bg-gradient-to-r hover:from-transparent hover:via-primary/50 hover:to-transparent cursor-row-resize transition-all group flex items-center justify-center ${isDragging ? "via-primary/70" : ""
-          }`}
-        whileHover={{ scaleY: 1.5 }}
-      >
-        <motion.div initial={false} animate={{ opacity: isDragging ? 1 : 0 }} className="absolute">
-          <GripVertical className="h-4 w-4 text-primary" />
-        </motion.div>
       </motion.div>
 
-      <div style={{ height: `${100 - topHeight}%` }} className="flex overflow-hidden">
-        <BottomSection selectedMemberId={selectedMemberId} historyData={middleview} />
+      {/* 2. DRAG HANDLE / EXPAND-COLLAPSE TOGGLE */}
+      <div
+        className="relative w-full h-10 flex justify-center items-center cursor-ns-resize z-50 "
+        onMouseDown={handleMouseDown}
+      >
+        {/* Expand/Collapse Button - Enhanced for Clarity */}
+        <Button
+          onClick={toggleExpand}
+          className="py-1 h-8 px-4 rounded-full z-20 flex items-center gap-2"
+          variant="default"
+          title={isExpanded ? "Collapse View" : "View Full History/Details"}
+        >
+          <span className="text-sm font-semibold">
+            {!isExpanded ? "View" : "hide"} History
+          </span>
+          <ExpandCollapseIcon className="h-4 w-4 transition-transform duration-300" />
+        </Button>
+
+        {/* Optional: Add a subtle line for the drag handle on desktop */}
+        <div className="absolute w-full h-1 bg-border/50 transition-colors duration-200 hover:bg-border top-1/2 -translate-y-1/2 -z-10 md:block hidden" />
+        <GripVertical className="absolute h-4 w-4 text-muted-foreground/70 -z-10 md:block hidden" />
       </div>
+
+      {/* 3. DYNAMICALLY SIZED BOTTOM SECTION */}
+      <motion.div
+        className="z-40 overflow-hidden"
+        style={{ height: bottomSectionTargetHeight }}
+        animate={{ height: bottomSectionTargetHeight }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      >
+        <BottomSection
+          selectedMemberId={selectedMemberId}
+          historyData={middleview}
+        />
+      </motion.div>
     </motion.div>
-  )
+  );
 }

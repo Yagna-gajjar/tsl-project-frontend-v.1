@@ -79,7 +79,7 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full h-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 transition-colors duration-300 overflow-y-auto"
+      className="w-full h-full  transition-colors duration-300 overflow-y-auto"
     >
       <div className="p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -87,8 +87,12 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
             <History className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Enrollment History</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Recent courses and billing details</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Enrollment History
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Recent courses and billing details
+            </p>
           </div>
         </div>
 
@@ -101,22 +105,36 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.005 }}
-                className={`group relative overflow-hidden rounded-xl border p-5 transition-all ${getRowStyles(item.status, item.changeType)}`}
+                className={`group relative overflow-hidden rounded-xl border p-5 transition-all ${getRowStyles(
+                  item.status,
+                  item.changeType
+                )}`}
               >
                 {/* Left Accent Bar */}
                 <div
-                  className={`absolute left-0 top-0 bottom-0 w-1.5 ${item.status === 'active' ? 'bg-slate-900 dark:bg-slate-100' :
-                      item.status === 'changed' ? 'bg-amber-400' :
-                        item.changeType === 'course-change' ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'
-                    }`}
+                  className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                    item.status === "active"
+                      ? "bg-slate-900 dark:bg-slate-100"
+                      : item.status === "changed"
+                      ? "bg-amber-400"
+                      : item.changeType === "course-change"
+                      ? "bg-blue-500"
+                      : "bg-slate-300 dark:bg-slate-700"
+                  }`}
                 />
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pl-3">
-
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${getBadgeStyles(item.status, item.changeType)}`}>
-                        {item.changeType ? item.changeType.replace('-', ' ') : item.status}
+                      <span
+                        className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${getBadgeStyles(
+                          item.status,
+                          item.changeType
+                        )}`}
+                      >
+                        {item.changeType
+                          ? item.changeType.replace("-", " ")
+                          : item.status}
                       </span>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                         #{item.enrollmentId}
@@ -135,22 +153,33 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
 
                   <div className="flex flex-col sm:items-end gap-1.5">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-sm text-slate-400 dark:text-slate-500 font-medium">INR</span>
+                      <span className="text-sm text-slate-400 dark:text-slate-500 font-medium">
+                        INR
+                      </span>
                       <span className="text-xl font-extrabold text-slate-900 dark:text-white">
-                        {parseFloat(item.commitedAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {parseFloat(item.commitedAmount).toLocaleString(
+                          "en-IN",
+                          { minimumFractionDigits: 2 }
+                        )}
                       </span>
                     </div>
 
-                    {item.processingCharge && parseFloat(item.processingCharge) > 0 && (
-                      <div className="text-xs text-slate-600 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-700 shadow-sm">
-                        + {parseFloat(item.processingCharge).toLocaleString('en-IN')} processing
-                      </div>
-                    )}
+                    {item.processingCharge &&
+                      parseFloat(item.processingCharge) > 0 && (
+                        <div className="text-xs text-slate-600 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-700 shadow-sm">
+                          +{" "}
+                          {parseFloat(item.processingCharge).toLocaleString(
+                            "en-IN"
+                          )}{" "}
+                          processing
+                        </div>
+                      )}
 
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white/50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700">
                       <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                       <span>
-                        {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                        {formatDate(item.startDate)} -{" "}
+                        {formatDate(item.endDate)}
                       </span>
                     </div>
                   </div>
@@ -158,7 +187,7 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
 
                 <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-medium">
-                    {item.source === 'EnrollmentChange' ? (
+                    {item.source === "EnrollmentChange" ? (
                       <ArrowRightLeft className="h-3.5 w-3.5" />
                     ) : (
                       <CheckCircle2 className="h-3.5 w-3.5" />
@@ -184,7 +213,9 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
               <AlertCircle className="h-8 w-8 text-slate-300 dark:text-slate-600" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-bold text-slate-900 dark:text-white">No history found</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                No history found
+              </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[200px]">
                 {selectedMemberId
                   ? "This member hasn't enrolled in any courses yet."
@@ -195,5 +226,5 @@ export default function BottomSection({ selectedMemberId, historyData }: BottomS
         )}
       </div>
     </motion.div>
-  )
+  );
 }

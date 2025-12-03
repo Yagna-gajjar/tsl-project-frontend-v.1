@@ -13,9 +13,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { BookOpen, HelpCircle, Stethoscope, Users, XCircle } from "lucide-react";
+import {
+  BookOpen,
+  HelpCircle,
+  Lock,
+  Snowflake,
+  Stethoscope,
+  Users,
+  XCircle,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 
 type Props = {
   onView?: (row: Enrollment) => void;
@@ -40,7 +47,8 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [changeDialogOpen, setChangeDialogOpen] = useState(false);
-  const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
+  const [selectedEnrollment, setSelectedEnrollment] =
+    useState<Enrollment | null>(null);
   const navigate = useNavigate();
 
   const loadData = useCallback(async () => {
@@ -67,8 +75,8 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray((res as Record<string, unknown>)?.data)
-          ? ((res as Record<string, unknown>).data as Enrollment[])
-          : [];
+        ? ((res as Record<string, unknown>).data as Enrollment[])
+        : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         enrollmentDate: r.enrollmentDate
@@ -144,15 +152,15 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
       header: "Change Enrollment",
       key: "enrollmentChange",
       render: (row: Enrollment) => (
-        <button
-          className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
+        <Button
+          className="text-sm"
           onClick={() => {
             setSelectedEnrollment(row);
             setChangeDialogOpen(true);
           }}
         >
           Change
-        </button>
+        </Button>
       ),
     },
     {
@@ -302,8 +310,8 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
           status === "active"
             ? "bg-green-100 text-green-800"
             : status === "inactive"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-blue-100 text-blue-800";
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-blue-100 text-blue-800";
         return (
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
@@ -354,7 +362,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
         onView={(row) => onView?.(row)}
-        onEdit={(row) => onEdit?.(row)}
         onDelete={(enrollmentId: number | undefined) => {
           setDeleteId(enrollmentId ?? null);
           setDeleteOpen(true);
@@ -387,45 +394,64 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
 
           {/* Action Grid - White & Blue Theme */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
             {/* Option 1: Course Change */}
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
+              onClick={() => handleAction("freeze-enrollment")}
+            >
+              <Snowflake className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
+                Freese Enrollment
+              </span>
+            </Button>
+
+            {/* Option 2: Course Change */}
             <Button
               variant="outline"
               className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
               onClick={() => handleAction("course-change")}
             >
               <BookOpen className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Change Course</span>
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
+                Change Course
+              </span>
             </Button>
 
-            {/* Option 2: Batch Change */}
+            {/* Option 3: Batch Change */}
             <Button
               variant="outline"
               className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
               onClick={() => handleAction("batch-change")}
             >
               <Users className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Switch Batch</span>
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
+                Switch Batch
+              </span>
             </Button>
 
-            {/* Option 3: Medical Extension */}
+            {/* Option 4: Medical Extension */}
             <Button
               variant="outline"
               className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
               onClick={() => handleAction("medical-extension")}
             >
               <Stethoscope className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Medical Extension</span>
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
+                Medical Extension
+              </span>
             </Button>
 
-            {/* Option 4: Other */}
+            {/* Option 5: Other */}
             <Button
               variant="outline"
               className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
               onClick={() => handleAction("other")}
             >
               <HelpCircle className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">Other Request</span>
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
+                Other Request
+              </span>
             </Button>
           </div>
 
@@ -447,10 +473,8 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
             <XCircle className="w-5 h-5 text-white" />
             <span className="text-base font-medium">Cancel Enrollment</span>
           </Button>
-
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

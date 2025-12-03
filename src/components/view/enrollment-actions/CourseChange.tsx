@@ -241,161 +241,161 @@ const CourseChange = () => {
 	}, [values.startDate, oldEnrollment]);
 
 	const fields = [
-		{
-			name: "enrollmentDate",
-			label: "Enrollment Date",
-			type: "date",
-			required: true,
-		},
-		{
-			name: "startDate",
-			label: "Start Date",
-			type: "date",
-			required: true,
-		},
-		{
-			name: "endDate",
-			label: "End Date",
-			type: "date",
-			required: false,
-			disabled: true,
-		},
-		{
-			name: "activityName",
-			label: "Activity Name",
-			type: "select",
-			options: activity.map((e) => ({
-				label: e.activityName,
-				value: Number(e.activityId),
-			})),
-			required: true,
-		},
-		{
-			name: "academyId",
-			label: "Academy",
-			type: "select",
-			options: academy.map((e) => ({
-				label: e.academyName,
-				value: Number(e.academyId),
-			})),
-			required: true,
-		},
-		{
-			name: "courseId",
-			label: "Course",
-			type: "select",
-			options: course.map((e) => ({
-				label: e.courseName,
-				value: Number(e.courseId),
-			})),
-			required: true,
-		},
-		{
-			name: "batchId",
-			label: "Batch",
-			type: "select",
-			options: batches.map((b) => ({
-				label: `${b.batchName} | ${b.startTime} To ${b.endTime}`,
-				value: Number(b.batchId),
-			})),
-			required: true,
-		},
-		{
-			name: "billingAmount",
-			label: "Remaining Amount",
-			type: "number",
-			disabled: true,
-		},
-		{
-			name: "processingCharge",
-			label: "Processing Charge",
-			type: "number",
-		},
-		{
-			name: "freeDays",
-			label: "Free Days",
-			type: "number",
-			required: false,
-		},
-		{
-			name: "sessionUnits",
-			label: "Session Units",
-			type: "number",
-			required: false,
-		},
-		{
-			name: "numberOfDays",
-			label: "Number Of Days",
-			type: "number",
-			required: false,
-			disabled: true
-		},
-		// {
-		// 	name: "discountedAmount",
-		// 	label: "Discounted Amount",
-		// 	type: "number",
-		// 	required: false,
-		// 	disabled: true,
-		// },
-		{
-			name: "commitedAmount",
-			label: "Commited Amount",
-			type: "number",
-			required: true,
-			disabled: true,
-		},
-		{
-			name: "billingRate",
-			label: "Billing Rate",
-			type: "number",
-			disabled: true,
-		},
-		{
-			name: "cndn",
-			label: "CNDN",
-			type: "number",
-		},
-		{
-			name: "adjustment",
-			label: "Adjustment",
-			type: "number",
-			disabled: true,
-		},
-		{
-			name: "openEnrollment",
-			label: "Open Enrollment",
-			type: "checkbox",
-		},
-		// {
-		// 	name: "discountId",
-		// 	label: "Discount ID",
-		// 	type: "number",
-		// 	required: false,
-		// 	disabled: true
-		// },
-		// {
-		// 	name: "isDiscounted",
-		// 	label: "Do you want to remove applied discount?",
-		// 	type: "checkbox",
-		// 	required: false,
-		// },
-		{
-			name: "remarks",
-			label: "Remarks",
-			type: "textarea",
-		},
-		{
-			name: "status",
-			label: "Status",
-			type: "select",
-			options: [
-				{ label: "Active", value: "active" },
-				{ label: "Inactive", value: "inactive" },
-				{ label: "Completed", value: "completed" },
-			],
-			required: true,
-		},
-	];
+    {
+      name: "enrollmentDate",
+      label: "Enrollment Date",
+      type: "date",
+      required: true,
+    },
+    {
+      name: "startDate",
+      label: "Start Date",
+      type: "date",
+      required: true,
+    },
+    {
+      name: "endDate",
+      label: "End Date",
+      type: "date",
+      required: false,
+      disabled: true,
+    },
+    {
+      name: "activityName",
+      label: "Activity Name",
+      type: "select",
+      options: activity.map((e) => ({
+        label: e.activityName,
+        value: Number(e.activityId),
+      })),
+      required: true,
+    },
+    {
+      name: "academyId",
+      label: "Academy",
+      type: "select",
+      options: academy.map((e) => ({
+        label: e.academyName,
+        value: Number(e.academyId),
+      })),
+      required: true,
+    },
+    {
+      name: "courseId",
+      label: "Course",
+      type: "select",
+      options: course.map((e) => ({
+        label: e.courseName,
+        value: Number(e.courseId),
+      })),
+      required: true,
+    },
+    {
+      name: "batchId",
+      label: "Batch",
+      type: "select",
+      options: batches.map((b) => ({
+        label: `${b.batchName} | ${b.startTime} To ${b.endTime}`,
+        value: Number(b.batchId),
+      })),
+      required: true,
+    },
+    {
+      name: "billingAmount",
+      label: "Remaining Amount",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "processingCharge",
+      label: "Processing Charge",
+      type: "number",
+    },
+    {
+      name: "freeDays",
+      label: "Free Days",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "sessionUnits",
+      label: "Session Units",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "numberOfDays",
+      label: "Number Of Days",
+      type: "number",
+      required: false,
+      disabled: true,
+    },
+    // {
+    // 	name: "discountedAmount",
+    // 	label: "Discounted Amount",
+    // 	type: "number",
+    // 	required: false,
+    // 	disabled: true,
+    // },
+    {
+      name: "commitedAmount",
+      label: "Commited Amount",
+      type: "number",
+      required: true,
+      disabled: true,
+    },
+    {
+      name: "billingRate",
+      label: "Billing Rate",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "cndn",
+      label: "CNDN",
+      type: "number",
+    },
+    {
+      name: "adjustment",
+      label: "Adjustment",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "openEnrollment",
+      label: "Open Enrollment",
+      type: "checkbox",
+    },
+    // {
+    // 	name: "discountId",
+    // 	label: "Discount ID",
+    // 	type: "number",
+    // 	required: false,
+    // 	disabled: true
+    // },
+    // {
+    // 	name: "isDiscounted",
+    // 	label: "Do you want to remove applied discount?",
+    // 	type: "checkbox",
+    // 	required: false,
+    // },
+    {
+      name: "remarks",
+      label: "Remarks",
+      type: "textarea",
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Completed", value: "completed" },
+      ],
+      required: true,
+    },
+  ];
 
 	const onChange = (field: string, value: any) => {
 		const numFields = ["academyId", "memberId", "courseId", "batchId", "numberOfDays", "freeDays"];

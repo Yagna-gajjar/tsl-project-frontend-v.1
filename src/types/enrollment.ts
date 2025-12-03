@@ -32,4 +32,5 @@ export interface Enrollment {
   remainingAmount?: number;
   processingCharge?: number;
   changeType?: string;
+  memberName?: string;
 }
