@@ -17,14 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import type { Enrollment } from "@/types/enrollment";
 import type { Batch } from "@/types/batch";
-
-// --- Mock API call for updating (Replace with your actual import) ---
-const updateEnrollmentBatch = async (payload: any) => {
-	// Simulate API delay
-	return new Promise((resolve) => setTimeout(resolve, 1000));
-};
-
-// --- Helper Functions ---
+import { changeBatch, type BatchMember } from "@/api/batchMember-api"
 
 const formatTime = (timeString: string) => {
 	if (!timeString) return "";
@@ -112,22 +105,27 @@ const BatchChange = () => {
 
 		setIsSubmitting(true);
 		try {
-			const payload = {
+			const payload: BatchMember = {
 				status: "active",
 				memberId: enrollment.memberId,
 				batchId: selectedBatchId,
+				enrollmentId: Number(id)
 			};
 
-			console.log("Submitting Payload:", payload);
+			const result = await changeBatch(payload);
+			console.log(result);
 
-			// Call your update API here
-			await updateEnrollmentBatch(payload);
-
-			toast({
-				title: "Success!",
-				description: "Batch updated successfully.",
-				variant: "default", // or "success" if you have that variant
-			});
+			if(result.success){
+				toast({
+					title: "Success!",
+					description: "Batch updated successfully.",
+					variant: "default", // or "success" if you have that variant
+				});
+				navigate(-1);
+			}
+			else{
+				throw new Error("Failed to change batch");
+			}
 
 		} catch (error) {
 			toast({
