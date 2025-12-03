@@ -52,11 +52,27 @@ const EnrollmentFormNew = () => {
 		startDate: format(Date.now(), 'yyyy-MM-dd') as any,
 		status: 'active',
 	});
-	const [fieldErrors] = useState<any>({});
-	const [isSubmitting] = useState<boolean>(false);
 
 	const [selectedActivity, setSelectedActivity] = useState<string>("");
 	const [selectedCourse, setSelectedCourse] = useState<Course>();
+	const [debouncedDays, setDebouncedDays] = useState(values.numberOfDays);
+	const [debouncedCndn, setDebouncedCndn] = useState(values.cndn);
+
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			setDebouncedDays(values.numberOfDays);
+		}, 400);
+
+		return () => clearTimeout(handler);
+	}, [values.numberOfDays]);
+
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			setDebouncedCndn(values.cndn);
+		}, 400);
+
+		return () => clearTimeout(handler);
+	}, [values.cndn]);
 
 	useEffect(() => {
 		const loadInit = async () => {
@@ -71,7 +87,7 @@ const EnrollmentFormNew = () => {
 
 				setMembers(mRes?.data || []);
 				setActivity(aRes?.data || []);
-			} catch (err: any) {
+			} catch {
 				setError("Failed to load members or activities.");
 			}
 		};
@@ -117,10 +133,10 @@ const EnrollmentFormNew = () => {
 	useEffect(() => {
 		if (!values?.courseId) return;
 
-		const c: Course = course.filter((c) => c.courseId == values?.courseId)[0]
+		const c: Course = course.find((c) => c.courseId == values?.courseId)!;
 		setSelectedCourse(c);
+
 		const { amount, adjust } = AdjustBillingAmount(c.minEnrollmentUnit * c.unitRate);
-		console.log(amount, " is amount ", adjust);
 		setValues((prev) => ({
 			...prev,
 			numberOfDays: c.minEnrollmentUnit,
@@ -143,13 +159,13 @@ const EnrollmentFormNew = () => {
 		};
 
 		loadBatches();
-		setTimeout(() => {
-			fetchDiscount();
-		}, 900);
+		fetchDiscount();
 	}, [values?.courseId]);
 
+	// ------------------------------------------------------
+	// DISCOUNT APPLY
+	// ------------------------------------------------------
 	useEffect(() => {
-
 		if (values.isDiscounted) {
 			const { amount, adjust } = AdjustBillingAmount(values.billingAmount);
 
@@ -164,31 +180,27 @@ const EnrollmentFormNew = () => {
 			return;
 		}
 
-		const discountedAmount = (values.billingAmount * (discount?.discountPercentage ?? 0)) / 100
+		const discountedAmount = (values.billingAmount * (discount?.discountPercentage ?? 0)) / 100;
 		const { amount, adjust } = AdjustBillingAmount(values.billingAmount - discountedAmount);
-		console.log(amount, " is amount ", adjust, "]]");
 
-		setValues({
-			...values,
+		setValues((prev) => ({
+			...prev,
 			discountId: discount?.discountId ?? 0,
-			discountedAmount: discountedAmount ?? 0.00,
+			discountedAmount: discountedAmount ?? 0.0,
 			commitedAmount: amount,
-			adjustment: adjust
-		});
-
+			adjustment: adjust,
+		}));
 	}, [discount, values.isDiscounted]);
 
 	useEffect(() => {
 		fetchDiscount();
-	}, [values?.numberOfDays]);
+	}, [debouncedDays]);
 
 	useEffect(() => {
-		// If CNDN is removed, restore defaults from selectedCourse
-		if (!values.cndn || values.cndn === 0) {
+		if (!debouncedCndn || debouncedCndn === 0) {
 			if (!selectedCourse) return;
 
-			const originalBillingAmount =
-				values?.numberOfDays * selectedCourse.unitRate;
+			const originalBillingAmount = values?.numberOfDays * selectedCourse.unitRate;
 
 			const { amount, adjust } = AdjustBillingAmount(originalBillingAmount);
 
@@ -201,40 +213,39 @@ const EnrollmentFormNew = () => {
 
 			return;
 		}
-		if (!discount || !values.numberOfDays) return;
-		const fp = Number(
-			(
-				(selectedCourse?.unitRate ?? 0 * (discount.discountPercentage ?? 0)) / 100
-			).toFixed(2)
-		);
-		const sp = Number((values.cndn / values.numberOfDays).toFixed(2));
+
+		if (!discount || !values.numberOfDays || !debouncedCndn) return;
+
+		const unitRate = Number(selectedCourse?.unitRate ?? 0);
+		const percentage = Number(discount?.discountPercentage ?? 0);
+		const fp = Number(((unitRate * percentage) / 100).toFixed(2));
+		const sp = Number((debouncedCndn / values.numberOfDays).toFixed(2));
 		const effectiveBillingRate = Number((fp - sp).toFixed(2));
+
 		const { amount, adjust } = AdjustBillingAmount(effectiveBillingRate * values?.numberOfDays);
 
 		setValues(prev => ({
 			...prev,
 			billingRate: effectiveBillingRate,
-			billingAmount: selectedCourse?.unitRate ?? 0 * values?.numberOfDays,
+			billingAmount: (selectedCourse?.unitRate ?? 0) * values?.numberOfDays,
 			commitedAmount: amount,
 			adjustment: adjust,
 		}));
-	}, [values.cndn]);
+	}, [debouncedCndn]);
 
 	useEffect(() => {
-		if (!values.startDate || !values.numberOfDays) return;
+		if (!values.startDate || !debouncedDays) return;
 
 		const start = new Date(values.startDate);
 		const end = new Date(start);
 
-		// numberOfDays means duration → endDate = startDate + numberOfDays
-		end.setDate(start.getDate() + Number(values.numberOfDays));
+		end.setDate(start.getDate() + Number(debouncedDays));
 
 		setValues((prev: any) => ({
 			...prev,
 			endDate: format(end, "yyyy-MM-dd")
 		}));
-	}, [values.startDate, values.numberOfDays]);
-
+	}, [values.startDate, debouncedDays]);
 
 	const AdjustBillingAmount = (amount: number) => {
 		const roundedAmount = Math.ceil(amount);
@@ -261,17 +272,16 @@ const EnrollmentFormNew = () => {
 		setValues(prev => ({ ...prev, [field]: value }));
 	};
 
-
 	const handleSubmit = async () => {
 		try {
 			console.log(values);
-			// return;
 			const res = await createEnrollment(values);
 			console.log(res);
-		} catch (err) {
+		} catch {
 			setError("Failed to make enrollment.");
 		}
 	};
+
 	const onClose = () => {
 		setValues({} as any);
 	};
@@ -351,7 +361,7 @@ const EnrollmentFormNew = () => {
 			label: "Free Days",
 			type: "number",
 			required: false,
-			disabled: true
+			disabled: true,
 		},
 		{
 			name: "sessionUnits",
@@ -370,7 +380,7 @@ const EnrollmentFormNew = () => {
 			label: "Discount ID",
 			type: "number",
 			required: false,
-			disabled: true
+			disabled: true,
 		},
 		{
 			name: "isDiscounted",
@@ -408,7 +418,8 @@ const EnrollmentFormNew = () => {
 			name: "cndn",
 			label: "CNDN",
 			type: "number",
-		}, {
+		},
+		{
 			name: "adjustment",
 			label: "Adjustment",
 			type: "number",
@@ -441,27 +452,24 @@ const EnrollmentFormNew = () => {
 		if (!values?.courseId) return;
 		if (!values?.numberOfDays) return;
 		try {
-			console.log(values?.courseId, "---", values?.numberOfDays, "don")
 			const res: Response<Discount> | any = await getDiscounts({
-				courseId: values?.courseId ? Number(values?.courseId) : 0,
-				aboveUnits: values?.numberOfDays
-					? Number(values?.numberOfDays)
-					: 0,
+				courseId: Number(values?.courseId),
+				aboveUnits: Number(values?.numberOfDays),
 				sortBy: "aboveUnits",
 				sortOrder: "DESC",
 				status: "active",
 			});
 			const data = res.data[0];
-			setValues((prev) => ({
+			setValues(prev => ({
 				...prev,
 				discountId: data?.discountId || 0,
 				billingAmount: values?.numberOfDays * values?.billingRate
-			}))
+			}));
 			setDiscount(data);
 		} catch {
 			setError("Failed to load discount.");
 		}
-	}
+	};
 
 	return (
 		<div className="flex flex-col max-h-[90vh] overflow-hidden">
@@ -469,10 +477,10 @@ const EnrollmentFormNew = () => {
 				<FormContent
 					fields={fields as any}
 					values={values as any}
-					errors={fieldErrors}
+					errors={{}}
 					loading={false}
 					error={error}
-					isSubmitting={isSubmitting}
+					isSubmitting={false}
 					onChange={onChange as any}
 					layout="grid"
 				/>
@@ -482,7 +490,7 @@ const EnrollmentFormNew = () => {
 				onClose={onClose}
 				onSubmit={handleSubmit}
 				submitLabel="Create"
-				isSubmitting={isSubmitting}
+				isSubmitting={false}
 			/>
 		</div>
 	);

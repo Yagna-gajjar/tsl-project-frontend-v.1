@@ -32,6 +32,7 @@ import EnrollmentDashborad from "./pages/enrollment-dashboard";
 import EnrollmentDashBoardPage from "./pages/enrollment-dashboard"
 import EnrollmentPage from "./pages/enrollment"
 import CourseChange from "./components/view/enrollment-actions/CourseChange"
+import BatchChange from "./components/view/enrollment-actions/BatchChange"
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
                 <Route path="/family" element={<FamilyPage />} />
                 <Route path="/enrollment" element={<EnrollmentPage />} />
                 <Route path="/enrollment/:id/course-change" element={<CourseChange />} />
+                <Route path="/enrollment/:id/batch-change" element={<BatchChange />} />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route
