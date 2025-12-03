@@ -2,10 +2,13 @@ import { deleteBatch, getBatch } from "@/api/batch.api";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Batch } from "@/types/batch";
 import { format } from "date-fns";
+import { ExternalLink } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   onView?: (row: Batch) => void;
@@ -24,6 +27,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   >({});
   const [sortBy, setSortBy] = useState<string>("batchId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
+  const navigate = useNavigate();
 
   // Helper: format a time input (Date | "HH:mm" | ISO string | number) into "HH:mm"
   const formatTimeDisplay = (t: unknown): string => {
@@ -103,9 +107,9 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
 
       const rowsRaw = Array.isArray(res)
         ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Batch[])
-        : [];
+        : Array.isArray(res?.data)
+          ? (res?.data as Batch[])
+          : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         // normalize createdAt/updatedAt as Date objects if present
@@ -174,6 +178,21 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   };
 
   const columns: Column<Batch>[] = [
+    {
+      key: "members",
+      header: "Members",
+      sortable: false,
+      filterType: null,
+      render: (r) => (
+        <div className="flex flex-col">
+          <Button
+            variant={"outline"}
+            onClick={() => { navigate(`/batch/attendance-sheet/${r?.batchId}`) }}>
+            <ExternalLink />
+          </Button>
+        </div>
+      )
+    },
     {
       key: "batchName",
       header: "Batch Name",
@@ -278,11 +297,10 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => (
         <div className="flex flex-col">
           <span
-            className={`font-medium ${
-              r.status === "active"
-                ? "bg-green-600/30 px-3 w-fit pb-1 rounded-lg text-green-600"
-                : "bg-red-600/30 px-2 w-fit pb-1 rounded-lg text-red-600"
-            }`}
+            className={`font-medium ${r.status === "active"
+              ? "bg-green-600/30 px-3 w-fit pb-1 rounded-lg text-green-600"
+              : "bg-red-600/30 px-2 w-fit pb-1 rounded-lg text-red-600"
+              }`}
           >
             {r.status}
           </span>

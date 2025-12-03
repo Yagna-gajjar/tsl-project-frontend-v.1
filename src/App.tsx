@@ -33,6 +33,7 @@ import EnrollmentDashBoardPage from "./pages/enrollment-dashboard"
 import EnrollmentPage from "./pages/enrollment"
 import CourseChange from "./components/view/enrollment-actions/CourseChange"
 import BatchChange from "./components/view/enrollment-actions/BatchChange"
+import AttendanceSheet from "./components/view/batch/attendance-sheet"
 
 export default function App() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
                 />
                 <Route path="/courses" element={<CoursePage />} />
                 <Route path="/batch" element={<BatchPage />} />
+                <Route path="/batch/attendance-sheet/:id" element={<AttendanceSheet />} />
                 <Route
                   path="/infrastructure-configurations/facility"
                   element={<FacilityPage />}
