@@ -16,6 +16,8 @@ export interface Batch {
   createdAt: Date;
   updatedAt: Date;
 
+  batchCapacity: number,
+  activeMemberCount: number,
   academyName: string;
   areaName?: string;
   facilityName?: string;
