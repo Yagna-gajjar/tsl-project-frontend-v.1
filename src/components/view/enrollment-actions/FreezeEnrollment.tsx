@@ -55,6 +55,7 @@ const FreezeEnrollment = () => {
     status: "active",
     processingCharge: 0,
     changeType: "freeze",
+    oldEnrollmentId: null,
   });
   const onClose = () => {
     setValues({} as any);
@@ -131,6 +132,10 @@ const FreezeEnrollment = () => {
         );
         const data = response?.data;
         if (data) setOldEnrollment(data);
+        setValues((prev) => ({
+          ...prev,
+          oldEnrollmentId: data.enrollmentId,
+        }));
       } catch (err) {
         setError("Failed to fetch enrollment details");
       }

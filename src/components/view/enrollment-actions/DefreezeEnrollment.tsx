@@ -15,6 +15,8 @@ import {
 } from "date-fns";
 import type { Course } from "@/types/course";
 import { getCourseById } from "@/api/course.api";
+import { getBatch } from "@/api/batch.api";
+import type { Batch } from "@/types/batch";
 
 const DefreezeEnrollment = () => {
   const { id }: any = useParams();
@@ -22,12 +24,13 @@ const DefreezeEnrollment = () => {
   const [oldEnrollment, setOldEnrollment] = useState<Enrollment>();
   const [fieldErrors] = useState<any>({});
   const [isSubmitting] = useState<boolean>(false);
-  const [course, setCourse] = useState<Course>([])
+  const [course, setCourse] = useState<Course>([]);
   const [ActivityName, setActivityName] = useState("");
   const [academyName, setAcademyName] = useState("");
   const [courseName, setCourseName] = useState("");
   const [lastEnrollment, setLastEnrollment] = useState<Enrollment | any>();
   const navigate = useNavigate();
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [values, setValues] = useState<Enrollment>({
     enrollmentId: Number(id),
     memberId: oldEnrollment?.memberId || 0,
@@ -68,7 +71,7 @@ const DefreezeEnrollment = () => {
           "Content-Type": "application/json",
         },
       }).then((r) => r.json());
-      navigate('/enrollment')
+      navigate("/enrollment");
     } catch (err) {
       setError("Failed to submit!");
     }
@@ -123,12 +126,9 @@ const DefreezeEnrollment = () => {
   }, [id]);
 
   useEffect(() => {
-
     const fetchCourse = async (id) => {
       try {
-        const res: Response<Course | any> = await getCourseById(
-          id
-        );
+        const res: Response<Course | any> = await getCourseById(id);
         setCourse(res.data);
         setValues((prev) => ({
           ...prev,
@@ -138,17 +138,17 @@ const DefreezeEnrollment = () => {
         setError("failed to fetch course");
       }
     };
-    
+
     const fetchOldEnrollment = async () => {
       try {
         const response: Response<Enrollment | any> = await getEnrollmentById(
           oldEnrollment?.oldEnrollmentId
         );
         const data = response?.data;
-        
+
         if (data) {
           setLastEnrollment(data);
-          fetchCourse(data.courseId)
+          fetchCourse(data.courseId);
           // ⭐ Set values here
           setValues((prev) => ({
             ...prev,
@@ -158,27 +158,34 @@ const DefreezeEnrollment = () => {
             courseId: data.courseId,
             batchId: data.batchId,
             enrollmentId: data.enrollmentId,
-            academyId: data.academyId
+            academyId: data.academyId,
           }));
+          console.log(data, "234567890-");
         }
-        
       } catch (err) {
         setError("Failed to fetch enrollment details");
       }
     };
-
-    
-    if (oldEnrollment?.oldEnrollmentId) {
-      fetchOldEnrollment()
-      
+    const loadBatches = async () => {
+      try {
+        const res: Response<Batch> | any = await getBatch({
+          courseId: oldEnrollment?.courseId,
+        });
+        setBatches(res?.data || []);
+      } catch {
+        setError("Failed to load batches.");
+      }
     };
-    
+
+    if (oldEnrollment?.oldEnrollmentId) {
+      fetchOldEnrollment();
+      loadBatches();
+    }
   }, [oldEnrollment]);
-  
 
   useEffect(() => {
     if (!course?.courseId) return;
-    
+
     const finalAmount = values?.billingAmount - (values?.processingCharge || 0);
 
     const { days, adjust } = AdjustDays(finalAmount / course.unitRate);
@@ -218,17 +225,17 @@ const DefreezeEnrollment = () => {
   }, [values?.freeDays]);
 
   useEffect(() => {
-    if (!values?.startDate || (!oldEnrollment)) return;
+    if (!values?.startDate || !oldEnrollment) return;
 
     setValues((prev: any) => ({
       ...prev,
       memberId: oldEnrollment?.memberId,
     }));
-    
+
     const diff = calculateDays(oldEnrollment?.startDate, values.startDate);
-    
+
     const usedAmount = oldEnrollment?.billingRate * (diff + 1);
-    
+
     const remaining = oldEnrollment?.billingAmount - usedAmount;
 
     setValues((prev) => ({
@@ -273,6 +280,12 @@ const DefreezeEnrollment = () => {
       name: "courseName",
       label: "Course",
       type: "text",
+      required: true,
+    },
+    {
+      name: "batchId",
+      label: "Batch",
+      type: "select",
       required: true,
     },
     {

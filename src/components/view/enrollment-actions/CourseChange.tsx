@@ -57,6 +57,7 @@ const CourseChange = () => {
     status: "active",
     processingCharge: 100,
     changeType: "course-change",
+    oldEnrollmentId: null,
   });
   const onClose = () => {
     setValues({} as any);
