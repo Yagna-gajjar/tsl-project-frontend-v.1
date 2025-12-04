@@ -23,6 +23,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 
 type Props = {
   onView?: (row: Enrollment) => void;
@@ -50,6 +51,7 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
   const [selectedEnrollment, setSelectedEnrollment] =
     useState<Enrollment | null>(null);
   const navigate = useNavigate();
+  const [isFreezed, setIsFreezed] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -71,6 +73,8 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         billingRate: filters.billingRate as number | undefined,
         cndn: filters.cndn as number | undefined,
       });
+
+      console.log(res);
 
       const rowsRaw = Array.isArray(res)
         ? res
@@ -147,28 +151,100 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
     }
   };
 
+  // Loading state for freeze/unfreeze
+  const [freezeLoading, setFreezeLoading] = useState(false);
+
+  /**
+   * Toggle freeze state for the currently selected enrollment.
+   * - Optimistic update: updates `data` and `selectedEnrollment` immediately.
+   * - Replace the "fake API" section with a real API call when you have one.
+   */
+  const handleToggleFreeze = async () => {
+    if (!selectedEnrollment) return;
+    const id = selectedEnrollment.enrollmentId;
+    const currentlyFrozen = Boolean(
+      (selectedEnrollment as any).isFreezed ||
+        (selectedEnrollment as any).isFrozen
+    );
+
+    try {
+      setFreezeLoading(true);
+
+      // --- Replace this block with a real API call ---
+      // Example (if you add functions to "@/api/enrollment.api"):
+      // await toggleFreezeEnrollment(id, !currentlyFrozen);
+      await new Promise((res) => setTimeout(res, 400)); // fake network delay
+      // --- end placeholder ---
+
+      // Optimistic UI update: flip the freeze flag on the row
+      setData((prev) =>
+        prev.map((r) =>
+          r.enrollmentId === id
+            ? ({ ...r, isFreezed: !currentlyFrozen } as Enrollment)
+            : r
+        )
+      );
+      setSelectedEnrollment((prev) =>
+        prev ? ({ ...prev, isFreezed: !currentlyFrozen } as Enrollment) : prev
+      );
+
+      toast({
+        title: currentlyFrozen ? "Defreezed" : "Freezed",
+        description: currentlyFrozen
+          ? "Enrollment has been defreezed successfully."
+          : "Enrollment has been freezed successfully.",
+      });
+    } catch (err) {
+      console.error("Freeze toggle failed", err);
+      toast({
+        title: "Error",
+        description: "Failed to change freeze state. Try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setFreezeLoading(false);
+    }
+  };
+
   const columns: Column<Enrollment>[] = [
+    // --- Replace the "Change Enrollment" column object with this ---
     {
       header: "Change Enrollment",
       key: "enrollmentChange",
-      render: (row: Enrollment) => (
-        <Button
-          className="text-sm"
-          onClick={() => {
-            setSelectedEnrollment(row);
-            setChangeDialogOpen(true);
-          }}
-        >
-          Change
-        </Button>
-      ),
+      render: (row: Enrollment) => {
+        // normalize dates: loadData already converts to Date, but safeguard here
+        const endDate = row.endDate ? new Date(row.endDate) : undefined;
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0); // midnight today
+
+        const isExpired =
+          (!!endDate && endDate < startOfToday) || row.status !== "active";
+
+        return !isExpired ? (
+          <Button
+            className={`text-sm`}
+            onClick={() => {
+              setSelectedEnrollment(row);
+              // read freeze flag from the row so dialog shows correct label
+              setIsFreezed(
+                Boolean((row as any).isFreezed || (row as any).isFrozen)
+              );
+              setChangeDialogOpen(true);
+            }}
+          >
+            Change
+          </Button>
+        ) : (
+          <></>
+        );
+      },
     },
     {
       header: "Enrollment Date",
       key: "enrollmentDate",
       render: (row: Enrollment) =>
         row.enrollmentDate
-          ? new Date(row.enrollmentDate).toLocaleDateString()
+          ? format(new Date(row.enrollmentDate), "dd MMM yyyy")
           : "-",
       sortable: true,
     },
@@ -176,14 +252,14 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
       header: "Start Date",
       key: "startDate",
       render: (row: Enrollment) =>
-        row.startDate ? new Date(row.startDate).toLocaleDateString() : "-",
+        row.startDate ? format(new Date(row.startDate), "dd MMM yyyy") : "-",
       sortable: true,
     },
     {
       header: "End Date",
       key: "endDate",
       render: (row: Enrollment) =>
-        row.endDate ? new Date(row.endDate).toLocaleDateString() : "-",
+        row.endDate ? format(new Date(row.endDate), "dd MMM yyyy") : "-",
       sortable: true,
     },
     {
@@ -305,7 +381,16 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         { value: "completed", label: "Completed" },
       ],
       render: (row: Enrollment) => {
-        const status = row.status || "active";
+        const endDate = row.endDate ? new Date(row.endDate) : undefined;
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        // If endDate is before today, force 'inactive' (per requirement)
+        const status =
+          endDate && endDate < startOfToday
+            ? "inactive"
+            : row.status || "active";
+
         const statusColor =
           status === "active"
             ? "bg-green-100 text-green-800"
@@ -362,10 +447,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
         onView={(row) => onView?.(row)}
-        onDelete={(enrollmentId: number | undefined) => {
-          setDeleteId(enrollmentId ?? null);
-          setDeleteOpen(true);
-        }}
         idKey={"enrollmentId"}
       />
       <ConfirmDialog
@@ -394,15 +475,24 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
 
           {/* Action Grid - White & Blue Theme */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Option 1: Course Change */}
+            {/* Option 1: Freeze / Defreeze button */}
             <Button
               variant="outline"
               className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
-              onClick={() => handleAction("freeze-enrollment")}
+              onClick={() =>
+                handleAction(
+                  selectedEnrollment?.courseName?.toLowerCase() === "freeze"
+                    ? "defreeze-enrollment"
+                    : "freeze-enrollment"
+                )
+              }
             >
               <Snowflake className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+
               <span className="font-semibold text-slate-900 group-hover:text-blue-700">
-                Freese Enrollment
+                {selectedEnrollment?.courseName?.toLowerCase() === "freeze"
+                  ? "Defreeze Enrollment"
+                  : "Freeze Enrollment"}
               </span>
             </Button>
 
@@ -417,7 +507,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
                 Change Course
               </span>
             </Button>
-
             {/* Option 3: Batch Change */}
             <Button
               variant="outline"
@@ -429,7 +518,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
                 Switch Batch
               </span>
             </Button>
-
             {/* Option 4: Medical Extension */}
             <Button
               variant="outline"
@@ -441,7 +529,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
                 Medical Extension
               </span>
             </Button>
-
             {/* Option 5: Other */}
             <Button
               variant="outline"

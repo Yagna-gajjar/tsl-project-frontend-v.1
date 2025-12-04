@@ -34,6 +34,7 @@ import BatchChange from "./components/view/enrollment-actions/BatchChange";
 import FreezeEnrollment from "./components/view/enrollment-actions/FreezeEnrollment";
 import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
 import AttendanceSheet from "./components/view/batch/attendance-sheet"
+import DefreezeEnrollment from "./components/view/enrollment-actions/DefreezeEnrollment";
 
 export default function App() {
   return (
@@ -66,6 +67,10 @@ export default function App() {
                   path="/enrollment/:id/freeze-enrollment"
                   element={<FreezeEnrollment />}
                 />
+                <Route
+                  path="/enrollment/:id/defreeze-enrollment"
+                  element={<DefreezeEnrollment />}
+                />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route
@@ -87,7 +92,10 @@ export default function App() {
                 />
                 <Route path="/courses" element={<CoursePage />} />
                 <Route path="/batch" element={<BatchPage />} />
-                <Route path="/batch/attendance-sheet/:id" element={<AttendanceSheet />} />
+                <Route
+                  path="/batch/attendance-sheet/:id"
+                  element={<AttendanceSheet />}
+                />
                 <Route
                   path="/infrastructure-configurations/facility"
                   element={<FacilityPage />}

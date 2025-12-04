@@ -33,4 +33,5 @@ export interface Enrollment {
   processingCharge?: number;
   changeType?: string;
   memberName?: string;
+  oldEnrollmentId?: number;
 }

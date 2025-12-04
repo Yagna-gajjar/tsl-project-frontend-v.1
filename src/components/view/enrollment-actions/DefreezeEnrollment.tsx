@@ -13,29 +13,28 @@ import {
   addDays,
   isDate,
 } from "date-fns";
-import type { Activity } from "@/types/activity";
-import type { Academy } from "@/types/academy";
 import type { Course } from "@/types/course";
-import { getAcademies } from "@/api/academy.api";
-import { getCourses } from "@/api/course.api";
-import { getActivities } from "@/api/activity.api";
-import { toast } from "@/hooks/use-toast";
+import { getCourseById } from "@/api/course.api";
 
-const FreezeEnrollment = () => {
+const DefreezeEnrollment = () => {
   const { id }: any = useParams();
-  const navigate = useNavigate();
   const [error, setError] = useState<string>("");
   const [oldEnrollment, setOldEnrollment] = useState<Enrollment>();
   const [fieldErrors] = useState<any>({});
   const [isSubmitting] = useState<boolean>(false);
-  const [selectedActivity, setSelectedActivity] = useState<string>("");
-  const [activity, setActivity] = useState<Activity[]>([]);
-  const [academy, setAcademy] = useState<Academy[]>([]);
-  const [course, setCourse] = useState<Course[]>([]);
+  const [course, setCourse] = useState<Course>([])
+  const [ActivityName, setActivityName] = useState("");
+  const [academyName, setAcademyName] = useState("");
+  const [courseName, setCourseName] = useState("");
+  const [lastEnrollment, setLastEnrollment] = useState<Enrollment | any>();
+  const navigate = useNavigate();
   const [values, setValues] = useState<Enrollment>({
     enrollmentId: Number(id),
     memberId: oldEnrollment?.memberId || 0,
     academyId: 0,
+    academyName: academyName ?? "",
+    activityName: ActivityName ?? "",
+    courseName: courseName ?? "",
     adjustment: 0,
     batchId: 0,
     billingAmount: 0,
@@ -54,40 +53,24 @@ const FreezeEnrollment = () => {
     startDate: format(new Date(), "yyyy-MM-dd") as any,
     status: "active",
     processingCharge: 0,
-    changeType: "freeze",
+    changeType: "Defreeze",
   });
   const onClose = () => {
     setValues({} as any);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     try {
-      const res: Response<Enrollment | any> = await fetch(
-        "http://localhost:9705/api/enrollment-change/demo",
-        {
-          body: JSON.stringify(values),
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      ).then((r) => r.json());
-
-      if (res.success) {
-        toast({
-          title: "Success",
-          description: "Freezing successfully",
-          variant: "success",
-        });
-        navigate("/enrollment");
-      }
+      const res = fetch("http://localhost:9705/api/enrollment-change/demo", {
+        body: JSON.stringify(values),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).then((r) => r.json());
+      navigate('/enrollment')
     } catch (err) {
       setError("Failed to submit!");
-      toast({
-        title: "Error",
-        description: "Freezing Failed",
-        variant: "destructive",
-      });
     }
   };
   function calculateDays(startISO?: any, endISO?: any, inclusive = false) {
@@ -136,112 +119,81 @@ const FreezeEnrollment = () => {
       }
     };
 
-    const fetchActivities = async () => {
-      try {
-        const res: Response<Activity[] | any> = await getActivities({
-          limit: 100,
-          activityName: "freezer",
-        });
-        const data = Array.isArray(res?.data) ? res.data : [];
-        if (data.length > 0) {
-          // your select expects the activity id stored in values.activityName
-          setValues((prev: any) => ({
-            ...prev,
-            activityName: Number(data[0].activityId),
-          }));
-          // also set selectedActivity text so academies search can use it
-          setSelectedActivity(data[0].activityName || "");
-        }
-        setActivity(data as any);
-      } catch (err) {
-        setError("Failed to fetch activities!");
-      }
-    };
-
-    const fetchAcademies = async () => {
-      try {
-        // getAcademies returns Academy[], so type it correctly
-        const res: Response<Academy[]> | any = await getAcademies({
-          limit: 100,
-          search: "freezer",
-        });
-        const data = Array.isArray(res?.data) ? res.data : [];
-        if (data.length > 0) {
-          // your form fields use academyId, so set that
-          setValues((prev) => ({
-            ...prev,
-            academyId: Number(data[0].academyId),
-          }));
-        }
-        setAcademy(data as any);
-      } catch (err) {
-        setError("Failed to fetch academies!");
-      }
-    };
-    const fetchCourse = async () => {
-      try {
-        // getAcademies returns Academy[], so type it correctly
-        const res: Response<Academy[]> | any = await getCourses({
-          limit: 100,
-          search: "freezer",
-        });
-        const data = Array.isArray(res?.data) ? res.data : [];
-        if (data.length > 0) {
-          // your form fields use academyId, so set that
-          setValues((prev) => ({
-            ...prev,
-            courseId: Number(data[0].courseId),
-          }));
-        }
-        setCourse(data as any);
-      } catch (err) {
-        setError("Failed to fetch academies!");
-      }
-    };
-
     fetchEnrollment();
-    fetchActivities();
-    fetchAcademies();
-    fetchCourse();
   }, [id]);
 
   useEffect(() => {
-    if (!values?.courseId) return;
 
-    const c: Course = course.filter((c) => c.courseId == values?.courseId)[0];
+    const fetchCourse = async (id) => {
+      try {
+        const res: Response<Course | any> = await getCourseById(
+          id
+        );
+        setCourse(res.data);
+        setValues((prev) => ({
+          ...prev,
+          activityName: res.data.activityName || "",
+        }));
+      } catch (err) {
+        setError("failed to fetch course");
+      }
+    };
+    
+    const fetchOldEnrollment = async () => {
+      try {
+        const response: Response<Enrollment | any> = await getEnrollmentById(
+          oldEnrollment?.oldEnrollmentId
+        );
+        const data = response?.data;
+        
+        if (data) {
+          setLastEnrollment(data);
+          fetchCourse(data.courseId)
+          // ⭐ Set values here
+          setValues((prev) => ({
+            ...prev,
+            activityName: data.activityName || "",
+            academyName: data.academyName || "",
+            courseName: data.courseName || "",
+            courseId: data.courseId,
+            batchId: data.batchId,
+            enrollmentId: data.enrollmentId,
+            academyId: data.academyId
+          }));
+        }
+        
+      } catch (err) {
+        setError("Failed to fetch enrollment details");
+      }
+    };
 
+    
+    if (oldEnrollment?.oldEnrollmentId) {
+      fetchOldEnrollment()
+      
+    };
+    
+  }, [oldEnrollment]);
+  
+
+  useEffect(() => {
+    if (!course?.courseId) return;
+    
     const finalAmount = values?.billingAmount - (values?.processingCharge || 0);
 
-    const { days, adjust } = AdjustDays(finalAmount / c.unitRate);
+    const { days, adjust } = AdjustDays(finalAmount / course.unitRate);
 
     const endDate = addDaysToDate(new Date(values?.startDate), days);
     setValues((prev: any) => ({
       ...prev,
-      billingRate: Number(c.unitRate),
-      commitedAmount: Number(days * c.unitRate),
+      billingRate: Number(course.unitRate),
+      commitedAmount: Number(days * course.unitRate),
       numberOfDays: days,
       discountedAmount: 0,
-      adjustment: Number(adjust * c.unitRate),
+      adjustment: Number(adjust * course.unitRate),
       endDate: endDate,
     }));
   }, [values?.courseId, values?.processingCharge, values?.billingAmount]);
-
-  useEffect(() => {
-    if (!values?.academyId) return;
-
-    const loadCourses = async () => {
-      try {
-        const res: Response<Course> | any = await getCourses({
-          academyId: values.academyId,
-        });
-        setCourse(res?.data || []);
-      } catch {
-        setError("Failed to load courses.");
-      }
-    };
-
-    loadCourses();
-  }, [values?.academyId]);
 
   const AdjustDays = (days: number) => {
     const roundedDays = Math.floor(days);
@@ -266,16 +218,18 @@ const FreezeEnrollment = () => {
   }, [values?.freeDays]);
 
   useEffect(() => {
-    if (!values?.startDate || !oldEnrollment) return;
+    if (!values?.startDate || (!oldEnrollment)) return;
 
-    setValues((prev) => ({
+    setValues((prev: any) => ({
       ...prev,
-      memberId: oldEnrollment.memberId,
+      memberId: oldEnrollment?.memberId,
     }));
-
-    const diff = calculateDays(oldEnrollment.startDate, values.startDate);
-    const usedAmount = oldEnrollment.billingRate * (diff + 1);
-    const remaining = oldEnrollment.commitedAmount - usedAmount;
+    
+    const diff = calculateDays(oldEnrollment?.startDate, values.startDate);
+    
+    const usedAmount = oldEnrollment?.billingRate * (diff + 1);
+    
+    const remaining = oldEnrollment?.billingAmount - usedAmount;
 
     setValues((prev) => ({
       ...prev,
@@ -306,31 +260,19 @@ const FreezeEnrollment = () => {
     {
       name: "activityName",
       label: "Activity Name",
-      type: "select",
-      options: activity.map((e) => ({
-        label: e.activityName,
-        value: Number(e.activityId),
-      })),
+      type: "text",
       required: true,
     },
     {
-      name: "academyId",
+      name: "academyName",
       label: "Academy",
-      type: "select",
-      options: academy.map((e) => ({
-        label: e.academyName,
-        value: Number(e.academyId),
-      })),
+      type: "text",
       required: true,
     },
     {
-      name: "courseId",
+      name: "courseName",
       label: "Course",
-      type: "select",
-      options: course.map((e) => ({
-        label: e.courseName,
-        value: Number(e.courseId),
-      })),
+      type: "text",
       required: true,
     },
     {
@@ -374,6 +316,12 @@ const FreezeEnrollment = () => {
     {
       name: "billingRate",
       label: "Billing Rate",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "adjustment",
+      label: "Adjustment",
       type: "number",
       disabled: true,
     },
@@ -421,11 +369,6 @@ const FreezeEnrollment = () => {
       value = Number(value);
     }
 
-    if (field === "activityName") {
-      const data = activity.find((e) => e.activityId === Number(value));
-      setSelectedActivity(data?.activityName || "");
-    }
-
     setValues((prev) => ({ ...prev, [field]: value }));
   };
   return (
@@ -453,4 +396,4 @@ const FreezeEnrollment = () => {
   );
 };
 
-export default FreezeEnrollment;
+export default DefreezeEnrollment;
