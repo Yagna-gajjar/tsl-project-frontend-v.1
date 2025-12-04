@@ -167,11 +167,25 @@ const EnrollmentFormNew = ({
 
     const loadBatches = async () => {
       try {
-        const res: Response<Batch> | any = await getBatch({
+        const res: Response<Batch[]> | any = await getBatch({
           courseId: values.courseId,
         });
-        setBatches(res?.data || []);
-      } catch {
+
+        const allBatches = res?.data || [];
+
+        // Keep only batches where activeMemberCount / batchCapacity < 1
+        const filtered = allBatches.filter((batch) => {
+          const count = Number(batch.activeMemberCount) || 0;
+          const capacity = Number(batch.batchCapacity) || 0;
+
+          // Avoid division by zero
+          if (capacity === 0) return false;
+
+          return count / capacity < 1;
+        });
+
+        setBatches(filtered);
+      } catch (err) {
         setError("Failed to load batches.");
       }
     };
@@ -360,10 +374,22 @@ const EnrollmentFormNew = ({
       name: "batchId",
       label: "Batch",
       type: "select",
-      options: batches.map((b) => ({
-        label: `${b.batchName} | ${b.startTime} To ${b.endTime}`,
-        value: Number(b.batchId),
-      })),
+      options: batches.map((b) => {
+        const seatsLeft = b.batchCapacity - b.activeMemberCount;
+
+        // Format times nicely (HH:MM)
+        const format = (t: string) => t.slice(0, 5);
+
+        const label = `${b.batchName}  |  ${format(b.startTime)}-${format(
+          b.endTime
+        )}  |  Seats: ${seatsLeft}`;
+
+        return {
+          label,
+          value: Number(b.batchId),
+        };
+      }),
+
       required: true,
     },
     {

@@ -1,37 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { getEnrollments, deleteEnrollment } from "@/api/enrollment.api";
+import { getEnrollments } from "@/api/enrollment.api";
 import type { Enrollment } from "@/types/enrollment";
-import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
-import { toast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import {
-  BookOpen,
-  HelpCircle,
-  Lock,
-  Snowflake,
-  Stethoscope,
-  Users,
-  XCircle,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
 type Props = {
   onView?: (row: Enrollment) => void;
-  onEdit?: (row: Enrollment) => void;
   refreshKey?: number;
 };
 
-export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
+export default function EnrollmentTable({ onView, refreshKey }: Props) {
   const [data, setData] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -44,14 +23,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
   >({});
   const [sortBy, setSortBy] = useState<string>("enrollmentId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
-
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [changeDialogOpen, setChangeDialogOpen] = useState(false);
-  const [selectedEnrollment, setSelectedEnrollment] =
-    useState<Enrollment | null>(null);
-  const navigate = useNavigate();
-  const [isFreezed, setIsFreezed] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -73,8 +44,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         billingRate: filters.billingRate as number | undefined,
         cndn: filters.cndn as number | undefined,
       });
-
-      console.log(res);
 
       const rowsRaw = Array.isArray(res)
         ? res
@@ -131,114 +100,35 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    try {
-      await deleteEnrollment(deleteId);
-      setData((prev) => prev.filter((e) => e.enrollmentId !== deleteId));
-      toast({
-        title: "Success",
-        description: "Enrollment deleted successfully",
-      });
-      setDeleteOpen(false);
-      setDeleteId(null);
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to delete enrollment",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Loading state for freeze/unfreeze
-  const [freezeLoading, setFreezeLoading] = useState(false);
-
-  /**
-   * Toggle freeze state for the currently selected enrollment.
-   * - Optimistic update: updates `data` and `selectedEnrollment` immediately.
-   * - Replace the "fake API" section with a real API call when you have one.
-   */
-  const handleToggleFreeze = async () => {
-    if (!selectedEnrollment) return;
-    const id = selectedEnrollment.enrollmentId;
-    const currentlyFrozen = Boolean(
-      (selectedEnrollment as any).isFreezed ||
-        (selectedEnrollment as any).isFrozen
-    );
-
-    try {
-      setFreezeLoading(true);
-
-      // --- Replace this block with a real API call ---
-      // Example (if you add functions to "@/api/enrollment.api"):
-      // await toggleFreezeEnrollment(id, !currentlyFrozen);
-      await new Promise((res) => setTimeout(res, 400)); // fake network delay
-      // --- end placeholder ---
-
-      // Optimistic UI update: flip the freeze flag on the row
-      setData((prev) =>
-        prev.map((r) =>
-          r.enrollmentId === id
-            ? ({ ...r, isFreezed: !currentlyFrozen } as Enrollment)
-            : r
-        )
-      );
-      setSelectedEnrollment((prev) =>
-        prev ? ({ ...prev, isFreezed: !currentlyFrozen } as Enrollment) : prev
-      );
-
-      toast({
-        title: currentlyFrozen ? "Defreezed" : "Freezed",
-        description: currentlyFrozen
-          ? "Enrollment has been defreezed successfully."
-          : "Enrollment has been freezed successfully.",
-      });
-    } catch (err) {
-      console.error("Freeze toggle failed", err);
-      toast({
-        title: "Error",
-        description: "Failed to change freeze state. Try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setFreezeLoading(false);
-    }
-  };
-
   const columns: Column<Enrollment>[] = [
     // --- Replace the "Change Enrollment" column object with this ---
-    {
-      header: "Change Enrollment",
-      key: "enrollmentChange",
-      render: (row: Enrollment) => {
-        // normalize dates: loadData already converts to Date, but safeguard here
-        const endDate = row.endDate ? new Date(row.endDate) : undefined;
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0); // midnight today
+    // {
+    //   header: "Change Enrollment",
+    //   key: "enrollmentChange",
+    //   render: (row: Enrollment) => {
+    //     // normalize dates: loadData already converts to Date, but safeguard here
+    //     const endDate = row.endDate ? new Date(row.endDate) : undefined;
+    //     const startOfToday = new Date();
+    //     startOfToday.setHours(0, 0, 0, 0); // midnight today
 
-        const isExpired =
-          (!!endDate && endDate < startOfToday) || row.status !== "active";
+    //     const isExpired =
+    //       (!!endDate && endDate < startOfToday) || row.status !== "active";
 
-        return !isExpired ? (
-          <Button
-            className={`text-sm`}
-            onClick={() => {
-              setSelectedEnrollment(row);
-              // read freeze flag from the row so dialog shows correct label
-              setIsFreezed(
-                Boolean((row as any).isFreezed || (row as any).isFrozen)
-              );
-              setChangeDialogOpen(true);
-            }}
-          >
-            Change
-          </Button>
-        ) : (
-          <></>
-        );
-      },
-    },
+    //     return !isExpired ? (
+    //       <Button
+    //         className={`text-sm`}
+    //         onClick={() => {
+    //           setSelectedEnrollment(row);
+    //           setChangeDialogOpen(true);
+    //         }}
+    //       >
+    //         Change
+    //       </Button>
+    //     ) : (
+    //       <></>
+    //     );
+    //   },
+    // },
     {
       header: "Enrollment Date",
       key: "enrollmentDate",
@@ -423,14 +313,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
     },
   ];
 
-  const handleAction = (pathSegment: any) => {
-    if (!selectedEnrollment?.enrollmentId as any) return;
-
-    // Navigate to: /enrollment/123/change-course
-    navigate(`/enrollment/${selectedEnrollment?.enrollmentId}/${pathSegment}`);
-    setChangeDialogOpen(false); // Close modal
-  };
-
   return (
     <div>
       <DataTable<Enrollment>
@@ -449,119 +331,6 @@ export default function EnrollmentTable({ onView, onEdit, refreshKey }: Props) {
         onView={(row) => onView?.(row)}
         idKey={"enrollmentId"}
       />
-      <ConfirmDialog
-        isOpen={deleteOpen}
-        onClose={() => {
-          setDeleteOpen(false);
-          setDeleteId(null);
-        }}
-        onConfirm={handleDelete}
-        title="Delete Enrollment?"
-        description="Are you sure you want to delete this enrollment? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="destructive"
-      />
-      <Dialog open={changeDialogOpen} onOpenChange={setChangeDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] w-[95%] rounded-xl p-6 bg-white border-0 shadow-2xl">
-          <DialogHeader className="mb-4">
-            <DialogTitle className="text-2xl font-bold text-slate-900">
-              Manage Enrollment
-            </DialogTitle>
-            <DialogDescription className="text-slate-500 text-base">
-              Choose an action to update your current enrollment status.
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Action Grid - White & Blue Theme */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Option 1: Freeze / Defreeze button */}
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
-              onClick={() =>
-                handleAction(
-                  selectedEnrollment?.courseName?.toLowerCase() === "freeze"
-                    ? "defreeze-enrollment"
-                    : "freeze-enrollment"
-                )
-              }
-            >
-              <Snowflake className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
-                {selectedEnrollment?.courseName?.toLowerCase() === "freeze"
-                  ? "Defreeze Enrollment"
-                  : "Freeze Enrollment"}
-              </span>
-            </Button>
-
-            {/* Option 2: Course Change */}
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
-              onClick={() => handleAction("course-change")}
-            >
-              <BookOpen className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
-                Change Course
-              </span>
-            </Button>
-            {/* Option 3: Batch Change */}
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
-              onClick={() => handleAction("batch-change")}
-            >
-              <Users className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
-                Switch Batch
-              </span>
-            </Button>
-            {/* Option 4: Medical Extension */}
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
-              onClick={() => handleAction("medical-extension")}
-            >
-              <Stethoscope className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
-                Medical Extension
-              </span>
-            </Button>
-            {/* Option 5: Other */}
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
-              onClick={() => handleAction("other")}
-            >
-              <HelpCircle className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
-                Other Request
-              </span>
-            </Button>
-          </div>
-
-          {/* Divider */}
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-100" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-400">Or</span>
-            </div>
-          </div>
-
-          {/* Destructive/Final Action - Styled Black to stand out without using Red */}
-          <Button
-            className="w-full py-6 bg-slate-900 hover:bg-black text-white rounded-lg flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
-            onClick={() => handleAction("cancel")}
-          >
-            <XCircle className="w-5 h-5 text-white" />
-            <span className="text-base font-medium">Cancel Enrollment</span>
-          </Button>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

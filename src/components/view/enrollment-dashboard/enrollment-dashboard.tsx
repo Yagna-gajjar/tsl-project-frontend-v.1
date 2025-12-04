@@ -118,7 +118,7 @@ export default function EnrollmentDashboard() {
 
       {/* 2. DRAG HANDLE / EXPAND-COLLAPSE TOGGLE */}
       <div
-        className="relative w-full h-10 flex justify-center items-center cursor-ns-resize z-50 "
+        className="relative w-full h-10 flex justify-center items-center cursor-ns-resize z-30 "
         onMouseDown={handleMouseDown}
       >
         {/* Expand/Collapse Button - Enhanced for Clarity */}

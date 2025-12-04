@@ -157,7 +157,6 @@ const DefreezeEnrollment = () => {
             courseName: data.courseName || "",
             courseId: data.courseId,
             batchId: data.batchId,
-            enrollmentId: data.enrollmentId,
             academyId: data.academyId,
           }));
           console.log(data, "234567890-");
