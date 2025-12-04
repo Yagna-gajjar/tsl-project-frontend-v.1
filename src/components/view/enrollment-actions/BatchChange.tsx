@@ -109,7 +109,9 @@ const BatchChange = () => {
 				status: "active",
 				memberId: enrollment.memberId,
 				batchId: selectedBatchId,
-				enrollmentId: Number(id)
+				enrollmentId: Number(id),
+				// startDate: new Date.now(),
+				// endDate: enrollment.endDate
 			};
 
 			const result = await changeBatch(payload);

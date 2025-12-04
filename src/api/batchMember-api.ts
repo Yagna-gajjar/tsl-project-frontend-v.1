@@ -12,6 +12,8 @@ export interface BatchMember {
 	endTime: string;
 	coachId: number;
 	coachName: string;
+	startDate: Date;
+	endDate: Date;
 	members: {
 		batchMemberId: number;
 		memberId: number;

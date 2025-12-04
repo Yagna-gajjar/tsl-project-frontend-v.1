@@ -291,6 +291,32 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       ),
     },
     {
+      key: "activeMemberCount",
+      header: "Active Members",
+      sortable: true,
+      render: (r) => {
+        const percentage = (r.activeMemberCount / r.batchCapacity) * 100;
+
+        let textColorClass = "text-gray-900";
+
+        if (percentage >= 100) {
+          textColorClass = "text-red-600 font-bold";
+        } else if (percentage >= 50) {
+          textColorClass = "text-yellow-600";
+        } else {
+          textColorClass = "text-green-600";
+        }
+
+        return (
+          <div className="flex flex-col">
+            <span className={`font-medium ${textColorClass}`}>
+              {r.activeMemberCount}/{r.batchCapacity}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
       key: "status",
       header: "Status",
       sortable: true,
