@@ -17,6 +17,7 @@ export interface Member {
 	contactNumber?: string;
 	transportMode: 'self drive' | 'parents' | 'van' | 'walking' | 'other';
 	addressId: number;
+	avatar?: string | null;
 	remarks?: string;
 	createdAt?: Date;
 	updatedAt?: Date;

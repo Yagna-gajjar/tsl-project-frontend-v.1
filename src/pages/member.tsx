@@ -41,13 +41,6 @@ export default function MemberPage() {
           <h1 className="text-2xl font-bold">Members</h1>
           <p className="text-muted-foreground">Manage all members.</p>
         </div>
-
-        {/* <button
-          className="px-4 py-2 bg-primary text-white rounded-md"
-          onClick={() => openForm(null)}
-        >
-          Add Member
-        </button> */}
       </div>
 
       {/* Pass initialFamilyId and handlers to table (table no longer renders the view modal) */}

@@ -29,7 +29,7 @@ export interface MembersQuery {
 
 const MEMBER_BASE = import.meta.env.VITE_APP_API_URL + '/member'
 
-export function getMembers(params: MembersQuery = {}): Promise<Response> {
+export function getMembers(params: MembersQuery = {}): Promise<Response<Member>> {
 	const qs = toQueryString({
 		page: params.page ?? 1,
 		limit: params.limit ?? 10,
@@ -47,15 +47,15 @@ export function getMembers(params: MembersQuery = {}): Promise<Response> {
 		familyId: params.familyId
 	})
 
-	return request<Response>(`${MEMBER_BASE}${qs}`)
+	return request<Response<Member>>(`${MEMBER_BASE}${qs}`)
 }
 
-export function getMemberById(id: number): Promise<Response> {
-	return request<Response>(`${MEMBER_BASE}/${id}`)
+export function getMemberById(id: number): Promise<Response<Member>> {
+	return request<Response<Member>>(`${MEMBER_BASE}/${id}`)
 }
 
-export function createMember(payload: Member): Promise<Response> {
-	return request<Response>(MEMBER_BASE, {
+export function createMember(payload: Member): Promise<Response<Member>> {
+	return request<Response<Member>>(MEMBER_BASE, {
 		method: 'POST',
 		body: JSON.stringify(payload)
 	})
@@ -71,8 +71,54 @@ export function updateMember(
 	})
 }
 
-export function deleteMember(id: number): Promise<Member> {
-	return request<Member>(`${MEMBER_BASE}/${id}`, {
+export function deleteMember(id: number): Promise<Response<Member>> {
+	return request<Response<Member>>(`${MEMBER_BASE}/${id}`, {
 		method: 'DELETE'
 	})
+}
+
+export async function saveUrlToMember(formData: FormData): Promise<Response> {
+	try {
+		console.log(formData," formData");
+		const res = await fetch(`${MEMBER_BASE}/avatar`, {
+			method: "POST",
+			body: formData,
+		});
+
+		const data = await res.json();
+		console.log(data, "api.ts no code");
+		return data;
+	} catch (error) {
+		console.error("Upload failed:", error);
+		return {
+			success: false,
+			message: "Failed to upload image",
+			data: null
+		};
+	}
+}
+
+export async function deleteAvatar(memberId: number, avatar: string): Promise<Response<Member>> {
+	try {
+		const response = await fetch(MEMBER_BASE + "/remove", {
+			method: "POST",
+			body: JSON.stringify({
+				memberId: memberId,
+				avatar: avatar
+			}),
+			headers: {
+				"Content-Type": "application/json"
+			}
+		})
+			.then((res) => res.json());
+
+		return response;
+	}
+	catch {
+		return {
+			success: false,
+			message: "Failed to save Image in user.",
+			data: null
+		}
+	}
 }
