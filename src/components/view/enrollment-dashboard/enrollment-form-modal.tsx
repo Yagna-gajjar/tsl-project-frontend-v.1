@@ -375,14 +375,14 @@ const EnrollmentFormNew = ({
       label: "Batch",
       type: "select",
       options: batches.map((b) => {
-        const seatsLeft = b.batchCapacity - b.activeMemberCount;
+        // const seatsLeft = b.batchCapacity - b.activeMemberCount;
 
         // Format times nicely (HH:MM)
         const format = (t: string) => t.slice(0, 5);
 
         const label = `${b.batchName}  |  ${format(b.startTime)}-${format(
           b.endTime
-        )}  |  Seats: ${seatsLeft}`;
+        )}  |  Seats: ${b.activeMemberCount} / ${b.batchCapacity}`;
 
         return {
           label,

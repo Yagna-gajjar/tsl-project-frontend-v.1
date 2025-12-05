@@ -125,9 +125,13 @@ const BatchChange = () => {
         memberId: enrollment.memberId,
         batchId: selectedBatchId,
         enrollmentId: Number(id),
+        oldEnollmentEndDate: enrollment.endDate,
+        newStartDate: new Date(),
       };
 
       const result = await changeBatch(payload);
+
+      console.log(result);
 
       if (result.success) {
         toast({
@@ -239,6 +243,7 @@ const BatchChange = () => {
               const handleCardClick = () => {
                 setSelectedBatchId(batch.batchId);
                 setSelectedBatchName(batch.batchName);
+
                 if (percentage >= 100 && !iscurrentBatch) {
                   // full -> request flow
                   setInRequested(true);
@@ -388,7 +393,10 @@ const BatchChange = () => {
       {/* Batch request modal */}
       <BatchRequestForm
         isOpen={requestModalOpen}
-        onClose={() => setRequestModalOpen(false)}
+        onClose={() => {
+          setRequestModalOpen(false);
+          setSelectedBatchId(null);
+        }}
         batchId={selectedBatchId ?? 0}
         batchName={selectedBatchName}
         enrollment={enrollment!}

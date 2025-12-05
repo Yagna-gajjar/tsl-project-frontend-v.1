@@ -1,7 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+"use client";
+
+import { useState } from "react";
 import { X, Loader2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
+import { AcceptRequest, updateBatchMember } from "@/api/enrollmentActions.api";
+import { getEnrollmentById } from "@/api/enrollment.api";
+import type { Response } from "@/types/response";
 
 type RequestItem = {
   batchMemberId: number;
@@ -10,7 +15,7 @@ type RequestItem = {
   status: string;
   enrollmentId: number;
   createdAt: string;
-  startDate: string | null; // start date of switched batch (new batch)
+  startDate: string | null;
   endDate: string | null;
   reason?: string | null;
   batchName?: string | null;
@@ -22,49 +27,32 @@ type Props = {
   onClose: () => void;
   // optional callback to refresh parent view after accept
   onAccepted?: () => void;
+  requestData: RequestItem[];
+  setRequestLen: () => void;
 };
 
 export default function AcceptBatchRequest({
   isOpen,
   onClose,
   onAccepted,
+  requestData,
+  setRequestLen,
 }: Props) {
   const [loading, setLoading] = useState(false);
-  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [requests, setRequests] = useState<RequestItem[]>(requestData);
   const [acceptingIds, setAcceptingIds] = useState<Record<number, boolean>>({});
-
-  const fetchRequests = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:9705/api/batch-member/request");
-      const text = await res.text();
-      const json = text ? JSON.parse(text) : null;
-      if (!res.ok) {
-        throw new Error(
-          json?.message || `Failed to load requests (${res.status})`
-        );
-      }
-      setRequests(json?.data || []);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch requests";
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchRequests();
-    }
-  }, [isOpen, fetchRequests]);
+  const [rejectingIds, setRejectingIds] = useState<Record<number, boolean>>({});
+  const [expandedRejectIds, setExpandedRejectIds] = useState<
+    Record<number, boolean>
+  >({});
+  const [rejectReasons, setRejectReasons] = useState<Record<number, string>>(
+    {}
+  );
 
   // helper: subtract one day and return YYYY-MM-DD (ISO date)
   const subtractOneDayIso = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      // create new date at same time then subtract 1 day
       const prev = new Date(d.getTime() - 24 * 60 * 60 * 1000);
       return prev.toISOString().split("T")[0]; // yyyy-mm-dd
     } catch {
@@ -75,49 +63,24 @@ export default function AcceptBatchRequest({
   const handleAccept = async (item: RequestItem) => {
     if (acceptingIds[item.batchMemberId]) return;
     setAcceptingIds((s) => ({ ...s, [item.batchMemberId]: true }));
-
+    
     try {
       // 1) Fetch enrollment (text first)
-      const enrollmentRes = await fetch(
-        `http://localhost:9705/api/enrollment/${item.enrollmentId}`,
-        {
-          headers: { Accept: "application/json" },
-        }
-      );
-      const enrollmentText = await enrollmentRes.text();
-
-      if (!enrollmentRes.ok) {
+      const enrollmentRes: Response | any = await getEnrollmentById(item.enrollmentId)
+      
+      if (!enrollmentRes.success) {
         console.error(
-          "Enrollment fetch failed:",
-          enrollmentRes.status,
-          enrollmentText
-        );
-        const snippet = enrollmentText.slice(0, 1000);
-        console.error("Enrollment response snippet:", snippet);
-        throw new Error(
-          enrollmentText || `Enrollment fetch failed (${enrollmentRes.status})`
-        );
-      }
-
-      // parse if JSON, else throw with helpful message
-      let enrollmentJson: any = null;
-      try {
-        enrollmentJson = enrollmentText ? JSON.parse(enrollmentText) : null;
-      } catch (e) {
-        console.error(
-          "Enrollment endpoint returned non-JSON:",
-          enrollmentText.slice(0, 2000)
+          "Enrollment fetch failed",
         );
         throw new Error(
-          "Enrollment endpoint returned non-JSON (HTML or text). Check server logs or paste response here."
+           `Enrollment fetch failed `
         );
       }
-
-      const enrollment = enrollmentJson?.data || enrollmentJson;
-      const oldBatchId = enrollment?.batchId;
+      const enrollment = enrollmentRes?.data;
+      const oldBatchId = enrollment?.batchId ;
       const enrollmentMemberId = enrollment?.memberId;
       const enrollmentEndDate = enrollment?.endDate;
-
+      
       let computedOldBatchEndDate: string | null = null;
 
       const todayStr = new Date().toISOString().split("T")[0];
@@ -167,51 +130,29 @@ export default function AcceptBatchRequest({
         );
       }
 
-      // 2) call accept endpoint (include memberId and computed oldBatchEndDate)
       const body = {
         oldBatchId,
         newBatchId: item.batchId,
         oldBatchEndDate: computedOldBatchEndDate,
         memberId: memberIdToSend,
       };
-     
-      const acceptRes = await fetch(
-        "http://localhost:9705/api/batch-member/accept",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify(body),
-        }
-      );
 
-      const acceptText = await acceptRes.text();
+      const acceptRes: Response | any = await AcceptRequest(body);
 
-      if (!acceptRes.ok) {
-        console.error(
-          "Accept API failed:",
-          acceptRes.status,
-          acceptText.slice(0, 2000)
-        );
-        const errMsg =
-          acceptText || `Accept request failed (${acceptRes.status})`;
-        throw new Error(errMsg);
+      if (!acceptRes.success) {
+        throw new Error("Accept API failed:");
       }
 
-      // try parse JSON success response but accept non-JSON too
       try {
-        const acceptJson = acceptText ? JSON.parse(acceptText) : null;
+        setRequestLen((prev) => {
+          console.log(prev, " ka bhai??");
+          return prev - 1;
+        });
         toast({
           title: "Success",
-          description: acceptJson?.message || "Batch change accepted.",
+          description: "Batch change accepted.",
         });
       } catch (e) {
-        console.warn(
-          "Accept endpoint returned non-JSON success:",
-          acceptText.slice(0, 500)
-        );
         toast({
           title: "Success",
           description: "Batch change accepted (non-JSON response).",
@@ -224,28 +165,85 @@ export default function AcceptBatchRequest({
       );
       if (onAccepted) onAccepted();
     } catch (err) {
-      console.error("handleAccept error:", err);
-      const message =
-        err instanceof Error ? err.message : "Failed to accept request";
-      if (typeof message === "string" && message.trim().startsWith("<")) {
-        toast({
-          title: "Server returned HTML",
+      toast({
+          title: "Error",
           description:
-            "Server returned HTML instead of JSON. Check backend logs or paste response into chat.",
+            "Failed to accept",
           variant: "destructive",
         });
-        console.error(
-          "Full server HTML response (first 5000 chars):",
-          message.slice(0, 5000)
-        );
-      } else {
-        toast({ title: "Error", description: message, variant: "destructive" });
+    }
+  };
+
+  const handleReject = (item: RequestItem) => {
+    setExpandedRejectIds((s) => ({
+      ...s,
+      [item.batchMemberId]: !s[item.batchMemberId],
+    }));
+    if (!rejectReasons[item.batchMemberId]) {
+      setRejectReasons((s) => ({ ...s, [item.batchMemberId]: "" }));
+    }
+  };
+
+  const submitReject = async (item: RequestItem) => {
+    const id = item.batchMemberId;
+    const reason = rejectReasons[id] || "";
+
+    if (rejectingIds[id]) return;
+    setRejectingIds((s) => ({ ...s, [id]: true }));
+
+    try {
+      const oldReason = item.reason || "";
+      const parts = [];
+      if (String(oldReason).trim()) parts.push(String(oldReason).trim());
+      if (String(reason).trim())
+        parts.push(`operator: ${String(reason).trim()}`);
+      const finalReason = parts.join(", ");
+
+      const body: Record<string, any> = {
+        status: "rejected",
+        reason: finalReason,
+      };
+
+      const res = await updateBatchMember(id, body);
+
+      if (!res.success) {
+        // server may send text or JSON error
+        throw new Error(`Failed to update`);
       }
-    } finally {
-      setAcceptingIds((s) => {
+
+      setRequests((prev) => prev.filter((r) => r.batchMemberId !== id));
+
+      // try parse success message if JSON else fallback
+      try {
+        setRequestLen((prev) => {
+          return prev - 1;
+        });
+        toast({
+          title: "Rejected",
+          description: "Request rejected successfully.",
+        });
+      } catch {
+        toast({
+          title: "Rejected",
+          description: "Request rejected successfully.",
+        });
+      }
+
+      setExpandedRejectIds((s) => {
         const copy = { ...s };
-        delete copy[item.batchMemberId];
+        delete copy[id];
         return copy;
+      });
+      setRejectReasons((s) => {
+        const copy = { ...s };
+        delete copy[id];
+        return copy;
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Reject failed",
+        variant: "destructive",
       });
     }
   };
@@ -300,13 +298,17 @@ export default function AcceptBatchRequest({
                 <div className="space-y-3">
                   {requests.map((item) => {
                     const isAccepting = !!acceptingIds[item.batchMemberId];
-                    // format dates
+                    const isRejecting = !!rejectingIds[item.batchMemberId];
+                    const isExpanded = !!expandedRejectIds[item.batchMemberId];
+                    const rejectReason =
+                      rejectReasons[item.batchMemberId] || "";
                     const start = item.startDate
                       ? new Date(item.startDate).toLocaleDateString()
                       : "-";
                     const end = item.endDate
                       ? new Date(item.endDate).toLocaleDateString()
                       : "-";
+
                     return (
                       <div
                         key={item.batchMemberId}
@@ -346,7 +348,7 @@ export default function AcceptBatchRequest({
                             </div>
                           </div>
 
-                          <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-end gap-2">
                             <button
                               onClick={() => handleAccept(item)}
                               disabled={isAccepting}
@@ -363,8 +365,73 @@ export default function AcceptBatchRequest({
                                 </>
                               )}
                             </button>
+                            <button
+                              onClick={() => handleReject(item)}
+                              disabled={isRejecting}
+                              className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+                            >
+                              {isRejecting ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                                  Rejecting...
+                                </>
+                              ) : (
+                                <>
+                                  <X className="w-4 h-4" /> Reject
+                                </>
+                              )}
+                            </button>
                           </div>
                         </div>
+
+                        {isExpanded && (
+                          <div className="mt-4 pt-4 border-t border-border">
+                            <div className="space-y-3">
+                              <div className="rounded-md p-3 bg-muted/30 border border-border">
+                                <div className="">
+                                  <label className="block text-sm font-medium mb-2">
+                                    Rejection Reason
+                                  </label>
+                                  <textarea
+                                    value={rejectReason}
+                                    onChange={(e) =>
+                                      setRejectReasons((s) => ({
+                                        ...s,
+                                        [item.batchMemberId]: e.target.value,
+                                      }))
+                                    }
+                                    className="w-full border rounded-md p-2 text-sm bg-background resize-none"
+                                    rows={4}
+                                    placeholder="Enter reason for rejection..."
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => handleReject(item)}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/70 text-sm"
+                                >
+                                  <X className="w-4 h-4" /> Close
+                                </button>
+                                <button
+                                  onClick={() => submitReject(item)}
+                                  disabled={!rejectReason.trim() || isRejecting}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 text-sm"
+                                >
+                                  {isRejecting ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                                      OK
+                                    </>
+                                  ) : (
+                                    "OK"
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

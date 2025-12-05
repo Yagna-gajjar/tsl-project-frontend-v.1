@@ -3,6 +3,7 @@ import { FormModal } from "@/components/form-modal/form-modal";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import type { Enrollment } from "@/types/enrollment";
 import { toast } from "@/hooks/use-toast";
+import { createBatchMemberRequests } from "@/api/enrollmentActions.api";
 
 type Props = {
   isOpen: boolean;
@@ -74,6 +75,8 @@ export default function BatchRequestedForm({
     },
   ];
 
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
   const initialData: Partial<RequestPayload> = {
     status: "requested",
     memberName: enrollment?.memberFirstName + " " + enrollment?.memberLastName,
@@ -81,7 +84,7 @@ export default function BatchRequestedForm({
     enrollmentId: enrollment?.enrollmentId,
     batchId: batchId ?? "",
     reason: "",
-    startDate: new Date().toISOString().split("T")[0],
+    startDate: tomorrow.toISOString().split("T")[0],
     endDate: enrollment?.endDate
       ? new Date(enrollment.endDate).toISOString().split("T")[0]
       : "",
@@ -100,48 +103,25 @@ export default function BatchRequestedForm({
         startDate: values.startDate,
         endDate: values.endDate,
       };
-      console.log(body);
 
       try {
-        const res: Response = await fetch(
-          "http://localhost:9705/api/batch-member/request",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          }
-        );
+        const res: Response = await createBatchMemberRequests(body);
 
-        // try to parse JSON safely
-        let json: any = null;
-        const text = await res.text();
-        if (text) {
-          try {
-            json = JSON.parse(text);
-          } catch (parseErr) {
-            console.warn("Non-JSON response from server:", text);
-            console.error(parseErr);
-
-            // fallthrough - treat as error if not OK
-          }
+        if (!res.success) {
+          throw new Error("Request failed");
         }
-
-        if (!res.ok) {
-          const message =
-            json?.message || `Request failed with status ${res.status}`;
-          throw new Error(message);
-        }
-
         // At this point, we can consider success.
-        toast({ title: "Requested", description: "Batch request submitted." });
+        toast({
+          title: "Requested",
+          description: "Batch request submitted.",
+          variant: "success",
+        });
         if (onSuccess) onSuccess();
         onClose();
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Something went wrong";
         toast({
-          title: "Request failed",
-          description: message,
+          title: "Erro",
+          description: "Request failed",
           variant: "destructive",
         });
         // rethrow so FormModal surfaces error too (optional)
