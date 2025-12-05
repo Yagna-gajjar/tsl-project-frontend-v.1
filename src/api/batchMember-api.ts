@@ -2,23 +2,25 @@ import { request } from "./helper";
 import type { Response } from "@/types/response";
 
 export interface BatchMember {
-	enrollmentId: number;
-	batchId: number;
-	memberId: number;
-	status: string;
-	memberFirstName?: string;
-	batchName: string;
-	startTime: string;
-	endTime: string;
-	coachId: number;
-	coachName: string;
-	startDate: Date;
-	endDate: Date;
-	members: {
-		batchMemberId: number;
-		memberId: number;
-		memberName: string;
-	}[];
+  enrollmentId: number;
+  batchId: number;
+  memberId: number;
+  status: string;
+  memberFirstName?: string;
+  batchName: string;
+  startTime: string;
+  endTime: string;
+  coachId: number;
+  coachName: string;
+  startDate: Date;
+  endDate: Date;
+  oldEnollmentEndDate: Date;
+  newStartDate: Date;
+  members: {
+    batchMemberId: number;
+    memberId: number;
+    memberName: string;
+  }[];
 }
 
 const BATCH_MEMBER_BASE = import.meta.env.VITE_APP_API_URL + "/batch-member";

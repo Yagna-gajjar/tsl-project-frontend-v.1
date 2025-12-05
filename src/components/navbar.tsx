@@ -28,12 +28,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/authContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import AcceptBatchRequest from "./view/enrollment-actions/acceptBatchRequest";
+import { useCallback, useEffect, useState } from "react";
+import { getBatchMemberRequests } from "@/api/enrollmentActions.api";
+import { toast } from "@/hooks/use-toast";
+import AcceptBatchRequest from "./view/enrollment-actions/AcceptBatchRequest";
 
 interface NavbarProps {
   onMenuClick: () => void;
 }
+
+type RequestItem = {
+  batchMemberId: number;
+  batchId: number;
+  memberId: number;
+  status: string;
+  enrollmentId: number;
+  createdAt: string;
+  startDate: string | null;
+  endDate: string | null;
+  reason?: string | null;
+  batchName?: string | null;
+  memberName?: string | null;
+};
 
 interface SettingsGroup {
   category: string;
@@ -77,6 +93,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const { logout, user, token } = useAuth();
   const navigate = useNavigate();
   const [userImage, setUserImage] = useState<string>();
+  const [loading, setLoading] = useState(false);
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [requestLen, setRequestLen] = useState<number>(0);
 
   // NEW: sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -100,8 +119,24 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     }
   };
 
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getBatchMemberRequests();
+      setRequests(data.data || []);
+      setRequestLen(data.data.length);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch requests";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUserImage();
+    fetchRequests();
   }, [user, token]);
 
   return (
@@ -148,9 +183,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               onClick={() => setSidebarOpen(true)} // OPEN SIDEBAR
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                3
-              </span>
+              {requestLen != 0 && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
+                  {requestLen}
+                </span>
+              )}
             </Button>
 
             {/* Settings (unchanged) */}
@@ -289,14 +326,18 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       </motion.nav>
 
       {/* Sidebar component rendered here */}
-      <AcceptBatchRequest
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onAccepted={() => {
-          // optional: do extra work after accept (refresh UI)
-          // e.g. toast or refetch something
-        }}
-      />
+      {requests && sidebarOpen && (
+        <AcceptBatchRequest
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          setRequestLen={setRequestLen}
+          requestData={requests}
+          onAccepted={() => {
+            // optional: do extra work after accept (refresh UI)
+            // e.g. toast or refetch something
+          }}
+        />
+      )}
     </>
   );
 }
