@@ -68,7 +68,8 @@ export function ConfirmationProvider({ children }: { children: React.ReactNode }
 		<ConfirmationContext.Provider value={{ confirm }}>
 			{children}
 			<AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-				<AlertDialogContent>
+				{/* z-[60] ensures this sits on top of your MemberTable modal (z-50) */}
+				<AlertDialogContent className="z-[60]">
 					<AlertDialogHeader>
 						<AlertDialogTitle>{options.title}</AlertDialogTitle>
 						<AlertDialogDescription>{options.description}</AlertDialogDescription>
