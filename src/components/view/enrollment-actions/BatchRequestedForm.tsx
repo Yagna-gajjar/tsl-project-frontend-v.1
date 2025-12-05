@@ -1,16 +1,14 @@
-"use client";
-
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { FormModal } from "@/components/form-modal/form-modal";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import type { Enrollment } from "@/types/enrollment";
 import { toast } from "@/hooks/use-toast";
-import { error } from "console";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   batchId: number;
+  batchName: string;
   enrollment: Enrollment;
   onSuccess?: () => void;
 };
@@ -18,9 +16,10 @@ type Props = {
 // Shape we will submit from the dynamic form
 type RequestPayload = {
   status: string;
-  memberId: number | string;
   batchId: number | string;
-  enrollmentId: number | string;
+  enrollmentId: number | null;
+  memberName: string;
+  memberId: number | null;
   reason: string;
   startDate: string;
   endDate: string;
@@ -30,6 +29,7 @@ export default function BatchRequestedForm({
   isOpen,
   onClose,
   batchId,
+  batchName,
   enrollment,
   onSuccess,
 }: Props) {
@@ -38,25 +38,13 @@ export default function BatchRequestedForm({
     {
       name: "status",
       label: "Status",
-      type: "select",
+      type: "text",
       required: true,
-      options: [
-        { label: "Requested", value: "requested" },
-        { label: "Pending", value: "pending" },
-      ],
       placeholder: "Select status",
     },
     {
-      name: "enrollmentId",
-      label: "Enrollment ID",
-      type: "text",
-      required: true,
-      disabled: true,
-      placeholder: "Auto",
-    },
-    {
-      name: "memberId",
-      label: "Member ID",
+      name: "memberName",
+      label: "member Name",
       type: "text",
       required: true,
       disabled: true,
@@ -82,17 +70,21 @@ export default function BatchRequestedForm({
       type: "date",
       required: true,
       placeholder: "Select end date",
+      disabled: true,
     },
   ];
 
   const initialData: Partial<RequestPayload> = {
     status: "requested",
-    enrollmentId: enrollment?.enrollmentId ?? enrollment?.id ?? "",
-    memberId: enrollment?.memberId ?? "",
+    memberName: enrollment?.memberFirstName + " " + enrollment?.memberLastName,
+    memberId: enrollment?.memberId,
+    enrollmentId: enrollment?.enrollmentId,
     batchId: batchId ?? "",
     reason: "",
-    startDate: "",
-    endDate: "",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: enrollment?.endDate
+      ? new Date(enrollment.endDate).toISOString().split("T")[0]
+      : "",
   };
 
   // inside BatchRequestForm: improved handleSubmit
@@ -100,15 +92,16 @@ export default function BatchRequestedForm({
     async (values: RequestPayload) => {
       const body = {
         status: values.status,
-        memberId: Number(values.memberId),
         batchId: Number(batchId),
-        enrollmentId: Number(values.enrollmentId),
+        memberId: values.memberId,
+        enrollmentId: values.enrollmentId,
+        memberName: values.memberName,
         reason: values.reason,
         startDate: values.startDate,
         endDate: values.endDate,
       };
       console.log(body);
-      
+
       try {
         const res: Response = await fetch(
           "http://localhost:9705/api/batch-member/request",
@@ -126,13 +119,13 @@ export default function BatchRequestedForm({
           try {
             json = JSON.parse(text);
           } catch (parseErr) {
-              console.warn("Non-JSON response from server:", text);
-              console.error(parseErr);
-              
+            console.warn("Non-JSON response from server:", text);
+            console.error(parseErr);
+
             // fallthrough - treat as error if not OK
           }
         }
- 
+
         if (!res.ok) {
           const message =
             json?.message || `Request failed with status ${res.status}`;
@@ -162,7 +155,7 @@ export default function BatchRequestedForm({
     <FormModal<RequestPayload>
       isOpen={isOpen}
       onClose={onClose}
-      title={`Request spot in batch ${batchId}`}
+      title={`Request spot in ${batchName}`}
       fields={fields}
       initialData={initialData}
       onSubmit={handleSubmit}

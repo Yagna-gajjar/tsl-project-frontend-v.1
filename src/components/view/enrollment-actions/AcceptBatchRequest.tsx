@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { X, Loader2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
@@ -12,7 +10,7 @@ type RequestItem = {
   status: string;
   enrollmentId: number;
   createdAt: string;
-  startDate: string | null;
+  startDate: string | null; // start date of switched batch (new batch)
   endDate: string | null;
   reason?: string | null;
   batchName?: string | null;
@@ -26,7 +24,11 @@ type Props = {
   onAccepted?: () => void;
 };
 
-export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Props) {
+export default function AcceptBatchRequest({
+  isOpen,
+  onClose,
+  onAccepted,
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [acceptingIds, setAcceptingIds] = useState<Record<number, boolean>>({});
@@ -58,9 +60,18 @@ export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Prop
     }
   }, [isOpen, fetchRequests]);
 
-  // Accept handler: fetch enrollment to get oldBatchId + oldBatchEndDate, then call accept endpoint
-  // inside BatchSwitchSidebar: improved handleAccept
-  // defensive handleAccept - use this in BatchSwitchSidebar.tsx
+  // helper: subtract one day and return YYYY-MM-DD (ISO date)
+  const subtractOneDayIso = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      // create new date at same time then subtract 1 day
+      const prev = new Date(d.getTime() - 24 * 60 * 60 * 1000);
+      return prev.toISOString().split("T")[0]; // yyyy-mm-dd
+    } catch {
+      return null;
+    }
+  };
+
   const handleAccept = async (item: RequestItem) => {
     if (acceptingIds[item.batchMemberId]) return;
     setAcceptingIds((s) => ({ ...s, [item.batchMemberId]: true }));
@@ -81,7 +92,6 @@ export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Prop
           enrollmentRes.status,
           enrollmentText
         );
-        // If HTML, log first 1000 chars to console to avoid spam
         const snippet = enrollmentText.slice(0, 1000);
         console.error("Enrollment response snippet:", snippet);
         throw new Error(
@@ -105,21 +115,66 @@ export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Prop
 
       const enrollment = enrollmentJson?.data || enrollmentJson;
       const oldBatchId = enrollment?.batchId;
-      const oldBatchEndDate = enrollment?.endDate;
+      const enrollmentMemberId = enrollment?.memberId;
+      const enrollmentEndDate = enrollment?.endDate;
 
-      if (!oldBatchId || !item.batchId || !oldBatchEndDate) {
+      let computedOldBatchEndDate: string | null = null;
+
+      const todayStr = new Date().toISOString().split("T")[0];
+      const todayDate = new Date(todayStr);
+
+      const yesterday = new Date(todayDate.getTime() - 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+
+      if (item.startDate) {
+        const startDateObj = new Date(item.startDate);
+
+        if (startDateObj < todayDate) {
+          computedOldBatchEndDate = yesterday;
+        } else {
+          const minusOne = subtractOneDayIso(item.startDate);
+          if (minusOne) computedOldBatchEndDate = minusOne;
+        }
+      }
+
+      if (!computedOldBatchEndDate && enrollmentEndDate) {
+        try {
+          computedOldBatchEndDate = new Date(enrollmentEndDate)
+            .toISOString()
+            .split("T")[0];
+        } catch {
+          computedOldBatchEndDate = enrollmentEndDate;
+        }
+      }
+
+      const memberIdToSend = item.memberId || enrollmentMemberId;
+
+      if (
+        !oldBatchId ||
+        !item.batchId ||
+        !computedOldBatchEndDate ||
+        !memberIdToSend
+      ) {
         console.error("Missing required data:", {
           oldBatchId,
           newBatchId: item.batchId,
-          oldBatchEndDate,
+          computedOldBatchEndDate,
+          memberIdToSend,
         });
         throw new Error(
-          "Missing required data to accept change (oldBatchId/newBatchId/endDate)."
+          "Missing required data to accept change (oldBatchId/newBatchId/oldBatchEndDate/memberId)."
         );
       }
 
-      // 2) call accept endpoint
-      const body = { oldBatchId, newBatchId: item.batchId, oldBatchEndDate };
+      // 2) call accept endpoint (include memberId and computed oldBatchEndDate)
+      const body = {
+        oldBatchId,
+        newBatchId: item.batchId,
+        oldBatchEndDate: computedOldBatchEndDate,
+        memberId: memberIdToSend,
+      };
+     
       const acceptRes = await fetch(
         "http://localhost:9705/api/batch-member/accept",
         {
@@ -140,7 +195,6 @@ export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Prop
           acceptRes.status,
           acceptText.slice(0, 2000)
         );
-        // show readable error
         const errMsg =
           acceptText || `Accept request failed (${acceptRes.status})`;
         throw new Error(errMsg);
@@ -154,7 +208,6 @@ export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Prop
           description: acceptJson?.message || "Batch change accepted.",
         });
       } catch (e) {
-        // server returned non-JSON success (rare) — still OK
         console.warn(
           "Accept endpoint returned non-JSON success:",
           acceptText.slice(0, 500)
@@ -174,7 +227,6 @@ export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Prop
       console.error("handleAccept error:", err);
       const message =
         err instanceof Error ? err.message : "Failed to accept request";
-      // If message looks like HTML, suggest copy/paste
       if (typeof message === "string" && message.trim().startsWith("<")) {
         toast({
           title: "Server returned HTML",
@@ -182,7 +234,6 @@ export default function AcceptBatchRequest({ isOpen, onClose, onAccepted }: Prop
             "Server returned HTML instead of JSON. Check backend logs or paste response into chat.",
           variant: "destructive",
         });
-        // also log more to console
         console.error(
           "Full server HTML response (first 5000 chars):",
           message.slice(0, 5000)

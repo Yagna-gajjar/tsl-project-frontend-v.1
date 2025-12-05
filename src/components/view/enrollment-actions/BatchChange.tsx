@@ -59,6 +59,7 @@ const BatchChange = () => {
   const [loadingEnrollment, setLoadingEnrollment] = useState(true);
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
+  const [selectedBatchName, setSelectedBatchName] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inRequested, setInRequested] = useState(false);
   const [currentBatch, setCurrentBatch] = useState(false);
@@ -237,6 +238,7 @@ const BatchChange = () => {
 
               const handleCardClick = () => {
                 setSelectedBatchId(batch.batchId);
+                setSelectedBatchName(batch.batchName);
                 if (percentage >= 100 && !iscurrentBatch) {
                   // full -> request flow
                   setInRequested(true);
@@ -352,7 +354,6 @@ const BatchChange = () => {
             onClick={() => {
               // If selected batch is full -> open request modal
               if (inRequested && !currentBatch) {
-
                 if (!selectedBatchId) {
                   toast({
                     title: "No batch selected",
@@ -389,6 +390,7 @@ const BatchChange = () => {
         isOpen={requestModalOpen}
         onClose={() => setRequestModalOpen(false)}
         batchId={selectedBatchId ?? 0}
+        batchName={selectedBatchName}
         enrollment={enrollment!}
         onSuccess={() => {
           setRequestModalOpen(false);
