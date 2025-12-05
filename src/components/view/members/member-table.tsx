@@ -204,20 +204,22 @@ export default function MemberTable({
   };
 
   const handleDelete = async (id: string | number) => {
-    const ok = confirm({
+    const ok = await confirm({
       title: "Delete this member?",
       description: "Are you sure want to delete this member?",
       variant: "destructive"
     });
+
     if (!ok) return;
+
     try {
       const res: Response = await deleteMember(Number(id));
-      const ok =
+      const success =
         typeof res?.success !== "undefined"
           ? res.success === true || String(res.success) === "true"
           : true;
 
-      if (!ok) {
+      if (!success) {
         throw new Error(
           (res as Record<string, any>)?.message || "Failed to delete member"
         );
@@ -262,13 +264,6 @@ export default function MemberTable({
 
   const handleRemoveAvatar = async () => {
     if (!selectedMember || !selectedMember.avatar) return;
-    const confirmDelete = confirm({
-      title: "Remove Image",
-      description: "Are you sure you want to remove this photo?",
-      variant: "destructive"
-    });
-    if (!confirmDelete) return;
-
     try {
       setIsUploading(true);
       const deleteRes = await deleteAvatar(selectedMember.memberId!, selectedMember.avatar);

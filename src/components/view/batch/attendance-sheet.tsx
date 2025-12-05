@@ -79,6 +79,8 @@ const AttendanceSheet = () => {
 	};
 
 	const isAllSelected = filteredMembers.length > 0 && filteredMembers.every(m => selectedIds.has(m.batchMemberId));
+
+	// NOTE: PDF Export logic remains unchanged (Output is typically always white paper)
 	const handleExportPDF = () => {
 		if (!batchData) return;
 
@@ -162,19 +164,20 @@ const AttendanceSheet = () => {
 		<div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
 			<div className="flex flex-col gap-6">
 
-				<div className="bg-blue-50 border-l-4 border-blue-600 p-4 md:p-6 rounded-r-lg shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+				{/* Header Card */}
+				<div className="bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-600 dark:border-blue-500 p-4 md:p-6 rounded-r-lg shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors">
 					<div>
-						<h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+						<h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
 							{batchData?.batchName || "Loading Batch..."}
 						</h1>
-						<div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
+						<div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
 							<span className="flex items-center gap-1">
-								<User className="w-4 h-4 text-blue-600" />
-								Coach: <span className="font-semibold text-gray-900">{batchData?.coachName || "-"}</span>
+								<User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+								Coach: <span className="font-semibold text-gray-900 dark:text-gray-200">{batchData?.coachName || "-"}</span>
 							</span>
 							<span className="flex items-center gap-1">
-								<Clock className="w-4 h-4 text-blue-600" />
-								Time: <span className="font-semibold text-gray-900">
+								<Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+								Time: <span className="font-semibold text-gray-900 dark:text-gray-200">
 									{batchData ? `${formatTime(batchData.startTime)} - ${formatTime(batchData.endTime)}` : "-"}
 								</span>
 							</span>
@@ -183,13 +186,13 @@ const AttendanceSheet = () => {
 
 					<div className="flex flex-col sm:flex-row gap-3">
 						<div className="relative w-full sm:w-auto">
-							<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+							<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
 							<input
 								type="text"
 								placeholder="Search student..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
-								className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 transition-all"
+								className="pl-9 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 w-full sm:w-64 transition-all"
 							/>
 						</div>
 
@@ -198,7 +201,7 @@ const AttendanceSheet = () => {
 							whileTap={{ scale: 0.98 }}
 							onClick={handleExportPDF}
 							disabled={loading || !batchData || selectedIds.size === 0}
-							className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+							className="flex items-center justify-center gap-2 bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
 						>
 							<FileDown className="w-4 h-4" />
 							<span>Export Selection</span>
@@ -207,29 +210,30 @@ const AttendanceSheet = () => {
 				</div>
 			</div>
 
-			<div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			{/* Table Container */}
+			<div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden transition-colors">
 				<div className="overflow-x-auto">
 					<table className="w-full text-left border-collapse min-w-[300px]">
 						<thead>
-							<tr className="bg-gray-100 border-b border-gray-200 text-xs uppercase text-gray-600 font-bold">
+							<tr className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold transition-colors">
 								<th className="px-4 py-4 w-12 text-center">
 									<input
 										type="checkbox"
 										checked={isAllSelected}
 										onChange={toggleSelectAll}
-										className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+										className="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500 cursor-pointer accent-blue-600"
 									/>
 								</th>
 								<th className="px-4 md:px-6 py-4 w-16 md:w-24 text-center">Sr. No</th>
 								<th className="px-4 md:px-6 py-4">Member Name</th>
 							</tr>
 						</thead>
-						<tbody className="divide-y divide-gray-100">
+						<tbody className="divide-y divide-gray-100 dark:divide-gray-800">
 							{loading ? (
 								<tr>
 									<td colSpan={3} className="py-12 text-center">
-										<Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
-										<p className="text-gray-400 text-sm mt-2">Loading batch data...</p>
+										<Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600 dark:text-blue-500" />
+										<p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Loading batch data...</p>
 									</td>
 								</tr>
 							) : filteredMembers.length > 0 ? (
@@ -241,28 +245,34 @@ const AttendanceSheet = () => {
 											animate={{ opacity: 1, y: 0 }}
 											exit={{ opacity: 0, y: -10 }}
 											transition={{ delay: index * 0.03 }}
-											className={`transition-colors group ${selectedIds.has(member.batchMemberId) ? 'bg-white' : 'bg-gray-50 opacity-60'}`}
+											className={`transition-colors group border-b dark:border-gray-800 last:border-0 ${selectedIds.has(member.batchMemberId)
+													? 'bg-white dark:bg-gray-950'
+													: 'bg-gray-50 dark:bg-gray-900/50 opacity-60'
+												}`}
 										>
 											<td className="px-4 py-4 text-center">
 												<input
 													type="checkbox"
 													checked={selectedIds.has(member.batchMemberId)}
 													onChange={() => toggleSelection(member.batchMemberId)}
-													className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+													className="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500 cursor-pointer accent-blue-600"
 												/>
 											</td>
-											<td className="px-4 md:px-6 py-4 text-center text-sm text-gray-500 font-mono">
+											<td className="px-4 md:px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400 font-mono">
 												{index + 1}
 											</td>
 											<td className="px-4 md:px-6 py-4">
 												<div className="flex items-center gap-3">
 													<div className={`w-8 h-8 min-w-[2rem] rounded-full flex items-center justify-center transition-colors 
                                                         ${selectedIds.has(member.batchMemberId)
-															? 'bg-blue-100 text-blue-600'
-															: 'bg-gray-200 text-gray-400'}`}>
+															? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+															: 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
 														<User className="w-4 h-4" />
 													</div>
-													<span className={`font-medium break-words ${selectedIds.has(member.batchMemberId) ? 'text-gray-900' : 'text-gray-400'}`}>
+													<span className={`font-medium break-words ${selectedIds.has(member.batchMemberId)
+															? 'text-gray-900 dark:text-gray-100'
+															: 'text-gray-400 dark:text-gray-500'
+														}`}>
 														{member.memberName}
 													</span>
 												</div>
@@ -272,7 +282,7 @@ const AttendanceSheet = () => {
 								</AnimatePresence>
 							) : (
 								<tr>
-									<td colSpan={3} className="py-8 text-center text-gray-500">
+									<td colSpan={3} className="py-8 text-center text-gray-500 dark:text-gray-400">
 										No active members found in this batch.
 									</td>
 								</tr>
@@ -282,10 +292,10 @@ const AttendanceSheet = () => {
 				</div>
 			</div>
 
-			<div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 px-2 gap-2">
+			<div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400 px-2 gap-2">
 				<span>Generated via Admin Portal</span>
 				<span>
-					Selected: <span className="font-bold text-blue-600">{selectedIds.size}</span> / <span className="font-bold text-gray-900">{filteredMembers.length}</span>
+					Selected: <span className="font-bold text-blue-600 dark:text-blue-400">{selectedIds.size}</span> / <span className="font-bold text-gray-900 dark:text-gray-200">{filteredMembers.length}</span>
 				</span>
 			</div>
 		</div>
