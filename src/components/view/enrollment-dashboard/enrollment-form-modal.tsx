@@ -194,9 +194,6 @@ const EnrollmentFormNew = ({
     fetchDiscount();
   }, [values?.courseId]);
 
-  // ------------------------------------------------------
-  // DISCOUNT APPLY
-  // ------------------------------------------------------
   useEffect(() => {
     if (values.isDiscounted) {
       const { amount, adjust } = AdjustBillingAmount(values.billingAmount);
@@ -375,9 +372,6 @@ const EnrollmentFormNew = ({
       label: "Batch",
       type: "select",
       options: batches.map((b) => {
-        // const seatsLeft = b.batchCapacity - b.activeMemberCount;
-
-        // Format times nicely (HH:MM)
         const format = (t: string) => t.slice(0, 5);
 
         const label = `${b.batchName}  |  ${format(b.startTime)}-${format(
@@ -403,6 +397,7 @@ const EnrollmentFormNew = ({
       label: "Start Date",
       type: "date",
       required: true,
+      minDate: new Date(),
     },
     {
       name: "endDate",

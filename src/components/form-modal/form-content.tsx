@@ -4,18 +4,19 @@ import { motion, AnimatePresence } from "framer-motion"
 import { AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FormFieldInput } from "./form-field-input"
+
 import type { FormFieldConfig, FormErrors } from "./types"
+import FormFieldInput from "./form-field-input";
 
 interface FormContentProps<T extends Record<string, any>> {
-  fields: FormFieldConfig<T>[]
-  values: Partial<T>
-  errors: FormErrors<T>
-  loading: boolean
-  error: string | null
-  isSubmitting: boolean
-  onChange: (field: keyof T, value: any) => void
-  layout: "grid" | "list"
+  fields: FormFieldConfig<T>[];
+  values: Partial<T>;
+  errors: FormErrors<T>;
+  loading: boolean;
+  error: string | null;
+  isSubmitting: boolean;
+  onChange: (field: keyof T, value: any) => void;
+  layout: "grid" | "list";
 }
 
 export function FormContent<T extends Record<string, any>>({
@@ -30,7 +31,13 @@ export function FormContent<T extends Record<string, any>>({
 }: FormContentProps<T>) {
   if (loading) {
     return (
-      <div className={`p-6 space-y-6 ${layout === "grid" ? "grid grid-cols-1 sm:grid-cols-2 gap-6" : "space-y-4"}`}>
+      <div
+        className={`p-6 space-y-6 ${
+          layout === "grid"
+            ? "grid grid-cols-1 sm:grid-cols-2 gap-6"
+            : "space-y-4"
+        }`}
+      >
         {Array.from({ length: Math.min(fields.length, 4) }).map((_, i) => (
           <div key={i} className="space-y-2">
             <Skeleton className="h-4 w-24 bg-foreground/10" />
@@ -38,7 +45,7 @@ export function FormContent<T extends Record<string, any>>({
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -51,7 +58,10 @@ export function FormContent<T extends Record<string, any>>({
             exit={{ opacity: 0, y: -10 }}
             className="mb-6"
           >
-            <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
+            <Alert
+              variant="destructive"
+              className="border-red-500/50 bg-red-500/10"
+            >
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -59,7 +69,13 @@ export function FormContent<T extends Record<string, any>>({
         )}
       </AnimatePresence>
 
-      <div className={layout === "grid" ? "grid grid-cols-1 sm:grid-cols-2 gap-6" : "space-y-6"}>
+      <div
+        className={
+          layout === "grid"
+            ? "grid grid-cols-1 sm:grid-cols-2 gap-6"
+            : "space-y-6"
+        }
+      >
         {fields.map((field, index) => (
           <FormFieldInput
             key={String(field.name)}
@@ -77,9 +93,11 @@ export function FormContent<T extends Record<string, any>>({
             disabled={field.disabled || isSubmitting}
             className={field.className}
             index={index}
+            minDate={field.minDate}
+            maxDate={field.maxDate}
           />
         ))}
       </div>
     </div>
-  )
+  );
 }

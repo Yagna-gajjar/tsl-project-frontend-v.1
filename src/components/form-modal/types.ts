@@ -3,18 +3,20 @@ import type { ReactNode } from "react"
 export type FieldType = "text" | "email" | "password" | "number" | "textarea" | "select" | "checkbox" | "date" | "multiselect"
 
 export interface FormFieldConfig<T extends Record<string, any>> {
-  name: keyof T
-  label: string
-  type: FieldType
-  placeholder?: string
-  description?: string
-  required?: boolean
-  validation?: (value: any) => string | true
-  options?: Array<{ label: string; value: any }> // For select fields
-  icon?: ReactNode
-  disabled?: boolean
-  className?: string
-  condition?: (values: Partial<T>) => boolean
+  name: keyof T;
+  label: string;
+  type: FieldType;
+  placeholder?: string;
+  description?: string;
+  required?: boolean;
+  validation?: (value: any) => string | true;
+  options?: Array<{ label: string; value: any }>; // For select fields
+  icon?: ReactNode;
+  disabled?: boolean;
+  className?: string;
+  condition?: (values: Partial<T>) => boolean;
+  minDate?: string | Date;
+  maxDate?: string | Date;
 }
 
 export interface FormModalProps<T extends Record<string, any>> {

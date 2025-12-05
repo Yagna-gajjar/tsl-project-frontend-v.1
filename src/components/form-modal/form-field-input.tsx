@@ -1,7 +1,4 @@
-"use client";
-
-import type { ReactNode } from "react";
-import { motion } from "framer-motion";
+import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,26 +10,48 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { FieldType } from "./types";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 
-interface FormFieldInputProps {
+type Option = { label: string; value: any };
+
+export type FieldType =
+  | "text"
+  | "email"
+  | "number"
+  | "password"
+  | "textarea"
+  | "select"
+  | "multiselect"
+  | "checkbox"
+  | "date";
+
+interface Props {
   type: FieldType;
   name: string;
   label: string;
   value: any;
-  onChange: (value: any) => void;
+  onChange: (v: any) => void;
   placeholder?: string;
   description?: string;
   required?: boolean;
   error?: string;
-  options?: Array<{ label: string; value: any }>;
-  icon?: ReactNode;
+  options?: Option[];
   disabled?: boolean;
   className?: string;
-  index: number;
+  index?: number;
+
+  // NEW: optional min/max date for date field (string "yyyy-mm-dd" or Date)
+  minDate?: string | Date;
+  maxDate?: string | Date;
 }
 
-export function FormFieldInput({
+export default function FormFieldInput({
   type,
   name,
   label,
@@ -43,29 +62,73 @@ export function FormFieldInput({
   required,
   error,
   options,
-  icon,
   disabled,
-  className,
-  index,
-}: FormFieldInputProps) {
-  const containerVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.05,
-        duration: 0.3,
-      },
-    }),
+  className = "",
+  minDate,
+  maxDate,
+}: Props) {
+  const baseInputClass = `${error ? "border-red-500" : ""}`;
+
+  if (type === "checkbox") {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <Checkbox
+          id={name}
+          checked={!!value}
+          onCheckedChange={(v) => onChange(Boolean(v))}
+          disabled={disabled}
+        />
+        <Label htmlFor={name} className={error ? "text-red-500" : ""}>
+          {label}
+          {required && <span className="ml-1 text-red-500">*</span>}
+        </Label>
+        {description && (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        )}
+        {error && (
+          <p id={`${name}-error`} className="text-sm text-red-500">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  function toLocalYMD(d: Date) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  // Normalize supplied min/max to start-of-day Date objects (or undefined)
+  const normalizeToStartOfDay = (d?: string | Date) => {
+    if (!d) return undefined;
+    if (d instanceof Date) {
+      const dt = new Date(d);
+      dt.setHours(0, 0, 0, 0);
+      return dt;
+    }
+    // assume "yyyy-mm-dd" (or other ISO-ish) string; append T00:00:00 for local parsing
+    // If your strings are already ISO with timezone, adjust accordingly.
+    const dt = new Date(String(d) + "T00:00:00");
+    dt.setHours(0, 0, 0, 0);
+    return dt;
   };
 
-  const errorVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: { opacity: 1, height: "auto" },
+  const minDt = normalizeToStartOfDay(minDate);
+  const maxDt = normalizeToStartOfDay(maxDate);
+
+  const isOutOfRange = (d?: Date | null) => {
+    if (!d) return false;
+    const nd = new Date(d);
+    nd.setHours(0, 0, 0, 0);
+    if (minDt && nd < minDt) return true;
+    if (maxDt && nd > maxDt) return true;
+    return false;
   };
 
-  const renderInput = () => {
+  const renderField = () => {
     switch (type) {
       case "textarea":
         return (
@@ -75,36 +138,26 @@ export function FormFieldInput({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className={`min-h-24 resize-none focus:ring-blue-500 focus:border-blue-500 ${
-              error ? "border-red-500" : ""
-            }`}
+            className={`min-h-24 resize-none ${baseInputClass}`}
             aria-invalid={!!error}
-            aria-describedby={
-              error ? `${name}-error` : description ? `${name}-desc` : undefined
-            }
           />
         );
 
       case "select":
         return (
           <Select
-            value={String(value || "")}
-            onValueChange={onChange}
+            value={String(value ?? "")}
+            onValueChange={(v) => onChange(v)}
             disabled={disabled}
           >
-            <SelectTrigger
-              className={`focus:ring-blue-500 focus:border-blue-500 ${
-                error ? "border-red-500" : ""
-              }`}
-              aria-invalid={!!error}
-            >
+            <SelectTrigger className={baseInputClass} aria-invalid={!!error}>
               <SelectValue
-                placeholder={placeholder || `Select ${label.toLowerCase()}`}
+                placeholder={placeholder ?? `Select ${label.toLowerCase()}`}
               />
             </SelectTrigger>
             <SelectContent>
               {options?.map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>
+                <SelectItem key={String(opt.value)} value={String(opt.value)}>
                   {opt.label}
                 </SelectItem>
               ))}
@@ -112,94 +165,78 @@ export function FormFieldInput({
           </Select>
         );
 
-      case "multiselect": {
-        const selectedArray = Array.isArray(value) ? value : [];
-
-        const selectedLabels =
-          options
-            ?.filter((opt) => selectedArray.includes(opt.value))
-            .map((o) => o.label)
-            .join(", ") || "";
-
+      case "multiselect":
         return (
-          <div className="relative">
-            {/* Trigger */}
-            <button
-              type="button"
-              disabled={disabled}
-              className={`w-full flex justify-between items-center px-3 py-2 border rounded text-left
-                    ${error ? "border-red-500" : "border-input"}
-                    ${
-                      disabled
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                    }`}
-              onClick={(e) => {
-                const menu = e.currentTarget.nextElementSibling;
-                if (menu) menu.classList.toggle("hidden");
-              }}
-            >
-              <span
-                className={`truncate ${
-                  selectedLabels ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {selectedLabels ||
-                  placeholder ||
-                  `Select ${label.toLowerCase()}`}
-              </span>
-              <span className="text-sm">▾</span>
-            </button>
-
-            {/* Dropdown (absolute, no space used) */}
-            <div className="hidden absolute z-50 mt-1 w-full max-h-60 overflow-auto bg-background border rounded shadow-lg p-2">
-              {options?.map((opt) => {
-                const checked = selectedArray.includes(opt.value);
-                return (
-                  <label
-                    key={opt.value}
-                    htmlFor={`${name}-${String(opt.value)}`}
-                    className="flex items-center gap-3 px-2 py-1 rounded hover:bg-muted cursor-pointer"
-                  >
-                    <Checkbox
-                      id={`${name}-${String(opt.value)}`}
-                      checked={checked}
-                      onCheckedChange={(c) => {
-                        const isChecked = Boolean(c);
-                        const current = [...selectedArray];
-                        if (isChecked) {
-                          if (!current.includes(opt.value)) {
-                            onChange([...current, opt.value]);
-                          }
-                        } else {
-                          onChange(current.filter((v) => v !== opt.value));
-                        }
-                      }}
-                    />
-                    <span className="text-sm">{opt.label}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+          <select
+            id={name}
+            multiple
+            value={Array.isArray(value) ? value.map(String) : []}
+            onChange={(e) => {
+              const vals = Array.from(e.target.selectedOptions).map(
+                (o) => o.value
+              );
+              onChange(vals);
+            }}
+            disabled={disabled}
+            className={`p-2 rounded border ${baseInputClass}`}
+          >
+            {options?.map((opt) => (
+              <option key={String(opt.value)} value={String(opt.value)}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         );
-      }
 
-      case "checkbox":
+      case "date":
         return (
-          <div className="flex items-center gap-3 pt-1">
-            <Checkbox
-              id={name}
-              checked={!!value}
-              onCheckedChange={onChange}
-              disabled={disabled}
-              className="w-5 h-5"
-              aria-invalid={!!error}
-            />
-            <Label htmlFor={name} className="font-normal cursor-pointer">
-              {label}
-            </Label>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={`w-full justify-between ${baseInputClass}`}
+                disabled={disabled}
+              >
+                {
+                  (value && value.toString().length === 10
+                    ? value
+                    : value
+                    ? new Date(value).toLocaleDateString()
+                    : placeholder || `Select ${label.toLowerCase()}`) as string
+                }
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={value ? new Date(value) : undefined}
+                // Try to provide disabled ranges to Calendar if it accepts them.
+                // react-day-picker style: disabled accepts [{ before: Date }, { after: Date }]
+                // we cast to any because Calendar's type might differ in your project
+                disabled={
+                  minDt || maxDt
+                    ? [
+                        ...(minDt ? [{ before: minDt }] : []),
+                        ...(maxDt ? [{ after: maxDt }] : []),
+                      ]
+                    : undefined
+                }
+                onSelect={(d) => {
+                  // d can be Date | undefined | null depending on Calendar
+                  if (!d) return onChange("");
+                  const picked = d as Date;
+                  if (isOutOfRange(picked)) {
+                    // ignore out-of-range selections.
+                    // optional: show toast/feedback here if you want
+                    return;
+                  }
+                  onChange(toLocalYMD(picked));
+                }}
+                // If your Calendar supports custom day rendering, you could further style out-of-range days.
+                // For compatibility we won't rely on that prop; disabled + onSelect guard are sufficient.
+              />
+            </PopoverContent>
+          </Popover>
         );
 
       default:
@@ -207,88 +244,42 @@ export function FormFieldInput({
           <Input
             id={name}
             type={type}
-            value={value || ""}
+            value={value ?? ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
             required={required}
-            className={`focus:ring-blue-500 focus:border-blue-500 ${
-              error ? "border-red-500" : ""
-            }`}
+            className={baseInputClass}
             aria-invalid={!!error}
-            aria-describedby={
-              error ? `${name}-error` : description ? `${name}-desc` : undefined
-            }
           />
         );
     }
   };
 
-  if (type === "checkbox") {
-    return (
-      <motion.div
-        custom={index}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className={`flex flex-col gap-2 ${className}`}
-      >
-        {renderInput()}
-        {description && (
-          <p id={`${name}-desc`} className="text-sm text-muted-foreground">
-            {description}
-          </p>
-        )}
-        {error && (
-          <motion.p
-            variants={errorVariants}
-            initial="hidden"
-            animate="visible"
-            id={`${name}-error`}
-            className="text-sm text-red-500"
-          >
-            {error}
-          </motion.p>
-        )}
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.div
-      custom={index}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className={`flex flex-col gap-2 ${className}`}
-    >
+    <div className={`flex flex-col gap-2 ${className}`}>
       <div className="flex items-center gap-2">
-        {icon && <span className="text-blue-500">{icon}</span>}
         <Label
           htmlFor={name}
-          className={`text-sm font-medium ${error ? "text-red-500" : ""}`}
+          className={`${error ? "text-red-500" : "text-sm font-medium"}`}
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </Label>
       </div>
-      {renderInput()}
+
+      {renderField()}
+
       {description && (
         <p id={`${name}-desc`} className="text-sm text-muted-foreground">
           {description}
         </p>
       )}
       {error && (
-        <motion.p
-          variants={errorVariants}
-          initial="hidden"
-          animate="visible"
-          id={`${name}-error`}
-          className="text-sm text-red-500"
-        >
+        <p id={`${name}-error`} className="text-sm text-red-500">
           {error}
-        </motion.p>
+        </p>
       )}
-    </motion.div>
+    </div>
   );
 }
