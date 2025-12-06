@@ -41,13 +41,7 @@ function DebitNoteTable({ onView, onEdit, refreshKey }: Props) {
         debitNoteType: filters.debitNoteType as string | undefined,
         debitNoteRemarks: filters.debitNoteRemarks as string | undefined,
       });
-      console.log(res.data);
       
-      // Normalize lots of possible API shapes:
-      // - res could be an array (rows)
-      // - res could be { data: [rows] }
-      // - res could be { data: { rows: [...], total: N } }
-      // - res could be { rows: [...], total: N }
       let rowsRaw: unknown[] = [];
       let serverTotal = 0;
 
