@@ -35,7 +35,7 @@ export default function DiscountPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Discount Management
           </h1>
           <p className="text-gray-500 mt-2">Manage course discounts</p>
@@ -51,7 +51,7 @@ export default function DiscountPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg">
+      <div className="rounded-lg">
         <DiscountTable
           onView={openView}
           onEdit={openForm}

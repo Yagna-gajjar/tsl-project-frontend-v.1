@@ -1,5 +1,5 @@
 export interface Payment {
-  paymentId?: number
+  paymentId?: number;
   paymentType: string;
   enrollmentId?: number | null;
   paymentMode: string;
@@ -9,7 +9,6 @@ export interface Payment {
   remaining: number;
   paymentRemarks?: string | null;
   createdAt?: string | Date;
-
   academyName?: string | null;
   courseName?: string | null;
   memberName?: string | null;

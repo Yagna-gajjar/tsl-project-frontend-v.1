@@ -111,7 +111,7 @@ const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "payment", href: "/payment", icon: BarChart3 },
   { name: "Debit Note", href: "/debit-note", icon: CreditCard },
 ];
 

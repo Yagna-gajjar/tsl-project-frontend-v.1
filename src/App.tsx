@@ -5,8 +5,6 @@ import Layout from "./components/layout"
 import Dashboard from "./pages/dashboard"
 import Projects from "./pages/projects"
 import EnumsPage from "./components/setting/enums/enums";
-import Reports from "./pages/reports";
-import Payments from "./pages/payments";
 import { Toaster } from "./components/ui/toaster";
 import LoginForm from "./components/login-form";
 import NotFound from "./pages/NotFound";
@@ -33,10 +31,10 @@ import CourseChange from "./components/view/enrollment-actions/CourseChange";
 import BatchChange from "./components/view/enrollment-actions/BatchChange";
 import FreezeEnrollment from "./components/view/enrollment-actions/FreezeEnrollment";
 import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
-import AttendanceSheet from "./components/view/batch/attendance-sheet"
+import AttendanceSheet from "./components/view/batch/attendance-sheet";
 import DefreezeEnrollment from "./components/view/enrollment-actions/DefreezeEnrollment";
-import DebitNoteTable from "./components/view/debitNote/debitNote-table";
 import DebitNote from "./pages/debitNote";
+import PaymentPage from "./pages/payment";
 
 export default function App() {
   return (
@@ -106,7 +104,7 @@ export default function App() {
                   path="/infrastructure-configurations/area"
                   element={<AreaPage />}
                 />
-                <Route path="/reports" element={<Reports />} />
+                <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/debit-note" element={<DebitNote />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<Signup />} />
