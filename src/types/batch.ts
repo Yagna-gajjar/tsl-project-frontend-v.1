@@ -12,7 +12,7 @@ export interface Batch {
   startTime: Date;
   endTime: Date;
   weekDays: number;
-  status: "active" | "suspended";
+  status: "active" | "suspended" | "inactive" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
 

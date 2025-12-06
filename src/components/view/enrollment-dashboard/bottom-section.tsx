@@ -1,112 +1,438 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+"use client"
+
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
+  ChevronDown,
+  GitBranch,
+  GitMerge,
   History,
   Calendar,
   AlertCircle,
   TrendingUp,
   ArrowRightLeft,
   CheckCircle2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import EnrollmentChangeActions, {
-  type EnrollmentSummary,
-} from "./enrollment-change-actions";
+  CreditCard,
+  Clock,
+  LinkIcon,
+  X,
+  IndianRupee,
+} from "lucide-react"
+import type { Batch } from "@/types/batch"
+import type { Payment } from "@/types/payment"
 
 export interface EnrollmentHistoryItem {
-  enrollmentId: number;
-  enrollmentDate: string;
-  startDate: string;
-  endDate: string;
-  academyName: string;
-  courseName: string;
-  status: "active" | "changed" | string;
-  changeType: string | null;
-  source: string;
-  billingAmount?: string | number | null;
-  processingCharge?: string | number | null;
-  commitedAmount: number | string;
-  memberFirstName?: string;
-  memberLastName?: string;
+  enrollmentId: number
+  enrollmentDate: string
+  startDate: string
+  endDate: string
+  academyName: string
+  courseName: string
+  status: "active" | "changed" | string
+  changeType: string | null
+  source: string
+  billingAmount?: string | number | null
+  processingCharge?: string | number | null
+  commitedAmount: number | string
+  memberFirstName?: string
+  memberLastName?: string
+  payments?: Payment[]
+  batches?: Batch[]
 }
 
-interface BottomSectionProps {
-  selectedMemberId?: number | null;
-  historyData: EnrollmentHistoryItem[] | null;
+interface EnrollmentHistoryProps {
+  selectedMemberId?: number | null
+  historyData: EnrollmentHistoryItem[] | null
 }
 
-export default function BottomSection({
-  selectedMemberId,
-  historyData,
-}: BottomSectionProps) {
-  // local UI state for dialog & selected enrollment
-  const [changeDialogOpen, setChangeDialogOpen] = useState(false);
-  const [selectedEnrollment, setSelectedEnrollment] =
-    useState<EnrollmentSummary | null>(null);
+// --- Helper Components ---
 
-  // formatting helpers
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "";
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch {
-      return dateString;
+function BatchTimeline({ batches }: { batches: Batch[] | any }) {
+  const activeBatches = batches.filter((b: Batch) => b.status === "active")
+  const inactiveBatches = batches.filter((b: Batch) => b.status === "inactive")
+
+  return (
+    <div className="space-y-4">
+      {/* Active Batches */}
+      {activeBatches.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+            <GitBranch className="h-4 w-4 text-green-600 dark:text-green-400" />
+            Active Batches
+          </h4>
+          {activeBatches.map((batch: Batch | any, idx: number) => (
+            <motion.div
+              key={batch.batchMemberId}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="relative pl-6 py-2 border-l-2 border-green-400 dark:border-green-500 bg-green-50/50 dark:bg-green-900/20 rounded-r-lg px-3"
+            >
+              <div className="absolute -left-2 top-2 h-3 w-3 rounded-full bg-green-500 dark:bg-green-400 border-2 border-white dark:border-slate-900" />
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <p className="font-semibold text-slate-900 dark:text-white text-sm">{batch.batchName}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(batch.startDate).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}{" "}
+                    →{" "}
+                    {new Date(batch.endDate).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div className="px-2 py-1 bg-green-200 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-bold rounded">
+                  Active
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Inactive Batches */}
+      {inactiveBatches.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+            <GitMerge className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            Changed Batches
+          </h4>
+          {inactiveBatches.map((batch: Batch | any, idx: number) => (
+            <motion.div
+              key={batch.batchMemberId}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: activeBatches.length * 0.1 + idx * 0.1 }}
+              className="relative pl-6 py-2 border-l-2 border-amber-300 dark:border-amber-600 bg-amber-50/50 dark:bg-amber-900/20 rounded-r-lg px-3 opacity-75"
+            >
+              <div className="absolute -left-2 top-2 h-3 w-3 rounded-full bg-amber-500 dark:bg-amber-400 border-2 border-white dark:border-slate-900" />
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <p className="font-semibold text-slate-700 dark:text-slate-200 text-sm line-through">
+                    {batch.batchName}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {new Date(batch.startDate).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}{" "}
+                    →{" "}
+                    {new Date(batch.endDate).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div className="px-2 py-1 bg-green-200 dark:bg-green-700/60 text-green-600 dark:text-green-400 text-xs font-bold rounded">
+                  Completed
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PaymentFlow({
+  payments,
+  onOpenPaymentModal,
+  committed
+}: {
+  payments: Payment[] | any
+  onOpenPaymentModal: (payment: Payment | any) => void
+  committed: number | any
+}) {
+  const totalPaidAcrossPayments = payments.reduce(
+    (sum: number, p: Payment) => sum + Number(p.paid),
+    0
+  );
+  const isFullyPaid = totalPaidAcrossPayments >= committed
+
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+        <CreditCard className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        Payment Flow
+      </h4>
+      {payments.map((payment: Payment | any, idx: number) => {
+        const paidAmount = Number.parseFloat(payment.paid)
+        const totalAmount = Number.parseFloat(payment.totalAmount)
+        const paymentProgress = (paidAmount / totalAmount) * 100
+        const isComplete = Number.parseFloat(payment.remaining) === 0
+
+        return (
+          <motion.div
+            key={payment.paymentId}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {isComplete ? (
+                  <CheckCircle2 className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                ) : (
+                  <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                )}
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{payment.paymentType}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">{payment.transactionId}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">₹{paidAmount.toFixed(2)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">of ₹{totalAmount.toFixed(2)}</p>
+              </div>
+            </div>
+
+            {/* Payment Status & Action */}
+            <div className="flex items-center justify-between text-xs mt-1">
+              <span className="text-slate-600 dark:text-slate-400">{payment.paymentMode}</span>
+
+              {isComplete || isFullyPaid ? (
+                <span className="font-semibold text-green-500 dark:text-green-500">Completed</span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                    ₹{Number.parseFloat(payment.remaining).toFixed(2)} remaining
+                  </span>
+                  <button
+                    onClick={() => onOpenPaymentModal(payment)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                  >
+                    Pay Now
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {payment.paymentRemarks && (
+              <p className="text-xs text-slate-600 dark:text-slate-400 italic border-t border-blue-200 dark:border-blue-800 pt-2 mt-2">
+                {payment.paymentRemarks}
+              </p>
+            )}
+          </motion.div>
+        )
+      })}
+    </div>
+  )
+}
+
+// --- Payment Modal Component ---
+
+interface PaymentModalProps {
+  isOpen: boolean
+  onClose: () => void
+  payment: Payment | null
+  committedAmount: string | number
+}
+
+function PaymentModal({ isOpen, onClose, payment, committedAmount }: PaymentModalProps) {
+  const [formData, setFormData] = useState({
+    paid: 0,
+    paymentMode: "Online",
+    transactionId: "",
+    paymentRemarks: "",
+  })
+
+  useEffect(() => {
+    if (payment) {
+      setFormData({
+        paid: Number(payment.remaining),
+        paymentMode: "Online",
+        transactionId: "",
+        paymentRemarks: "",
+      })
     }
-  };
+  }, [payment])
+
+  if (!isOpen || !payment) return null
+
+  const totalAmount = Number(committedAmount) || Number(payment.totalAmount)
+  const currentPaid = Number(formData.paid) || 0
+  const remainingCalculated = Math.max(0, Number(payment.remaining) - currentPaid)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const payload = {
+      enrollmentId: payment.enrollmentId,
+      paymentType: "receipt",
+      totalAmount: totalAmount,
+      paid: formData.paid,
+      remaining: remainingCalculated,
+      paymentMode: formData.paymentMode,
+      transactionId: formData.transactionId,
+      paymentRemarks: formData.paymentRemarks,
+    }
+    console.log("Submitting Payment:", payload)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+            <IndianRupee className="h-5 w-5 text-blue-600" />
+            Complete Payment
+          </h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Enrollment ID</label>
+              <input
+                type="text"
+                value={Number(payment.enrollmentId)}
+                disabled
+                className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 cursor-not-allowed"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Payment Type</label>
+              <input
+                type="text"
+                value="receipt"
+                disabled
+                className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 cursor-not-allowed uppercase font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-3 border border-blue-100 dark:border-blue-800">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">Total Committed:</span>
+              <span className="font-semibold text-slate-900 dark:text-white">₹{totalAmount}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">Current Pending:</span>
+              <span className="font-bold text-amber-600">₹{payment.remaining}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Paying Now (₹)</label>
+              <input
+                type="number"
+                required
+                min="1"
+                max={Number(payment.remaining)}
+                value={formData.paid}
+                onChange={(e) => setFormData({ ...formData, paid: Number(e.target.value) })}
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">New Remaining</label>
+              <input
+                type="text"
+                value={`₹ ${remainingCalculated.toFixed(2)}`}
+                disabled
+                className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Payment Mode</label>
+              <select
+                value={formData.paymentMode}
+                onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="Online">Online</option>
+                <option value="Cash">Cash</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+              </select>
+            </div>
+
+            {/* Transaction ID */}
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Transaction ID</label>
+              <input
+                type="text"
+                value={formData.transactionId}
+                onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Remarks */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Remarks</label>
+            <textarea
+              rows={2}
+              value={formData.paymentRemarks}
+              onChange={(e) => setFormData({ ...formData, paymentRemarks: e.target.value })}
+              className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+          >
+            Submit Payment
+          </button>
+        </form>
+      </motion.div>
+    </div>
+  )
+}
+
+export default function EnrollmentHistory({ selectedMemberId, historyData }: EnrollmentHistoryProps) {
+  const [expandedItems, setExpandedItems] = useState<number[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
+  const [selectedCommittedAmount, setSelectedCommittedAmount] = useState<string | number>(0)
+
+  const toggleExpand = (enrollmentId: number) => {
+    setExpandedItems((prev) =>
+      prev.includes(enrollmentId) ? prev.filter((id) => id !== enrollmentId) : [...prev, enrollmentId],
+    )
+  }
+
+  const handleOpenPaymentModal = (payment: Payment, committedAmount: string | number) => {
+    setSelectedPayment(payment)
+    setSelectedCommittedAmount(committedAmount)
+    setIsModalOpen(true)
+  }
 
   const getDuration = (start?: string, end?: string) => {
-    if (!start || !end) return 0;
-    const diff = new Date(end).getTime() - new Date(start).getTime();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-  };
+    if (!start || !end) return 0
+    const diff = new Date(end).getTime() - new Date(start).getTime()
+    return Math.ceil(diff / (1000 * 60 * 60 * 24))
+  }
 
-  const getRowStyles = (status: string, changeType: string | null) => {
-    if (status === "changed") {
-      return "ml-12 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/10";
-    }
-
-    if (changeType === "course-change") {
-      return "bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800";
-    }
-    if (status === "active") {
-      return "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-md";
-    }
-    return "bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-90";
-  };
-
-  const getBadgeStyles = (status: string, changeType: string | null) => {
-    if (status === "changed") {
-      return "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-700";
-    }
-    if (changeType === "course-change") {
-      return "bg-blue-600 text-white border-blue-600";
-    }
-    if (status === "active") {
-      return "bg-slate-900 dark:bg-slate-50 dark:text-slate-900 text-white border-slate-900 dark:border-slate-50";
-    }
-    return "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
-  };
-
-  // helper to open dialog with chosen item
-  const openChangeDialogFor = (item: EnrollmentHistoryItem) => {
-    setSelectedEnrollment({
-      enrollmentId: item.enrollmentId,
-      courseName: item.courseName,
-      academyName: item.academyName,
-    });
-    setChangeDialogOpen(true);
-  };
-
-  // Ensure commitedAmount is displayed correctly
   const committedAmountToNumber = (value: number | string) => {
-    if (typeof value === "number") return value;
-    const n = parseFloat(String(value || "0"));
-    return isNaN(n) ? 0 : n;
-  };
+    if (typeof value === "number") return value
+    const n = Number.parseFloat(String(value || "0"))
+    return isNaN(n) ? 0 : n
+  }
 
   return (
     <>
@@ -115,150 +441,147 @@ export default function BottomSection({
         animate={{ opacity: 1 }}
         className="w-full h-full transition-colors duration-300 overflow-y-auto"
       >
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+        <div className="p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
               <History className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                Enrollment History
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Recent courses and billing details
-              </p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Enrollment History</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Courses, batches & payment tracking</p>
             </div>
           </div>
 
+          {/* History Items */}
           {historyData && historyData.length > 0 ? (
             <div className="space-y-4">
               {historyData
                 .slice()
-                .sort(
-                  (a, b) =>
-                    new Date(b.startDate).getTime() -
-                    new Date(a.startDate).getTime()
-                )
-                .map((item, index) => (
-                  <motion.div
-                    key={item.enrollmentId ?? index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.005 }}
-                    className={`group relative overflow-hidden rounded-xl border p-5 transition-all ${getRowStyles(
-                      item.status,
-                      item.changeType
-                    )}`}
-                  >
-                    {/* Left Accent Bar */}
-                    <div
-                      className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                        item.status === "active"
-                          ? "bg-slate-900 dark:bg-slate-100"
-                          : item.status === "changed"
-                          ? "bg-amber-400"
-                          : item.changeType === "course-change"
-                          ? "bg-blue-500"
-                          : "bg-slate-300 dark:bg-slate-700"
-                      }`}
-                    />
+                .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                .map((item, index) => {
+                  const isExpanded = expandedItems.includes(item.enrollmentId)
+                  const hasBatches = item.batches && item.batches.length > 0
+                  const hasPayments = item.payments && item.payments.length > 0
 
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pl-3">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${getBadgeStyles(
-                              item.status,
-                              item.changeType
-                            )}`}
-                          >
-                            {item.changeType
-                              ? item.changeType.replace("-", " ")
-                              : item.status}
-                          </span>
-                        </div>
+                  return (
+                    <motion.div
+                      key={item.enrollmentId ?? index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      {/* Main Content */}
+                      <div className="p-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          {/* Left Section */}
+                          <div className="space-y-2 flex-1">
+                            {/* Badge */}
+                            <span
+                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${item.status === "active"
+                                ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
+                                : item.changeType === "course-change"
+                                  ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
+                                  : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                }`}
+                            >
+                              {item.changeType ? item.changeType.replace("-", " ") : item.status}
+                            </span>
 
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {item.courseName}
-                        </h3>
+                            {/* Course Name */}
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{item.courseName}</h3>
 
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                          <TrendingUp className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
-                          <span className="font-semibold">
-                            {item.academyName}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:items-end gap-1.5">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-sm text-slate-400 dark:text-slate-500 font-medium">
-                            INR
-                          </span>
-                          <span className="text-xl font-extrabold text-slate-900 dark:text-white">
-                            {committedAmountToNumber(
-                              item.commitedAmount
-                            ).toLocaleString("en-IN", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </span>
-                        </div>
-
-                        {item.processingCharge &&
-                          Number(item.processingCharge) > 0 && (
-                            <div className="text-xs text-slate-600 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-700 shadow-sm">
-                              +{" "}
-                              {Number(item.processingCharge).toLocaleString(
-                                "en-IN",
-                                {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                }
-                              )}{" "}
-                              processing
+                            {/* Academy Name */}
+                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                              <TrendingUp className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                              <span className="font-semibold">{item.academyName}</span>
                             </div>
-                          )}
+                          </div>
 
-                        <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white/50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700">
-                          <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                          <span>
-                            {formatDate(item.startDate)} -{" "}
-                            {formatDate(item.endDate)}
+                          {/* Right Section - Amount & Duration */}
+                          <div className="flex flex-col sm:items-end gap-2">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">₹</span>
+                              <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                                {committedAmountToNumber(item.commitedAmount).toLocaleString("en-IN", {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 0,
+                                })}
+                              </span>
+                            </div>
+
+                            {item.processingCharge && Number(item.processingCharge) > 0 && (
+                              <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                                +₹{Number(item.processingCharge).toFixed(2)} processing
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 mt-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>{getDuration(item.startDate, item.endDate)} days</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Footer Info */}
+                        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                          <span className="flex items-center gap-1">
+                            {item.source === "EnrollmentChange" ? (
+                              <ArrowRightLeft className="h-3.5 w-3.5" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            )}
+                            {item.source}
                           </span>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-medium">
-                        {item.source === "EnrollmentChange" ? (
-                          <ArrowRightLeft className="h-3.5 w-3.5" />
-                        ) : (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        )}
-                        <span>Source: {item.source}</span>
-                      </div>
-                      <div className="flex gap-4 items-center">
-                        {/* Change */}
-                        {!item.changeType && item.status === "active" && (
-                          <Button
-                            className={`text-sm`}
-                            onClick={() => openChangeDialogFor(item)}
-                          >
-                            Change
-                          </Button>
-                        )}
-                        {/* Duration Tag */}
-                        <div className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
-                          {getDuration(item.startDate, item.endDate)} Days
-                          Duration
+                          {/* Expand Button */}
+                          {(hasBatches || hasPayments) && (
+                            <button
+                              onClick={() => toggleExpand(item.enrollmentId)}
+                              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <LinkIcon className="h-3.5 w-3.5" />
+                              <span className="font-semibold">
+                                {(item.batches?.length || 0) + (item.payments?.length || 0)} links
+                              </span>
+                              <ChevronDown
+                                className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                              />
+                            </button>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+
+                      {/* Expanded Section */}
+                      <AnimatePresence>
+                        {isExpanded && (hasBatches || hasPayments) && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-6"
+                          >
+                            {/* Batches */}
+                            {hasBatches && <BatchTimeline batches={item.batches} />}
+
+                            {/* Payments */}
+                            {hasPayments && (
+                              <PaymentFlow
+                                payments={item.payments}
+                                onOpenPaymentModal={(payment) =>
+                                  handleOpenPaymentModal(payment, item.commitedAmount)
+                                }
+                                committed={item.commitedAmount}
+                              />
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )
+                })}
             </div>
           ) : (
             <motion.div
@@ -270,9 +593,7 @@ export default function BottomSection({
                 <AlertCircle className="h-8 w-8 text-slate-300 dark:text-slate-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">
-                  No history found
-                </p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">No history found</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[200px]">
                   {selectedMemberId
                     ? "This member hasn't enrolled in any courses yet."
@@ -284,12 +605,17 @@ export default function BottomSection({
         </div>
       </motion.div>
 
-      {/* EnrollmentChangeActions dialog */}
-      <EnrollmentChangeActions
-        open={changeDialogOpen}
-        onOpenChange={(v) => setChangeDialogOpen(v)}
-        selectedEnrollment={selectedEnrollment}
-      />
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <PaymentModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            payment={selectedPayment}
+            committedAmount={selectedCommittedAmount}
+          />
+        )}
+      </AnimatePresence>
     </>
-  );
+  )
 }
