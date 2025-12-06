@@ -35,7 +35,7 @@ export default function AcademyCoachPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Academy Coaches Management
           </h1>
           <p className="text-gray-500 mt-2">Manage academy coaches</p>
@@ -51,7 +51,7 @@ export default function AcademyCoachPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg">
+      <div className="rounded-lg">
         <AcademyCoachTable
           onView={openView}
           onEdit={openForm}

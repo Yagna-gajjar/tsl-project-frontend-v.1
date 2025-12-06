@@ -1,7 +1,5 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
   GitBranch,
@@ -15,41 +13,43 @@ import {
   CreditCard,
   Clock,
   LinkIcon,
-  X,
-  IndianRupee,
-} from "lucide-react"
-import type { Batch } from "@/types/batch"
-import type { Payment } from "@/types/payment"
+} from "lucide-react";
+import type { Batch } from "@/types/batch";
+import type { Payment } from "@/types/payment";
+// import type { Response } from "@/types/response";
+// import { createPayment } from "@/api/payment.api";
+// import { toast } from "@/hooks/use-toast";
+import { PaymentFormModal } from "../payment/payment-form-modal";
 
 export interface EnrollmentHistoryItem {
-  enrollmentId: number
-  enrollmentDate: string
-  startDate: string
-  endDate: string
-  academyName: string
-  courseName: string
-  status: "active" | "changed" | string
-  changeType: string | null
-  source: string
-  billingAmount?: string | number | null
-  processingCharge?: string | number | null
-  commitedAmount: number | string
-  memberFirstName?: string
-  memberLastName?: string
-  payments?: Payment[]
-  batches?: Batch[]
+  enrollmentId: number;
+  enrollmentDate: string;
+  startDate: string;
+  endDate: string;
+  academyName: string;
+  courseName: string;
+  status: "active" | "changed" | string;
+  changeType: string | null;
+  source: string;
+  billingAmount?: string | number | null;
+  processingCharge?: string | number | null;
+  commitedAmount: number | string;
+  memberFirstName?: string;
+  memberLastName?: string;
+  payments?: Payment[];
+  batches?: Batch[];
 }
 
 interface EnrollmentHistoryProps {
-  selectedMemberId?: number | null
-  historyData: EnrollmentHistoryItem[] | null
+  selectedMemberId?: number | null;
+  historyData: EnrollmentHistoryItem[] | null;
 }
 
 // --- Helper Components ---
 
 function BatchTimeline({ batches }: { batches: Batch[] | any }) {
-  const activeBatches = batches.filter((b: Batch) => b.status === "active")
-  const inactiveBatches = batches.filter((b: Batch) => b.status === "inactive")
+  const activeBatches = batches.filter((b: Batch) => b.status === "active");
+  const inactiveBatches = batches.filter((b: Batch) => b.status === "inactive");
 
   return (
     <div className="space-y-4">
@@ -71,7 +71,9 @@ function BatchTimeline({ batches }: { batches: Batch[] | any }) {
               <div className="absolute -left-2 top-2 h-3 w-3 rounded-full bg-green-500 dark:bg-green-400 border-2 border-white dark:border-slate-900" />
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-900 dark:text-white text-sm">{batch.batchName}</p>
+                  <p className="font-semibold text-slate-900 dark:text-white text-sm">
+                    {batch.batchName}
+                  </p>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {new Date(batch.startDate).toLocaleDateString("en-US", {
@@ -137,24 +139,23 @@ function BatchTimeline({ batches }: { batches: Batch[] | any }) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function PaymentFlow({
   payments,
   onOpenPaymentModal,
-  committed
+  committed,
 }: {
-  payments: Payment[] | any
-  onOpenPaymentModal: (payment: Payment | any) => void
-  committed: number | any
+  payments: Payment[] | any;
+  onOpenPaymentModal: (payment: Payment | any) => void;
+  committed: number | any;
 }) {
   const totalPaidAcrossPayments = payments.reduce(
     (sum: number, p: Payment) => sum + Number(p.paid),
     0
   );
-  const isFullyPaid = totalPaidAcrossPayments >= committed
-
+  const isFullyPaid = totalPaidAcrossPayments >= committed;
 
   return (
     <div className="space-y-3">
@@ -163,9 +164,9 @@ function PaymentFlow({
         Payment Flow
       </h4>
       {payments.map((payment: Payment | any, idx: number) => {
-        const paidAmount = Number.parseFloat(payment.paid)
-        const totalAmount = Number.parseFloat(payment.totalAmount)
-        const isComplete = Number.parseFloat(payment.remaining) === 0
+        const paidAmount = Number.parseFloat(payment.paid);
+        const totalAmount = Number.parseFloat(payment.totalAmount);
+        const isComplete = Number.parseFloat(payment.remaining) === 0;
 
         return (
           <motion.div
@@ -183,22 +184,34 @@ function PaymentFlow({
                   <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 )}
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{payment.paymentType}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">{payment.transactionId}</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {payment.paymentType}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {payment.transactionId}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">₹{paidAmount.toFixed(2)}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">of ₹{totalAmount.toFixed(2)}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  ₹{paidAmount.toFixed(2)}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  of ₹{totalAmount.toFixed(2)}
+                </p>
               </div>
             </div>
 
             {/* Payment Status & Action */}
             <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-slate-600 dark:text-slate-400">{payment.paymentMode}</span>
+              <span className="text-slate-600 dark:text-slate-400">
+                {payment.paymentMode}
+              </span>
 
               {isComplete || isFullyPaid ? (
-                <span className="font-semibold text-green-500 dark:text-green-500">Completed</span>
+                <span className="font-semibold text-green-500 dark:text-green-500">
+                  Completed
+                </span>
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-amber-600 dark:text-amber-400">
@@ -220,218 +233,51 @@ function PaymentFlow({
               </p>
             )}
           </motion.div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
-// --- Payment Modal Component ---
-
-interface PaymentModalProps {
-  isOpen: boolean
-  onClose: () => void
-  payment: Payment | null
-  committedAmount: string | number
-}
-
-function PaymentModal({ isOpen, onClose, payment, committedAmount }: PaymentModalProps) {
-  const [formData, setFormData] = useState({
-    paid: 0,
-    paymentMode: "Online",
-    transactionId: "",
-    paymentRemarks: "",
-  })
-
-  useEffect(() => {
-    if (payment) {
-      setFormData({
-        paid: Number(payment.remaining),
-        paymentMode: "Online",
-        transactionId: "",
-        paymentRemarks: "",
-      })
-    }
-  }, [payment])
-
-  if (!isOpen || !payment) return null
-
-  const totalAmount = Number(committedAmount) || Number(payment.totalAmount)
-  const currentPaid = Number(formData.paid) || 0
-  const remainingCalculated = Math.max(0, Number(payment.remaining) - currentPaid)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const payload = {
-      enrollmentId: payment.enrollmentId,
-      paymentType: "receipt",
-      totalAmount: totalAmount,
-      paid: formData.paid,
-      remaining: remainingCalculated,
-      paymentMode: formData.paymentMode,
-      transactionId: formData.transactionId,
-      paymentRemarks: formData.paymentRemarks,
-    }
-    console.log("Submitting Payment:", payload)
-    onClose()
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
-      >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-          <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-            <IndianRupee className="h-5 w-5 text-blue-600" />
-            Complete Payment
-          </h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Enrollment ID</label>
-              <input
-                type="text"
-                value={Number(payment.enrollmentId)}
-                disabled
-                className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 cursor-not-allowed"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Payment Type</label>
-              <input
-                type="text"
-                value="receipt"
-                disabled
-                className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 cursor-not-allowed uppercase font-bold"
-              />
-            </div>
-          </div>
-
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-3 border border-blue-100 dark:border-blue-800">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600 dark:text-slate-400">Total Committed:</span>
-              <span className="font-semibold text-slate-900 dark:text-white">₹{totalAmount}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600 dark:text-slate-400">Current Pending:</span>
-              <span className="font-bold text-amber-600">₹{payment.remaining}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Paying Now (₹)</label>
-              <input
-                type="number"
-                required
-                min="1"
-                max={Number(payment.remaining)}
-                value={formData.paid}
-                onChange={(e) => setFormData({ ...formData, paid: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">New Remaining</label>
-              <input
-                type="text"
-                value={`₹ ${remainingCalculated.toFixed(2)}`}
-                disabled
-                className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Payment Mode</label>
-              <select
-                value={formData.paymentMode}
-                onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                <option value="Online">Online</option>
-                <option value="Cash">Cash</option>
-                <option value="Cheque">Cheque</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-              </select>
-            </div>
-
-            {/* Transaction ID */}
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Transaction ID</label>
-              <input
-                type="text"
-                value={formData.transactionId}
-                onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Remarks */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Remarks</label>
-            <textarea
-              rows={2}
-              value={formData.paymentRemarks}
-              onChange={(e) => setFormData({ ...formData, paymentRemarks: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
-          >
-            Submit Payment
-          </button>
-        </form>
-      </motion.div>
-    </div>
-  )
-}
-
-export default function EnrollmentHistory({ selectedMemberId, historyData }: EnrollmentHistoryProps) {
-  const [expandedItems, setExpandedItems] = useState<number[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
-  const [selectedCommittedAmount, setSelectedCommittedAmount] = useState<string | number>(0)
+export default function EnrollmentHistory({
+  selectedMemberId,
+  historyData,
+}: EnrollmentHistoryProps) {
+  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [selectedCommittedAmount, setSelectedCommittedAmount] = useState<
+    string | number
+  >(0);
 
   const toggleExpand = (enrollmentId: number) => {
     setExpandedItems((prev) =>
-      prev.includes(enrollmentId) ? prev.filter((id) => id !== enrollmentId) : [...prev, enrollmentId],
-    )
-  }
+      prev.includes(enrollmentId)
+        ? prev.filter((id) => id !== enrollmentId)
+        : [...prev, enrollmentId]
+    );
+  };
 
-  const handleOpenPaymentModal = (payment: Payment, committedAmount: string | number) => {
-    setSelectedPayment(payment)
-    setSelectedCommittedAmount(committedAmount)
-    setIsModalOpen(true)
-  }
+  const handleOpenPaymentModal = (
+    payment: Payment,
+    committedAmount: string | number
+  ) => {
+    setSelectedPayment(payment);
+    setSelectedCommittedAmount(committedAmount);
+    setIsModalOpen(true);
+  };
 
   const getDuration = (start?: string, end?: string) => {
-    if (!start || !end) return 0
-    const diff = new Date(end).getTime() - new Date(start).getTime()
-    return Math.ceil(diff / (1000 * 60 * 60 * 24))
-  }
+    if (!start || !end) return 0;
+    const diff = new Date(end).getTime() - new Date(start).getTime();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
 
   const committedAmountToNumber = (value: number | string) => {
-    if (typeof value === "number") return value
-    const n = Number.parseFloat(String(value || "0"))
-    return isNaN(n) ? 0 : n
-  }
+    if (typeof value === "number") return value;
+    const n = Number.parseFloat(String(value || "0"));
+    return isNaN(n) ? 0 : n;
+  };
 
   return (
     <>
@@ -447,8 +293,12 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
               <History className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Enrollment History</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Courses, batches & payment tracking</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Enrollment History
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Courses, batches & payment tracking
+              </p>
             </div>
           </div>
 
@@ -457,11 +307,15 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
             <div className="space-y-4">
               {historyData
                 .slice()
-                .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(b.startDate).getTime() -
+                    new Date(a.startDate).getTime()
+                )
                 .map((item, index) => {
-                  const isExpanded = expandedItems.includes(item.enrollmentId)
-                  const hasBatches = item.batches && item.batches.length > 0
-                  const hasPayments = item.payments && item.payments.length > 0
+                  const isExpanded = expandedItems.includes(item.enrollmentId);
+                  const hasBatches = item.batches && item.batches.length > 0;
+                  const hasPayments = item.payments && item.payments.length > 0;
 
                   return (
                     <motion.div
@@ -478,47 +332,62 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
                           <div className="space-y-2 flex-1">
                             {/* Badge */}
                             <span
-                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${item.status === "active"
-                                ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
-                                : item.changeType === "course-change"
+                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
+                                item.status === "active"
+                                  ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
+                                  : item.changeType === "course-change"
                                   ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
                                   : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                                }`}
+                              }`}
                             >
-                              {item.changeType ? item.changeType.replace("-", " ") : item.status}
+                              {item.changeType
+                                ? item.changeType.replace("-", " ")
+                                : item.status}
                             </span>
 
                             {/* Course Name */}
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{item.courseName}</h3>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                              {item.courseName}
+                            </h3>
 
                             {/* Academy Name */}
                             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                               <TrendingUp className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
-                              <span className="font-semibold">{item.academyName}</span>
+                              <span className="font-semibold">
+                                {item.academyName}
+                              </span>
                             </div>
                           </div>
 
                           {/* Right Section - Amount & Duration */}
                           <div className="flex flex-col sm:items-end gap-2">
                             <div className="flex items-baseline gap-1">
-                              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">₹</span>
+                              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                ₹
+                              </span>
                               <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                                {committedAmountToNumber(item.commitedAmount).toLocaleString("en-IN", {
+                                {committedAmountToNumber(
+                                  item.commitedAmount
+                                ).toLocaleString("en-IN", {
                                   minimumFractionDigits: 0,
                                   maximumFractionDigits: 0,
                                 })}
                               </span>
                             </div>
 
-                            {item.processingCharge && Number(item.processingCharge) > 0 && (
-                              <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                                +₹{Number(item.processingCharge).toFixed(2)} processing
-                              </div>
-                            )}
+                            {item.processingCharge &&
+                              Number(item.processingCharge) > 0 && (
+                                <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                                  +₹{Number(item.processingCharge).toFixed(2)}{" "}
+                                  processing
+                                </div>
+                              )}
 
                             <div className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 mt-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              <span>{getDuration(item.startDate, item.endDate)} days</span>
+                              <span>
+                                {getDuration(item.startDate, item.endDate)} days
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -542,10 +411,14 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
                             >
                               <LinkIcon className="h-3.5 w-3.5" />
                               <span className="font-semibold">
-                                {(item.batches?.length || 0) + (item.payments?.length || 0)} links
+                                {(item.batches?.length || 0) +
+                                  (item.payments?.length || 0)}{" "}
+                                links
                               </span>
                               <ChevronDown
-                                className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                className={`h-4 w-4 transition-transform ${
+                                  isExpanded ? "rotate-180" : ""
+                                }`}
                               />
                             </button>
                           )}
@@ -563,14 +436,19 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
                             className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-6"
                           >
                             {/* Batches */}
-                            {hasBatches && <BatchTimeline batches={item.batches} />}
+                            {hasBatches && (
+                              <BatchTimeline batches={item.batches} />
+                            )}
 
                             {/* Payments */}
                             {hasPayments && (
                               <PaymentFlow
                                 payments={item.payments}
                                 onOpenPaymentModal={(payment) =>
-                                  handleOpenPaymentModal(payment, item.commitedAmount)
+                                  handleOpenPaymentModal(
+                                    payment,
+                                    item.commitedAmount
+                                  )
                                 }
                                 committed={item.commitedAmount}
                               />
@@ -579,7 +457,7 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
                         )}
                       </AnimatePresence>
                     </motion.div>
-                  )
+                  );
                 })}
             </div>
           ) : (
@@ -592,7 +470,9 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
                 <AlertCircle className="h-8 w-8 text-slate-300 dark:text-slate-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">No history found</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  No history found
+                </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[200px]">
                   {selectedMemberId
                     ? "This member hasn't enrolled in any courses yet."
@@ -607,7 +487,7 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
       {/* Payment Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <PaymentModal
+          <PaymentFormModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             payment={selectedPayment}
@@ -616,5 +496,5 @@ export default function EnrollmentHistory({ selectedMemberId, historyData }: Enr
         )}
       </AnimatePresence>
     </>
-  )
+  );
 }

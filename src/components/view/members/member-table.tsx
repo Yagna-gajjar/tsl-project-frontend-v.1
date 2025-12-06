@@ -428,14 +428,14 @@ export default function MemberTable({
       {/* --- UPLOAD MODAL --- */}
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-md rounded-lg bg-background border border-foreground p-6 shadow-xl animate-in fade-in zoom-in duration-200">
             <h3 className="text-lg font-semibold mb-4">
               Update Profile Picture
             </h3>
 
             <div className="flex flex-col items-center gap-6">
               {/* Preview Circle */}
-              <div className="relative h-32 w-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+              <div className="relative h-32 w-32 rounded-full border-2 border-dashed border-foreground flex items-center justify-center overflow-hidden bg-background">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
@@ -464,9 +464,10 @@ export default function MemberTable({
                   </p>
                 </div>
               ) : (
-                <div className="text-center w-full px-4 py-2 bg-amber-50 rounded-md border border-amber-100">
+                <div className="text-center w-full px-4 py-2 bg-amber-700/20 rounded-md">
                   <p className="text-sm text-amber-700 font-medium">
-                    You must remove the current picture before uploading a new one.
+                    You must remove the current picture before uploading a new
+                    one.
                   </p>
                 </div>
               )}

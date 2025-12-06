@@ -17,7 +17,7 @@ export default function EnrollmentPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Enrollment Management
           </h1>
           <p className="text-gray-500 mt-2">
@@ -26,7 +26,7 @@ export default function EnrollmentPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg">
+      <div className="rounded-lg">
         <EnrollmentTable onView={openView} refreshKey={refreshKey} />
       </div>
 
