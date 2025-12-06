@@ -35,6 +35,8 @@ import FreezeEnrollment from "./components/view/enrollment-actions/FreezeEnrollm
 import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
 import AttendanceSheet from "./components/view/batch/attendance-sheet"
 import DefreezeEnrollment from "./components/view/enrollment-actions/DefreezeEnrollment";
+import DebitNoteTable from "./components/view/debitNote/debitNote-table";
+import DebitNote from "./pages/debitNote";
 
 export default function App() {
   return (
@@ -105,7 +107,7 @@ export default function App() {
                   element={<AreaPage />}
                 />
                 <Route path="/reports" element={<Reports />} />
-                <Route path="/payments" element={<Payments />} />
+                <Route path="/debit-note" element={<DebitNote />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="*" element={<NotFound />} />

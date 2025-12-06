@@ -20,14 +20,10 @@ import {
   Award,
   BookA,
   Layers,
-  LayoutDashboardIcon,
-  BookAudio,
-  BookAIcon,
   Book,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import Dashboard from "@/pages/dashboard";
 
 interface SubMenuItem {
   label: string;
@@ -116,7 +112,7 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Payments", href: "/payments", icon: CreditCard },
+  { name: "Debit Note", href: "/debit-note", icon: CreditCard },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {

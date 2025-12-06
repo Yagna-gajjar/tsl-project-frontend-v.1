@@ -17,11 +17,15 @@ import { getActivities } from "@/api/activity.api";
 import { getAcademies } from "@/api/academy.api";
 import { getCourses } from "@/api/course.api";
 import { getBatch } from "@/api/batch.api";
+import { getAcademyCoaches } from "@/api/academyCoach.api";
 import { getDiscounts } from "@/api/discount.api";
 import { createEnrollment } from "@/api/enrollment.api";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+// import type { Payment } from "@/types/payment";
+import type { DebitNote } from "@/types/debitNote";
+import type { Coach } from "@/types/coach";
 
 const EnrollmentFormNew = ({
   memberId,
@@ -33,12 +37,14 @@ const EnrollmentFormNew = ({
   const [error, setError] = useState<string>("");
   const [members, setMembers] = useState<Member[]>([]);
   const [activity, setActivity] = useState<Activity[]>([]);
-  const [academy, setAcademy] = useState<Academy[]>([]);
+  const [academy, setAcademy] = useState<Academy[]>([]); // academies filtered by activity (existing behaviour)
+  const [allAcademies, setAllAcademies] = useState<Academy[]>([]); // NEW: all academies for debit-note dropdown
   const [course, setCourse] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [discount, setDiscount] = useState<Discount>();
-
-  const navigate = useNavigate();
+  const [selectedActivity, setSelectedActivity] = useState<string>("");
+  const [selectedCourse, setSelectedCourse] = useState<Course>();
+  const [coaches, setCoaches] = useState<Coach[]>([]);
 
   const [values, setValues] = useState<Enrollment>({
     memberId: Number(memberId),
@@ -63,10 +69,25 @@ const EnrollmentFormNew = ({
     status: "active",
   });
 
-  const [selectedActivity, setSelectedActivity] = useState<string>("");
-  const [selectedCourse, setSelectedCourse] = useState<Course>();
   const [debouncedDays, setDebouncedDays] = useState(values.numberOfDays);
   const [debouncedCndn, setDebouncedCndn] = useState(values.cndn);
+
+  // new separate state for debit-note academy choice (user can pick academy for debit note separately)
+  const [debitNoteAcademyId, setDebitNoteAcademyId] = useState<number>(0);
+
+  const [debitNoteValues, setDebitNoteValues] = useState<
+    DebitNote & { debitNoteAcademyId?: number }
+  >({
+    debitNoteDate: format(Date.now(), "yyyy-MM-dd") as any,
+    academyId: 0, // enrollment's academy (kept for reference)
+    debitNoteAcademyId: 0, // NEW: independent academy for debit note
+    debitNoteType: "",
+    coachId: null,
+    debitNoteAmount: 0,
+    debitNoteRemarks: "",
+  });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -84,19 +105,27 @@ const EnrollmentFormNew = ({
     return () => clearTimeout(handler);
   }, [values.cndn]);
 
+  // initial load: members + activities + ALL academies (for debit-note academy list)
   useEffect(() => {
     const loadInit = async () => {
       try {
         const [mRes, aRes]: [Response<Member>, Response<Activity>] | any =
-          await Promise.all([
-            getMembers(),
-            getActivities({
-              limit: 100,
-            }),
-          ]);
+          await Promise.all([getMembers(), getActivities({ limit: 100 })]);
 
         setMembers(mRes?.data || []);
         setActivity(aRes?.data || []);
+
+        // fetch ALL academies for the debit-note dropdown (no activity filter)
+        try {
+          const allRes: Response<Academy> | any = await getAcademies({
+            limit: 1000, // adjust as needed
+          });
+          setAllAcademies(allRes?.data || []);
+        } catch {
+          // don't block main init if all academies fail; just log error
+          // eslint-disable-next-line no-console
+          console.error("Failed to load all academies for debit note");
+        }
       } catch {
         setError("Failed to load members or activities.");
       }
@@ -111,6 +140,7 @@ const EnrollmentFormNew = ({
     }));
   }, [memberName]);
 
+  // existing behavior: load academies filtered by activity selection
   useEffect(() => {
     if (!values?.activityName) return;
     if (!selectedActivity) return;
@@ -127,7 +157,7 @@ const EnrollmentFormNew = ({
     };
 
     loadAcademies();
-  }, [values?.activityName]);
+  }, [values?.activityName, selectedActivity]);
 
   useEffect(() => {
     if (!values?.academyId) return;
@@ -135,7 +165,7 @@ const EnrollmentFormNew = ({
     const loadCourses = async () => {
       try {
         const res: Response<Course> | any = await getCourses({
-          academyId: values.academyId,
+          academyId: Number(values.academyId),
         });
         setCourse(res?.data || []);
       } catch {
@@ -146,29 +176,42 @@ const EnrollmentFormNew = ({
     loadCourses();
   }, [values?.academyId]);
 
+  // fix: ensure safe handling when course isn't found and always fetch batches when courseId exists
   useEffect(() => {
     if (!values?.courseId) return;
 
-    const c: Course = course.find((c) => c.courseId == values?.courseId)!;
-    setSelectedCourse(c);
-
-    const { amount, adjust } = AdjustBillingAmount(
-      c.minEnrollmentUnit * c.unitRate
+    // try to find course locally (may be undefined if course list not loaded yet)
+    const foundCourse = course.find(
+      (c) => Number(c.courseId) === Number(values?.courseId)
     );
-    setValues((prev) => ({
-      ...prev,
-      numberOfDays: c.minEnrollmentUnit,
-      billingRate: c.unitRate,
-      billingAmount: c.minEnrollmentUnit * c.unitRate,
-      commitedAmount: amount,
-      discountedAmount: 0,
-      adjustment: adjust,
-    }));
+
+    if (foundCourse) {
+      setSelectedCourse(foundCourse);
+      const { amount, adjust } = AdjustBillingAmount(
+        foundCourse.minEnrollmentUnit * foundCourse.unitRate
+      );
+      setValues((prev) => ({
+        ...prev,
+        numberOfDays: foundCourse.minEnrollmentUnit,
+        billingRate: foundCourse.unitRate,
+        billingAmount: foundCourse.minEnrollmentUnit * foundCourse.unitRate,
+        commitedAmount: amount,
+        discountedAmount: 0,
+        adjustment: adjust,
+      }));
+    }
 
     const loadBatches = async () => {
       try {
+        // ensure we pass a number
+        const courseIdNum = Number(values.courseId);
+        if (!courseIdNum) {
+          setBatches([]);
+          return;
+        }
+
         const res: Response<Batch[]> | any = await getBatch({
-          courseId: values.courseId,
+          courseId: courseIdNum,
         });
 
         const allBatches = res?.data || [];
@@ -178,7 +221,7 @@ const EnrollmentFormNew = ({
           const count = Number(batch.activeMemberCount) || 0;
           const capacity = Number(batch.batchCapacity) || 0;
 
-          // Avoid division by zero
+          // If capacity is 0 treat as unavailable
           if (capacity === 0) return false;
 
           return count / capacity < 1;
@@ -186,12 +229,15 @@ const EnrollmentFormNew = ({
 
         setBatches(filtered);
       } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to load batches:", err);
         setError("Failed to load batches.");
       }
     };
 
     loadBatches();
     fetchDiscount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values?.courseId]);
 
   useEffect(() => {
@@ -220,10 +266,12 @@ const EnrollmentFormNew = ({
       commitedAmount: amount,
       adjustment: adjust,
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discount, values.isDiscounted]);
 
   useEffect(() => {
     fetchDiscount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedDays]);
 
   useEffect(() => {
@@ -231,7 +279,8 @@ const EnrollmentFormNew = ({
       if (!selectedCourse) return;
 
       const originalBillingAmount =
-        values?.numberOfDays * selectedCourse.unitRate;
+        values?.numberOfDays * selectedCourse.unitRate -
+        values.discountedAmount;
 
       const { amount, adjust } = AdjustBillingAmount(originalBillingAmount);
       setValues((prev) => ({
@@ -244,25 +293,90 @@ const EnrollmentFormNew = ({
       return;
     }
 
-    if (!discount || !values.numberOfDays || !debouncedCndn) return;
+    if (!values.numberOfDays || !debouncedCndn) return;
 
-    const unitRate = Number(selectedCourse?.unitRate ?? 0);
-    const percentage = Number(discount?.discountPercentage ?? 0);
-    const fp = Number(((unitRate * percentage) / 100).toFixed(2));
-    const sp = Number((debouncedCndn / values.numberOfDays).toFixed(2));
-    const effectiveBillingRate = Number((fp - sp).toFixed(2));
+    if (!discount) {
+      const unitRate = Number(selectedCourse?.unitRate ?? 0);
+      const fp = Number(unitRate);
+      const sp = Number((debouncedCndn / values.numberOfDays).toFixed(2));
+      const effectiveBillingRate = Number((fp - sp).toFixed(2));
 
-    const { amount, adjust } = AdjustBillingAmount(
-      effectiveBillingRate * values?.numberOfDays
-    );
-    setValues((prev) => ({
-      ...prev,
-      billingRate: effectiveBillingRate,
-      billingAmount: (selectedCourse?.unitRate ?? 0) * values?.numberOfDays,
-      commitedAmount: amount,
-      adjustment: adjust,
-    }));
+      const { amount, adjust } = AdjustBillingAmount(
+        effectiveBillingRate * values?.numberOfDays
+      );
+      setValues((prev) => ({
+        ...prev,
+        billingRate: effectiveBillingRate,
+        billingAmount: (selectedCourse?.unitRate ?? 0) * values?.numberOfDays,
+        commitedAmount: amount,
+        adjustment: adjust,
+      }));
+    } else {
+      const unitRate = Number(selectedCourse?.unitRate ?? 0);
+      const percentage = Number(discount?.discountPercentage ?? 0);
+      const fp = Number(((unitRate * percentage) / 100).toFixed(2));
+      const sp = Number((debouncedCndn / values.numberOfDays).toFixed(2));
+      const effectiveBillingRate = Number((fp - sp).toFixed(2));
+
+      const { amount, adjust } = AdjustBillingAmount(
+        effectiveBillingRate * values?.numberOfDays
+      );
+      setValues((prev) => ({
+        ...prev,
+        billingRate: effectiveBillingRate,
+        billingAmount: (selectedCourse?.unitRate ?? 0) * values?.numberOfDays,
+        commitedAmount: amount,
+        adjustment: adjust,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedCndn]);
+
+  // NEW: fetch coaches based on debitNoteAcademyId OR fallback to enrollment academyId.
+  // Also clear debit note values & coaches if cndn removed (0/null).
+  useEffect(() => {
+    // If cndn is not present (0 or null), clear debit note values and coaches
+    if (!debouncedCndn || debouncedCndn === 0) {
+      setDebitNoteValues({
+        debitNoteDate: format(Date.now(), "yyyy-MM-dd") as any,
+        academyId: 0,
+        debitNoteAcademyId: 0,
+        debitNoteType: "",
+        coachId: null,
+        debitNoteAmount: 0,
+        debitNoteRemarks: "",
+      });
+      setDebitNoteAcademyId(0);
+      setCoaches([]);
+      return;
+    }
+
+    // choose which academy to fetch coaches for:
+    // priority: explicitly selected debitNoteAcademyId > enrollment academyId
+    const academyForDebit = debitNoteAcademyId || values.academyId;
+    if (!academyForDebit) return;
+
+    const fetchCoaches = async () => {
+      try {
+        const coachesRes: Response | any = await getAcademyCoaches({
+          academyId: Number(academyForDebit),
+        });
+        setCoaches(coachesRes?.data || []);
+      } catch {
+        setError("Failed to load coaches for debit note academy.");
+      }
+    };
+
+    // fetch coaches and update debit note amounts/academy
+    fetchCoaches();
+    setDebitNoteValues((prev) => ({
+      ...prev,
+      academyId: values.academyId,
+      debitNoteAcademyId: academyForDebit,
+      debitNoteAmount: debouncedCndn,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedCndn, values.academyId, debitNoteAcademyId]);
 
   useEffect(() => {
     if (!values.startDate || !debouncedDays) return;
@@ -310,9 +424,50 @@ const EnrollmentFormNew = ({
     setValues((prev) => ({ ...prev, [field]: value }));
   };
 
+  // updated: account for debitNoteAcademyId and numeric conversions
+  const onDebitNoteChange = (field: string, value: any) => {
+    // numeric conversions
+    if (field === "debitNoteAcademyId" || field === "coachId")
+      value = Number(value);
+
+    if (field === "debitNoteAcademyId") {
+      setDebitNoteAcademyId(Number(value));
+    }
+
+    setDebitNoteValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const handleSubmit = async () => {
     try {
-      const res: Response<Enrollment> = await createEnrollment(values);
+      // Build payload
+      const payload: any = { ...values /*, payment: paymentValues */ };
+
+      // Only attach debit note fields when cndn / amount > 0; otherwise send explicit nulls
+      if (debouncedCndn && Number(debitNoteValues.debitNoteAmount) > 0) {
+        Object.assign(payload, {
+          debitNoteAcademyId:
+            debitNoteValues.debitNoteAcademyId,
+          coachId: debitNoteValues.coachId ?? null,
+          debitNoteType: debitNoteValues.debitNoteType ?? null,
+          debitNoteAmount: Number(debitNoteValues.debitNoteAmount) || 0,
+          debitNoteRemarks: debitNoteValues.debitNoteRemarks ?? null,
+        });
+      } else {
+        // clear debit-note fields explicitly (or omit entirely if you prefer)
+        Object.assign(payload, {
+          debitNoteAcademyId: null,
+          coachId: null,
+          debitNoteType: null,
+          debitNoteAmount: null,
+          debitNoteRemarks: null,
+        });
+      }
+
+
+      const res: Response<Enrollment> = await createEnrollment(payload as any);
       if (res.success) {
         toast({
           title: "Success",
@@ -328,6 +483,30 @@ const EnrollmentFormNew = ({
 
   const onClose = () => {
     setValues({} as any);
+  };
+
+  const fetchDiscount = async () => {
+    if (!values?.courseId) return;
+    if (!values?.numberOfDays) return;
+    try {
+      const res: Response<Discount> | any = await getDiscounts({
+        courseId: Number(values?.courseId),
+        aboveUnits: Number(values?.numberOfDays),
+        sortBy: "aboveUnits",
+        sortOrder: "DESC",
+        status: "active",
+      });
+      const data = res.data[0];
+      setValues((prev) => ({
+        ...prev,
+        discountId: data?.discountId || 0,
+        billingAmount: values?.numberOfDays * values?.billingRate,
+        commitedAmount: values?.numberOfDays * values?.billingRate,
+      }));
+      setDiscount(data);
+    } catch {
+      setError("Failed to load discount.");
+    }
   };
 
   const fields = [
@@ -372,8 +551,7 @@ const EnrollmentFormNew = ({
       label: "Batch",
       type: "select",
       options: batches.map((b) => {
-        const format = (t: string) => t.slice(0, 5);
-
+        const format = (t: string) => (t ? t.slice(0, 5) : "");
         const label = `${b.batchName}  |  ${format(b.startTime)}-${format(
           b.endTime
         )}  |  Seats: ${b.activeMemberCount} / ${b.batchCapacity}`;
@@ -397,7 +575,6 @@ const EnrollmentFormNew = ({
       label: "Start Date",
       type: "date",
       required: true,
-      minDate: new Date(),
     },
     {
       name: "endDate",
@@ -498,47 +675,88 @@ const EnrollmentFormNew = ({
     },
   ];
 
-  const fetchDiscount = async () => {
-    if (!values?.courseId) return;
-    if (!values?.numberOfDays) return;
-    try {
-      const res: Response<Discount> | any = await getDiscounts({
-        courseId: Number(values?.courseId),
-        aboveUnits: Number(values?.numberOfDays),
-        sortBy: "aboveUnits",
-        sortOrder: "DESC",
-        status: "active",
-      });
-      const data = res.data[0];
-      setValues((prev) => ({
-        ...prev,
-        discountId: data?.discountId || 0,
-        billingAmount: values?.numberOfDays * values?.billingRate,
-        commitedAmount: values?.numberOfDays * values?.billingRate,
-      }));
-      setDiscount(data);
-    } catch {
-      setError("Failed to load discount.");
-    }
-  };
+  const debitNoteFields = [
+    {
+      name: "debitNoteAcademyId",
+      label: "Debit Note Academy",
+      type: "select",
+      // use ALL academies here so coaches can be filtered across every academy
+      options: allAcademies.map((a) => ({
+        label: a.academyName,
+        value: Number(a.academyId),
+      })),
+      required: false,
+    },
+    {
+      name: "coachId",
+      label: "Coach Name",
+      type: "select",
+      options: coaches.map((c) => ({
+        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${
+          c.coachLastName
+        }`.trim(),
+        value: c.coachId,
+      })),
+    },
+    {
+      name: "debitNoteType",
+      label: "Type",
+      type: "text",
+      required: true,
+    },
+    {
+      name: "debitNoteAmount",
+      label: "Amount",
+      type: "text",
+      required: true,
+      disabled: true,
+    },
+    {
+      name: "debitNoteRemarks",
+      label: "Remarks",
+      type: "textarea",
+      required: true,
+    },
+  ];
 
   return (
     <div className="flex flex-col max-h-[90vh] overflow-hidden">
       <div className="overflow-auto">
         {memberName && (
-          <FormContent
-            fields={fields as any}
-            values={values as any}
-            errors={{}}
-            loading={false}
-            error={error}
-            isSubmitting={false}
-            onChange={onChange as any}
-            layout="grid"
-          />
+          <>
+            <h1 className="text-center text-blue-600 font-bold text-2xl py-2">
+              Enrollment Details
+            </h1>
+            <FormContent
+              fields={fields as any}
+              values={values as any}
+              errors={{}}
+              loading={false}
+              error={error}
+              isSubmitting={false}
+              onChange={onChange as any}
+              layout="grid"
+            />
+            {debouncedCndn != 0 && debouncedCndn != null && (
+              <>
+                <h1 className="text-center text-blue-600 font-bold text-2xl py-2">
+                  Debit Note
+                </h1>
+                <FormContent
+                  fields={debitNoteFields as any}
+                  values={debitNoteValues as any}
+                  errors={{}}
+                  loading={false}
+                  error={error}
+                  isSubmitting={false}
+                  onChange={onDebitNoteChange as any}
+                  layout="grid"
+                />
+              </>
+            )}
+          </>
         )}
       </div>
-
       <FormFooter
         onClose={onClose}
         onSubmit={handleSubmit}

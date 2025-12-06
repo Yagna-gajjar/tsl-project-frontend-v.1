@@ -6,8 +6,6 @@ import { getAreas, deleteArea } from "@/api/area.api";
 import type { Area } from "@/types/area";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Columns } from "lucide-react";
-import { Area } from "recharts";
 
 type Props = {
   onView?: (row: Area) => void;
@@ -156,7 +154,6 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
         r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US") : "-",
     },
   ];
-
 
   return (
     <div>

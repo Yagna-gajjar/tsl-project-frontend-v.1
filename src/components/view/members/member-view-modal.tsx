@@ -9,7 +9,6 @@ type Props = {
 };
 
 import {
-  Badge,
   User,
   UserCircle2,
   UserSquare2,
@@ -23,7 +22,6 @@ import {
   BadgeInfo,
   StickyNote,
   Clock,
-  IdCard,
 } from "lucide-react";
 
 const defaultFields = [
@@ -35,7 +33,7 @@ const defaultFields = [
     key: "dob",
     label: "DOB",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v: Member) => (v ? new Date(v).toLocaleDateString() : "-"),
   },
 
   { key: "email", label: "Email", icon: Mail },
