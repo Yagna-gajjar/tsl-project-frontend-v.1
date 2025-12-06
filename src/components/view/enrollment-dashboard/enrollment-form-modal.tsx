@@ -23,7 +23,6 @@ import { createEnrollment } from "@/api/enrollment.api";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-// import type { Payment } from "@/types/payment";
 import type { DebitNote } from "@/types/debitNote";
 import type { Coach } from "@/types/coach";
 
@@ -72,19 +71,30 @@ const EnrollmentFormNew = ({
   const [debouncedDays, setDebouncedDays] = useState(values.numberOfDays);
   const [debouncedCndn, setDebouncedCndn] = useState(values.cndn);
 
-  // new separate state for debit-note academy choice (user can pick academy for debit note separately)
   const [debitNoteAcademyId, setDebitNoteAcademyId] = useState<number>(0);
 
   const [debitNoteValues, setDebitNoteValues] = useState<
     DebitNote & { debitNoteAcademyId?: number }
   >({
     debitNoteDate: format(Date.now(), "yyyy-MM-dd") as any,
-    academyId: 0, // enrollment's academy (kept for reference)
-    debitNoteAcademyId: 0, // NEW: independent academy for debit note
+    academyId: 0,
+    debitNoteAcademyId: 0,
     debitNoteType: "",
     coachId: null,
     debitNoteAmount: 0,
     debitNoteRemarks: "",
+  });
+
+  // -------------------------
+  // Payment state (new)
+  // -------------------------
+  const [paymentValues, setPaymentValues] = useState({
+    paymentType: "Reciept", // default
+    paymentMode: "cash", // cash | card | upi | bank etc.
+    transactionId: "" as string | null,
+    paid: 0,
+    remaining: 0, // computed: commitedAmount - paid (disabled)
+    paymentRemarks: "" as string | null,
   });
 
   const navigate = useNavigate();
@@ -105,7 +115,6 @@ const EnrollmentFormNew = ({
     return () => clearTimeout(handler);
   }, [values.cndn]);
 
-  // initial load: members + activities + ALL academies (for debit-note academy list)
   useEffect(() => {
     const loadInit = async () => {
       try {
@@ -140,7 +149,6 @@ const EnrollmentFormNew = ({
     }));
   }, [memberName]);
 
-  // existing behavior: load academies filtered by activity selection
   useEffect(() => {
     if (!values?.activityName) return;
     if (!selectedActivity) return;
@@ -392,6 +400,14 @@ const EnrollmentFormNew = ({
     }));
   }, [values.startDate, debouncedDays]);
 
+  // Recompute payment.remaining whenever commitedAmount or payment.paid changes
+  useEffect(() => {
+    const commited = Number(values.commitedAmount || 0);
+    const paid = Number(paymentValues.paid || 0);
+    const remaining = Number((commited - paid).toFixed(2));
+    setPaymentValues((prev) => ({ ...prev, remaining }));
+  }, [values.commitedAmount, paymentValues.paid]);
+
   const AdjustBillingAmount = (amount: number) => {
     const roundedAmount = Math.ceil(amount);
     const newAdjust = roundedAmount - amount;
@@ -440,16 +456,51 @@ const EnrollmentFormNew = ({
     }));
   };
 
+  // -------------------------
+  // Payment handlers (new)
+  // -------------------------
+  const onPaymentChange = (field: string, value: any) => {
+    // convert numeric for 'paid'
+    if (field === "paid") value = Number(value || 0);
+    if (field === "remaining") value = Number(value || 0);
+
+    // normalize transactionId empty string to null for payload if needed
+    if (field === "transactionId" && value === "") value = null;
+
+    setPaymentValues((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async () => {
     try {
+      // Basic validation for payment fields
+      const mustHaveTransaction =
+        (paymentValues.paymentMode || "").toLowerCase() !== "cash";
+
+      if (mustHaveTransaction && !paymentValues.transactionId) {
+        setError("Transaction ID is required for non-cash payment modes.");
+        return;
+      }
+
+      // paid must not be negative and should be <= commitedAmount
+      if (Number(paymentValues.paid) < 0) {
+        setError("Paid amount cannot be negative.");
+        return;
+      }
+
+      const committed = Number(values.commitedAmount || 0);
+      const paidVal = Number(paymentValues.paid || 0);
+      if (paidVal > committed) {
+        setError("Paid amount cannot exceed committed amount.");
+        return;
+      }
+
       // Build payload
-      const payload: any = { ...values /*, payment: paymentValues */ };
+      const payload: any = { ...values };
 
       // Only attach debit note fields when cndn / amount > 0; otherwise send explicit nulls
       if (debouncedCndn && Number(debitNoteValues.debitNoteAmount) > 0) {
         Object.assign(payload, {
-          debitNoteAcademyId:
-            debitNoteValues.debitNoteAcademyId,
+          debitNoteAcademyId: debitNoteValues.debitNoteAcademyId,
           coachId: debitNoteValues.coachId ?? null,
           debitNoteType: debitNoteValues.debitNoteType ?? null,
           debitNoteAmount: Number(debitNoteValues.debitNoteAmount) || 0,
@@ -465,7 +516,21 @@ const EnrollmentFormNew = ({
           debitNoteRemarks: null,
         });
       }
+      // Attach payment object — send only relevant fields per your requirement
+      const paymentPayload = {
+        paymentType: paymentValues.paymentType,
+        paymentMode: paymentValues.paymentMode,
+        transactionId:
+          (paymentValues.paymentMode || "").toLowerCase() === "cash"
+            ? null
+            : paymentValues.transactionId ?? null,
+        paid: Number(paymentValues.paid || 0),
+        remaining: Number(paymentValues.remaining || 0),
+        paymentRemarks: paymentValues.paymentRemarks ?? null,
+      };
 
+      // Attach as 'payment' so backend receives it (you had commented this previously).
+      Object.assign(payload, paymentPayload);
 
       const res: Response<Enrollment> = await createEnrollment(payload as any);
       if (res.success) {
@@ -475,8 +540,12 @@ const EnrollmentFormNew = ({
           variant: "success",
         });
         navigate("/enrollment");
+      } else {
+        setError("Failed to create enrollment.");
       }
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("create enrollment error", err);
       setError("Failed to make enrollment.");
     }
   };
@@ -719,6 +788,58 @@ const EnrollmentFormNew = ({
     },
   ];
 
+  const paymentFields = [
+    {
+      name: "paymentType",
+      label: "Payment Type",
+      type: "text",
+      required: true,
+      disabled: true,
+    },
+    {
+      name: "paymentMode",
+      label: "Payment Mode",
+      type: "select",
+      options: [
+        { label: "Cash", value: "cash" },
+        { label: "Card", value: "card" },
+        { label: "UPI", value: "upi" },
+        { label: "Bank", value: "bank" },
+      ],
+      required: true,
+    },
+    ...(paymentValues.paymentMode !== "cash"
+      ? [
+          {
+            name: "transactionId",
+            label: "Transaction ID",
+            type: "text",
+            required: true, // now required
+            disabled: false,
+          },
+        ]
+      : []),
+    {
+      name: "paid",
+      label: "Paid",
+      type: "number",
+      required: true,
+    },
+    {
+      name: "remaining",
+      label: "Remaining",
+      type: "number",
+      required: true,
+      disabled: true, // computed
+    },
+    {
+      name: "paymentRemarks",
+      label: "Payment Remarks",
+      type: "textarea",
+      required: false,
+    },
+  ];
+
   return (
     <div className="flex flex-col max-h-[90vh] overflow-hidden">
       <div className="overflow-auto">
@@ -737,6 +858,27 @@ const EnrollmentFormNew = ({
               onChange={onChange as any}
               layout="grid"
             />
+
+            {/* Payment section (NEW) */}
+            <h1 className="text-center text-blue-600 font-bold text-2xl py-2">
+              Payment
+            </h1>
+            <FormContent
+              fields={paymentFields as any}
+              // Merge values so FormContent can pick each field from paymentValues
+              values={paymentValues as any}
+              errors={{}}
+              loading={false}
+              error={error}
+              isSubmitting={false}
+              // FormContent's onChange receives (name, value) — we route to onPaymentChange
+              onChange={(name: string, val: any) => {
+                // special handling: if paid changes, onPaymentChange will recompute remaining via the effect
+                onPaymentChange(name, val);
+              }}
+              layout="grid"
+            />
+
             {debouncedCndn != 0 && debouncedCndn != null && (
               <>
                 <h1 className="text-center text-blue-600 font-bold text-2xl py-2">

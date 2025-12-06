@@ -1,10 +1,15 @@
 export interface Payment {
-  paymentId: number;
-  amount: number;
-  paymentMode: string;
+  paymentId?: number;
   paymentType: string;
+  enrollmentId?: number | null;
+  paymentMode: string;
   transactionId?: string | null;
+  totalAmount: number;
+  paid: number;
+  remaining: number;
   paymentRemarks?: string | null;
-  enrollmentId: number;
-  createdAt: Date;
+  createdAt?: string | Date;
+  academyName?: string | null;
+  courseName?: string | null;
+  memberName?: string | null;
 }

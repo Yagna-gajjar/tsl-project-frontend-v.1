@@ -35,7 +35,7 @@ export default function CoursePage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Course Management
           </h1>
           <p className="text-gray-500 mt-2">Manage courses and programs</p>
@@ -51,7 +51,7 @@ export default function CoursePage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg">
+      <div className="rounded-lg">
         <CourseTable
           onView={openView}
           onEdit={openForm}
