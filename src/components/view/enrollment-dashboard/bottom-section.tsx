@@ -165,7 +165,6 @@ function PaymentFlow({
       {payments.map((payment: Payment | any, idx: number) => {
         const paidAmount = Number.parseFloat(payment.paid)
         const totalAmount = Number.parseFloat(payment.totalAmount)
-        const paymentProgress = (paidAmount / totalAmount) * 100
         const isComplete = Number.parseFloat(payment.remaining) === 0
 
         return (
