@@ -85,4 +85,45 @@ async function deleteCoach(id: number) {
   }
 }
 
-export { getCoaches, getCoachById, createCoach, updateCoach, deleteCoach };
+async function saveUrlToCoach(formData: FormData) {
+  try {
+    // Assuming backend endpoint is /coach/photo to match member pattern
+    const url = `${API_URL}/coach/photo`;
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData, // Content-Type header is auto-set by browser for FormData
+    });
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error("Error uploading coach photo:", err);
+    throw err;
+  }
+}
+
+async function deletePhoto(coachId: number, photo: string) {
+  try {
+    // Assuming backend endpoint is /coach/remove to match member pattern
+    const url = `${API_URL}/coach/remove`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coachId, photo }),
+    });
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error("Error deleting coach photo:", err);
+    throw err;
+  }
+}
+
+export {
+  getCoaches,
+  getCoachById,
+  createCoach,
+  updateCoach,
+  deleteCoach,
+  saveUrlToCoach,
+  deletePhoto
+};
