@@ -17,6 +17,7 @@ import type { Course } from "@/types/course";
 import { getCourseById } from "@/api/course.api";
 import { getBatch } from "@/api/batch.api";
 import type { Batch } from "@/types/batch";
+import { enrollmentChange } from "@/api/enrollmentActions.api";
 
 const DefreezeEnrollment = () => {
   const { id }: any = useParams();
@@ -62,15 +63,9 @@ const DefreezeEnrollment = () => {
     setValues({} as any);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
-      const res = fetch("http://localhost:9705/api/enrollment-change/demo", {
-        body: JSON.stringify(values),
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }).then((r) => r.json());
+      const res: Response = await enrollmentChange(values);
       navigate("/enrollment");
     } catch (err) {
       setError("Failed to submit!");
@@ -126,60 +121,106 @@ const DefreezeEnrollment = () => {
   }, [id]);
 
   useEffect(() => {
-    const fetchCourse = async (id) => {
+    if (!oldEnrollment?.oldEnrollmentId) return;
+
+    let mounted = true;
+
+    const fetchCourse = async (id: number) => {
       try {
-        const res: Response<Course | any> = await getCourseById(id);
+        const res = await getCourseById(id);
+        if (!mounted) return;
         setCourse(res.data);
         setValues((prev) => ({
           ...prev,
           activityName: res.data.activityName || "",
         }));
+        return res.data;
       } catch (err) {
-        setError("failed to fetch course");
+        console.error("fetchCourse error:", err);
+        if (mounted) setError("Failed to fetch course");
+        throw err;
       }
     };
 
-    const fetchOldEnrollment = async () => {
+    const fetchOldEnrollmentAndBatches = async () => {
       try {
-        const response: Response<Enrollment | any> = await getEnrollmentById(
-          oldEnrollment?.oldEnrollmentId
-        );
+        const response: Response<Batch[] | any> = await getEnrollmentById(oldEnrollment.oldEnrollmentId);
         const data = response?.data;
-
-        if (data) {
-          setLastEnrollment(data);
-          fetchCourse(data.courseId);
-          // ⭐ Set values here
-          setValues((prev) => ({
-            ...prev,
-            activityName: data.activityName || "",
-            academyName: data.academyName || "",
-            courseName: data.courseName || "",
-            courseId: data.courseId,
-            batchId: data.batchId,
-            academyId: data.academyId,
-          }));
-          console.log(data, "234567890-");
+        console.log("getEnrollmentById returned:", data);
+        if (!data) {
+          setError("No enrollment data returned");
+          return;
         }
+
+        if (!mounted) return;
+        setLastEnrollment(data);
+
+        // ensure courseId exists
+        if (!data.courseId && data.courseId !== 0) {
+          console.error("Missing courseId on enrollment data:", data);
+          setError("Missing courseId in enrollment");
+          return;
+        }
+
+        // Fetch course and wait (so any course-dependent state is set)
+        try {
+          await fetchCourse(Number(data.courseId));
+        } catch (err) {
+          // fetchCourse already logged error
+        }
+
+        // set form values derived from old enrollment
+        setValues((prev) => ({
+          ...prev,
+          activityName: data.activityName || "",
+          academyName: data.academyName || "",
+          courseName: data.courseName || "",
+          courseId: data.courseId,
+          batchId: data.batchId,
+          academyId: data.academyId,
+        }));
+
+        // --- Attempt to fetch batches. Try the two most common argument shapes ---
+        try {
+          console.log(
+            "Calling getBatch with object shape: { courseId:",
+            data.courseId,
+            "}"
+          );
+          let batchRes;
+
+          // Try object param first
+          try {
+            batchRes = await getBatch({ courseId: data.courseId });
+          } catch (errObj) {
+            console.warn(
+              "getBatch(object) failed, trying primitive id. error:",
+              errObj
+            );
+            // Try primitive param fallback
+            batchRes = await getBatch(Number(data.courseId));
+          }
+
+          console.log("getBatch response:", batchRes);
+          const batchesData = batchRes?.data ?? [];
+          if (mounted) setBatches(batchesData);
+        } catch (err) {
+          console.error("Failed to load batches:", err);
+          if (mounted) setError("Failed to load batches.");
+        }
+
+        console.log(data, "fetched old enrollment full flow");
       } catch (err) {
-        setError("Failed to fetch enrollment details");
-      }
-    };
-    const loadBatches = async () => {
-      try {
-        const res: Response<Batch> | any = await getBatch({
-          courseId: oldEnrollment?.courseId,
-        });
-        setBatches(res?.data || []);
-      } catch {
-        setError("Failed to load batches.");
+        console.error("fetchOldEnrollmentAndBatches error:", err);
+        if (mounted) setError("Failed to fetch enrollment details");
       }
     };
 
-    if (oldEnrollment?.oldEnrollmentId) {
-      fetchOldEnrollment();
-      loadBatches();
-    }
+    fetchOldEnrollmentAndBatches();
+
+    return () => {
+      mounted = false;
+    };
   }, [oldEnrollment]);
 
   useEffect(() => {
@@ -286,6 +327,10 @@ const DefreezeEnrollment = () => {
       label: "Batch",
       type: "select",
       required: true,
+      options: batches.map((b) => ({
+        value: b.batchId,
+        label: b.batchName,
+      })),
     },
     {
       name: "billingAmount",

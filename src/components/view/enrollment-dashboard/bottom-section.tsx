@@ -39,6 +39,7 @@ export interface EnrollmentHistoryItem {
   memberLastName?: string;
   payments?: Payment[];
   batches?: Batch[];
+  adjustment?: string | number | null;
 }
 
 interface EnrollmentHistoryProps {
@@ -334,7 +335,7 @@ export default function EnrollmentHistory({
 
                   return (
                     <motion.div
-                      key={item.enrollmentId ?? index}
+                      key={index}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -397,6 +398,12 @@ export default function EnrollmentHistory({
                                   processing
                                 </div>
                               )}
+                            {item.adjustment && Number(item.adjustment) > 0 && (
+                              <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                                +₹{Number(item.adjustment).toFixed(2)}{" "}
+                                adjustment
+                              </div>
+                            )}
 
                             <div className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 mt-1">
                               <Calendar className="h-3.5 w-3.5" />
@@ -418,65 +425,73 @@ export default function EnrollmentHistory({
                             {item.source}
                           </span>
                           <div className="flex gap-3">
-                            <Button
-                              className={`text-sm`}
-                              onClick={() => openChangeDialogFor(item)}
-                            >
-                              Change
-                            </Button>
+                            {!item.changeType &&
+                              item.status.toLowerCase() === "active" && (
+                                <Button
+                                  className={`text-sm`}
+                                  onClick={() => openChangeDialogFor(item)}
+                                >
+                                  Change
+                                </Button>
+                              )}
                             {/* Expand Button */}
-                            {(hasBatches || hasPayments) && (
-                              <button
-                                onClick={() => toggleExpand(item.enrollmentId)}
-                                className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              >
-                                <LinkIcon className="h-3.5 w-3.5" />
-                                <span className="font-semibold">
-                                  {(item.batches?.length || 0) +
-                                    (item.payments?.length || 0)}{" "}
-                                  links
-                                </span>
-                                <ChevronDown
-                                  className={`h-4 w-4 transition-transform ${
-                                    isExpanded ? "rotate-180" : ""
-                                  }`}
-                                />
-                              </button>
-                            )}
+                            {(hasBatches || hasPayments) &&
+                              !item.changeType && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpand(item.enrollmentId)
+                                  }
+                                  className={`flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors`}
+                                >
+                                  <LinkIcon className="h-3.5 w-3.5" />
+                                  <span className="font-semibold">
+                                    {(item.batches?.length || 0) +
+                                      (item.payments?.length || 0)}{" "}
+                                    links
+                                  </span>
+                                  <ChevronDown
+                                    className={`h-4 w-4 transition-transform ${
+                                      isExpanded ? "rotate-180" : ""
+                                    }`}
+                                  />
+                                </button>
+                              )}
                           </div>
                         </div>
                       </div>
 
                       {/* Expanded Section */}
                       <AnimatePresence>
-                        {isExpanded && (hasBatches || hasPayments) && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-6"
-                          >
-                            {/* Batches */}
-                            {hasBatches && (
-                              <BatchTimeline batches={item.batches} />
-                            )}
+                        {isExpanded &&
+                          !item.changeType &&
+                          (hasBatches || hasPayments) && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-6"
+                            >
+                              {/* Batches */}
+                              {hasBatches && (
+                                <BatchTimeline batches={item.batches} />
+                              )}
 
-                            {/* Payments */}
-                            {hasPayments && (
-                              <PaymentFlow
-                                payments={item.payments}
-                                onOpenPaymentModal={(payment) =>
-                                  handleOpenPaymentModal(
-                                    payment,
-                                    item.commitedAmount
-                                  )
-                                }
-                                committed={item.commitedAmount}
-                              />
-                            )}
-                          </motion.div>
-                        )}
+                              {/* Payments */}
+                              {hasPayments && (
+                                <PaymentFlow
+                                  payments={item.payments}
+                                  onOpenPaymentModal={(payment) =>
+                                    handleOpenPaymentModal(
+                                      payment,
+                                      item.commitedAmount
+                                    )
+                                  }
+                                  committed={item.commitedAmount}
+                                />
+                              )}
+                            </motion.div>
+                          )}
                       </AnimatePresence>
                     </motion.div>
                   );

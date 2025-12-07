@@ -8,7 +8,10 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   BookOpen,
+  Currency,
+  DollarSign,
   HelpCircle,
+  IndianRupee,
   Snowflake,
   Stethoscope,
   SunSnow,
@@ -79,16 +82,18 @@ export default function EnrollmentChangeActions({
             </span>
           </Button>
 
-          <Button
-            variant="outline"
-            className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
-            onClick={() => handleClick("course-change")}
-          >
-            <BookOpen className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
-            <span className="font-semibold text-slate-900 group-hover:text-blue-700">
-              Change Course
-            </span>
-          </Button>
+          {!isFreeze && (
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
+              onClick={() => handleClick("course-change")}
+            >
+              <BookOpen className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+              <span className="font-semibold text-slate-900 group-hover:text-blue-700">
+                Change Course
+              </span>
+            </Button>
+          )}
 
           <Button
             variant="outline"
@@ -109,6 +114,17 @@ export default function EnrollmentChangeActions({
             <Stethoscope className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
             <span className="font-semibold text-slate-900 group-hover:text-blue-700">
               Medical Extension
+            </span>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50 transition-all group"
+            onClick={() => handleClick("refund")}
+          >
+            <IndianRupee className="w-6 h-6 text-slate-900 group-hover:text-blue-600" />
+            <span className="font-semibold text-slate-900 group-hover:text-blue-700">
+              Refund
             </span>
           </Button>
 

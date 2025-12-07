@@ -36,6 +36,7 @@ import DefreezeEnrollment from "./components/view/enrollment-actions/DefreezeEnr
 import DebitNote from "./pages/debitNote";
 import PaymentPage from "./pages/payment";
 import Billing from "./pages/billing"
+import RefundFormModal from "./components/view/enrollment-actions/Refund";
 
 export default function App() {
   return (
@@ -71,6 +72,10 @@ export default function App() {
                 <Route
                   path="/enrollment/:id/defreeze-enrollment"
                   element={<DefreezeEnrollment />}
+                />
+                <Route
+                  path="/enrollment/:id/refund"
+                  element={<RefundFormModal />}
                 />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />

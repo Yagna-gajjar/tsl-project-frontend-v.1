@@ -21,6 +21,7 @@ import { getAcademies } from "@/api/academy.api";
 import { getCourses } from "@/api/course.api";
 import { getBatch } from "@/api/batch.api";
 import { getActivities } from "@/api/activity.api";
+import { enrollmentChange } from "@/api/enrollmentActions.api";
 
 const CourseChange = () => {
   const { id }: any = useParams();
@@ -65,17 +66,10 @@ const CourseChange = () => {
 
   const handleSubmit = async () => {
     try {
-      const res: Response<Enrollment | any> = await fetch(
-        "http://localhost:9705/api/enrollment-change/demo",
-        {
-          body: JSON.stringify(values),
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      ).then((r) => r.json());
+      const res: Response<Enrollment | any> = await enrollmentChange(values);
       if (res.success) {
+        console.log(values);
+
         navigate("/enrollment");
       } else {
         throw new Error("Failed to change.");
@@ -246,9 +240,9 @@ const CourseChange = () => {
     const usedAmount = oldEnrollment.billingRate * (diff + 1);
     const remaining = oldEnrollment.commitedAmount - usedAmount;
 
-    setValues((prev) => ({
+    setValues((prev: any) => ({
       ...prev,
-      billingAmount: remaining,
+      billingAmount: Number(Number(remaining).toFixed(2)),
     }));
   }, [values.startDate, oldEnrollment]);
 
