@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
@@ -20,6 +20,10 @@ import type { Payment } from "@/types/payment";
 // import { createPayment } from "@/api/payment.api";
 // import { toast } from "@/hooks/use-toast";
 import { PaymentFormModal } from "../payment/payment-form-modal";
+import { Button } from "@/components/ui/button";
+import EnrollmentChangeActions, {
+  type EnrollmentSummary,
+} from "./enrollment-change-actions";
 
 export interface EnrollmentHistoryItem {
   enrollmentId: number;
@@ -250,6 +254,11 @@ export default function EnrollmentHistory({
     string | number
   >(0);
 
+  const [selectedEnrollment, setSelectedEnrollment] =
+    useState<EnrollmentSummary | null>(null);
+
+  const [changeDialogOpen, setChangeDialogOpen] = useState(false);
+
   const toggleExpand = (enrollmentId: number) => {
     setExpandedItems((prev) =>
       prev.includes(enrollmentId)
@@ -277,6 +286,15 @@ export default function EnrollmentHistory({
     if (typeof value === "number") return value;
     const n = Number.parseFloat(String(value || "0"));
     return isNaN(n) ? 0 : n;
+  };
+
+  const openChangeDialogFor = (item: EnrollmentHistoryItem) => {
+    setSelectedEnrollment({
+      enrollmentId: item.enrollmentId,
+      courseName: item.courseName,
+      academyName: item.academyName,
+    });
+    setChangeDialogOpen(true);
   };
 
   return (
@@ -402,26 +420,33 @@ export default function EnrollmentHistory({
                             )}
                             {item.source}
                           </span>
-
-                          {/* Expand Button */}
-                          {(hasBatches || hasPayments) && (
-                            <button
-                              onClick={() => toggleExpand(item.enrollmentId)}
-                              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          <div className="flex gap-3">
+                            <Button
+                              className={`text-sm`}
+                              onClick={() => openChangeDialogFor(item)}
                             >
-                              <LinkIcon className="h-3.5 w-3.5" />
-                              <span className="font-semibold">
-                                {(item.batches?.length || 0) +
-                                  (item.payments?.length || 0)}{" "}
-                                links
-                              </span>
-                              <ChevronDown
-                                className={`h-4 w-4 transition-transform ${
-                                  isExpanded ? "rotate-180" : ""
-                                }`}
-                              />
-                            </button>
-                          )}
+                              Change
+                            </Button>
+                            {/* Expand Button */}
+                            {(hasBatches || hasPayments) && (
+                              <button
+                                onClick={() => toggleExpand(item.enrollmentId)}
+                                className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                              >
+                                <LinkIcon className="h-3.5 w-3.5" />
+                                <span className="font-semibold">
+                                  {(item.batches?.length || 0) +
+                                    (item.payments?.length || 0)}{" "}
+                                  links
+                                </span>
+                                <ChevronDown
+                                  className={`h-4 w-4 transition-transform ${
+                                    isExpanded ? "rotate-180" : ""
+                                  }`}
+                                />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -495,6 +520,11 @@ export default function EnrollmentHistory({
           />
         )}
       </AnimatePresence>
+      <EnrollmentChangeActions
+        open={changeDialogOpen}
+        onOpenChange={(v) => setChangeDialogOpen(v)}
+        selectedEnrollment={selectedEnrollment}
+      />
     </>
   );
 }
