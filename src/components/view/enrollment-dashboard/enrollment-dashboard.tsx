@@ -7,8 +7,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 import type { Member } from "@/types/member";
-import type { Batch } from "@/types/batch";
-// Ensure correct import path for your components
 import TopSection from "./top-section";
 import BottomSection from "./bottom-section";
 import { Button } from "@/components/ui/button";
@@ -16,17 +14,14 @@ import { Button } from "@/components/ui/button";
 export default function EnrollmentDashboard() {
   const [selectedFamilyId, setSelectedFamilyId] = useState<number | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
-  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
   const [memberDetails, setMemberDetails] = useState<Member | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [middleview, setMiddleview] = useState<any>();
 
-  // State for the top panel height (default is 50%)
   const [topHeight, setTopHeight] = useState(100);
-  // State to track if the BottomSection is expanded
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // --- Drag Handlers (No change needed here) ---
   const handleMouseDown = () => {
     if (!isExpanded) {
       setIsDragging(true);
@@ -50,13 +45,11 @@ export default function EnrollmentDashboard() {
       setTopHeight(newHeight);
     }
   };
-  // ---------------------------------------------
 
   const toggleExpand = () => {
     setIsExpanded((prev) => !prev);
   };
 
-  // --- Data Fetching Effect (kept as is) ---
   useEffect(() => {
     const fetchMember = async () => {
       try {
@@ -80,7 +73,6 @@ export default function EnrollmentDashboard() {
     };
     fetchMember();
   }, [selectedMemberId]);
-  // ----------------------------------------
 
   const topSectionTargetHeight = isExpanded ? "0%" : `${topHeight}%`;
   const bottomSectionTargetHeight = isExpanded ? "100%" : `${100 - topHeight}%`;
@@ -97,7 +89,6 @@ export default function EnrollmentDashboard() {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* 1. DYNAMICALLY SIZED TOP SECTION */}
       <motion.div
         className="flex overflow-hidden"
         style={{ height: topSectionTargetHeight }}

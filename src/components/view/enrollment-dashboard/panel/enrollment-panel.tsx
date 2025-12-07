@@ -1,73 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { FileText, AlertCircle } from "lucide-react"
-import type { Member } from "@/types/member"
-import type { Batch } from "@/types/batch"
-import { getBatch } from "@/api/batch.api"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { FileText, AlertCircle } from "lucide-react";
+import type { Member } from "@/types/member";
+import type { Batch } from "@/types/batch";
 import EnrollmentFormNew from "../enrollment-form-modal";
 
 interface EnrollmentPanelProps {
   selectedMemberId: number | null;
   memberName: string | null;
   memberDetails: Member | null;
-  selectedBatch: Batch | null;
   onBatchSelect: (batch: Batch | null) => void;
 }
 
 export default function EnrollmentPanel({
   selectedMemberId,
   memberName,
-  memberDetails,
   onBatchSelect,
 }: EnrollmentPanelProps) {
-  const [batches, setBatches] = useState<Batch[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  // Fetch batches when member selected
-  useEffect(() => {
-    if (!selectedMemberId) {
-      setBatches([]);
-      onBatchSelect(null);
-      return;
-    }
-
-    let mounted = true;
-    getBatch({ limit: 200 })
-      .then((res: any) => {
-        if (!mounted) return;
-        const data: Batch[] = Array.isArray(res)
-          ? res
-          : Array.isArray(res?.data)
-          ? res.data
-          : res?.batches ?? [];
-        setBatches(data);
-
-        // Auto-select batch if member has enrollment info
-        const batchId =
-          (memberDetails as any)?.enrollment?.batchId ??
-          (memberDetails as any)?.currentEnrollment?.batchId ??
-          (memberDetails as any)?.batchId ??
-          undefined;
-
-        if (batchId) {
-          const found = data.find(
-            (b) => (b as any).batchId === batchId || (b as any).id === batchId
-          );
-          if (found) onBatchSelect(found);
-        }
-      })
-      .catch((err) => {
-        console.error("getBatch error", err);
-        setError("Failed to load batches");
-      })
-      .finally(() => mounted);
-
-    return () => {
-      mounted = false;
-    };
-  }, [selectedMemberId, memberDetails, onBatchSelect]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -106,17 +58,16 @@ export default function EnrollmentPanel({
   return (
     <>
       <motion.div
-        className="h-full overflow-y-auto bg-background p-6"
+        className="h-full w-full overflow-y-auto flex flex-grow no-scrollbar bg-background"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="max-w-2xl space-y-4">
-          <EnrollmentFormNew
-            memberId={selectedMemberId}
-            memberName={memberName}
-          />
-        </div>
+        <EnrollmentFormNew
+          memberId={selectedMemberId}
+          memberName={memberName}
+          onBatchSelect={onBatchSelect}
+        />
       </motion.div>
 
       {error && (

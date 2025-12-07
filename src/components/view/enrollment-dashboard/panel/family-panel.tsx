@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { Users, User, AlertCircle, Loader2 } from "lucide-react"
-import type { Family } from "@/types/family"
-import type { Member } from "@/types/member"
-import { getFamilies } from "@/api/family.api"
-import { getMembers, getMemberById } from "@/api/member.api"
-import SearchInput from "../search-input"
+import { useEffect, useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { Users, User, AlertCircle, Loader2 } from "lucide-react";
+import type { Family } from "@/types/family";
+import type { Member } from "@/types/member";
+import { getFamilies } from "@/api/family.api";
+import { getMembers, getMemberById } from "@/api/member.api";
+import SearchInput from "../search-input";
 
 interface FamilyPanelProps {
   selectedFamilyId: number | null;
@@ -33,6 +33,8 @@ export default function FamilyPanel({
   const [loadingFamilies, setLoadingFamilies] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch families on mount
   useEffect(() => {
@@ -147,6 +149,22 @@ export default function FamilyPanel({
     visible: { opacity: 1, x: 0 },
   };
 
+  // close dropdown when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(e.target as Node)) {
+        // don't clear search, just close dropdown by blurring input (consumer can still edit)
+        // we won't programmatically clear familySearch so user sees what they typed
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const showFilteredFamilies =
+    familySearch.trim().length > 0 && filteredFamilies.length > 0;
+
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
       <motion.div
@@ -167,7 +185,7 @@ export default function FamilyPanel({
           </h2>
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3 relative" ref={dropdownRef}>
           <label className="block text-xs font-medium text-foreground mb-2">
             Families
           </label>
@@ -176,26 +194,51 @@ export default function FamilyPanel({
             onChange={setFamilySearch}
             placeholder="Search families..."
           />
-        </div>
 
-        <select
-          value={selectedFamilyId ?? ""}
-          onChange={(e) => {
-            onFamilySelect(e.target.value ? Number(e.target.value) : null);
-            setMemberSearch("");
-          }}
-          className="w-full px-3 py-2.5 border border-border/60 rounded-lg bg-card text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-        >
-          <option value="">-- Select family --</option>
-          {filteredFamilies.map((f: any) => (
-            <option
-              key={(f as any).familyId ?? f.id}
-              value={(f as any).familyId ?? f.id}
+          {/* Friendly filtered list UI — only show when user typed something */}
+          {showFilteredFamilies && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 max-h-48 overflow-y-auto rounded-lg shadow-lg border border-border/40 bg-card z-50"
             >
-              {(f as any).familyName ?? `${(f as any).familyId ?? f.id}`}
-            </option>
-          ))}
-        </select>
+              <ul role="list" className="divide-y divide-border/30">
+                {filteredFamilies.map((f: any) => {
+                  const id = (f as any).familyId ?? f.id;
+                  const name = (f as any).familyName ?? `${id}`;
+                  return (
+                    <li
+                      key={id}
+                      className={`px-3 py-2 text-sm cursor-pointer hover:bg-accent/40 transition-colors flex items-center gap-2 ${
+                        selectedFamilyId === id
+                          ? "bg-primary text-primary-foreground font-medium"
+                          : "text-foreground"
+                      }`}
+                      onClick={() => {
+                        onFamilySelect(id);
+                        // clear member search and selection when family changes
+                        setMemberSearch("");
+                        onMemberSelect(null);
+                        onMemberDetailsChange(null);
+                        // keep the typed query — user still sees what they searched for
+                      }}
+                    >
+                      <Users className="h-4 w-4 flex-shrink-0 text-muted-foreground/60" />
+                      <div className="truncate">{name}</div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </motion.div>
+          )}
+
+          {/* helpful empty state when user typed but nothing matched */}
+          {familySearch.trim().length > 0 && filteredFamilies.length === 0 && (
+            <div className="mt-2 rounded-lg p-3 text-xs text-muted-foreground border border-border/30 bg-card/50">
+              No families match "{familySearch}".
+            </div>
+          )}
+        </div>
 
         {error && (
           <motion.div

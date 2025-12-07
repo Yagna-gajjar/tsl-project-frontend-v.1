@@ -35,10 +35,14 @@ function useDebounced<T>(value: T, delay = 400) {
   return debounced;
 }
 
-const toNumber = (v: any) =>
+const toNumber = (v: unknown) =>
   v === "" || v === null || v === undefined ? 0 : Number(v);
 
-function useEnrollmentForm(initialMemberId: number, initialMemberName: string) {
+function useEnrollmentForm(
+  initialMemberId: number,
+  initialMemberName: string | null,
+  onBatchSelect: (id: number) => void
+) {
   const navigate = useNavigate();
 
   const [error, setError] = useState<string>("");
@@ -86,7 +90,6 @@ function useEnrollmentForm(initialMemberId: number, initialMemberName: string) {
     DebitNote & { debitNoteAcademyId?: number }
   >({
     debitNoteDate: format(Date.now(), "yyyy-MM-dd") as any,
-    academyId: 0,
     debitNoteAcademyId: 0,
     debitNoteType: "",
     coachId: null,
@@ -353,7 +356,6 @@ function useEnrollmentForm(initialMemberId: number, initialMemberName: string) {
     };
   }, [debouncedCndn, values.academyId, debitNoteAcademyId]);
 
-  // compute endDate whenever startDate or debouncedDays changes (preserve behavior)
   useEffect(() => {
     if (!values.startDate || !debouncedDays) return;
     const start = new Date(values.startDate);
@@ -381,6 +383,7 @@ function useEnrollmentForm(initialMemberId: number, initialMemberName: string) {
         "numberOfDays",
         "freeDays",
       ];
+
       if (numFields.includes(field)) value = toNumber(value);
 
       if (field === "activityName") {
@@ -388,9 +391,17 @@ function useEnrollmentForm(initialMemberId: number, initialMemberName: string) {
         setSelectedActivity(data?.activityName || "");
       }
 
+      if (field === "batchId") {
+        setValues((prev) => ({ ...prev, [field]: value }));
+        console.log(value);
+
+        onBatchSelect(Number(value));
+        return;
+      }
+
       setValues((prev) => ({ ...prev, [field]: value }));
     },
-    [activityList]
+    [activityList, onBatchSelect]
   );
 
   const onDebitNoteChange = useCallback((field: string, value: any) => {
@@ -491,7 +502,6 @@ function useEnrollmentForm(initialMemberId: number, initialMemberName: string) {
     setValues({} as any);
   }, []);
 
-  // expose everything needed by UI
   return {
     // data
     error,
@@ -527,11 +537,12 @@ function useEnrollmentForm(initialMemberId: number, initialMemberName: string) {
   } as const;
 }
 
-const EnrollmentFormNew: React.FC<{ memberId: number; memberName: string }> = ({
-  memberId,
-  memberName,
-}) => {
-  const form = useEnrollmentForm(memberId, memberName);
+const EnrollmentFormNew: React.FC<{
+  memberId: number;
+  memberName: string | null;
+  onBatchSelect: (batch: Batch | null) => void;
+}> = ({ memberId, memberName, onBatchSelect }) => {
+  const form = useEnrollmentForm(memberId, memberName, onBatchSelect);
 
   const fields = useMemo(
     () => [
@@ -826,13 +837,13 @@ const EnrollmentFormNew: React.FC<{ memberId: number; memberName: string }> = ({
               )}
           </>
         )}
+        <FormFooter
+          onClose={form.onClose}
+          onSubmit={form.handleSubmit}
+          submitLabel="Create"
+          isSubmitting={false}
+        />
       </div>
-      <FormFooter
-        onClose={form.onClose}
-        onSubmit={form.handleSubmit}
-        submitLabel="Create"
-        isSubmitting={false}
-      />
     </div>
   );
 };
