@@ -12,11 +12,13 @@ interface BatchDetailsPanelProps {
 }
 
 interface DetailItem {
-  icon: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | number | undefined;
-  colorClass: string;
-  iconColor: string;
+  colorClass?: string;
+  iconColor?: string;
+  imageUrl?: string;
+  fallbackLetter?: string; // <-- For initials avatar
 }
 
 export default function BatchDetailsPanel({
@@ -41,12 +43,11 @@ export default function BatchDetailsPanel({
   useEffect(() => {
     const fetchBatch = async (id: number) => {
       setLoading(true);
-      // Optionally clear previous batch so loader is obvious
       setBatch(null);
       try {
-        const res: Response = await getBatchById(id);
+        const res: Response<Batch | any> = await getBatchById(id);
         if (res) {
-          setBatch(res.data);
+          setBatch(res?.data);
         }
       } catch (err) {
         console.error("Failed to fetch batch:", err);
@@ -60,14 +61,10 @@ export default function BatchDetailsPanel({
     }
   }, [selectedBatch]);
 
-  // Log updated batch AFTER it is set
   useEffect(() => {
-    if (batch) {
-      console.log("Updated batch:", batch);
-    }
+    if (batch) console.log("Updated batch:", batch);
   }, [batch]);
 
-  // If no batch is selected show the 'no selection' placeholder
   if (selectedBatch == null) {
     return (
       <motion.div
@@ -82,6 +79,7 @@ export default function BatchDetailsPanel({
         >
           <BookOpen className="h-8 w-8 text-primary/60" />
         </motion.div>
+
         <p className="text-center px-4">
           <span className="block text-sm font-medium text-foreground">
             No batch selected
@@ -94,21 +92,29 @@ export default function BatchDetailsPanel({
     );
   }
 
-  // If a batch is selected but data is loading, show a loader
   if (loading) {
     return (
       <svg className="mr-3 size-5 animate-spin ..." viewBox="0 0 24 24"></svg>
     );
   }
 
-  // Define batch details in a clean, DRY manner
+  const coachFullName =
+    batch?.coachFirstName && batch?.coachLastName
+      ? `${batch.coachFirstName} ${batch.coachLastName}`
+      : batch?.coachFirstName || "Unknown Coach";
+
+  const fallbackLetter = coachFullName ? coachFullName.charAt(0).toUpperCase() : "C";
+
   const details: DetailItem[] = [
     {
-      icon: Users,
       label: "Coach",
-      value: batch?.coachFirstName,
+      value: coachFullName,
       colorClass: "bg-accent/10",
       iconColor: "text-accent",
+      imageUrl: batch?.photo
+        ? `${import.meta.env.VITE_APP_R2_PUBLIC_ENDPOINT}/${batch.photo}`
+        : undefined,
+      fallbackLetter,
     },
     {
       icon: BookOpen,
@@ -134,7 +140,6 @@ export default function BatchDetailsPanel({
       animate="visible"
     >
       <div className="space-y-3">
-        {/* Batch Header */}
         <motion.div variants={itemVariants} className="mb-4">
           <div className="flex items-center gap-3">
             <motion.div
@@ -143,6 +148,7 @@ export default function BatchDetailsPanel({
             >
               <BookOpen className="h-5 w-5 text-primary" />
             </motion.div>
+
             <div>
               <h3 className="text-base font-semibold text-foreground">
                 {batch?.batchName}
@@ -154,9 +160,10 @@ export default function BatchDetailsPanel({
           </div>
         </motion.div>
 
-        {/* Dynamic Detail Items */}
+        {/* Details Render */}
         {details.map((detail, idx) => {
           const Icon = detail.icon;
+
           return (
             <motion.div
               key={idx}
@@ -164,16 +171,32 @@ export default function BatchDetailsPanel({
               className="bg-card rounded-lg border border-border/50 p-3 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3">
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  className={`p-2 rounded-lg ${detail.colorClass} flex-shrink-0`}
-                >
-                  <Icon className={`h-4 w-4 ${detail.iconColor}`} />
-                </motion.div>
+                {/* Show image → else initial avatar → else icon */}
+                {detail.imageUrl ? (
+                  <motion.img
+                    whileHover={{ scale: 1.1 }}
+                    src={detail.imageUrl}
+                    alt={`${detail.label} Photo`}
+                    className="h-10 w-10 rounded-full object-cover border flex-shrink-0"
+                  />
+                ) : detail.fallbackLetter ? (
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    className="h-10 w-10 rounded-full bg-accent/20 text-black flex items-center justify-center text-accent font-semibold text-sm border flex-shrink-0"
+                  >
+                    {detail.fallbackLetter}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    className={`p-2 rounded-lg ${detail.colorClass} flex-shrink-0`}
+                  >
+                    {Icon && <Icon className={`h-4 w-4 ${detail.iconColor}`} />}
+                  </motion.div>
+                )}
+
                 <div>
-                  <div className="text-xs text-muted-foreground">
-                    {detail.label}
-                  </div>
+                  <div className="text-xs text-muted-foreground">{detail.label}</div>
                   <div className="text-sm font-medium text-foreground">
                     {detail.value || "N/A"}
                   </div>

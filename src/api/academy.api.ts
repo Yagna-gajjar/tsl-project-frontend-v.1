@@ -15,7 +15,7 @@ export interface AcademyQuery {
 
 const ACADEMY_BASE = import.meta.env.VITE_APP_API_URL + "/academy";
 
-export function getAcademies(params: AcademyQuery = {}): Promise<Academy[]> {
+export function getAcademies(params: AcademyQuery = {}): Promise<Response<Academy[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -27,7 +27,7 @@ export function getAcademies(params: AcademyQuery = {}): Promise<Academy[]> {
     activityName: params.activityName ?? undefined,
   });
 
-  return request<Academy[]>(`${ACADEMY_BASE}${qs}`);
+  return request<Response<Academy[]>>(`${ACADEMY_BASE}${qs}`);
 }
 
 export function getAcademyById(id: number): Promise<Response> {

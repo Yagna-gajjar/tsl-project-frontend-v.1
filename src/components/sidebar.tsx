@@ -135,8 +135,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
   };
 
   const handleSectionClick = (item: NavigationItem) => {
-    // If the item has an href and no submenu, Link will handle navigation.
-    // If the item has a submenu, toggle when expanded.
     if (item.submenu && isExpanded) {
       toggleSection(item.name);
     }
@@ -148,16 +146,17 @@ export default function Sidebar({ onClose }: SidebarProps) {
       animate={{ x: 0 }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
       className={cn(
-        "bg-card border-r mt-1 border-border h-screen transition-all duration-300 ease-in-out relative",
+        // Main container must stay relative to hold the toggle button
+        "bg-card border-r mt-1 border-border h-screen transition-all duration-300 ease-in-out relative flex flex-col",
         isExpanded ? "w-64" : "w-16"
       )}
     >
-      {/* Toggle Button */}
+      {/* Toggle Button - Kept outside the scrollable area so it doesn't move or get clipped */}
       <Button
         variant="ghost"
         size="icon"
         onClick={toggleExpanded}
-        className="absolute -right-3 bg-red-800 top-12 z-50 h-6 w-6 rounded-full border border-border bg-background shadow-md hidden lg:flex"
+        className="absolute -right-3 bg-red-800 top-12 z-50 h-6 w-6 rounded-full border border-border bg-background shadow-md hidden lg:flex items-center justify-center"
       >
         {isExpanded ? (
           <ChevronLeft className="h-3 w-3" />
@@ -166,7 +165,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         )}
       </Button>
 
-      <div className="p-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 no-scrollbar">
         <AnimatePresence mode="wait">
           {isExpanded ? (
             <motion.h2
@@ -191,14 +190,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
           )}
         </AnimatePresence>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 pb-10">
           {navigationItems.map((item) => {
             const hasSubmenu =
               Array.isArray(item.submenu) && item.submenu.length > 0;
             const isSectionExpanded = expandedSections[item.name];
 
             const Icon = item.icon;
-            // If item has a direct href and no submenu, render as Link (navigates)
             if (item.href && !hasSubmenu) {
               return (
                 <motion.div
@@ -236,7 +234,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
               );
             }
 
-            // Otherwise (has submenu or no href), render header as button that toggles submenu when expanded
             return (
               <div key={item.name} className="space-y-1">
                 <motion.button
