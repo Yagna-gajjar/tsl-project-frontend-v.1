@@ -70,20 +70,18 @@
     background: hsl(var(--muted));
   }
 
-  /* Firefox */
   * {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) hsl(var(--muted));
   }
 
   .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    display: none;
   }
 
-  /* For IE, Edge, and Firefox */
   .no-scrollbar {
-      -ms-overflow-style: none;  /* IE and Edge */
-      scrollbar-width: none;     /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
