@@ -7,10 +7,9 @@ import { useCallback, useEffect, useState } from "react";
 type Props = {
   onView?: (row: DebitNote) => void;
   onEdit?: (row: DebitNote) => void;
-  refreshKey?: number;
 };
 
-function DebitNoteTable({ onView, onEdit, refreshKey }: Props) {
+function DebitNoteTable({ onView, onEdit }: Props) {
   const [data, setData] = useState<DebitNote[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [total, setTotal] = useState<number>(0);
@@ -40,8 +39,9 @@ function DebitNoteTable({ onView, onEdit, refreshKey }: Props) {
         coachName: filters.coachName as string | undefined,
         debitNoteType: filters.debitNoteType as string | undefined,
         debitNoteRemarks: filters.debitNoteRemarks as string | undefined,
+        dateFrom: filters.dateFrom as Date | undefined,
+        dateTo: filters.dateTo as Date | undefined
       });
-      
       let rowsRaw: unknown[] = [];
       let serverTotal = 0;
 
@@ -97,7 +97,7 @@ function DebitNoteTable({ onView, onEdit, refreshKey }: Props) {
 
   useEffect(() => {
     loadData();
-  }, [loadData, refreshKey]);
+  }, [loadData]);
 
   const handleSearchChange = (q: string) => {
     setSearch(q);
@@ -133,6 +133,20 @@ function DebitNoteTable({ onView, onEdit, refreshKey }: Props) {
         r.debitNoteDate
           ? new Date(r.debitNoteDate).toLocaleDateString("en-US")
           : "-",
+    },
+    {
+      key: "dateFrom",
+      header: "Date From",
+      sortable: false,
+      filterType: "date",
+      hidden: true,
+    },
+    {
+      key: "dateTo",
+      header: "Date To",
+      sortable: false,
+      filterType: "date",
+      hidden: true,
     },
     {
       key: "debitNoteType",

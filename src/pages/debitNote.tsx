@@ -10,8 +10,6 @@ export default function DebitNote() {
   const [viewOpen, setViewOpen] = useState(false);
   const [viewData, setViewData] = useState<DebitNote | null>(null);
 
-  const [refreshKey, setRefreshKey] = useState<number>(0);
-  const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
   const openView = (row: DebitNote) => {
     setViewData(row);
@@ -30,7 +28,6 @@ export default function DebitNote() {
       {/* Table */}
       <DebitNoteTable
         onView={openView}
-        refreshKey={refreshKey}
       />
 
       {/* View Modal */}

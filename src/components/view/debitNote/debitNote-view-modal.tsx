@@ -8,7 +8,7 @@ import type { FieldConfig } from "@/components/view-modal/types";
 
 type Props = {
   isOpen: boolean;
-  item?: DebitNote;
+  item?: DebitNote | null;
   onClose: () => void;
 };
 
@@ -49,7 +49,7 @@ const fields: FieldConfig<DebitNote>[] = [
   {
     key: "debitNoteRemarks",
     label: "Remarks",
-    icon: FileText, 
+    icon: FileText,
     render: (v) => (v ? String(v) : "-"),
   },
 
@@ -74,7 +74,7 @@ export default function DebitNoteViewModal({
   onClose,
 }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string) => {
+    async (_?: number | string) => {
       if (!item) throw new Error("No data");
       return item;
     },

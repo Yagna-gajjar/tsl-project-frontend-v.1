@@ -9,4 +9,7 @@ export interface DebitNote {
   debitNoteRemarks: string;
   createdAt?: Date;
   updatedAt?: Date;
+
+  academyName?: string | undefined;
+  coachName?: string | undefined;
 }

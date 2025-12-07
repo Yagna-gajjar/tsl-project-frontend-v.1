@@ -35,6 +35,7 @@ import AttendanceSheet from "./components/view/batch/attendance-sheet";
 import DefreezeEnrollment from "./components/view/enrollment-actions/DefreezeEnrollment";
 import DebitNote from "./pages/debitNote";
 import PaymentPage from "./pages/payment";
+import Billing from "./pages/billing"
 
 export default function App() {
   return (
@@ -105,6 +106,7 @@ export default function App() {
                   element={<AreaPage />}
                 />
                 <Route path="/payment" element={<PaymentPage />} />
+                <Route path="/billing" element={<Billing />} />
                 <Route path="/debit-note" element={<DebitNote />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<Signup />} />

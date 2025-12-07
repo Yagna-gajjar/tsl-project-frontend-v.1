@@ -1,6 +1,7 @@
 import type { DebitNote } from "@/types/debitNote";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";
+import { format } from "date-fns";
 
 export interface DebitNoteQuery {
   page?: number;
@@ -13,6 +14,9 @@ export interface DebitNoteQuery {
   coachName?: string;
   debitNoteType?: string;
   debitNoteRemarks?: string;
+  debitNoteAcademyId?: number;
+  dateFrom?: Date;
+  dateTo?: Date;
 }
 
 
@@ -32,6 +36,13 @@ export function getDebitNotes(
     coachName: params.coachName ?? undefined,
     debitNoteType: params.debitNoteType ?? undefined,
     debitNoteRemarks: params.debitNoteRemarks ?? undefined,
+    debitNoteAcademyId: params.debitNoteAcademyId ?? undefined,
+    dateFrom: params.dateFrom
+      ? format(new Date(params.dateFrom), "yyyy-MM-dd")
+      : undefined,
+    dateTo: params.dateTo
+      ? format(new Date(params.dateTo), "yyyy-MM-dd")
+      : undefined
   });
 
   return request<Response<DebitNote[]>>(`${DEBITNOTE_BASE}${qs}`);
@@ -43,7 +54,7 @@ export function getDebitNoteById(id: number): Promise<Response<DebitNote>> {
 }
 
 export function createDebitNote(
-  payload: DebitNote 
+  payload: DebitNote
 ): Promise<Response> {
   return request<Response>(DEBITNOTE_BASE, {
     method: "POST",

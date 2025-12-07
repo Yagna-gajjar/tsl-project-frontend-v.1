@@ -21,6 +21,7 @@ import {
   BookA,
   Layers,
   Book,
+  IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -97,6 +98,7 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   { name: "Academy", href: "/academy", icon: HomeIcon },
+  { name: "Billing", href: "/billing", icon: IndianRupee },
   {
     name: "Staff Management",
     href: "/staff-management",
@@ -120,7 +122,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({
-    // default expand the Family section (optional)
     Family: true,
   });
   const location = useLocation();

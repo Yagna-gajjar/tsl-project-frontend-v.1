@@ -38,7 +38,7 @@ export default function AcceptBatchRequest({
   requestData,
   setRequestLen,
 }: Props) {
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [requests, setRequests] = useState<RequestItem[]>(requestData);
   const [acceptingIds, setAcceptingIds] = useState<Record<number, boolean>>({});
   const [rejectingIds, setRejectingIds] = useState<Record<number, boolean>>({});
@@ -63,24 +63,24 @@ export default function AcceptBatchRequest({
   const handleAccept = async (item: RequestItem) => {
     if (acceptingIds[item.batchMemberId]) return;
     setAcceptingIds((s) => ({ ...s, [item.batchMemberId]: true }));
-    
+
     try {
       // 1) Fetch enrollment (text first)
       const enrollmentRes: Response | any = await getEnrollmentById(item.enrollmentId)
-      
+
       if (!enrollmentRes.success) {
         console.error(
           "Enrollment fetch failed",
         );
         throw new Error(
-           `Enrollment fetch failed `
+          `Enrollment fetch failed `
         );
       }
       const enrollment = enrollmentRes?.data;
-      const oldBatchId = enrollment?.batchId ;
+      const oldBatchId = enrollment?.batchId;
       const enrollmentMemberId = enrollment?.memberId;
       const enrollmentEndDate = enrollment?.endDate;
-      
+
       let computedOldBatchEndDate: string | null = null;
 
       const todayStr = new Date().toISOString().split("T")[0];
@@ -144,10 +144,7 @@ export default function AcceptBatchRequest({
       }
 
       try {
-        setRequestLen((prev) => {
-          console.log(prev, " ka bhai??");
-          return prev - 1;
-        });
+        setRequestLen((prev: any) => prev - 1);
         toast({
           title: "Success",
           description: "Batch change accepted.",
@@ -166,11 +163,11 @@ export default function AcceptBatchRequest({
       if (onAccepted) onAccepted();
     } catch (err) {
       toast({
-          title: "Error",
-          description:
-            "Failed to accept",
-          variant: "destructive",
-        });
+        title: "Error",
+        description:
+          "Failed to accept",
+        variant: "destructive",
+      });
     }
   };
 
@@ -199,7 +196,7 @@ export default function AcceptBatchRequest({
         parts.push(`operator: ${String(reason).trim()}`);
       const finalReason = parts.join(", ");
 
-      const body: Record<string, any> = {
+      const body: { status: string, reason: string } = {
         status: "rejected",
         reason: finalReason,
       };
@@ -215,9 +212,7 @@ export default function AcceptBatchRequest({
 
       // try parse success message if JSON else fallback
       try {
-        setRequestLen((prev) => {
-          return prev - 1;
-        });
+        setRequestLen((prev: number) => prev - 1);
         toast({
           title: "Rejected",
           description: "Request rejected successfully.",

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Bell,
   LogIn,
   Menu,
   Moon,
@@ -14,6 +13,7 @@ import {
   Home,
   IdCard,
   Activity,
+  SquareMenu,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "../contexts/theme-context";
@@ -32,6 +32,8 @@ import { useCallback, useEffect, useState } from "react";
 import { getBatchMemberRequests } from "@/api/enrollmentActions.api";
 import { toast } from "@/hooks/use-toast";
 import AcceptBatchRequest from "./view/enrollment-actions/AcceptBatchRequest";
+import type { Response } from "@/types/response";
+import type { BatchMember } from "@/api/batchMember-api";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -93,7 +95,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const { logout, user, token } = useAuth();
   const navigate = useNavigate();
   const [userImage, setUserImage] = useState<string>();
-  const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [requestLen, setRequestLen] = useState<number>(0);
 
@@ -120,17 +121,15 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   const fetchRequests = useCallback(async () => {
-    setLoading(true);
     try {
-      const data = await getBatchMemberRequests();
-      setRequests(data.data || []);
-      setRequestLen(data.data.length);
+      const data: Response<BatchMember[] | any> = await getBatchMemberRequests();
+      setRequests(data?.data || []);
+      setRequestLen(data?.data!.length);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch requests";
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -182,7 +181,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               className="relative"
               onClick={() => setSidebarOpen(true)} // OPEN SIDEBAR
             >
-              <Bell className="h-5 w-5" />
+              <SquareMenu className="h-5 w-5" />
               {requestLen != 0 && (
                 <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
                   {requestLen}

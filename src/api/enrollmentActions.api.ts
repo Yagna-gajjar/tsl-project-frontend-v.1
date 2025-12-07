@@ -1,39 +1,16 @@
+import type { Response } from "@/types/response";
+import type { BatchMember } from "./batchMember-api";
 import { request } from "./helper";
 
 const API_BASE =
   (import.meta.env.VITE_APP_API_URL ?? "http://localhost:9705/api");
 
-interface BatchMemberRequest {
-  batchMemberId: number;
-  batchId: number;
-  memberId: number;
-  enrollmentId?: number | null;
-  status: string;
-  reason?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
+export function getBatchMemberRequests(): Promise<Response<BatchMember[]>> {
+  return request<Response<BatchMember[]>>(`${API_BASE}/batch-member/request`);
 }
 
-export function getBatchMemberRequests(): Promise<BatchMemberRequest[]> {
-  return request<BatchMemberRequest[]>(`${API_BASE}/batch-member/request`);
-}
-
-interface BatchMemberRequestForm {
-  batchId: number;
-  memberId: number;
-  enrollmentId?: number | null;
-  status: string;
-  reason?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export function createBatchMemberRequests(payload: BatchMemberRequestForm): Promise<Response> {
-  return request<Response>(`${API_BASE}/batch-member/request`, {
+export function createBatchMemberRequests(payload: BatchMember): Promise<Response<BatchMember>> {
+  return request<Response<BatchMember>>(`${API_BASE}/batch-member/request`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -44,23 +21,23 @@ interface AcceptRequest {
   newBatchId: number;
   oldBatchEndDate: string;
   memberId: number;
-} 
+}
 
-export function AcceptRequest(payload: AcceptRequest): Promise<Response> {
-  return request<Response>(`${API_BASE}/batch-member/accept`, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-      })
+export function AcceptRequest(payload: AcceptRequest): Promise<Response<BatchMember>> {
+  return request<Response<BatchMember>>(`${API_BASE}/batch-member/accept`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
 
 interface updateBatchMember {
   status: string,
-  reason: any
+  reason: string
 }
 
-export function updateBatchMember(id: number, payload: updateBatchMember): Promise<Response> {
-   return request<Response>(`${API_BASE}/batch-member/${id}`, {
-     method: "PUT",
-     body: JSON.stringify(payload),
-   });
+export function updateBatchMember(id: number, payload: updateBatchMember): Promise<Response<BatchMember>> {
+  return request<Response<BatchMember>>(`${API_BASE}/batch-member/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
