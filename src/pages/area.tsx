@@ -35,7 +35,9 @@ export default function AreaPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Area Management</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            Area Management
+          </h1>
           <p className="text-gray-500 mt-2">Manage all facility areas</p>
         </div>
         <Button
@@ -48,7 +50,7 @@ export default function AreaPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg">
+      <div className="rounded-lg">
         <AreaTable
           onView={openView}
           onEdit={openForm}

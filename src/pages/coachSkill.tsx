@@ -35,10 +35,12 @@ export default function CoachSkillPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Coach Skills Management
           </h1>
-          <p className="text-gray-500 mt-2">Manage coach skills and expertise</p>
+          <p className="text-gray-500 mt-2">
+            Manage coach skills and expertise
+          </p>
         </div>
 
         <Button
@@ -51,7 +53,7 @@ export default function CoachSkillPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg">
+      <div className="rounded-lg">
         <CoachSkillTable
           onView={openView}
           onEdit={openForm}
