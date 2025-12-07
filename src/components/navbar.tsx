@@ -124,7 +124,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     try {
       const data: Response<BatchMember[] | any> = await getBatchMemberRequests();
       setRequests(data?.data || []);
-      setRequestLen(data?.data!.length);
+      setRequestLen(Array.isArray(data?.data) ? data.data.length : 0);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch requests";

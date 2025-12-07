@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { X, Loader2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
@@ -25,10 +25,9 @@ type RequestItem = {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  // optional callback to refresh parent view after accept
   onAccepted?: () => void;
   requestData: RequestItem[];
-  setRequestLen: () => void;
+  setRequestLen: Dispatch<SetStateAction<number>>;
 };
 
 export default function AcceptBatchRequest({
