@@ -21,45 +21,28 @@ export interface EnrollmentSummary {
   enrollmentId: number;
   courseName?: string | null;
   academyName?: string | null;
-  // add other fields you need to display in the dialog title/body
 }
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedEnrollment?: EnrollmentSummary | null;
-  /**
-   * Called when user picks an action.
-   * Receives the action key (eg. "freeze-enrollment", "course-change", "cancel", etc)
-   */
   onAction?: (actionKey: string, enrollment?: EnrollmentSummary | null) => void;
 }
 
-/**
- * EnrollmentChangeActions
- * - Controlled dialog component.
- * - Calls onAction(actionKey, selectedEnrollment) when an action is chosen.
- */
 export default function EnrollmentChangeActions({
   open,
   onOpenChange,
   selectedEnrollment,
 }: Props) {
-
   const handleClick = (actionKey: string) => {
-    // bubble action to parent
-    // onAction?.(actionKey, selectedEnrollment ?? null);
-    
-      if (!selectedEnrollment?.enrollmentId as any) return;
+    if (!selectedEnrollment?.enrollmentId as any) return;
 
-      navigate(
-        `/enrollment/${selectedEnrollment?.enrollmentId}/${actionKey}`
-      );
+    navigate(`/enrollment/${selectedEnrollment?.enrollmentId}/${actionKey}`);
     onOpenChange(false);
   };
 
   const isFreeze = selectedEnrollment?.courseName?.toLowerCase?.() === "freeze";
-
 
   const navigate = useNavigate();
 

@@ -16,9 +16,6 @@ import {
 } from "lucide-react";
 import type { Batch } from "@/types/batch";
 import type { Payment } from "@/types/payment";
-// import type { Response } from "@/types/response";
-// import { createPayment } from "@/api/payment.api";
-// import { toast } from "@/hooks/use-toast";
 import { PaymentFormModal } from "../payment/payment-form-modal";
 import { Button } from "@/components/ui/button";
 import EnrollmentChangeActions, {
