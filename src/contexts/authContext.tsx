@@ -1,82 +1,57 @@
+import type { User } from "@/types/user"
 import React, {
 	createContext,
 	useContext,
 	useEffect,
 	useState,
 } from "react"
-import CryptoJS from "crypto-js"
-
-interface User {
-	UserId: number
-	username: string
-	password: string
-	phone: string
-	profileImage: string
-	organizationId: number
-	role?: string
-	createdAt: string
-	updatedAt: string
-}
 
 interface AuthContextType {
 	user: User | null
 	token: string | null
-	decryptedOrgId: string | null
 	login: (user: User, token: string) => void
 	logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const SECRET_KEY = import.meta.env.VITE_APP_ENCRYPT_SECRET
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null)
 	const [token, setToken] = useState<string | null>(() => {
 		return localStorage.getItem("token")
 	})
-	const [decryptedOrgId, setDecryptedOrgId] = useState<string | null>(() => {
-		const encryptedOrgId = localStorage.getItem("organizationId")
-		if (encryptedOrgId) {
-			try {
-				const bytes = CryptoJS.AES.decrypt(encryptedOrgId, SECRET_KEY)
-				return bytes.toString(CryptoJS.enc.Utf8)
-			} catch {
-				return null
-			}
-		}
-		return null
-	})
+
+	const redirectToLogin = () => {
+		window.location.replace("/login")
+	}
 
 	const login = (user: User, token: string) => {
 		setUser(user)
 		setToken(token)
 		localStorage.setItem("token", token)
-
-		const encryptedOrgId = CryptoJS.AES.encrypt(
-			user.organizationId.toString(),
-			SECRET_KEY
-		).toString()
-
-		localStorage.setItem("organizationId", encryptedOrgId)
-		setDecryptedOrgId(user.organizationId.toString())
 	}
 
 	const logout = () => {
 		setUser(null)
 		setToken(null)
-		setDecryptedOrgId(null)
 		localStorage.removeItem("token")
-		localStorage.removeItem("organizationId")
+		redirectToLogin()
 	}
 
 	useEffect(() => {
+		// FIX: Do not validate while on /login page
+		if (window.location.pathname === "/login") return;
+
 		const validateToken = async () => {
-			if (!token) return
+			if (!token) {
+				console.log('token no maylu')
+				logout()
+				return
+			}
 
 			try {
 				const res = await fetch(
-					`${import.meta.env.VITE_APP_API_URL}/api/auth/validate`,
+					`${import.meta.env.VITE_APP_API_URL}/user/validate`,
 					{
 						method: "GET",
 						headers: {
@@ -86,12 +61,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 					}
 				)
 
-				if (res.ok) {
-					const data = await res.json()
-					if (data.valid) {
-						setUser(data.user)
-					} else {
-						logout()
+				if (!res.ok) {
+					logout()
+					return
+				}
+
+				const data = await res.json()
+
+				if (data.success) {
+					setUser(data.user)
+
+					// Refresh JWT if provided
+					if (data.token) {
+						setToken(data.token)
+						localStorage.setItem("token", data.token)
 					}
 				} else {
 					logout()
@@ -108,17 +91,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const value = {
 		user,
 		token,
-		decryptedOrgId,
 		login,
 		logout,
 	}
 
-	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+	return (
+		<AuthContext.Provider value={value}>
+			{children}
+		</AuthContext.Provider>
+	)
 }
 
 export const useAuth = () => {
 	const context = useContext(AuthContext)
-	if (context === undefined) {
+	if (!context) {
 		throw new Error("useAuth must be used within an AuthProvider")
 	}
 	return context

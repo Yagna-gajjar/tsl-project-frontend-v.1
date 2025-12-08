@@ -1,20 +1,20 @@
-// --- helper to convert query object to string ---
 export function toQueryString(q: Record<string, any>) {
     const params = new URLSearchParams();
     Object.entries(q).forEach(([k, v]) => {
         if (v === undefined || v === null) return;
-        // keep boolean / number / string
         params.append(k, String(v));
     });
     const s = params.toString();
     return s ? `?${s}` : '';
 }
 
-// Helper function
-export async function request<T>(url: string, options?: RequestInit): Promise<T> {
+export async function request<T>(url: string, options?: RequestInit, token?: string): Promise<T> {
     try {
         const res = await fetch(url, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                "authorization": `Bearer ${token}`
+            },
             ...options,
         })
 

@@ -76,6 +76,7 @@ export default function BatchRequestedForm({
   ];
 
   const tomorrow = new Date();
+console.log(enrollment);
 
   tomorrow.setDate(tomorrow.getDate() + 1);
   const initialData: Partial<RequestPayload> = {

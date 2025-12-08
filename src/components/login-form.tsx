@@ -1,267 +1,304 @@
-import { useState, useEffect } from 'react';
-import { Apple, Chrome } from 'lucide-react';
-import { useAuth } from '@/contexts/authContext';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/authContext';
+import { useToast } from '@/hooks/use-toast';
+import {
+  User,
+  Lock,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  LayoutDashboard,
+  type LucideIcon
+} from 'lucide-react';
+import { login as userLogin } from "@/api/user.api";
+// Ensure you have this type defined or import it correctly
+// import type { Response } from '@/types/response'; 
 
+// --- TYPES ---
+type UserRole = 'staff' | 'admin' | 'superadmin';
+
+interface LoginFormData {
+  username: string;
+  password: string;
+  role: UserRole;
+}
+
+interface InputFieldProps {
+  label: string;
+  name: keyof LoginFormData;
+  type?: string;
+  icon: LucideIcon;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+}
+
+// --- SUB-COMPONENT: INPUT FIELD ---
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  name,
+  type = "text",
+  icon: Icon,
+  value,
+  onChange,
+  placeholder
+}) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const inputType = type === 'password' ? (showPassword ? 'text' : 'password') : type;
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={name} className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+        {label}
+      </label>
+      <div className="relative group">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors">
+          <Icon size={18} />
+        </div>
+        <input
+          id={name}
+          name={name}
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required
+          className="
+            w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border bg-white dark:bg-slate-900 
+            text-slate-900 dark:text-slate-100 placeholder-slate-400 border-slate-300 dark:border-slate-700
+            focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 
+            focus:ring-4 focus:ring-blue-600/10 dark:focus:ring-blue-500/10 
+            hover:border-slate-400 transition-all duration-200 shadow-sm
+          "
+        />
+        {type === 'password' && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors outline-none"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
 export default function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [isDark, setIsDark] = useState(false);
-  const [formData, setFormData] = useState({
+  const { toast } = useToast();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<LoginFormData>({
     username: '',
     password: '',
-    role: 'client'
+    role: 'staff'
   });
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    setIsDark(false);
-  }, []);
+  const roles: UserRole[] = ['staff', 'admin', 'superadmin'];
 
-  const handleInputChange = (e: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async () => {
+  const handleRoleChange = (role: UserRole) => {
+    setFormData(prev => ({ ...prev, role }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
 
     try {
-      const fetchUrl = `${import.meta.env.VITE_APP_API_URL}/api/auth/login`;
-      const response = await fetch(fetchUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
+      const apiPayload = {
+        usernameOrEmail: formData.username,
+        password: formData.password
+      };
 
-      const data = await response.json();
+      const response = await userLogin(apiPayload);
+      console.log(response," respo");
+      if (response.success) {
+        const { user, token } = response;
+        console.log(user, token);
+        login(user, token);
 
-      if (response.ok) {
-        login(data?.user, data?.token);
         toast({
           title: "Success",
-          description: "Login successfully.",
+          description: "Welcome back! Login successful.",
           variant: "success",
-        })
+        });
+
         navigate("/dashboard");
       } else {
         toast({
-          title: "Error",
-          description: "Invalid Credentials",
+          title: "Access Denied",
+          description: response.message || "Invalid Credentials",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
       console.error('Network error:', error);
-      alert('Network error occurred. Check console for details.');
+      toast({
+        title: "Network Error",
+        description: "Could not connect to the server.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-white dark:bg-[#020817] transition-colors duration-300">
-        <div className="flex min-h-screen items-center justify-center p-4">
-          <div className="w-full max-w-4xl">
-            {/* Main Card */}
-            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-lg">
-              <div className="grid md:grid-cols-2">
-                {/* Form Section */}
-                <div className="p-6 md:p-8">
-                  <div className="flex flex-col gap-6">
-                    {/* Header */}
-                    <div className="flex flex-col items-center text-center">
-                      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Welcome back
-                      </h1>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Login to your xyz account
-                      </p>
-                    </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020817] transition-colors duration-300 flex items-center justify-center p-4 font-sans">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl shadow-blue-900/10 dark:shadow-black/50 overflow-hidden border border-slate-200 dark:border-slate-800 flex"
+      >
 
-                    {/* Role Selection */}
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Select Role
-                      </label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="role"
-                            value="owner"
-                            checked={formData.role === 'owner'}
-                            onChange={handleInputChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Owner</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="role"
-                            value="client"
-                            checked={formData.role === 'client'}
-                            onChange={handleInputChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Client</span>
-                        </label>
-                      </div>
-                    </div>
+        {/* Left Side: Form */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+          <div className="mb-8 text-center">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="h-12 w-12 bg-blue-100 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            >
+              <User size={24} strokeWidth={2.5} />
+            </motion.div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Welcome Back</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
+              Enter your credentials to access your sports account.
+            </p>
+          </div>
 
-                    {/* Username Field */}
-                    <div className="grid gap-2">
-                      <label
-                        htmlFor="username"
-                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                      >
-                        Username
-                      </label>
-                      <input
-                        id="username"
-                        name="username"
-                        type="text"
-                        placeholder="username"
-                        required
-                        value={formData.username}
-                        onChange={handleInputChange}
-                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20"
-                      />
-                    </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* Password Field */}
-                    <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <label
-                          htmlFor="password"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
-                          Password
-                        </label>
-                        <a
-                          href="#"
-                          className="ml-auto text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                          tabIndex={-1}
-                        >
-                          Forgot your password?
-                        </a>
-                      </div>
-                      <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder='********'
-                        required
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20"
-                      />
-                    </div>
-
-                    {/* Login Button */}
-                    <button
-                      type="submit"
-                      onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="w-full rounded-md bg-blue-600 dark:bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? 'Logging in...' : 'Login'}
-                    </button>
-
-                    {/* Divider */}
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-gray-300 dark:border-gray-600" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
-                          Or continue with
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Social Login Buttons */}
-                    <div className="grid grid-cols-3 gap-4">
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 transition-colors duration-200"
-                      >
-                        <Apple className="h-5 w-5" />
-                        <span className="sr-only">Login with Apple</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 transition-colors duration-200"
-                      >
-                        <Chrome className="h-5 w-5" />
-                        <span className="sr-only">Login with Google</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 transition-colors duration-200"
-                      >
-                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                        <span className="sr-only">Login with Meta</span>
-                      </button>
-                    </div>
-
-                    {/* Sign Up Link */}
-                    <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                      Don't have an account?{" "}
-                      <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
-                        Sign up
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Image Section */}
-                <div className="relative hidden bg-gray-100 dark:bg-gray-700 md:block">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 dark:from-blue-400/10 dark:to-purple-500/10" />
-                  <div className="flex h-full items-center justify-center p-8">
-                    <div className="text-center">
-                      <div className="mx-auto mb-4 h-24 w-24 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 flex items-center justify-center">
-                        <svg className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        Lightning Fast
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-300">
-                        Experience the power of modern authentication with seamless security.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            {/* Role Selector (Segmented Control) */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                Select Role
+              </label>
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                {roles.map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => handleRoleChange(role)}
+                    className={`
+                      flex-1 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all duration-200
+                      ${formData.role === role
+                        ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}
+                    `}
+                  >
+                    {role === 'superadmin' ? 'Super Admin' : role}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Terms */}
-            <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-              By clicking continue, you agree to our{" "}
-              <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
-                Privacy Policy
-              </a>
-              .
+            <InputField
+              label="Username / Email"
+              name="username"
+              icon={User}
+              value={formData.username}
+              onChange={handleInputChange}
+              placeholder="johndoe"
+            />
+
+            <div>
+              <InputField
+                label="Password"
+                name="password"
+                type="password"
+                icon={Lock}
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="••••••••"
+              />
+              <div className="flex justify-end mt-2">
+                <a href="#" className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                  Forgot password?
+                </a>
+              </div>
             </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={isLoading}
+              className="
+                w-full py-3 px-4 rounded-xl flex items-center justify-center
+                bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-wide
+                shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed
+                transition-all duration-200
+              "
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>Verifying...</span>
+                </div>
+              ) : (
+                <>
+                  Sign In <ArrowRight size={18} className="ml-2" />
+                </>
+              )}
+            </motion.button>
+          </form>
+
+          {/* Footer Link */}
+          <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
+            Don't have an account?{' '}
+            <a
+              href="/signup"
+              className="font-bold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Sign up
+            </a>
           </div>
         </div>
-      </div>
+
+        {/* Right Side: Image/Branding (Hidden on mobile) */}
+        <div className="hidden md:block w-1/2 relative bg-slate-100 dark:bg-slate-800">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 dark:from-blue-500/10 dark:to-purple-900/20 backdrop-blur-sm" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center z-10">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="mb-6 bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-3xl shadow-2xl shadow-blue-500/30"
+            >
+              <LayoutDashboard size={48} className="text-white" />
+            </motion.div>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">
+              Manage Your Sports Academy
+            </h3>
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+              Experience the power of modern management. Streamline operations, enrollments, and academy seamlessly.
+            </p>
+          </div>
+          {/* Decorative Pattern Overlay */}
+          <div className="absolute inset-0 opacity-10 dark:opacity-5 pointer-events-none"
+            style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, gray 1px, transparent 0)', backgroundSize: '24px 24px' }}
+          />
+        </div>
+
+      </motion.div>
     </div>
   );
 }
