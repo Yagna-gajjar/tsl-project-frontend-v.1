@@ -26,7 +26,7 @@ import { useNavigate } from "react-router-dom";
 import type { DebitNote } from "@/types/debitNote";
 import type { Coach } from "@/types/coach";
 
-import BatchRequestedForm from "@/components/view/enrollment-actions/BatchRequestedForm"; // <- ensure path is correct
+import BatchRequestedForm from "@/components/view/enrollment-actions/BatchRequestedForm";
 
 const EnrollmentFormNew = ({
   memberId,
@@ -65,6 +65,7 @@ const EnrollmentFormNew = ({
     billingAmount: 0,
     billingRate: 0,
     cndn: 0,
+    debitAmount: 0,
     commitedAmount: 0,
     courseId: 0,
     discountedAmount: 0,
@@ -77,10 +78,14 @@ const EnrollmentFormNew = ({
     sessionUnits: 0,
     startDate: format(Date.now(), "yyyy-MM-dd") as any,
     status: "active",
+    batchName: "",
   });
 
   const [debouncedDays, setDebouncedDays] = useState(values.numberOfDays);
   const [debouncedCndn, setDebouncedCndn] = useState(values.cndn);
+  const [debouncedDebitAmount, setDebouncedDebitAmount] = useState(
+    values.debitAmount
+  );
 
   const [debitNoteAcademyId, setDebitNoteAcademyId] = useState<number>(0);
 
@@ -122,6 +127,35 @@ const EnrollmentFormNew = ({
 
     return () => clearTimeout(handler);
   }, [values.cndn]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedDebitAmount(values.debitAmount);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [values.debitAmount]);
+
+  useEffect(() => {
+    if (debouncedDebitAmount != 0 && debouncedDebitAmount) {
+      setValues((prev) => ({
+        ...prev,
+        commitedAmount: prev.commitedAmount - debouncedDebitAmount,
+      }));
+    } else {
+      if (!discount) {
+        setValues((prev) => ({
+          ...prev,
+          commitedAmount: prev.numberOfDays * prev.billingRate,
+        }));
+      } else {
+        setValues((prev) => ({
+          ...prev,
+          commitedAmount:
+            prev.numberOfDays * prev.billingRate - prev.discountedAmount,
+        }));
+      }
+    }
+  }, [debouncedDebitAmount]);
 
   useEffect(() => {
     const loadInit = async () => {
@@ -421,7 +455,6 @@ const EnrollmentFormNew = ({
         const selectedBatch = batches.find(
           (b) => Number(b.batchId) === Number(value)
         );
-        console.log(selectedBatch);
 
         if (selectedBatch) {
           const isFull =
@@ -443,6 +476,25 @@ const EnrollmentFormNew = ({
         setValues((prev) => ({ ...prev, [field]: value }));
         onBatchSelect(Number(value));
         return;
+      }
+
+      if (field === "endDate") {
+        const start = new Date(values.startDate);
+        const end = new Date(value);
+
+        let numberOfDays = 0;
+
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          numberOfDays = Math.ceil(
+            (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+          );
+        }
+
+        setValues((prev) => ({
+          ...prev,
+          endDate: value,
+          numberOfDays: numberOfDays > 0 ? numberOfDays : 0,
+        }));
       }
 
       setValues((prev) => ({ ...prev, [field]: value }));
@@ -648,7 +700,6 @@ const EnrollmentFormNew = ({
       label: "End Date",
       type: "date",
       required: false,
-      disabled: true,
     },
     {
       name: "freeDays",
@@ -707,6 +758,11 @@ const EnrollmentFormNew = ({
       label: "Billing Rate",
       type: "number",
       disabled: true,
+    },
+    {
+      name: "debitAmount",
+      label: "Debit Amount",
+      type: "number",
     },
     {
       name: "cndn",
@@ -872,7 +928,7 @@ const EnrollmentFormNew = ({
               layout="grid"
             />
 
-            {debouncedCndn != 0 && debouncedCndn != null && (
+            {debouncedDebitAmount != 0 && debouncedDebitAmount != null && (
               <>
                 <h1 className="text-center text-blue-600 font-bold text-2xl py-2">
                   Debit Note

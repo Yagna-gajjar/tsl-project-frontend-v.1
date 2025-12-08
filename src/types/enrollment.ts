@@ -17,6 +17,7 @@ export interface Enrollment {
   batchName: string;
   status: string;
   cndn: number;
+  debitAmount: number;
   billingRate: number;
   billingAmount: number;
   adjustment: number;

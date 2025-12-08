@@ -201,22 +201,23 @@ export default function FormFieldInput({
                 className={`w-full justify-between ${baseInputClass}`}
                 disabled={disabled}
               >
-                {
-                  (value && value.toString().length === 10
-                    ? value
-                    : value
-                    ? new Date(value).toLocaleDateString()
-                    : placeholder || `Select ${label.toLowerCase()}`) as string
-                }
+                {value && value instanceof Date
+                  ? value.toLocaleDateString()
+                  : value
+                  ? new Date(value).toLocaleDateString()
+                  : placeholder || `Select ${label.toLowerCase()}`}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
               <Calendar
                 mode="single"
-                selected={value ? new Date(value) : undefined}
-                // Try to provide disabled ranges to Calendar if it accepts them.
-                // react-day-picker style: disabled accepts [{ before: Date }, { after: Date }]
-                // we cast to any because Calendar's type might differ in your project
+                selected={
+                  value && value instanceof Date
+                    ? value
+                    : value
+                    ? new Date(value)
+                    : undefined
+                }
                 disabled={
                   minDt || maxDt
                     ? [
@@ -226,18 +227,12 @@ export default function FormFieldInput({
                     : undefined
                 }
                 onSelect={(d) => {
-                  // d can be Date | undefined | null depending on Calendar
-                  if (!d) return onChange("");
+                  if (!d) return onChange(""); // optional: clear
                   const picked = d as Date;
-                  if (isOutOfRange(picked)) {
-                    // ignore out-of-range selections.
-                    // optional: show toast/feedback here if you want
-                    return;
-                  }
-                  onChange(toLocalYMD(picked));
+                  if (isOutOfRange(picked)) return;
+                  // Pass Date object into onChange (NOT string)
+                  onChange(picked);
                 }}
-                // If your Calendar supports custom day rendering, you could further style out-of-range days.
-                // For compatibility we won't rely on that prop; disabled + onSelect guard are sufficient.
               />
             </PopoverContent>
           </Popover>

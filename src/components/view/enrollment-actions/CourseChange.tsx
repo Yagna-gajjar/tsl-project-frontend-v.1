@@ -13,7 +13,7 @@ import {
   Calculator,
   Wallet,
   Clock,
-  CheckCircle2
+  CheckCircle2,
 } from "lucide-react";
 
 import { getEnrollmentById } from "@/api/enrollment.api";
@@ -39,26 +39,42 @@ import { getActivities } from "@/api/activity.api";
 import { enrollmentChange } from "@/api/enrollmentActions.api";
 
 const SectionHeader = ({ icon: Icon, title, colorClass }: any) => (
-  <div className={`flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-800 ${colorClass}`}>
+  <div
+    className={`flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-800 ${colorClass}`}
+  >
     <Icon size={18} />
     <h3 className="text-xs font-bold uppercase tracking-wider">{title}</h3>
   </div>
 );
 
-const DetailCard = ({ label, value, subValue, icon: Icon, type = "default" }: any) => {
+const DetailCard = ({
+  label,
+  value,
+  subValue,
+  icon: Icon,
+  type = "default",
+}: any) => {
   const bgColors: any = {
     default: "bg-gray-50 dark:bg-gray-800/50",
-    success: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400",
-    warning: "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
+    success:
+      "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400",
+    warning:
+      "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
     info: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
     danger: "bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400",
   };
 
   return (
-    <div className={`p-3 rounded-lg border border-gray-100 dark:border-gray-800 ${bgColors[type]} flex items-start gap-3 transition-all hover:shadow-sm`}>
-      <div className="mt-0.5 opacity-70"><Icon size={16} /></div>
+    <div
+      className={`p-3 rounded-lg border border-gray-100 dark:border-gray-800 ${bgColors[type]} flex items-start gap-3 transition-all hover:shadow-sm`}
+    >
+      <div className="mt-0.5 opacity-70">
+        <Icon size={16} />
+      </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase font-bold opacity-70 mb-0.5">{label}</p>
+        <p className="text-[10px] uppercase font-bold opacity-70 mb-0.5">
+          {label}
+        </p>
         <p className="text-sm font-semibold truncate">{value || "-"}</p>
         {subValue && <p className="text-xs opacity-80 mt-0.5">{subValue}</p>}
       </div>
@@ -104,7 +120,8 @@ const CourseChange = () => {
     processingCharge: 100,
     changeType: "course-change",
     oldEnrollmentId: null,
-    batchName : ""
+    batchName: "",
+    debitAmount: 0,
   });
 
   const onClose = () => setValues({} as any);
@@ -120,7 +137,10 @@ const CourseChange = () => {
     return diff;
   }
 
-  function addDaysToDate(startISO: string | Date | null | undefined, daysToAdd: number) {
+  function addDaysToDate(
+    startISO: string | Date | null | undefined,
+    daysToAdd: number
+  ) {
     if (!startISO) return null;
     let startDate: any;
     if (isDate(startISO)) {
@@ -137,20 +157,27 @@ const CourseChange = () => {
 
   // --- Derived Calculations for UI ---
   // We calculate these on the fly to show the user exactly what's happening
-  const daysConsumed = oldEnrollment && values.startDate
-    ? calculateDays(oldEnrollment.startDate, values.startDate) + 1
-    : 0;
+  const daysConsumed =
+    oldEnrollment && values.startDate
+      ? calculateDays(oldEnrollment.startDate, values.startDate) + 1
+      : 0;
 
   const amountConsumed = oldEnrollment
     ? (oldEnrollment.billingRate * daysConsumed).toFixed(2)
     : "0.00";
 
-  const getSelectedCourseName = () => course.find(c => c.courseId === values.courseId)?.courseName;
-  const getSelectedAcademyName = () => academy.find(a => a.academyId === values.academyId)?.academyName;
+  const getSelectedCourseName = () =>
+    course.find((c) => c.courseId === values.courseId)?.courseName;
+  const getSelectedAcademyName = () =>
+    academy.find((a) => a.academyId === values.academyId)?.academyName;
   const getSelectedBatchName = () => {
-    const b = batches.find(bt => bt.batchId === values.batchId);
+    const b = batches.find((bt) => bt.batchId === values.batchId);
     return b ? `${b.batchName} (${b.startTime}-${b.endTime})` : null;
   };
+
+  const [debouncedDebitAmount, setDebouncedDebitAmount] = useState(
+    values.debitAmount
+  );
 
   // --- API Effects ---
   const handleSubmit = async () => {
@@ -169,16 +196,24 @@ const CourseChange = () => {
   useEffect(() => {
     const fetchEnrollment = async () => {
       try {
-        const response: Response<Enrollment | any> = await getEnrollmentById(id);
+        const response: Response<Enrollment | any> = await getEnrollmentById(
+          id
+        );
         const data = response?.data || [];
         setOldEnrollment(data);
-      } catch (err) { setError("Failed to fetch enrollment details"); }
+      } catch (err) {
+        setError("Failed to fetch enrollment details");
+      }
     };
     const fetchActivities = async () => {
       try {
-        const res: Response<Activity | any> = await getActivities({ limit: 100 });
+        const res: Response<Activity | any> = await getActivities({
+          limit: 100,
+        });
         setActivity(res?.data || []);
-      } catch (err) { setError("Failed to fetch activities!"); }
+      } catch (err) {
+        setError("Failed to fetch activities!");
+      }
     };
     fetchEnrollment();
     fetchActivities();
@@ -188,9 +223,13 @@ const CourseChange = () => {
     if (!values?.activityName || !selectedActivity) return;
     const loadAcademies = async () => {
       try {
-        const res: Response<Academy> | any = await getAcademies({ search: selectedActivity });
+        const res: Response<Academy> | any = await getAcademies({
+          search: selectedActivity,
+        });
         setAcademy(res?.data || []);
-      } catch { setError("Failed to load academies."); }
+      } catch {
+        setError("Failed to load academies.");
+      }
     };
     loadAcademies();
   }, [values?.activityName]);
@@ -204,17 +243,21 @@ const CourseChange = () => {
     setValues((prev: any) => ({
       ...prev,
       billingRate: Number(c.unitRate),
-      commitedAmount: Number(days * c.unitRate),
+      commitedAmount: Number((days * c.unitRate).toFixed(2)),
       numberOfDays: days,
       discountedAmount: 0,
-      adjustment: Number(adjust * c.unitRate),
+      adjustment: Number((adjust * c.unitRate).toFixed(2)),
       endDate: endDate,
     }));
     const loadBatches = async () => {
       try {
-        const res: Response<Batch> | any = await getBatch({ courseId: values.courseId });
+        const res: Response<Batch> | any = await getBatch({
+          courseId: values.courseId,
+        });
         setBatches(res?.data || []);
-      } catch { setError("Failed to load batches."); }
+      } catch {
+        setError("Failed to load batches.");
+      }
     };
     loadBatches();
   }, [values?.courseId, values?.processingCharge, values?.billingAmount]);
@@ -223,9 +266,13 @@ const CourseChange = () => {
     if (!values?.academyId) return;
     const loadCourses = async () => {
       try {
-        const res: Response<Course> | any = await getCourses({ academyId: values.academyId });
+        const res: Response<Course> | any = await getCourses({
+          academyId: values.academyId,
+        });
         setCourse(res?.data || []);
-      } catch { setError("Failed to load courses."); }
+      } catch {
+        setError("Failed to load courses.");
+      }
     };
     loadCourses();
   }, [values?.academyId]);
@@ -241,7 +288,10 @@ const CourseChange = () => {
 
   useEffect(() => {
     if (!values?.endDate) return;
-    const newEndDate = addDaysToDate(values?.startDate, values?.freeDays + values?.numberOfDays);
+    const newEndDate = addDaysToDate(
+      values?.startDate,
+      values?.freeDays + values?.numberOfDays
+    );
     setValues((prev: any) => ({ ...prev, endDate: newEndDate }));
   }, [values?.freeDays]);
 
@@ -251,44 +301,180 @@ const CourseChange = () => {
     const diff = calculateDays(oldEnrollment.startDate, values.startDate);
     const usedAmount = oldEnrollment.billingRate * (diff + 1);
     const remaining = oldEnrollment.commitedAmount - usedAmount;
-    setValues((prev: any) => ({ ...prev, billingAmount: Number(Number(remaining).toFixed(2)) }));
+    setValues((prev: any) => ({
+      ...prev,
+      billingAmount: Number(Number(remaining).toFixed(2)),
+    }));
   }, [values.startDate, oldEnrollment]);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedDebitAmount(values.debitAmount);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [values.debitAmount]);
+
+  useEffect(() => {
+    if (debouncedDebitAmount != 0 && debouncedDebitAmount) {
+      setValues((prev) => ({
+        ...prev,
+        commitedAmount: prev.commitedAmount - debouncedDebitAmount,
+      }));
+    } else {
+      setValues((prev) => ({
+        ...prev,
+        commitedAmount: prev.numberOfDays * prev.billingRate,
+      }));
+    }
+  }, [debouncedDebitAmount]);
+
   const fields = [
-    { name: "enrollmentDate", label: "Enrollment Date", type: "date", required: true },
+    {
+      name: "enrollmentDate",
+      label: "Enrollment Date",
+      type: "date",
+      required: true,
+    },
     { name: "startDate", label: "Start Date", type: "date", required: true },
-    { name: "endDate", label: "End Date", type: "date", required: false, disabled: true },
-    { name: "activityName", label: "Activity Name", type: "select", options: activity.map((e) => ({ label: e.activityName, value: Number(e.activityId) })), required: true },
-    { name: "academyId", label: "Academy", type: "select", options: academy.map((e) => ({ label: e.academyName, value: Number(e.academyId) })), required: true },
-    { name: "courseId", label: "Course", type: "select", options: course.map((e) => ({ label: e.courseName, value: Number(e.courseId) })), required: true },
-    { name: "batchId", label: "Batch", type: "select", options: batches.map((b) => ({ label: `${b.batchName} | ${b.startTime} To ${b.endTime}`, value: Number(b.batchId) })), required: true },
-    { name: "billingAmount", label: "Remaining Amount", type: "number", disabled: true },
+    {
+      name: "activityName",
+      label: "Activity Name",
+      type: "select",
+      options: activity.map((e) => ({
+        label: e.activityName,
+        value: Number(e.activityId),
+      })),
+      required: true,
+    },
+    {
+      name: "academyId",
+      label: "Academy",
+      type: "select",
+      options: academy.map((e) => ({
+        label: e.academyName,
+        value: Number(e.academyId),
+      })),
+      required: true,
+    },
+    {
+      name: "courseId",
+      label: "Course",
+      type: "select",
+      options: course.map((e) => ({
+        label: e.courseName,
+        value: Number(e.courseId),
+      })),
+      required: true,
+    },
+    {
+      name: "batchId",
+      label: "Batch",
+      type: "select",
+      options: batches.map((b) => ({
+        label: `${b.batchName} | ${b.startTime} To ${b.endTime}`,
+        value: Number(b.batchId),
+      })),
+      required: true,
+    },
     { name: "processingCharge", label: "Processing Charge", type: "number" },
-    { name: "freeDays", label: "Free Days", type: "number", required: false },
-    { name: "sessionUnits", label: "Session Units", type: "number", required: false },
-    { name: "numberOfDays", label: "Number Of Days", type: "number", required: false, disabled: true },
-    { name: "commitedAmount", label: "Commited Amount", type: "number", required: true, disabled: true },
-    { name: "billingRate", label: "Billing Rate", type: "number", disabled: true },
+    {
+      name: "debitAmount",
+      label: "Debit Amount",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "sessionUnits",
+      label: "Session Units",
+      type: "number",
+      required: false,
+    },
+    { name: "keepDiscount", label: "Keep Old Discount", type: "checkbox" },
+    {
+      name: "commitedAmount",
+      label: "Commited Amount",
+      type: "number",
+      required: true,
+      disabled: true,
+    },
     { name: "cndn", label: "CNDN", type: "number" },
     { name: "adjustment", label: "Adjustment", type: "number", disabled: true },
     { name: "openEnrollment", label: "Open Enrollment", type: "checkbox" },
     { name: "remarks", label: "Remarks", type: "textarea" },
-    { name: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }, { label: "Completed", value: "completed" }], required: true },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Completed", value: "completed" },
+      ],
+      required: true,
+    },
   ];
 
   const onChange = (field: string, value: any) => {
-    const numFields = ["academyId", "memberId", "courseId", "batchId", "numberOfDays", "freeDays"];
-    if (numFields.includes(field)) { value = Number(value); }
+    const numFields = [
+      "academyId",
+      "memberId",
+      "courseId",
+      "batchId",
+      "numberOfDays",
+      "freeDays",
+    ];
+    if (numFields.includes(field)) {
+      value = Number(value);
+    }
     if (field === "activityName") {
       const data = activity.find((e) => e.activityId === Number(value));
       setSelectedActivity(data?.activityName || "");
     }
+
+    // --- FIXED: keepDiscount handling ---
+    if (field === "keepDiscount") {
+      const keep = Boolean(value);
+
+      // If we don't have oldEnrollment or its billingAmount, do nothing special
+      if (!oldEnrollment || !oldEnrollment.billingAmount) {
+        // just set the checkbox state; other logic will compute values via effects
+        setValues((prev) => ({ ...prev, keepDiscount: keep }));
+      } else {
+        // compute numeric discount ratio (guard divide-by-zero)
+        const discountRatio =
+          Number(oldEnrollment.commitedAmount || 0) /
+            Number(oldEnrollment.billingAmount || 1) || 0;
+
+        setValues((prev) => {
+          // when user chooses to keep discount, apply ratio to current billingAmount (remaining balance)
+          if (keep) {
+            const newCommitted = Number(
+              (Number(prev.commitedAmount || 0) * discountRatio).toFixed(2)
+            );
+            return {
+              ...prev,
+              commitedAmount: newCommitted,
+              keepDiscount: true,
+            };
+          } else {
+            // when user unchecks, restore commitedAmount based on numberOfDays * billingRate
+            const restored = Number(
+              ((prev.numberOfDays || 0) * (prev.billingRate || 0)).toFixed(2)
+            );
+            return { ...prev, commitedAmount: restored, keepDiscount: false };
+          }
+        });
+      }
+
+      // we already handled setting keepDiscount + commitedAmount; return to avoid duplicate set
+      return;
+    }
+
     setValues((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 p-4 gap-6 overflow-hidden">
-
       {/* --- TOP: Detailed Transformation View --- */}
       <AnimatePresence>
         {oldEnrollment && (
@@ -299,7 +485,11 @@ const CourseChange = () => {
           >
             {/* 1. LEFT: Source (Old) */}
             <div className="lg:col-span-5 space-y-4">
-              <SectionHeader icon={History} title="Previous Plan Details" colorClass="text-gray-500" />
+              <SectionHeader
+                icon={History}
+                title="Previous Plan Details"
+                colorClass="text-gray-500"
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <DetailCard
@@ -355,9 +545,14 @@ const CourseChange = () => {
               </div>
 
               <div className="z-10 text-center bg-white dark:bg-gray-950 px-2">
-                <p className="text-xs font-medium text-gray-400 uppercase">Transferring</p>
+                <p className="text-xs font-medium text-gray-400 uppercase">
+                  Transferring
+                </p>
                 <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                  ₹{values.billingAmount ? values.billingAmount.toFixed(2) : "0.00"}
+                  ₹
+                  {values.billingAmount
+                    ? values.billingAmount.toFixed(2)
+                    : "0.00"}
                 </p>
                 <p className="text-[10px] text-gray-400">Balance Credit</p>
               </div>
@@ -365,18 +560,29 @@ const CourseChange = () => {
 
             {/* 3. RIGHT: Destination (New) */}
             <div className="lg:col-span-5 space-y-4">
-              <SectionHeader icon={Layers} title="New Plan Configuration" colorClass="text-blue-600 dark:text-blue-400" />
+              <SectionHeader
+                icon={Layers}
+                title="New Plan Configuration"
+                colorClass="text-blue-600 dark:text-blue-400"
+              />
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <DetailCard
-                    icon={BookOpen}
-                    type="info"
-                    label="Selected Course"
-                    value={getSelectedCourseName() || "Select Course..."}
-                    subValue={getSelectedAcademyName() || "Select Academy..."}
-                  />
-                </div>
+                <DetailCard
+                  icon={BookOpen}
+                  type="info"
+                  label="Selected Course"
+                  value={getSelectedCourseName() || "Select Course..."}
+                  subValue={getSelectedAcademyName() || "Select Academy..."}
+                />
+                <DetailCard
+                  icon={Calendar}
+                  label="End Date"
+                  value={
+                    oldEnrollment.endDate
+                      ? format(oldEnrollment.endDate, "dd-MM-yyyy")
+                      : "-"
+                  }
+                />
                 <DetailCard
                   icon={Wallet}
                   label="New Daily Rate"
@@ -387,20 +593,32 @@ const CourseChange = () => {
                   icon={Calendar}
                   label="New Duration"
                   type="success"
-                  value={values.numberOfDays ? `${values.numberOfDays} Days` : "-"}
+                  value={
+                    values.numberOfDays ? `${values.numberOfDays} Days` : "-"
+                  }
                   subValue={`Ends: ${values.endDate || "-"}`}
                 />
                 <DetailCard
                   icon={Building2}
                   label="Batch"
-                  value={getSelectedBatchName() ? getSelectedBatchName()!.split('|')[0] : "Select Batch"}
-                  subValue={getSelectedBatchName() ? getSelectedBatchName()!.split('|')[1] : ""}
+                  value={
+                    getSelectedBatchName()
+                      ? getSelectedBatchName()!.split("|")[0]
+                      : "Select Batch"
+                  }
+                  subValue={
+                    getSelectedBatchName()
+                      ? getSelectedBatchName()!.split("|")[1]
+                      : ""
+                  }
                 />
                 <DetailCard
                   icon={CheckCircle2}
                   label="Final Status"
                   type="success"
-                  value={values.status === 'active' ? 'Active Plan' : values.status}
+                  value={
+                    values.status === "active" ? "Active Plan" : values.status
+                  }
                   subValue="Ready to Submit"
                 />
               </div>
@@ -416,7 +634,9 @@ const CourseChange = () => {
             <Info size={18} className="text-blue-500" />
             Modify Enrollment Details
           </h2>
-          <span className="text-xs text-gray-400">Fill required fields below</span>
+          <span className="text-xs text-gray-400">
+            Fill required fields below
+          </span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Users, Building2, Clipboard, Clock } from "lucide-react";
+import { BookOpen, Users, Building2, Clipboard, Clock, X } from "lucide-react";
 import type { Batch } from "@/types/batch";
 import { useCallback, useEffect, useState } from "react";
 import type { Response } from "@/types/response";
@@ -18,7 +18,7 @@ interface DetailItem {
   colorClass?: string;
   iconColor?: string;
   imageUrl?: string;
-  fallbackLetter?: string; // <-- For initials avatar
+  fallbackLetter?: string;
 }
 
 export default function BatchDetailsPanel({
@@ -307,21 +307,6 @@ export default function BatchDetailsPanel({
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    onClick={() => {
-                      navigator.clipboard?.writeText(
-                        String(batch?.courseId ?? "")
-                      );
-                      toast({
-                        title: "Copied",
-                        description: "Course ID copied",
-                        variant: "default",
-                      });
-                    }}
-                  >
-                    <Clipboard className="h-4 w-4" /> Copy Course ID
-                  </Button>
-                  <Button
-                    size="sm"
                     variant={"ghost" as any}
                     onClick={() => {
                       setShowModal(false);
@@ -329,7 +314,7 @@ export default function BatchDetailsPanel({
                       setRequestReason("");
                     }}
                   >
-                    Close
+                    <X className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
@@ -390,9 +375,6 @@ export default function BatchDetailsPanel({
                               <div className="flex items-center gap-2">
                                 <div className="text-sm font-semibold text-foreground truncate">
                                   {b.batchName}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  • ID {b.batchId}
                                 </div>
                               </div>
 

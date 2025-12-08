@@ -22,6 +22,7 @@ import {
   Layers,
   Book,
   IndianRupee,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -115,6 +116,11 @@ const navigationItems: NavigationItem[] = [
   },
   { name: "payment", href: "/payment", icon: BarChart3 },
   { name: "Debit Note", href: "/debit-note", icon: CreditCard },
+  {
+    name: "Membership",
+    icon: Crown,
+    submenu: [{ label: "Membership Master", href: "/membership-master" }],
+  },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {
