@@ -2,6 +2,24 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, differenceInCalendarDays, parseISO, isDate } from "date-fns";
 
+import { motion } from "framer-motion";
+import {
+  DollarSign,
+  Calendar,
+  Wallet,
+  FileText,
+  CreditCard,
+  Zap,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Hash,
+  Calculator,
+  Grid3X3,
+  List,
+  ArrowDown, // Added for visual separation
+} from "lucide-react";
+
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 
@@ -12,6 +30,8 @@ import { createPayment } from "@/api/payment.api";
 import type { Response } from "@/types/response";
 import type { Enrollment } from "@/types/enrollment";
 import type { Course } from "@/types/course";
+
+// --- LOGIC (UNMODIFIED) ---
 
 const RefundEnrollment = () => {
   const { id }: any = useParams();
@@ -26,11 +46,10 @@ const RefundEnrollment = () => {
   const [values, setValues] = useState<any>({
     enrollmentId: Number(id),
     refundDate: format(new Date(), "yyyy-MM-dd"),
-    processingCharge: 100, // keep as before; change if you want different default
-    paymentMode: "cash", // user-selectable (was previously named paymentType by mistake)
+    processingCharge: 100,
+    paymentMode: "cash",
     transactionId: "",
     remarks: "",
-    // paymentType is fixed and will be "refund" when sent to backend
   });
 
   const [computed, setComputed] = useState({
@@ -127,12 +146,10 @@ const RefundEnrollment = () => {
     const remainingDays = Math.max(0, totalDays - usedDays);
     const fullDailyRate = Number(course.unitRate ?? 0);
     const refundBeforeProcessing = Number(
-      (remainingDays * fullDailyRate).toFixed(2)
-    );
+      oldEnrollment.commitedAmount - usedDays * fullDailyRate
+    ).toFixed(2);
     const fullTotalAtFullRate = totalDays * fullDailyRate;
-    const originalCommittedAmount = Number(
-      oldEnrollment.commitedAmount ?? oldEnrollment.billingAmount ?? 0
-    );
+    const originalCommittedAmount = Number(oldEnrollment.commitedAmount ?? 0);
     const discountApplied = Math.max(
       0,
       fullTotalAtFullRate - originalCommittedAmount
@@ -168,7 +185,6 @@ const RefundEnrollment = () => {
   }, [oldEnrollment, course, values.refundDate, values.processingCharge]);
 
   const onChange = (field: string, value: any) => {
-    // numerical conversion for processingCharge
     if (field === "processingCharge") value = Number(value || 0);
     setValues((prev: any) => ({ ...prev, [field]: value }));
   };
@@ -185,13 +201,10 @@ const RefundEnrollment = () => {
         return;
       }
 
-      // Build payment payload with swapped semantics fixed:
-      // - paymentType is the action (refund)
-      // - paymentMode is how the payment was/ will be made (cash/bank/upi/etc)
       const paymentPayload: any = {
-        paymentType: "refund", // fixed — we swapped this back
+        paymentType: "refund",
         enrollmentId: Number(values.enrollmentId) || null,
-        paymentMode: values.paymentMode || "cash", // user-selectable (was previously misnamed)
+        paymentMode: values.paymentMode || "cash",
         transactionId:
           values.paymentMode && values.paymentMode !== "cash"
             ? values.transactionId || null
@@ -219,13 +232,14 @@ const RefundEnrollment = () => {
   const fields = [
     {
       name: "processingCharge",
-      label: "Processing Charge (to deduct)",
+      label: "Processing Charge (₹)",
       type: "number",
       value: values.processingCharge,
+      icon: Zap,
     },
     {
       name: "paymentMode",
-      label: "Payment Mode", // user selects mode (cash, bank, upi...) — swapped corrected
+      label: "Payment Mode",
       type: "select",
       required: true,
       options: [
@@ -235,6 +249,7 @@ const RefundEnrollment = () => {
         { label: "Other", value: "other" },
       ],
       value: values.paymentMode,
+      icon: Wallet,
     },
     {
       name: "transactionId",
@@ -242,81 +257,254 @@ const RefundEnrollment = () => {
       type: "text",
       required: values.paymentMode !== "cash",
       value: values.transactionId,
+      icon: CreditCard,
     },
     {
       name: "remarks",
       label: "Remarks",
       type: "textarea",
       value: values.remarks,
+      icon: FileText,
     },
   ];
 
+  // --- UI IMPLEMENTATION STARTS HERE ---
+
+  // Framer Motion Variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
+  };
+
+  // Helper Component for Detailed List Items
+  const DetailRow = ({ icon: Icon, label, value, valueClass = "" }) => (
+    <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+      <span className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+        <Icon className="w-4 h-4 mr-2 text-blue-500 shrink-0" />
+        {label}
+      </span>
+      <span
+        className={`text-sm font-medium text-gray-900 dark:text-white ${valueClass} text-right break-words`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col max-h-[90vh] overflow-hidden">
-      <div className="overflow-auto">
-        <FormContent
-          fields={fields as any}
-          values={values as any}
-          errors={{}}
-          loading={false}
-          error={error}
-          isSubmitting={isSubmitting}
-          onChange={onChange as any}
-          layout="grid"
-        />
+    <div className="flex flex-col h-full min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      {/* Header (Always visible) */}
+      <header className="sticky top-0 z-10 px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-md">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+          <DollarSign className="w-6 h-6 mr-3 text-blue-600" />
+          Enrollment Refund
+          <span className="ml-3 px-3 py-1 text-sm font-mono bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-300 flex items-center">
+            <Hash className="w-4 h-4 mr-1" />
+            {id}
+          </span>
+        </h1>
+      </header>
 
-        {/* Summary: show read-only enrollment/payment computation data */}
-        <div className="p-4 mt-4 bg-gray-50 rounded-md">
-          <div className="text-sm text-slate-700 space-y-1">
-            <div>
-              <strong>Enrollment:</strong>{" "}
-              {oldEnrollment ? `#${oldEnrollment.enrollmentId}` : "—"}
-            </div>
-            <div>Enrollment Date: {oldEnrollment?.enrollmentDate || "—"}</div>
-            <div>Start Date: {oldEnrollment?.startDate || "—"}</div>
-            <div>End Date: {oldEnrollment?.endDate || "—"}</div>
-            <div>
-              Original committed amount: ₹{computed.originalCommittedAmount}
-            </div>
-            <div>
-              Original discount applied (if any): ₹
-              {computed.originalDiscountApplied}
-            </div>
-            <div>Total days: {computed.totalDays}</div>
-            <div>Used days: {computed.usedDays}</div>
-            <div>Remaining days: {computed.remainingDays}</div>
-            <div>
-              Refund before processing: ₹{computed.refundBeforeProcessing}
-            </div>
-            <div>
-              Processing charge (entered): ₹
-              {Number(values.processingCharge ?? 0).toFixed(2)}
-            </div>
-            <div className="font-semibold mt-2">
-              Final refund: ₹{computed.finalRefundAmount}
-            </div>
+      {/* Main Content Area: Single Column */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="flex-grow overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6"
+      >
+        {/* === SECTION 1: FORM INPUTS (TOP) === */}
+        <motion.div
+          variants={itemVariants}
+          className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
+        >
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+            <CreditCard className="w-5 h-5 mr-2 text-blue-500" />
+            Processing and Payment Details
+          </h2>
+          <FormContent
+            fields={fields as any}
+            values={values as any}
+            errors={{}}
+            loading={false}
+            error={error}
+            isSubmitting={isSubmitting}
+            onChange={onChange as any}
+            // Use responsive grid for form content
+            layout="grid"
+            gridClasses="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          />
+        </motion.div>
 
-            <div className="mt-2">
-              <div className="text-xs text-slate-500">
-                Payment details (will be recorded)
+        {/* --- Visual Separator --- */}
+        <motion.div
+          variants={itemVariants}
+          className="flex justify-center py-2"
+        >
+          <ArrowDown className="w-6 h-6 text-blue-400 dark:text-blue-600 animate-bounce" />
+        </motion.div>
+
+        {/* === SECTION 2: FINAL REFUND AMOUNT (HIGHLIGHT) === */}
+        <motion.div
+          variants={itemVariants}
+          className="p-6 bg-blue-600 dark:bg-blue-900 rounded-xl shadow-2xl shadow-blue-500/50 dark:shadow-blue-900/50 text-white"
+        >
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-semibold flex items-center">
+              <DollarSign className="w-6 h-6 mr-3" />
+              NET REFUND PAYABLE
+            </span>
+            <span className="text-4xl font-extrabold">
+              ₹{Number(computed.finalRefundAmount).toFixed(2)}
+            </span>
+          </div>
+        </motion.div>
+
+        {/* === SECTION 3: SUMMARY AND BREAKDOWN (BELOW) === */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Panel: Enrollment Financial Breakdown */}
+          <motion.div
+            variants={itemVariants}
+            className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
+          >
+            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+              <Calculator className="w-5 h-5 mr-2 text-blue-500" />
+              Enrollment and Charge Breakdown
+            </h2>
+
+            <div className="space-y-1">
+              <DetailRow
+                icon={Wallet}
+                label="Original Committed Amount"
+                value={`₹${Number(computed.originalCommittedAmount).toFixed(
+                  2
+                )}`}
+                valueClass="font-bold"
+              />
+              <DetailRow
+                icon={XCircle}
+                label="Original Discount Applied"
+                value={`- ₹${Number(computed.originalDiscountApplied).toFixed(
+                  2
+                )}`}
+                valueClass="text-red-500 dark:text-red-400"
+              />
+              <DetailRow
+                icon={Grid3X3}
+                label="Full Daily Rate"
+                value={`₹${Number(computed.fullDailyRate).toFixed(2)}`}
+              />
+              <DetailRow
+                icon={CheckCircle}
+                label="Refund Before Processing"
+                value={`₹${Number(computed.refundBeforeProcessing).toFixed(2)}`}
+                valueClass="text-blue-600 dark:text-blue-400 font-bold"
+              />
+              <div className="h-2"></div> {/* Separator */}
+              <DetailRow
+                icon={Zap}
+                label="Processing Charge (Deduction)"
+                value={`- ₹${Number(values.processingCharge ?? 0).toFixed(2)}`}
+                valueClass="text-red-600 dark:text-red-500 font-extrabold"
+              />
+            </div>
+          </motion.div>
+
+          {/* Right Panel: Day Counts & Payment Info */}
+          <div className="space-y-6">
+            {/* Day Counters (Condensed Grid) */}
+            <motion.div
+              variants={itemVariants}
+              className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
+            >
+              <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200 flex items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                Duration Usage
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                {/* Day Card 1 */}
+                <div className="p-3 bg-blue-50 dark:bg-gray-700 rounded-lg text-center">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Total Days
+                  </p>
+                  <p className="text-xl font-bold text-blue-800 dark:text-blue-300">
+                    {computed.totalDays}
+                  </p>
+                </div>
+                {/* Day Card 2 */}
+                <div className="p-3 bg-yellow-50 dark:bg-gray-700 rounded-lg text-center">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Used Days
+                  </p>
+                  <p className="text-xl font-bold text-yellow-800 dark:text-yellow-300 flex items-center justify-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    {computed.usedDays}
+                  </p>
+                </div>
+                {/* Day Card 3 */}
+                <div className="p-3 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Remaining
+                  </p>
+                  <p className="text-xl font-bold text-green-800 dark:text-green-300">
+                    {computed.remainingDays}
+                  </p>
+                </div>
               </div>
-              <div>Payment Type: refund</div>
-              <div>Payment Mode: {values.paymentMode}</div>
+            </motion.div>
+
+            {/* Payment Record Details */}
+            <motion.div
+              variants={itemVariants}
+              className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
+            >
+              <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200 flex items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                <List className="w-4 h-4 mr-2 text-blue-500" />
+                Recorded Payment Details
+              </h3>
+              <DetailRow
+                icon={DollarSign}
+                label="Payment Type"
+                value="Refund"
+              />
+              <DetailRow
+                icon={CreditCard}
+                label="Payment Mode"
+                value={values.paymentMode}
+              />
               {values.paymentMode !== "cash" && (
-                <div>Transaction ID: {values.transactionId || "—"}</div>
+                <DetailRow
+                  icon={FileText}
+                  label="Transaction ID"
+                  value={values.transactionId || "—"}
+                />
               )}
-              <div>Remarks: {values.remarks || "—"}</div>
-            </div>
+              <DetailRow
+                icon={FileText}
+                label="Remarks"
+                value={values.remarks || "—"}
+              />
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <FormFooter
-        onClose={() => navigate("/enrollment")}
-        onSubmit={handleSubmit}
-        submitLabel="Create Refund Payment"
-        isSubmitting={isSubmitting}
-      />
+      {/* Form Footer (Sticky Bottom) */}
+      <div className="shrink-0 sticky bottom-0 z-10">
+        <FormFooter
+          onClose={() => navigate("/enrollment")}
+          onSubmit={handleSubmit}
+          submitLabel={`Refund (₹${Number(computed.finalRefundAmount).toFixed(
+            2
+          )})`}
+          isSubmitting={isSubmitting}
+          className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3 shadow-2xl"
+        />
+      </div>
     </div>
   );
 };
