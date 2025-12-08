@@ -21,7 +21,6 @@ interface FamilyPanelProps {
 export default function FamilyPanel({
   selectedFamilyId,
   selectedMemberId,
-  memberName,
   onFamilySelect,
   onMemberSelect,
   onMemberDetailsChange,
@@ -36,18 +35,18 @@ export default function FamilyPanel({
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch families on mount
   useEffect(() => {
     let mounted = true;
     setLoadingFamilies(true);
+    // Note: Ensure emergencyContact and email are defined variables or removed if not needed for the initial fetch
     getFamilies({ limit: 100 })
       .then((res: any) => {
         if (!mounted) return;
         const data: Family[] = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res)
-          ? res
-          : res?.families ?? [];
+            ? res
+            : res?.families ?? [];
         setFamilies(data);
       })
       .catch((err) => {
@@ -61,7 +60,6 @@ export default function FamilyPanel({
     };
   }, []);
 
-  // When family selected, fetch members
   useEffect(() => {
     if (!selectedFamilyId) {
       setMembers([]);
@@ -78,8 +76,8 @@ export default function FamilyPanel({
         const data: Member[] = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res)
-          ? res
-          : res?.members ?? [];
+            ? res
+            : res?.members ?? [];
         setMembers(data);
       })
       .catch((err) => {
@@ -126,11 +124,27 @@ export default function FamilyPanel({
     );
   };
 
-  const filteredFamilies = families.filter((f: any) =>
-    ((f as any).familyName ?? `${(f as any).familyId ?? f.id}`)
+  // Updated filtering logic to include email and emergency contact
+  const filteredFamilies = families.filter((f: any) => {
+    const query = familySearch.toLowerCase();
+
+    // Check Family Name or ID
+    const nameMatch = ((f as any).familyName ?? `${(f as any).familyId ?? f.id}`)
       .toLowerCase()
-      .includes(familySearch.toLowerCase())
-  );
+      .includes(query);
+
+    // Check Email (checks common fields: email, familyEmail)
+    const emailMatch = ((f as any).email ?? (f as any).familyEmail ?? "")
+      .toLowerCase()
+      .includes(query);
+
+    // Check Emergency Contact (checks common fields: emergencyContact, phone, contactNumber)
+    const contactMatch = ((f as any).emergencyContact ?? (f as any).contactNumber ?? (f as any).phone ?? "")
+      .toLowerCase()
+      .includes(query);
+
+    return nameMatch || emailMatch || contactMatch;
+  });
 
   const filteredMembers = members.filter((m) =>
     memberDisplay(m).toLowerCase().includes(memberSearch.toLowerCase())
@@ -155,7 +169,6 @@ export default function FamilyPanel({
       if (!dropdownRef.current) return;
       if (!dropdownRef.current.contains(e.target as Node)) {
         // don't clear search, just close dropdown by blurring input (consumer can still edit)
-        // we won't programmatically clear familySearch so user sees what they typed
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -192,7 +205,7 @@ export default function FamilyPanel({
           <SearchInput
             value={familySearch}
             onChange={setFamilySearch}
-            placeholder="Search families..."
+            placeholder="Search by name, email, or phone..."
           />
 
           {/* Friendly filtered list UI — only show when user typed something */}
@@ -209,11 +222,10 @@ export default function FamilyPanel({
                   return (
                     <li
                       key={id}
-                      className={`px-3 py-2 text-sm cursor-pointer hover:bg-accent/40 transition-colors flex items-center gap-2 ${
-                        selectedFamilyId === id
-                          ? "bg-primary text-primary-foreground font-medium"
-                          : "text-foreground"
-                      }`}
+                      className={`px-3 py-2 text-sm cursor-pointer hover:bg-accent/40 transition-colors flex items-center gap-2 ${selectedFamilyId === id
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-foreground"
+                        }`}
                       onClick={() => {
                         onFamilySelect(id);
                         // clear member search and selection when family changes
@@ -309,11 +321,10 @@ export default function FamilyPanel({
                   onClick={() =>
                     onMemberSelect((m as any).memberId ?? (m as any).id)
                   }
-                  className={`cursor-pointer px-3 py-2.5 text-sm transition-all ${
-                    selectedMemberId === ((m as any).memberId ?? (m as any).id)
-                      ? "bg-primary text-primary-foreground font-medium shadow-md"
-                      : "hover:bg-accent/50 text-foreground"
-                  }`}
+                  className={`cursor-pointer px-3 py-2.5 text-sm transition-all ${selectedMemberId === ((m as any).memberId ?? (m as any).id)
+                    ? "bg-primary text-primary-foreground font-medium shadow-md"
+                    : "hover:bg-accent/50 text-foreground"
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 flex-shrink-0" />
