@@ -38,6 +38,7 @@ import PaymentPage from "./pages/payment";
 import Billing from "./pages/billing"
 import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
+import MembershipPage from "./pages/membership";
 
 export default function App() {
   return (
@@ -114,6 +115,10 @@ export default function App() {
                 <Route
                   path="/membership-master"
                   element={<MembershipMasterPage />}
+                />
+                <Route
+                  path="/membership-Registration"
+                  element={<MembershipPage />}
                 />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/billing" element={<Billing />} />

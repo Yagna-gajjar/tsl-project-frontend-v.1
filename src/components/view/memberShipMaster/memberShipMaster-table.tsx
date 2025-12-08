@@ -2,16 +2,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { getMembershipMasters } from "@/api/membershipMaster.api";
-import type { membershipMaster } from "@/types/memberShipMaster";
+import {
+  getMembershipMasters,
+  deleteMembershipMaster,
+} from "@/api/membershipMaster.api";
+import type { membershipMaster } from "@/types/membershipMaster";
+import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 type Props = {
   onView?: (row: membershipMaster) => void;
+  onEdit?: (row: membershipMaster) => void;
   refreshKey?: number;
 };
 
-export default function MembershipMasterTable({ onView, refreshKey }: Props) {
+export default function MembershipMasterTable({
+  onView,
+  onEdit,
+  refreshKey,
+}: Props) {
   const [data, setData] = useState<membershipMaster[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -55,7 +65,6 @@ export default function MembershipMasterTable({ onView, refreshKey }: Props) {
             : undefined,
       });
 
-      // normalize response shape similar to EnrollmentTable
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray((res as Record<string, unknown>)?.data)
@@ -109,6 +118,9 @@ export default function MembershipMasterTable({ onView, refreshKey }: Props) {
     setPage(1);
   };
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
   const formatDate = (d?: Date | string) =>
     d ? format(new Date(d), "dd MMM yyyy") : "-";
 
@@ -140,10 +152,10 @@ export default function MembershipMasterTable({ onView, refreshKey }: Props) {
     },
     {
       header: "Duration (days)",
-      key: "membershipDurationInDays",
+      key: "membershipDurationDays",
       render: (row) =>
-        typeof row.membershipDurationInDays === "number"
-          ? row.membershipDurationInDays
+        typeof row.membershipDurationDays === "number"
+          ? row.membershipDurationDays
           : "-",
       sortable: true,
       filterType: "number",
@@ -238,26 +250,6 @@ export default function MembershipMasterTable({ onView, refreshKey }: Props) {
       ],
     },
     {
-      header: "Birthday Venue",
-      key: "birthdayVenueUsage",
-      render: (row) => (row.birthdayVenueUsage ? "Yes" : "No"),
-      filterType: "select",
-      filterOptions: [
-        { value: "true", label: "Yes" },
-        { value: "false", label: "No" },
-      ],
-    },
-    {
-      header: "Anniversary Venue",
-      key: "anniversaryVenueUsage",
-      render: (row) => (row.anniversaryVenueUsage ? "Yes" : "No"),
-      filterType: "select",
-      filterOptions: [
-        { value: "true", label: "Yes" },
-        { value: "false", label: "No" },
-      ],
-    },
-    {
       header: "Cancellation Charges",
       key: "cancallationCharges",
       render: (row) => `Rs. ${Number(row.cancallationCharges ?? 0).toFixed(2)}`,
@@ -284,6 +276,27 @@ export default function MembershipMasterTable({ onView, refreshKey }: Props) {
     },
   ];
 
+  const handleDelete = async (id: number | undefined) => {
+    if (id === undefined) return;
+
+    try {
+      await deleteMembershipMaster(id);
+      toast({
+        title: "Success",
+        description: "Membership master deleted successfully",
+      });
+      setDeleteId(null);
+      setDeleteOpen(false);
+      await loadData();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to delete membership master",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div>
       <DataTable<membershipMaster>
@@ -300,7 +313,26 @@ export default function MembershipMasterTable({ onView, refreshKey }: Props) {
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
         onView={(row) => onView?.(row)}
+        onEdit={(row) => onEdit?.(row)}
+        onDelete={(id: number | undefined) => {
+          setDeleteId(id ?? null);
+          setDeleteOpen(true);
+        }}
         idKey={"membershipMasterId"}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => {
+          setDeleteOpen(false);
+          setDeleteId(null);
+        }}
+        onConfirm={() => handleDelete(deleteId ?? undefined)}
+        title="Delete Membership Master?"
+        description="Are you sure you want to delete this membership master? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
       />
     </div>
   );

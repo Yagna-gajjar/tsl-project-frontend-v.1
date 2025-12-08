@@ -119,7 +119,10 @@ const navigationItems: NavigationItem[] = [
   {
     name: "Membership",
     icon: Crown,
-    submenu: [{ label: "Membership Master", href: "/membership-master" }],
+    submenu: [
+      { label: "Membership Master", href: "/membership-master" },
+      { label: "Membership Reg", href: "/membership-Registration" },
+    ],
   },
 ];
 
