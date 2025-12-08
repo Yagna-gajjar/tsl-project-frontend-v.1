@@ -76,11 +76,12 @@ export default function BatchRequestedForm({
   ];
 
   const tomorrow = new Date();
+console.log(enrollment);
 
   tomorrow.setDate(tomorrow.getDate() + 1);
   const initialData: Partial<RequestPayload> = {
     status: "requested",
-    memberName: enrollment?.memberName,
+    memberName: enrollment?.memberName ? enrollment.memberName : `${enrollment.memberFirstName} ${enrollment.memberLastName}`,
     memberId: enrollment?.memberId,
     enrollmentId: enrollment?.enrollmentId,
     batchId: batchId ?? "",
