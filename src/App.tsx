@@ -113,8 +113,6 @@ export default function App() {
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/billing" element={<Billing />} />
                 <Route path="/debit-note" element={<DebitNote />} />
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/signup" element={<Signup />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route path="/setting" element={<Setting />}>
@@ -134,6 +132,8 @@ export default function App() {
                 <Route path="/setting/common-lookups" element={<EnumsPage />} />
                 <Route path="/setting/*" element={<NotFound />} />
               </Route>
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/signup" element={<Signup />} />
             </Routes>
           </Router>
           <Toaster />

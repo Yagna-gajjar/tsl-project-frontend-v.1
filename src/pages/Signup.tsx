@@ -1,552 +1,333 @@
-"use client"
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+	User,
+	Mail,
+	Lock,
+	Shield,
+	ArrowRight,
+	AlertCircle,
+	CheckCircle2,
+	Eye,
+	EyeOff,
+	type LucideIcon
+} from 'lucide-react';
+import { signup } from '@/api/user.api';
+import type { User as UserType } from '@/types/user';
+import type { Response } from '@/types/response';
+import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
-import type React from "react"
+type UserRole = 'staff' | 'admin' | 'superadmin';
 
-import { motion, AnimatePresence } from "framer-motion"
-import { useState, useRef } from "react"
-import { User, Mail, Phone, MapPin, Eye, EyeOff, Upload, Check, X, Camera, Building2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
-
-interface FormData {
-	username: string
-	password: string
-	rePassword: string
-	email: string
-	phone: string
-	address: string
-	profileImage: File | null
+interface SignupFormData {
+	username: string;
+	email: string;
+	password: string;
+	confirmPassword: string;
+	role: UserRole;
 }
 
-interface ValidationErrors {
-	username?: string
-	password?: string
-	rePassword?: string
-	email?: string
-	phone?: string
-	address?: string
-	profileImage?: string
+interface FormErrors {
+	username?: string;
+	email?: string;
+	password?: string;
+	confirmPassword?: string;
+	role?: string;
 }
 
-const passwordRequirements = [
-	{ label: "At least 5 characters", test: (pwd: string) => pwd.length >= 5 },
-	{ label: "Contains uppercase letter", test: (pwd: string) => /[A-Z]/.test(pwd) },
-	{ label: "Contains lowercase letter", test: (pwd: string) => /[a-z]/.test(pwd) },
-	{ label: "Contains digit", test: (pwd: string) => /\d/.test(pwd) },
-	{ label: "Contains symbol", test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd) },
-]
+interface InputFieldProps {
+	label: string;
+	name: keyof SignupFormData;
+	type?: string;
+	icon: LucideIcon;
+	value: string;
+	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	error?: string;
+	placeholder?: string;
+}
 
-export default function Signup() {
-	const { toast } = useToast()
-	const fileInputRef = useRef<HTMLInputElement>(null)
-	const [showPassword, setShowPassword] = useState(false)
-	const [showRePassword, setShowRePassword] = useState(false)
-	const [isSubmitting, setIsSubmitting] = useState(false)
-	const [imagePreview, setImagePreview] = useState<string | null>(null)
+const InputField: React.FC<InputFieldProps> = ({
+	label,
+	name,
+	type = "text",
+	icon: Icon,
+	value,
+	onChange,
+	error,
+	placeholder
+}) => {
+	const [showPassword, setShowPassword] = useState(false);
 
-	const [formData, setFormData] = useState<FormData>({
-		username: "",
-		password: "",
-		rePassword: "",
-		email: "",
-		phone: "",
-		address: "",
-		profileImage: null,
-	})
-
-	const [errors, setErrors] = useState<ValidationErrors>({})
-	const [touched, setTouched] = useState<Record<string, boolean>>({})
-
-	const validateUsername = (username: string): string | undefined => {
-		if (!username) return "Username is required"
-		if (username !== username.toLowerCase()) return "Username must be lowercase"
-		if (username.length < 5) return "Username must be at least 5 characters"
-		if (username.length > 100) return "Username must not exceed 100 characters"
-		if (!/^[a-z0-9_]+$/.test(username)) return "Username can only contain lowercase letters, numbers, and underscores"
-		return undefined
-	}
-
-	const validatePassword = (password: string): string | undefined => {
-		if (!password) return "Password is required"
-		const failedRequirements = passwordRequirements.filter((req) => !req.test(password))
-		if (failedRequirements.length > 0) {
-			return `Password must meet all requirements`
-		}
-		return undefined
-	}
-
-	const validateEmail = (email: string): string | undefined => {
-		if (!email) return "Email is required"
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-		if (!emailRegex.test(email)) return "Please enter a valid email address"
-		return undefined
-	}
-
-	const validatePhone = (phone: string): string | undefined => {
-		if (!phone) return "Phone number is required"
-		const phoneRegex = /^\+?[1-9]\d{1,14}$/
-		if (!phoneRegex.test(phone)) return "Please enter a valid phone number with country code (max 14 digits)"
-		if (phone.length > 14) return "Phone number cannot exceed 14 characters"
-		return undefined
-	}
-
-	const validateAddress = (address: string): string | undefined => {
-		if (!address) return "Address is required"
-		if (address.length < 10) return "Please provide a complete address"
-		return undefined
-	}
-
-	const validateForm = (): boolean => {
-		const newErrors: ValidationErrors = {}
-
-		newErrors.username = validateUsername(formData.username)
-		newErrors.password = validatePassword(formData.password)
-		newErrors.email = validateEmail(formData.email)
-		newErrors.phone = validatePhone(formData.phone)
-		newErrors.address = validateAddress(formData.address)
-
-		if (formData.password !== formData.rePassword) {
-			newErrors.rePassword = "Passwords do not match"
-		}
-
-		setErrors(newErrors)
-		return Object.values(newErrors).every((error) => !error)
-	}
-
-	const handleInputChange = (field: keyof FormData, value: string) => {
-		setFormData((prev) => ({ ...prev, [field]: value }))
-		setTouched((prev) => ({ ...prev, [field]: true }))
-
-		// Real-time validation
-		const newErrors = { ...errors }
-		switch (field) {
-			case "username":
-				newErrors.username = validateUsername(value)
-				break
-			case "password":
-				newErrors.password = validatePassword(value)
-				if (formData.rePassword && value !== formData.rePassword) {
-					newErrors.rePassword = "Passwords do not match"
-				} else if (formData.rePassword && value === formData.rePassword) {
-					newErrors.rePassword = undefined
-				}
-				break
-			case "rePassword":
-				newErrors.rePassword = value !== formData.password ? "Passwords do not match" : undefined
-				break
-			case "email":
-				newErrors.email = validateEmail(value)
-				break
-			case "phone":
-				newErrors.phone = validatePhone(value)
-				break
-			case "address":
-				newErrors.address = validateAddress(value)
-				break
-		}
-		setErrors(newErrors)
-	}
-
-	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0]
-		if (file) {
-			if (file.size > 5 * 1024 * 1024) {
-				toast({
-					title: "File too large",
-					description: "Please select an image smaller than 5MB",
-					variant: "destructive",
-				})
-				return
-			}
-
-			if (!file.type.startsWith("image/")) {
-				toast({
-					title: "Invalid file type",
-					description: "Please select an image file",
-					variant: "destructive",
-				})
-				return
-			}
-
-			setFormData((prev) => ({ ...prev, profileImage: file }))
-
-			const reader = new FileReader()
-			reader.onload = (e) => {
-				setImagePreview(e.target?.result as string)
-			}
-			reader.readAsDataURL(file)
-		}
-	}
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault()
-		setIsSubmitting(true)
-
-		if (!validateForm()) {
-			setIsSubmitting(false)
-			toast({
-				title: "Validation Error",
-				description: "Please fix the errors before submitting",
-				variant: "destructive",
-			})
-			return
-		}
-
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 2000))
-
-		// Console log all form data
-		console.log("=== SIGNUP FORM DATA ===")
-		console.log("Username:", formData.username)
-		console.log("Password:", formData.password)
-		console.log("Email:", formData.email)
-		console.log("Phone:", formData.phone)
-		console.log("Address:", formData.address)
-		console.log("Profile Image:", formData.profileImage)
-		console.log("Profile Image Name:", formData.profileImage?.name)
-		console.log("Profile Image Size:", formData.profileImage?.size)
-		console.log("Profile Image Type:", formData.profileImage?.type)
-		console.log("========================")
-
-		setIsSubmitting(false)
-		toast({
-			title: "Account Created Successfully!",
-			description: "Welcome to XYZ Management System.",
-			variant: "success",
-		})
-	}
-
-	const getFieldError = (field: keyof FormData) => {
-		return touched[field] ? errors[field] : undefined
-	}
+	const inputType = type === 'password' ? (showPassword ? 'text' : 'password') : type;
 
 	return (
-		<div className="h-screen w-screen overflow-scroll">
-			<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6 }}
-					className="w-full max-w-2xl"
-				>
-					<Card className="shadow-2xl border-0 bg-card/95 backdrop-blur">
-						<CardHeader className="text-center pb-6">
-							<motion.div
-								initial={{ scale: 0 }}
-								animate={{ scale: 1 }}
-								transition={{ duration: 0.5, delay: 0.2 }}
-								className="mx-auto mb-4"
-							>
-								<div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
-									<Building2 className="h-8 w-8 text-primary-foreground text-white" />
-								</div>
-							</motion.div>
-							<CardTitle className="text-3xl font-bold">Join Us</CardTitle>
-							<p className="text-muted-foreground">Create your account for managing xyz projects</p>
-						</CardHeader>
+		<div className="space-y-1.5">
+			<label htmlFor={name} className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+				{label}
+			</label>
+			<div className="relative group">
+				<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+					<Icon size={18} />
+				</div>
 
-						<CardContent>
-							<form onSubmit={handleSubmit} className="space-y-6">
-								{/* Profile Image Upload */}
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.5, delay: 0.3 }}
-									className="flex flex-col items-center space-y-4"
-								>
-									<div className="relative">
-										<motion.div
-											whileHover={{ scale: 1.05 }}
-											whileTap={{ scale: 0.95 }}
-											className="w-24 h-24 rounded-full border-2 border-dashed border-muted-foreground/50 flex items-center justify-center cursor-pointer hover:border-primary transition-colors overflow-hidden bg-muted/50"
-											onClick={() => fileInputRef.current?.click()}
-										>
-											{imagePreview ? (
-												<img
-													src={imagePreview || "/placeholder.svg"}
-													alt="Preview"
-													className="w-full h-full object-cover rounded-full"
-												/>
-											) : (
-												<Camera className="h-8 w-8 text-muted-foreground" />
-											)}
-										</motion.div>
-										<input
-											ref={fileInputRef}
-											type="file"
-											accept="image/*"
-											onChange={handleImageUpload}
-											className="hidden"
-										/>
-									</div>
-									<Button
-										type="button"
-										variant="outline"
-										size="sm"
-										onClick={() => fileInputRef.current?.click()}
-										className="flex items-center gap-2"
-									>
-										<Upload className="h-4 w-4" />
-										Upload Profile Image
-									</Button>
-								</motion.div>
+				<input
+					id={name}
+					type={inputType}
+					name={name}
+					value={value}
+					onChange={onChange}
+					placeholder={placeholder}
+					className={`
+            w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border bg-white dark:bg-slate-900 
+            text-slate-900 dark:text-slate-100 placeholder-slate-400 
+            transition-all duration-200 outline-none shadow-sm
+            ${error
+							? 'border-red-500 focus:ring-2 focus:ring-red-500/20 focus:border-red-500'
+							: 'border-slate-300 dark:border-slate-700 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 hover:border-slate-400'}
+          `}
+				/>
 
-								{/* Username */}
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.5, delay: 0.4 }}
-									className="space-y-2"
-								>
-									<Label htmlFor="username">Username *</Label>
-									<div className="relative">
-										<User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-										<Input
-											id="username"
-											value={formData.username}
-											onChange={(e) => handleInputChange("username", e.target.value.toLowerCase())}
-											placeholder="Enter username (lowercase)"
-											className={cn("pl-10", getFieldError("username") && "border-destructive")}
-										/>
-									</div>
-									<AnimatePresence>
-										{getFieldError("username") && (
-											<motion.p
-												initial={{ opacity: 0, height: 0 }}
-												animate={{ opacity: 1, height: "auto" }}
-												exit={{ opacity: 0, height: 0 }}
-												className="text-sm text-destructive"
-											>
-												{getFieldError("username")}
-											</motion.p>
-										)}
-									</AnimatePresence>
-								</motion.div>
-
-								{/* Email */}
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.5, delay: 0.5 }}
-									className="space-y-2"
-								>
-									<Label htmlFor="email">Email *</Label>
-									<div className="relative">
-										<Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-										<Input
-											id="email"
-											type="email"
-											value={formData.email}
-											onChange={(e) => handleInputChange("email", e.target.value)}
-											placeholder="Enter your email"
-											className={cn("pl-10", getFieldError("email") && "border-destructive")}
-										/>
-									</div>
-									<AnimatePresence>
-										{getFieldError("email") && (
-											<motion.p
-												initial={{ opacity: 0, height: 0 }}
-												animate={{ opacity: 1, height: "auto" }}
-												exit={{ opacity: 0, height: 0 }}
-												className="text-sm text-destructive"
-											>
-												{getFieldError("email")}
-											</motion.p>
-										)}
-									</AnimatePresence>
-								</motion.div>
-
-								{/* Phone */}
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.5, delay: 0.6 }}
-									className="space-y-2"
-								>
-									<Label htmlFor="phone">Phone Number *</Label>
-									<div className="relative">
-										<Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-										<Input
-											id="phone"
-											value={formData.phone}
-											onChange={(e) => handleInputChange("phone", e.target.value)}
-											placeholder="+1234567890 (with country code)"
-											className={cn("pl-10", getFieldError("phone") && "border-destructive")}
-										/>
-									</div>
-									<AnimatePresence>
-										{getFieldError("phone") && (
-											<motion.p
-												initial={{ opacity: 0, height: 0 }}
-												animate={{ opacity: 1, height: "auto" }}
-												exit={{ opacity: 0, height: 0 }}
-												className="text-sm text-destructive"
-											>
-												{getFieldError("phone")}
-											</motion.p>
-										)}
-									</AnimatePresence>
-								</motion.div>
-
-								{/* Password */}
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.5, delay: 0.7 }}
-									className="space-y-2"
-								>
-									<Label htmlFor="password">Password *</Label>
-									<div className="relative">
-										<Input
-											id="password"
-											type={showPassword ? "text" : "password"}
-											value={formData.password}
-											onChange={(e) => handleInputChange("password", e.target.value)}
-											placeholder="Enter your password"
-											className={cn("pr-10", getFieldError("password") && "border-destructive")}
-										/>
-										<button
-											type="button"
-											onClick={() => setShowPassword(!showPassword)}
-											className="absolute right-3 top-1/2 transform -translate-y-1/2"
-										>
-											{showPassword ? (
-												<EyeOff className="h-4 w-4 text-muted-foreground" />
-											) : (
-												<Eye className="h-4 w-4 text-muted-foreground" />
-											)}
-										</button>
-									</div>
-
-									{/* Password Requirements */}
-									<div className="space-y-1">
-										{passwordRequirements.map((req, index) => {
-											const isValid = req.test(formData.password)
-											return (
-												<motion.div
-													key={index}
-													initial={{ opacity: 0 }}
-													animate={{ opacity: 1 }}
-													transition={{ delay: index * 0.1 }}
-													className="flex items-center gap-2 text-xs"
-												>
-													{isValid ? (
-														<Check className="h-3 w-3 text-green-500" />
-													) : (
-														<X className="h-3 w-3 text-muted-foreground" />
-													)}
-													<span className={isValid ? "text-green-600" : "text-muted-foreground"}>{req.label}</span>
-												</motion.div>
-											)
-										})}
-									</div>
-								</motion.div>
-
-								{/* Confirm Password */}
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.5, delay: 0.8 }}
-									className="space-y-2"
-								>
-									<Label htmlFor="rePassword">Confirm Password *</Label>
-									<div className="relative">
-										<Input
-											id="rePassword"
-											type={showRePassword ? "text" : "password"}
-											value={formData.rePassword}
-											onChange={(e) => handleInputChange("rePassword", e.target.value)}
-											placeholder="Confirm your password"
-											className={cn("pr-10", getFieldError("rePassword") && "border-destructive")}
-										/>
-										<button
-											type="button"
-											onClick={() => setShowRePassword(!showRePassword)}
-											className="absolute right-3 top-1/2 transform -translate-y-1/2"
-										>
-											{showRePassword ? (
-												<EyeOff className="h-4 w-4 text-muted-foreground" />
-											) : (
-												<Eye className="h-4 w-4 text-muted-foreground" />
-											)}
-										</button>
-									</div>
-									<AnimatePresence>
-										{getFieldError("rePassword") && (
-											<motion.p
-												initial={{ opacity: 0, height: 0 }}
-												animate={{ opacity: 1, height: "auto" }}
-												exit={{ opacity: 0, height: 0 }}
-												className="text-sm text-destructive"
-											>
-												{getFieldError("rePassword")}
-											</motion.p>
-										)}
-									</AnimatePresence>
-								</motion.div>
-
-								{/* Address */}
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ duration: 0.5, delay: 0.9 }}
-									className="space-y-2"
-								>
-									<Label htmlFor="address">Complete Address *</Label>
-									<div className="relative">
-										<MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-										<Textarea
-											id="address"
-											value={formData.address}
-											onChange={(e) => handleInputChange("address", e.target.value)}
-											placeholder="Enter your complete address (street, city, state, country, postal code)"
-											className={cn("pl-10 min-h-[80px]", getFieldError("address") && "border-destructive")}
-											rows={3}
-										/>
-									</div>
-									<AnimatePresence>
-										{getFieldError("address") && (
-											<motion.p
-												initial={{ opacity: 0, height: 0 }}
-												animate={{ opacity: 1, height: "auto" }}
-												exit={{ opacity: 0, height: 0 }}
-												className="text-sm text-destructive"
-											>
-												{getFieldError("address")}
-											</motion.p>
-										)}
-									</AnimatePresence>
-								</motion.div>
-
-								{/* Submit Button */}
-								<motion.div
-									initial={{ opacity: 0, y: 20 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{ duration: 0.5, delay: 1 }}
-								>
-									<Button type="submit" className="w-full h-12 text-lg" disabled={isSubmitting}>
-										{isSubmitting ? (
-											<motion.div
-												animate={{ rotate: 360 }}
-												transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-												className="w-5 h-5 border-2 border-current border-t-transparent rounded-full"
-											/>
-										) : (
-											"Create Account"
-										)}
-									</Button>
-								</motion.div>
-							</form>
-						</CardContent>
-					</Card>
-				</motion.div>
+				{type === 'password' && (
+					<button
+						type="button"
+						onClick={() => setShowPassword(!showPassword)}
+						className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors outline-none"
+						tabIndex={-1}
+					>
+						{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+					</button>
+				)}
 			</div>
-		</div>
 
-	)
-}
+			<AnimatePresence mode="wait">
+				{error && (
+					<motion.div
+						initial={{ opacity: 0, y: -5, height: 0 }}
+						animate={{ opacity: 1, y: 0, height: 'auto' }}
+						exit={{ opacity: 0, y: -5, height: 0 }}
+						className="flex items-center text-xs font-medium text-red-500 overflow-hidden pt-1"
+					>
+						<AlertCircle size={12} className="mr-1.5 flex-shrink-0" />
+						{error}
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</div>
+	);
+};
+
+const SignupForm = () => {
+	const [formData, setFormData] = useState<SignupFormData>({
+		username: '',
+		email: '',
+		password: '',
+		confirmPassword: '',
+		role: 'staff'
+	});
+
+	const navigate = useNavigate();
+	const [errors, setErrors] = useState<FormErrors>({});
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	const roles: UserRole[] = ['staff', 'admin', 'superadmin'];
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { name, value } = e.target;
+		setFormData(prev => ({ ...prev, [name]: value }));
+
+		if (errors[name as keyof FormErrors]) {
+			setErrors(prev => ({ ...prev, [name]: '' }));
+		}
+	};
+
+	const validateForm = (): FormErrors => {
+		const newErrors: FormErrors = {};
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+		if (!formData.username.trim()) newErrors.username = "Required";
+		else if (formData.username.length < 3) newErrors.username = "Min 3 chars";
+
+		if (!formData.email) newErrors.email = "Required";
+		else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email";
+
+		if (!formData.password) newErrors.password = "Required";
+		else if (formData.password.length < 6) newErrors.password = "Min 6 chars";
+
+		if (formData.password !== formData.confirmPassword) {
+			newErrors.confirmPassword = "No match";
+		}
+
+		return newErrors;
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setIsSubmitting(true);
+
+		const validationErrors = validateForm();
+		if (Object.keys(validationErrors).length > 0) {
+			setErrors(validationErrors);
+			setIsSubmitting(false);
+			return;
+		}
+
+
+		const { confirmPassword, ...payload } = formData;
+		const response: Response<UserType> = await signup(payload);
+
+		if (!response.success) {
+			toast({
+				title: "Failed",
+				description: "Invalid Credentials",
+				variant: "destructive"
+			})
+		}
+		else {
+			navigate('/login');
+		}
+		console.log("🚀 Payload:", payload);
+		setIsSubmitting(false);
+	};
+
+	return (
+		<div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
+			<motion.div
+				initial={{ opacity: 0, y: 10 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.4 }}
+				className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 overflow-hidden border border-slate-200 dark:border-slate-800"
+			>
+				{/* Compact Header */}
+				<div className="bg-slate-50/50 dark:bg-slate-800/30 px-6 py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col items-center">
+					<div className="h-10 w-10 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mb-3">
+						<User size={20} />
+					</div>
+					<h2 className="text-xl font-bold text-slate-800 dark:text-white">Create Account</h2>
+				</div>
+
+				{/* Form Body */}
+				<form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5">
+					<div className="space-y-4">
+						<InputField
+							label="Username"
+							name="username"
+							value={formData.username}
+							onChange={handleChange}
+							error={errors.username}
+							icon={User}
+							placeholder="johndoe"
+						/>
+
+						<InputField
+							label="Email"
+							name="email"
+							type="email"
+							value={formData.email}
+							onChange={handleChange}
+							error={errors.email}
+							icon={Mail}
+							placeholder="john@example.com"
+						/>
+
+						{/* Role Select */}
+						<div className="space-y-1.5">
+							<label htmlFor="role" className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+								Role
+							</label>
+							<div className="relative group">
+								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+									<Shield size={18} />
+								</div>
+								<select
+									id="role"
+									name="role"
+									value={formData.role}
+									onChange={handleChange}
+									className="
+                    w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border bg-white dark:bg-slate-900 
+                    text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700
+                    focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 hover:border-slate-400
+                    appearance-none cursor-pointer transition-all shadow-sm
+                  "
+								>
+									{roles.map(role => (
+										<option key={role} value={role}>
+											{role.charAt(0).toUpperCase() + role.slice(1)}
+										</option>
+									))}
+								</select>
+								<div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+									</svg>
+								</div>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<InputField
+								label="Password"
+								name="password"
+								type="password"
+								value={formData.password}
+								onChange={handleChange}
+								error={errors.password}
+								icon={Lock}
+								placeholder="••••••"
+							/>
+							<InputField
+								label="Confirm"
+								name="confirmPassword"
+								type="password"
+								value={formData.confirmPassword}
+								onChange={handleChange}
+								error={errors.confirmPassword}
+								icon={CheckCircle2}
+								placeholder="••••••"
+							/>
+						</div>
+					</div>
+
+					<div className="pt-2">
+						<motion.button
+							whileHover={{ scale: 1.01 }}
+							whileTap={{ scale: 0.98 }}
+							type="submit"
+							disabled={isSubmitting}
+							className="
+                w-full flex items-center justify-center py-3 rounded-xl
+                bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm
+                shadow-lg shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed
+                transition-all duration-200
+              "
+						>
+							{isSubmitting ? (
+								<span className="flex items-center gap-2">
+									<svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+									</svg>
+									Processing
+								</span>
+							) : (
+								<span className="flex items-center gap-2">
+									Create Account <ArrowRight size={16} strokeWidth={2.5} />
+								</span>
+							)}
+						</motion.button>
+					</div>
+
+					<p className="text-center text-xs text-slate-500 dark:text-slate-400">
+						Already have an account?{' '}
+						<a href="/login" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+							Log in
+						</a>
+					</p>
+				</form>
+			</motion.div>
+		</div>
+	);
+};
+
+export default SignupForm;

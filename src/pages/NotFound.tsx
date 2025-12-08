@@ -151,9 +151,9 @@ export default function PageNotFound() {
 					transition={{ duration: 0.6, delay: 0.5 }}
 					className="mb-8 space-y-4"
 				>
-					<h2 className="text-3xl md:text-4xl font-bold text-foreground">Oops! Page Under XYZ</h2>
+					<h2 className="text-3xl md:text-4xl font-bold text-foreground">Oops! Page Under Constuction</h2>
 					<p className="text-lg text-muted-foreground max-w-md mx-auto">
-						The page you're looking for seems to have wandered off the XYZ site. Our crew is working hard to
+						The page you're looking for seems to have wandered off the TSL site. Our crew is working hard to
 						build it!
 					</p>
 				</motion.div>
