@@ -1,11 +1,11 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { BookOpen, Users, Building2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BookOpen, Users, Building2, Clipboard, Clock } from "lucide-react";
 import type { Batch } from "@/types/batch";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Response } from "@/types/response";
-import { getBatchById } from "@/api/batch.api";
+import { getBatch, getBatchById } from "@/api/batch.api";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 interface BatchDetailsPanelProps {
   selectedBatch: number | null;
@@ -39,6 +39,7 @@ export default function BatchDetailsPanel({
 
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(false);
+  const [allBatches, setAllBatches] = useState<Batch[] | null>(null);
 
   useEffect(() => {
     const fetchBatch = async (id: number) => {
@@ -60,6 +61,47 @@ export default function BatchDetailsPanel({
       fetchBatch(selectedBatch);
     }
   }, [selectedBatch]);
+
+  // modal state
+  const [showModal, setShowModal] = useState(false);
+  const [courseBatches, setCourseBatches] = useState<Batch[]>([]);
+  const [loadingCourseBatches, setLoadingCourseBatches] = useState(false);
+
+  // inline request composer state
+  const [requestingBatchId, setRequestingBatchId] = useState<number | null>(
+    null
+  );
+  const [requestReason, setRequestReason] = useState("");
+
+  // open modal and fetch all batches for course
+  const openModal = useCallback(async () => {
+    if (!batch?.courseId) {
+      toast({
+        title: "No course",
+        description: "This batch has no courseId",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowModal(true);
+    setLoadingCourseBatches(true);
+    try {
+      const res: Response<Batch[]> = await getBatch({
+        courseId: Number(batch.courseId),
+      });
+      setCourseBatches(res?.data ?? []);
+    } catch (err) {
+      console.error("Failed to load batches for course:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load batches.",
+        variant: "destructive",
+      });
+      setCourseBatches([]);
+    } finally {
+      setLoadingCourseBatches(false);
+    }
+  }, [batch?.courseId]);
 
   useEffect(() => {
     if (batch) console.log("Updated batch:", batch);
@@ -103,7 +145,9 @@ export default function BatchDetailsPanel({
       ? `${batch.coachFirstName} ${batch.coachLastName}`
       : batch?.coachFirstName || "Unknown Coach";
 
-  const fallbackLetter = coachFullName ? coachFullName.charAt(0).toUpperCase() : "C";
+  const fallbackLetter = coachFullName
+    ? coachFullName.charAt(0).toUpperCase()
+    : "C";
 
   const details: DetailItem[] = [
     {
@@ -141,21 +185,23 @@ export default function BatchDetailsPanel({
     >
       <div className="space-y-3">
         <motion.div variants={itemVariants} className="mb-4">
-          <div className="flex items-center gap-3">
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              className="p-2 rounded-lg bg-primary/10"
-            >
-              <BookOpen className="h-5 w-5 text-primary" />
-            </motion.div>
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2 items-center">
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                className="p-2 rounded-lg bg-primary/10"
+              >
+                <BookOpen className="h-5 w-5 text-primary" />
+              </motion.div>
 
-            <div>
               <h3 className="text-base font-semibold text-foreground">
                 {batch?.batchName}
               </h3>
-              <div className="text-xs text-muted-foreground">
-                ID: {batch?.batchId}
-              </div>
+            </div>
+            <div>
+              <Button onClick={openModal} size={"sm"}>
+                View Batches
+              </Button>
             </div>
           </div>
         </motion.div>
@@ -196,7 +242,9 @@ export default function BatchDetailsPanel({
                 )}
 
                 <div>
-                  <div className="text-xs text-muted-foreground">{detail.label}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {detail.label}
+                  </div>
                   <div className="text-sm font-medium text-foreground">
                     {detail.value || "N/A"}
                   </div>
@@ -206,6 +254,235 @@ export default function BatchDetailsPanel({
           );
         })}
       </div>
+
+      {/* Modal: All batches for the course */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            key="overlay"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* overlay */}
+            <motion.div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => {
+                setShowModal(false);
+                setRequestingBatchId(null);
+                setRequestReason("");
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+
+            {/* modal panel */}
+            <motion.div
+              className="relative z-10 w-full max-w-4xl bg-card rounded-2xl shadow-2xl overflow-hidden"
+              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              animate={{
+                scale: 1,
+                opacity: 1,
+                y: 0,
+                transition: { type: "spring", stiffness: 260, damping: 20 },
+              }}
+              exit={{ scale: 0.96, opacity: 0, y: 10 }}
+            >
+              {/* header */}
+              <div className="flex items-center justify-between p-4 border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold">Batches for</div>
+                    <div className="text-xs text-muted-foreground">
+                      {batch?.courseName ?? "Course"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(
+                        String(batch?.courseId ?? "")
+                      );
+                      toast({
+                        title: "Copied",
+                        description: "Course ID copied",
+                        variant: "default",
+                      });
+                    }}
+                  >
+                    <Clipboard className="h-4 w-4" /> Copy Course ID
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={"ghost" as any}
+                    onClick={() => {
+                      setShowModal(false);
+                      setRequestingBatchId(null);
+                      setRequestReason("");
+                    }}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+
+              {/* content */}
+              <div className="p-4 max-h-[60vh] overflow-auto space-y-3">
+                {loadingCourseBatches ? (
+                  <div className="flex items-center justify-center py-12">
+                    <svg
+                      className="animate-spin h-8 w-8 text-muted-foreground"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeOpacity="0.2"
+                        fill="none"
+                      />
+                      <path
+                        d="M22 12a10 10 0 0 1-10 10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                    </svg>
+                  </div>
+                ) : courseBatches.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    No other batches found for this course.
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {courseBatches.map((b) => {
+                      const isFull =
+                        Number(b.activeMemberCount) >= Number(b.batchCapacity);
+                      return (
+                        <motion.div
+                          key={b.batchId}
+                          layout
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          whileHover={{
+                            scale: 1.01,
+                            boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+                          }}
+                          className="flex items-center justify-between gap-4 p-3 rounded-lg bg-gradient-to-br from-card to-background border border-border/50"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                              <BookOpen className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <div className="text-sm font-semibold text-foreground truncate">
+                                  {b.batchName}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  • ID {b.batchId}
+                                </div>
+                              </div>
+
+                              <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  <span>
+                                    {b.startTime?.slice(0, 5) ?? "-"} -{" "}
+                                    {b.endTime?.slice(0, 5) ?? "-"}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-3.5 w-3.5" />
+                                  <span>
+                                    Coach:{" "}
+                                    {b.coachFirstName
+                                      ? `${b.coachFirstName} ${
+                                          b.coachLastName ?? ""
+                                        }`
+                                      : "N/A"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <div className="text-xs text-muted-foreground">
+                                Seats
+                              </div>
+                              <div
+                                className={`text-sm font-medium ${
+                                  isFull ? "text-red-600" : "text-foreground"
+                                }`}
+                              >
+                                {b.activeMemberCount} / {b.batchCapacity}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* inline request composer */}
+                <AnimatePresence>
+                  {requestingBatchId && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="mt-4 bg-muted/5 p-4 rounded-lg border border-border/40"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold">
+                            Request spot for batch {requestingBatchId}
+                          </div>
+                          <textarea
+                            value={requestReason}
+                            onChange={(e) => setRequestReason(e.target.value)}
+                            placeholder="Short reason (why do you need a spot?)"
+                            className="w-full mt-2 p-2 rounded-md bg-card border border-border/40 resize-none"
+                            rows={3}
+                          />
+                          <div className="flex items-center justify-end gap-2 mt-2">
+                            <Button
+                              size="sm"
+                              variant={"ghost" as any}
+                              onClick={() => {
+                                setRequestingBatchId(null);
+                                setRequestReason("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

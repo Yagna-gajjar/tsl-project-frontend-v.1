@@ -78,8 +78,7 @@ export default function CourseFormModal({
 
       const [resActivity, resAcademy] = await Promise.all([
         getActivities({
-          limit: 100,
-          page: 1,
+          limit: 300,
         }),
         getAcademies(),
       ]);

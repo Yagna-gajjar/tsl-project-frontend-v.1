@@ -13,8 +13,9 @@ import { getAcademies } from "@/api/academy.api";
 import type { Batch } from "@/types/batch";
 import { toast } from "@/hooks/use-toast";
 import { format as dfFormat } from "date-fns";
-import { getEnumsByCategory } from "@/api/enums.api";
 import type { Response } from "@/types/response";
+import { getActivities } from "@/api/activity.api";
+import type { Activity } from "@/types/activity";
 
 type Props = {
   isOpen: boolean;
@@ -131,22 +132,14 @@ export function BatchFormModal({
   };
 
   // Activity options (shape: { label, value }) to feed FormContent select
-  const [activityOptions, setActivityOptions] = useState<
-    Array<{ label: string; value: string }>
-  >([]);
+  const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
 
   const getAllActivity = async () => {
     try {
-      const response: Response = await getEnumsByCategory("activity");
+      const response: Response = await getActivities({ limit: 100 });
       const items = response?.data || [];
 
-      const mapped = (items as any[]).map((it: any) => {
-        const rawValue =
-          it?.id !== undefined ? Number(it.id) : String(it?.value ?? "");
-        const label = it?.value && String(it.value);
-        return { label, value: rawValue };
-      });
-      setActivityOptions(mapped);
+      setActivityOptions(items);
     } catch (err) {
       toast({
         title: "Error",
@@ -759,7 +752,10 @@ export function BatchFormModal({
       name: "activityName",
       label: "Activity",
       type: "select",
-      options: activityOptions.map((a) => ({ label: a.label, value: a.label })),
+      options: activityOptions.map((a) => ({
+        label: a.activityName,
+        value: a.activityId,
+      })),
       required: true,
     },
     {

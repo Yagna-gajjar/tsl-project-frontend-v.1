@@ -26,6 +26,8 @@ import { useNavigate } from "react-router-dom";
 import type { DebitNote } from "@/types/debitNote";
 import type { Coach } from "@/types/coach";
 
+import BatchRequestedForm from "@/components/view/enrollment-actions/BatchRequestedForm"; // <- ensure path is correct
+
 const EnrollmentFormNew = ({
   memberId,
   memberName,
@@ -46,6 +48,13 @@ const EnrollmentFormNew = ({
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [selectedCourse, setSelectedCourse] = useState<Course>();
   const [coaches, setCoaches] = useState<Coach[]>([]);
+
+  // modal state for batch requests
+  const [showBatchRequest, setShowBatchRequest] = useState(false);
+  const [requestBatchDetails, setRequestBatchDetails] = useState<{
+    batchId: number;
+    batchName: string;
+  } | null>(null);
 
   const [values, setValues] = useState<Enrollment>({
     memberId: Number(memberId),
@@ -217,16 +226,7 @@ const EnrollmentFormNew = ({
 
         const allBatches = res?.data || [];
 
-        const filtered = allBatches.filter((batch) => {
-          const count = Number(batch.activeMemberCount) || 0;
-          const capacity = Number(batch.batchCapacity) || 0;
-
-          if (capacity === 0) return false;
-
-          return count / capacity < 1;
-        });
-
-        setBatches(filtered);
+        setBatches(allBatches);
       } catch (err) {
         console.error("Failed to load batches:", err);
         setError("Failed to load batches.");
@@ -417,16 +417,37 @@ const EnrollmentFormNew = ({
       }
 
       if (field === "batchId") {
-        setValues((prev) => ({ ...prev, [field]: value }));
-        console.log(value);
+        // find the batch, check capacity
+        const selectedBatch = batches.find(
+          (b) => Number(b.batchId) === Number(value)
+        );
+        console.log(selectedBatch);
 
+        if (selectedBatch) {
+          const isFull =
+            Number(selectedBatch.activeMemberCount) >=
+            Number(selectedBatch.batchCapacity);
+          if (isFull) {
+            // open request modal instead of selecting the batch
+            setRequestBatchDetails({
+              batchId: Number(selectedBatch.batchId),
+              batchName: selectedBatch.batchName || "",
+            });
+            setShowBatchRequest(true);
+            // do not set values.batchId or call onBatchSelect
+            return;
+          }
+        }
+
+        // not full -> normal behavior:
+        setValues((prev) => ({ ...prev, [field]: value }));
         onBatchSelect(Number(value));
         return;
       }
 
       setValues((prev) => ({ ...prev, [field]: value }));
     },
-    [activity, onBatchSelect]
+    [activity, onBatchSelect, batches]
   );
 
   const onDebitNoteChange = (field: string, value: any) => {
@@ -595,16 +616,19 @@ const EnrollmentFormNew = ({
       type: "select",
       options: batches.map((b) => {
         const format = (t: string) => (t ? t.slice(0, 5) : "");
-        const label = `${b.batchName}  |  ${format(b.startTime)}-${format(
+
+        const isFull = b.activeMemberCount >= b.batchCapacity;
+
+        const label = `${b.batchName} | ${format(b.startTime)}-${format(
           b.endTime
-        )}  |  Seats: ${b.activeMemberCount} / ${b.batchCapacity}`;
+        )} | Seats: ${b.activeMemberCount} / ${b.batchCapacity}`;
 
         return {
           label,
           value: Number(b.batchId),
+          className: isFull ? "text-red-600" : "",
         };
       }),
-
       required: true,
     },
     {
@@ -873,6 +897,25 @@ const EnrollmentFormNew = ({
         onSubmit={handleSubmit}
         submitLabel="Create"
         isSubmitting={false}
+      />
+
+      {/* Batch request modal */}
+      <BatchRequestedForm
+        isOpen={showBatchRequest}
+        onClose={() => setShowBatchRequest(false)}
+        batchId={requestBatchDetails?.batchId || 0}
+        batchName={requestBatchDetails?.batchName || ""}
+        enrollment={values as Enrollment}
+        onSuccess={() => {
+          // called when request succeeded
+          setShowBatchRequest(false);
+          // optional: show toast or refresh batches here
+          toast({
+            title: "Requested",
+            description: "Spot request submitted.",
+            variant: "success",
+          });
+        }}
       />
     </div>
   );

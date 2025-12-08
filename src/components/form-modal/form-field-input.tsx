@@ -157,7 +157,11 @@ export default function FormFieldInput({
             </SelectTrigger>
             <SelectContent>
               {options?.map((opt) => (
-                <SelectItem key={String(opt.value)} value={String(opt.value)}>
+                <SelectItem
+                  className={className}
+                  key={String(opt.value)}
+                  value={String(opt.value)}
+                >
                   {opt.label}
                 </SelectItem>
               ))}

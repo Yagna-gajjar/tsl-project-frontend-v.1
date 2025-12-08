@@ -8,8 +8,8 @@ import { createAcademy, updateAcademy } from "@/api/academy.api";
 import type { Academy } from "@/types/academy";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { getEnumsByCategory } from "@/api/enums.api";
 import type { Response } from "@/types/response";
+import { getActivities } from "@/api/activity.api";
 type Props = {
   isOpen: boolean;
   initialData?: Academy;
@@ -51,7 +51,7 @@ export default function AcademyFormModal({
 
   const getAllActivity = async () => {
     try {
-      const res: Response = await getEnumsByCategory("activity");
+      const res: Response = await getActivities();
       const data = res?.data || [];
       setActivity(data);
     } catch (err) {
@@ -212,7 +212,10 @@ export default function AcademyFormModal({
       name: "academyType",
       label: "Academy Type",
       type: "select",
-      options: activity.map((a) => ({ label: a.value, value: a.value })),
+      options: activity.map((a) => ({
+        label: a.activityName,
+        value: a.activityId,
+      })),
       required: false,
     },
     {
