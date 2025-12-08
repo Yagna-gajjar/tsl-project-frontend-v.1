@@ -14,6 +14,7 @@ export interface Enrollment {
   discountedAmount: number;
   commitedAmount: number;
   openEnrollment: boolean;
+  batchName: string;
   status: string;
   cndn: number;
   billingRate: number;
@@ -33,5 +34,5 @@ export interface Enrollment {
   processingCharge?: number;
   changeType?: string;
   memberName?: string;
-  oldEnrollmentId?: number;
+  oldEnrollmentId?: number | null;
 }
