@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +19,8 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import type { ReactNode } from "react";
+import { X, ChevronDown } from "lucide-react";
 
 type Option = { label: string; value: number | string | Date };
 
@@ -46,7 +50,6 @@ interface Props {
   className?: string;
   index?: number;
 
-  // NEW: optional min/max date for date field (string "yyyy-mm-dd" or Date)
   minDate?: string | Date;
   maxDate?: string | Date;
   icon: ReactNode
