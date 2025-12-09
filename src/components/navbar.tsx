@@ -18,6 +18,7 @@ import {
 import { motion } from "framer-motion";
 import { useTheme } from "../contexts/theme-context";
 import { Button } from "@/components/ui/button";
+import { checkIn, checkOut, isUserActive } from "@/api/inout.api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -98,27 +99,30 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [requestLen, setRequestLen] = useState<number>(0);
 
-  // NEW: sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const fetchUserImage = async () => {
-    if (!user?.profileImage || !token) return;
+  // Toggle State for In/Out
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
 
-    const response = await fetch(
-      `${import.meta.env.VITE_APP_API_URL}/${user.profileImage}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+  // const fetchUserImage = async () => {
+  //   if (!user?.avatar || !token) return;
 
-    if (response.ok) {
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-      setUserImage(imageUrl);
-    }
-  };
+  //   const response = await fetch(
+  //     `${import.meta.env.VITE_APP_API_URL}/${user.avatar}`,
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     }
+  //   );
+
+  //   if (response.ok) {
+  //     const blob = await response.blob();
+  //     const imageUrl = URL.createObjectURL(blob);
+  //     setUserImage(imageUrl);
+  //   }
+  // };
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -134,9 +138,55 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   }, []);
 
   useEffect(() => {
-    fetchUserImage();
+    // fetchUserImage();
     fetchRequests();
-  }, [user, token]);
+
+    // Fetch User Active Status logic added here
+    const fetchStatus = async () => {
+      if (user?.userId) {
+        try {
+          const response: any = await isUserActive(user.userId);
+          // Set state based on response.data (true/false)
+          if (response && typeof response.data === 'boolean') {
+            setIsCheckedIn(response.data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch user status", error);
+        }
+      }
+    };
+
+    fetchStatus();
+  }, [user, token, fetchRequests]);
+
+  // Handle Check In/Out Toggle
+  const handleStatusToggle = async () => {
+    if (!user?.userId) {
+      toast({ title: "Error", description: "User ID not found", variant: "destructive" });
+      return;
+    }
+    if (isLoadingStatus) return;
+
+    setIsLoadingStatus(true);
+    try {
+      if (isCheckedIn) {
+        // Currently In, so call Check Out
+        await checkOut(user.userId);
+        setIsCheckedIn(false);
+        toast({ title: "Success", description: "You have checked out." });
+      } else {
+        // Currently Out, so call Check In
+        await checkIn(user.userId);
+        setIsCheckedIn(true);
+        toast({ title: "Success", description: "You have checked in.", className: "bg-green-600 text-white border-none" });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update status";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    } finally {
+      setIsLoadingStatus(false);
+    }
+  };
 
   return (
     <>
@@ -174,6 +224,28 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
           {/* Right Section */}
           <div className="flex items-center space-x-2">
+
+            {/* Check In/Out Toggle - Visible only when logged in */}
+            {user && (
+              <div className="flex items-center gap-2 mr-2 border-r pr-4 border-border/50">
+                <span className={`text-xs font-bold ${isCheckedIn ? "text-green-600" : "text-muted-foreground"}`}>
+                  {isCheckedIn ? "IN" : "OUT"}
+                </span>
+                <div
+                  onClick={handleStatusToggle}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-300 flex items-center px-1 ${isCheckedIn ? "bg-green-500" : "bg-input"
+                    } ${isLoadingStatus ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <motion.div
+                    className="w-4 h-4 bg-background rounded-full shadow-sm"
+                    layout
+                    transition={{ type: "spring", stiffness: 700, damping: 30 }}
+                    animate={{ x: isCheckedIn ? 20 : 0 }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Notifications -> open sidebar */}
             <Button
               variant="ghost"

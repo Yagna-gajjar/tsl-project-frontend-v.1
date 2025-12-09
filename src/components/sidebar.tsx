@@ -112,6 +112,11 @@ const navigationItems: NavigationItem[] = [
         href: "/staff-management/academy-coaches",
         icon: Users,
       },
+      {
+        label: "Staff Attendance",
+        href: "staff-management/attendance",
+        icon: User
+      }
     ],
   },
   { name: "payment", href: "/payment", icon: BarChart3 },
