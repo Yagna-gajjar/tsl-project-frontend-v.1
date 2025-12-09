@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresence
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   User,
@@ -9,14 +7,14 @@ import {
   Loader2,
   X,
   IndianRupee,
-  Wallet, // Added Wallet icon for a visual touch in the button
+  Wallet,
 } from "lucide-react";
 import type { Family } from "@/types/family";
 import type { Member } from "@/types/member";
 import type { membership } from "@/types/membership";
 import { getFamilies } from "@/api/family.api";
 import { getMembers, getMemberById } from "@/api/member.api";
-import { getMemberships } from "@/api/membership.api"; // adjust path if needed
+import { getMemberships } from "@/api/membership.api";
 import SearchInput from "../search-input";
 
 interface FamilyPanelProps {
@@ -51,7 +49,6 @@ export default function FamilyPanel({
     useState<membership | null>(null);
   const [membershipList, setMembershipList] = useState<membership[]>([]);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
-  // State to track if the family has memberships to conditionally style the button
   const [hasMemberships, setHasMemberships] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -85,7 +82,6 @@ export default function FamilyPanel({
       setMembers([]);
       onMemberSelect(null);
       onMemberDetailsChange(null);
-      // Reset membership related states
       setMembershipList([]);
       setMembershipBalance(null);
       setHasMemberships(false);
@@ -103,6 +99,11 @@ export default function FamilyPanel({
           ? res
           : res?.members ?? [];
         setMembers(data);
+        try {
+          fetchMembershipBalance(selectedFamilyId);
+        } catch (err) {
+          console.error("Error calling fetchMembershipBalance:", err);
+        }
       })
       .catch((err) => {
         console.error("getMembers error", err);
@@ -110,7 +111,6 @@ export default function FamilyPanel({
       })
       .finally(() => mounted && setLoadingMembers(false));
 
-    // Reset membership related states when family changes
     setMembershipList([]);
     setMembershipBalance(null);
     setHasMemberships(false);
@@ -120,7 +120,6 @@ export default function FamilyPanel({
     };
   }, [selectedFamilyId, onMemberSelect, onMemberDetailsChange]);
 
-  // Fetch member details when selected
   useEffect(() => {
     if (!selectedMemberId) {
       onMemberDetailsChange(null);
@@ -153,23 +152,19 @@ export default function FamilyPanel({
     );
   };
 
-  // Updated filtering logic to include email and emergency contact
   const filteredFamilies = families.filter((f: any) => {
     const query = familySearch.toLowerCase();
 
-    // Check Family Name or ID
     const nameMatch = (
       (f as any).familyName ?? `${(f as any).familyId ?? f.id}`
     )
       .toLowerCase()
       .includes(query);
 
-    // Check Email (checks common fields: email, familyEmail)
     const emailMatch = ((f as any).email ?? (f as any).familyEmail ?? "")
       .toLowerCase()
       .includes(query);
 
-    // Check Emergency Contact (checks common fields: emergencyContact, phone, contactNumber)
     const contactMatch = (
       (f as any).emergencyContact ??
       (f as any).contactNumber ??
@@ -199,13 +194,9 @@ export default function FamilyPanel({
     visible: { opacity: 1, x: 0 },
   };
 
-  // close dropdown when clicking outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (!dropdownRef.current) return;
-      if (!dropdownRef.current.contains(e.target as Node)) {
-        // don't clear search, just close dropdown by blurring input (consumer can still edit)
-      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -214,16 +205,14 @@ export default function FamilyPanel({
   const showFilteredFamilies =
     familySearch.trim().length > 0 && filteredFamilies.length > 0;
 
-  // Fetch memberships and compute balance (on demand)
   const fetchMembershipBalance = async (familyId: number) => {
     try {
       setLoadingMemberships(true);
       setMembershipBalance(null);
       setSelectedMembership(null);
       setMembershipList([]);
-      setHasMemberships(false); // Reset before fetch
+      setHasMemberships(false);
 
-      // fetch memberships for this family (you exposed getMemberships in api.ts)
       const res: any = await getMemberships({ familyId, limit: 100 });
       const rows: membership[] = Array.isArray(res?.data)
         ? res.data
@@ -232,9 +221,8 @@ export default function FamilyPanel({
         : res ?? [];
 
       setMembershipList(rows);
-      setHasMemberships(rows.length > 0); // Set hasMemberships
+      setHasMemberships(rows.length > 0);
 
-      // pick active membership first, otherwise the latest by membershipId
       const active = rows.find(
         (r) => String(r.status).toLowerCase() === "active"
       );
@@ -246,15 +234,12 @@ export default function FamilyPanel({
         setMembershipBalance(0);
         setSelectedMembership(null);
       } else {
-        // compute balance: actualFBalance + actualCBalance (change if you prefer other formula)
         const f = Number(chosen.actualFBalance ?? 0);
         const c = Number(chosen.actualCBalance ?? 0);
         const total = f + c;
         setMembershipBalance(total);
         setSelectedMembership(chosen);
       }
-
-      setShowBalanceModal(true);
     } catch (err) {
       console.error("getMemberships error", err);
       setError("Failed to load membership(s) for this family");
@@ -297,7 +282,6 @@ export default function FamilyPanel({
             placeholder="Search by name, email, or phone..."
           />
 
-          {/* Friendly filtered list UI — only show when user typed something */}
           {showFilteredFamilies && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
@@ -318,11 +302,9 @@ export default function FamilyPanel({
                       }`}
                       onClick={() => {
                         onFamilySelect(id);
-                        // clear member search and selection when family changes
                         setMemberSearch("");
                         onMemberSelect(null);
                         onMemberDetailsChange(null);
-                        // keep the typed query — user still sees what they searched for
                       }}
                     >
                       <Users className="h-4 w-4 flex-shrink-0 text-muted-foreground/60" />
@@ -334,7 +316,6 @@ export default function FamilyPanel({
             </motion.div>
           )}
 
-          {/* helpful empty state when user typed but nothing matched */}
           {familySearch.trim().length > 0 && filteredFamilies.length === 0 && (
             <div className="mt-2 rounded-lg p-3 text-xs text-muted-foreground border border-border/30 bg-card/50">
               No families match "{familySearch}".
@@ -342,7 +323,6 @@ export default function FamilyPanel({
           )}
         </div>
 
-        {/* Error / Loading */}
         {error && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -358,44 +338,6 @@ export default function FamilyPanel({
           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
             <Loader2 className="h-3 w-3 animate-spin" />
             Loading families...
-          </div>
-        )}
-
-        {/* Balance button when a family is selected */}
-        {selectedFamilyId && (
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => fetchMembershipBalance(selectedFamilyId)}
-              className={buttonClass}
-              disabled={loadingMemberships}
-            >
-              {loadingMemberships ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : hasMemberships ? (
-                <Wallet className="h-4 w-4" />
-              ) : (
-                <IndianRupee className="h-4 w-4" />
-              )}
-              <span className="text-sm">Balance</span>
-            </button>
-
-            {/* quick visual if already fetched */}
-            {loadingMemberships ? (
-              <div className="text-xs text-muted-foreground flex items-center gap-2">
-                <Loader2 className="h-3 w-3 animate-spin" /> Fetching...
-              </div>
-            ) : membershipBalance !== null ? (
-              <div
-                className={`text-sm ${
-                  hasMemberships
-                    ? "text-yellow-600 font-semibold"
-                    : "text-muted-foreground"
-                }`}
-              >
-                ₹ {membershipBalance.toFixed(2)}
-              </div>
-            ) : null}
           </div>
         )}
       </motion.div>
@@ -465,9 +407,47 @@ export default function FamilyPanel({
             </ul>
           )}
         </motion.div>
+
+        {selectedFamilyId && hasMemberships && (
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                fetchMembershipBalance(selectedFamilyId);
+                setShowBalanceModal(true);
+              }}
+              className={buttonClass}
+              disabled={loadingMemberships}
+            >
+              {loadingMemberships ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : hasMemberships ? (
+                <Wallet className="h-4 w-4" />
+              ) : (
+                <IndianRupee className="h-4 w-4" />
+              )}
+              <span className="text-sm">Balance</span>
+            </button>
+
+            {loadingMemberships ? (
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <Loader2 className="h-3 w-3 animate-spin" /> Fetching...
+              </div>
+            ) : membershipBalance !== null ? (
+              <div
+                className={`text-sm ${
+                  hasMemberships
+                    ? "text-yellow-600 font-semibold"
+                    : "text-muted-foreground"
+                }`}
+              >
+                ₹ {membershipBalance.toFixed(2)}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
-      {/* Balance modal - Enhanced with Framer Motion and Gold Styling */}
       <AnimatePresence>
         {showBalanceModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -484,23 +464,21 @@ export default function FamilyPanel({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 50 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="relative max-w-lg w-full bg-card rounded-xl shadow-2xl p-6 border border-yellow-500/30 overflow-hidden" // Enhanced style
+              className="relative max-w-lg w-full bg-card rounded-xl shadow-2xl p-6 border border-yellow-500/30 overflow-hidden"
             >
-              {/* Header */}
               <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/50">
                 <h3 className="text-lg font-bold flex items-center gap-2 text-yellow-600">
                   <Wallet className="h-5 w-5 fill-yellow-600 stroke-1" /> Family
                   Membership Balance
                 </h3>
                 <button
-                  className="p-1 rounded-full hover:bg-red-500/20 transition-colors"
+                  className="p-1 rounded-lg hover:bg-red-500/20 transition-colors"
                   onClick={() => setShowBalanceModal(false)}
                 >
                   <X className="h-5 w-5 text-muted-foreground hover:text-red-500" />
                 </button>
               </div>
 
-              {/* Balance Display */}
               <div className="mb-4">
                 {loadingMemberships ? (
                   <div className="flex items-center gap-2 text-base text-muted-foreground">
@@ -521,7 +499,6 @@ export default function FamilyPanel({
                 )}
               </div>
 
-              {/* Membership Details */}
               <div className="text-sm text-muted-foreground mb-4 pt-2 border-t border-border/30">
                 {selectedMembership ? (
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -611,18 +588,6 @@ export default function FamilyPanel({
                 ) : (
                   <div>No past or current memberships found.</div>
                 )}
-              </div>
-
-              {/* Footer Button */}
-              <div className="flex justify-end gap-2 pt-4 border-t border-border/30">
-                <button
-                  className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors"
-                  onClick={() => {
-                    setShowBalanceModal(false);
-                  }}
-                >
-                  Close
-                </button>
               </div>
             </motion.div>
           </div>

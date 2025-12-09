@@ -111,17 +111,14 @@ export default function FamilyViewModal({ isOpen, onClose, item }: Props) {
   const [memberInitialData, setMemberInitialData] =
     useState<Partial<any> | null>(null);
 
-  // open member form and prefill familyId (and optionally familyName)
   const openAddMemberForFamily = (family: Family | undefined | null) => {
     if (!family) return;
     setMemberInitialData({
       familyId: family.familyId,
-      // you can prefill other member defaults here if needed
     });
     setMemberFormOpen(true);
   };
   const navigate = useNavigate();
-  // inject runtime onClick into button field so it receives the current row (data)
   const fields = baseViewFields.map((f) => {
     if (f.key === "addMember") {
       return {
@@ -129,7 +126,6 @@ export default function FamilyViewModal({ isOpen, onClose, item }: Props) {
         button: {
           ...f.button,
           onClick: (row: Family) => {
-            // prefer the passed row, fallback to 'item' from props
             openAddMemberForFamily(row ?? item ?? null);
           },
         },
@@ -148,7 +144,7 @@ export default function FamilyViewModal({ isOpen, onClose, item }: Props) {
         },
       } as FieldConfig<Family>;
     }
-  
+
     return f;
   });
 
@@ -171,10 +167,7 @@ export default function FamilyViewModal({ isOpen, onClose, item }: Props) {
         }}
         initialData={memberInitialData}
         onSaved={() => {
-          // close the member form after save
           setMemberFormOpen(false);
-          // optionally, if you want the family view to refresh its data after adding a member,
-          // you can call fetch here by making fetchFn available or by triggering parent's refresh.
         }}
       />
     </>

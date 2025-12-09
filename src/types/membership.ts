@@ -2,7 +2,7 @@ export interface membership {
   membershipId: number;
   membershipMasterId: number;
   familyId: number;
-  startDate: Date;
+  startDate: Date | string;
   endDate: Date;
   graceDate: Date;
   committedAmount: number;

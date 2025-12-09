@@ -488,7 +488,6 @@ export default function MembershipFormModal({
       required: true,
     },
     { name: "startDate", label: "Start Date", type: "Date", required: true },
-    // durationDays now comes from membership master; do not expose input
     {
       name: "endDate",
       label: "End Date",
