@@ -6,6 +6,7 @@ export interface BatchMember {
   batchId: number;
   memberId: number;
   status: string;
+  courseId: number;
   memberFirstName?: string;
   batchName: string;
   startTime: string;
@@ -26,18 +27,31 @@ export interface BatchMember {
 const BATCH_MEMBER_BASE = import.meta.env.VITE_APP_API_URL + "/batch-member";
 
 export function changeBatch(
-	payload: BatchMember
+  payload: BatchMember
 ): Promise<Response> {
-	return request<Response>(`${BATCH_MEMBER_BASE}/change-batch`, {
-		method: "POST",
-		body: JSON.stringify(payload),
-	});
+  return request<Response>(`${BATCH_MEMBER_BASE}/change-batch`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function getAttendance(
-	batchId: number
+  batchId: number
 ): Promise<Response> {
-	return request<Response>(`${BATCH_MEMBER_BASE}/attendance/${batchId}`, {
-		method: "GET",
-	});
+  return request<Response>(`${BATCH_MEMBER_BASE}/attendance/${batchId}`, {
+    method: "GET",
+  });
+}
+
+export function shiftMembers(
+  oldBatchId: number, newBatchId: number, memberIds: number[]
+): Promise<Response> {
+  return request<Response>(`${BATCH_MEMBER_BASE}/shift`, {
+    method: "POST",
+    body: JSON.stringify({
+      oldBatchId,
+      newBatchId,
+      memberIds
+    }),
+  });
 }

@@ -1,5 +1,5 @@
 import type { Response } from "@/types/response";
-import type { BatchMember } from "./batchMember-api";
+import type { BatchMember } from "./batchMember.api";
 import { request } from "./helper";
 import type { Enrollment } from "@/types/enrollment";
 

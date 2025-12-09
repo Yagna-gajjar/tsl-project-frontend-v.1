@@ -18,7 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import type { Enrollment } from "@/types/enrollment";
 import type { Batch } from "@/types/batch";
-import { changeBatch, type BatchMember } from "@/api/batchMember-api";
+import { changeBatch, type BatchMember } from "@/api/batchMember.api";
 import BatchRequestForm from "@/components/view/enrollment-actions/BatchRequestedForm"; // adjust path if needed
 
 const formatTime = (timeString: string) => {
