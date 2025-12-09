@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 		const validateToken = async () => {
 			if (!token) {
-				console.log('token no maylu')
 				logout()
 				return
 			}

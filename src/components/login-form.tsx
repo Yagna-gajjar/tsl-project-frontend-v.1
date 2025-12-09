@@ -123,10 +123,8 @@ export default function LoginForm() {
       };
 
       const response = await userLogin(apiPayload);
-      console.log(response," respo");
       if (response.success) {
         const { user, token } = response;
-        console.log(user, token);
         login(user, token);
 
         toast({
