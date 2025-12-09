@@ -1,5 +1,6 @@
 import type { AcademyCoach } from "@/types/academyCoach";
 import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface AcademyCoachQuery {
   page?: number;
@@ -40,8 +41,8 @@ export function getAcademyCoachById(id: number): Promise<AcademyCoach> {
 
 export function createAcademyCoach(
   payload: Omit<AcademyCoach, "academyCoachesId" | "createdAt" | "updatedAt">
-): Promise<AcademyCoach> {
-  return request<AcademyCoach>(ACADEMY_COACH_BASE, {
+): Promise<Response<AcademyCoach>> {
+  return request<Response<AcademyCoach>>(ACADEMY_COACH_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -49,9 +50,11 @@ export function createAcademyCoach(
 
 export function updateAcademyCoach(
   id: number,
-  payload: Partial<Omit<AcademyCoach, "academyCoachesId" | "createdAt" | "updatedAt">>
-): Promise<AcademyCoach> {
-  return request<AcademyCoach>(`${ACADEMY_COACH_BASE}/${id}`, {
+  payload: Partial<
+    Omit<AcademyCoach, "academyCoachesId" | "createdAt" | "updatedAt">
+  >
+): Promise<Response<AcademyCoach>> {
+  return request<Response<AcademyCoach>>(`${ACADEMY_COACH_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });

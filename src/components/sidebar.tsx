@@ -23,6 +23,7 @@ import {
   Book,
   IndianRupee,
   Crown,
+  ParkingCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -115,11 +116,12 @@ const navigationItems: NavigationItem[] = [
       {
         label: "Staff Attendance",
         href: "staff-management/attendance",
-        icon: User
-      }
+        icon: User,
+      },
     ],
   },
   { name: "payment", href: "/payment", icon: BarChart3 },
+  { name: "Parking", href: "/parking", icon: ParkingCircle },
   { name: "Debit Note", href: "/debit-note", icon: CreditCard },
   {
     name: "Membership",

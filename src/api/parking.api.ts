@@ -17,7 +17,7 @@ export interface ParkingQuery {
 
 const PARKING_BASE = import.meta.env.VITE_APP_API_URL + "/parking";
 
-export function getActivities(
+export function getParking(
   params: ParkingQuery = {}
 ): Promise<Response<Parking>> {
   const qs = toQueryString({
@@ -35,18 +35,18 @@ export function getActivities(
   return request<Response<Parking>>(`${PARKING_BASE}${qs}`);
 }
 
-export function getActivityById(id: number): Promise<Response> {
+export function getParkingById(id: number): Promise<Response> {
   return request<Response>(`${PARKING_BASE}/${id}`);
 }
 
-export function createActivity(payload: Parking): Promise<Response> {
+export function createParking(payload: Parking): Promise<Response> {
   return request<Response>(PARKING_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function editActivity(
+export function editParking(
   id: number,
   payload: Partial<Parking>
 ): Promise<Response> {
@@ -56,7 +56,7 @@ export function editActivity(
   });
 }
 
-export function deleteActivity(id: number): Promise<Response> {
+export function deleteParking(id: number): Promise<Response> {
   return request<Response>(`${PARKING_BASE}/${id}`, {
     method: "DELETE",
   });

@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import { getActivities } from "@/api/activity.api";
+import type { Activity } from "@/types/activity";
 type Props = {
   isOpen: boolean;
   initialData?: Academy;
@@ -47,17 +48,28 @@ export default function AcademyFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [activity, setActivity] = useState<any>([]);
+  const [activity, setActivity] = useState<Activity[]>([]);
 
   const getAllActivity = async () => {
     try {
-      const res: Response = await getActivities();
+      const res: Response<Activity[]> = await getActivities();
       const data = res?.data || [];
+
+      if (res.success !== true) {
+        setError(res.message);
+        throw new Error(res.message);
+      } else {
+        toast({
+          title: "Success",
+          description: "Academy coach created successfully",
+          variant: "success",
+        });
+      }
       setActivity(data);
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
-        description: "Failed to fetch activities",
+        description: error ? error : "failed to create academy",
         variant: "destructive",
       });
     }
@@ -190,7 +202,7 @@ export default function AcademyFormModal({
           : "Academy created successfully",
         variant: "success",
       });
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load facilities.",

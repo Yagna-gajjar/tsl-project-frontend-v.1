@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Academy } from "@/types/academy";
@@ -22,6 +20,7 @@ import {
   MapPin,
 } from "lucide-react";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -44,8 +43,18 @@ const fields: FieldConfig<Academy>[] = [
   { key: "share_tsl", label: "TSL Share %", icon: PieChart },
   { key: "share_expenses", label: "Expenses Share %", icon: PieChart },
   { key: "panCard", label: "PAN Card", icon: CreditCard },
-  { key: "registrationDate", label: "Registration Date", icon: Calendar, render: (v) => (v ? formatDateForInput(v) : "-") },
-  { key: "discontinuedDate", label: "Discontinued Date", icon: Calendar, render: (v) => (v ? formatDateForInput(v) : "-") },
+  {
+    key: "registrationDate",
+    label: "Registration Date",
+    icon: Calendar,
+    render: (v) => (v ? formatDateForInput(v) : "-"),
+  },
+  {
+    key: "discontinuedDate",
+    label: "Discontinued Date",
+    icon: Calendar,
+    render: (v) => (v ? formatDateForInput(v) : "-"),
+  },
   { key: "addressId", label: "Address ID", icon: MapPin },
   {
     key: "createdAt",
@@ -70,14 +79,9 @@ export default function AcademyViewModal({
     async (id?: number | string): Promise<Academy> => {
       const useId = id ?? academyId;
       if (!useId) throw new Error("Academy ID missing");
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getAcademyById(Number(useId));
-
-      // normalize: API may return { success, data } or raw academy
-      if (res && res.data) return res.data as Academy;
-
-      return res as Academy;
+      const res: Response<Academy> = await getAcademyById(Number(useId));
+      const resRow = res?.data ? res?.data : ({} as Academy);
+      return resRow;
     },
     [academyId]
   );

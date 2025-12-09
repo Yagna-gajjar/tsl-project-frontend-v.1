@@ -10,6 +10,7 @@ import { getAcademies } from "@/api/academy.api";
 import type { Response } from "@/types/response";
 import { toast } from "@/hooks/use-toast";
 import { getCoaches } from "@/api/coach.api";
+import type { Academy } from "@/types/academy";
 import type { Coach } from "@/types/coach";
 
 type Props = {
@@ -20,16 +21,15 @@ type Props = {
 };
 
 const empty = {
-  academyCoachesId: 0,
   coachId: 0,
   academyId: 0,
-  joiningDate: "",
-  relievedDate: "",
+  joiningDate: new Date(),
+  relievedDate: new Date(),
   designation: "",
   description: "",
   rfid: "",
   thumbprint: "",
-} as unknown as AcademyCoach;
+} as AcademyCoach;
 
 export default function AcademyCoachFormModal({
   isOpen,
@@ -41,14 +41,23 @@ export default function AcademyCoachFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [academyOptions, setAcademyOptions] = useState([]);
-  const [coachOptions, setCoachOptions] = useState([]);
+  const [academyOptions, setAcademyOptions] = useState<
+    {
+      label: string;
+      value: number;
+    }[]
+  >([]);
+  const [coachOptions, setCoachOptions] = useState<
+    {
+      label: string;
+      value: number;
+    }[]
+  >([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Reset form first
-        const baseValues: Record<string, unknown> = { ...empty };
+        const baseValues: AcademyCoach = { ...empty };
 
         if (initialData) {
           baseValues.academyCoachesId = initialData.academyCoachesId;
@@ -56,7 +65,7 @@ export default function AcademyCoachFormModal({
           baseValues.academyId = initialData.academyId;
           baseValues.joiningDate = initialData.joiningDate
             ? formatDateForInput(initialData.joiningDate)
-            : undefined;
+            : "";
           baseValues.relievedDate = initialData.relievedDate
             ? formatDateForInput(initialData.relievedDate)
             : undefined;
@@ -70,35 +79,39 @@ export default function AcademyCoachFormModal({
         setFieldErrors({});
         setError(null);
 
-        // Fetch dropdown data
-        const res: Response = await getAcademies();
+        const res: Response<Academy[]> = await getAcademies();
         const academyoptions = Array.isArray(res.data)
-          ? res.data.map((academy: Record<string, unknown>) => ({
-              value: academy.academyId,
-              label: academy.academyName,
+          ? res.data.map((academy: Academy) => ({
+              value: academy.academyId as number,
+              label: academy.academyName as string,
             }))
           : [];
 
         setAcademyOptions(academyoptions);
 
-          const res1: Response = await getCoaches();
-          
+        const res1: Response = await getCoaches();
+
         const coachoptions = Array.isArray(res1)
-          ? res1.map((coach: Record<string, unknown>) => ({
+          ? res1.map((coach: Coach) => ({
               value: coach.coachId,
-              label: coach.coachFirstName + " " + coach.coachLastName + " " + coach.coachMiddleName,
+              label:
+                coach.coachFirstName +
+                " " +
+                coach.coachLastName +
+                " " +
+                coach.coachMiddleName,
             }))
           : [];
 
         setCoachOptions(coachoptions);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Failed to load academy data:", err);
 
         // Show toast
         toast({
           variant: "destructive",
           title: "Failed to load academies",
-          description: err?.message || "Something went wrong.",
+          description: "Something went wrong.",
         });
 
         // Keep form clean instead of partial state
@@ -165,43 +178,51 @@ export default function AcademyCoachFormModal({
       };
 
       if (initialData?.academyCoachesId) {
-        await updateAcademyCoach(
+        const res: Response<AcademyCoach> = await updateAcademyCoach(
           initialData.academyCoachesId,
           payload as Omit<
             AcademyCoach,
             "academyCoachesId" | "createdAt" | "updatedAt"
           >
         );
+        if (res.success !== true) {
+          throw new Error("Failed to update academy coach");
+        } else {
+          toast({
+            title: "Success",
+            description: "Academy coach updated successfully",
+            variant: "success",
+          });
+        }
       } else {
-        const res: Response = await createAcademyCoach(
+        const res: Response<AcademyCoach> = await createAcademyCoach(
           payload as Omit<
             AcademyCoach,
             "academyCoachesId" | "createdAt" | "updatedAt"
           >
-          );
-          
-          if (res.success !== true) {
-            throw new Error("Failed to create academy coach");
-          } else {
-            toast({
-              title: "Success",
-              description: "Academy coach created successfully",
-              variant: "success",
-            });
-          } 
-          
+        );
+
+        if (res.success !== true) {
+          throw new Error("Failed to create academy coach");
+        } else {
+          toast({
+            title: "Success",
+            description: "Academy coach created successfully",
+            variant: "success",
+          });
+        }
       }
       onSave();
       onClose();
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An error occurred";
-        setError(errorMessage);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: errorMessage,
-        });
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }

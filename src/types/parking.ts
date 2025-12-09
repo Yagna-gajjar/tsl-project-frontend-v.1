@@ -1,6 +1,8 @@
 export interface Parking {
   parkingId?: number;
   memberId: number;
+  memberFirstName: string;
+  memberLastName: string;
   vehicleType: string;
   vehicleNumber: string;
   status: string;
@@ -12,6 +14,7 @@ export interface Parking {
 
   paymentId: number;
   paymentAmount: number;
+  paymentType: string;
   paymentMode: string;
   transactionId?: string;
   totalAmount: number;
