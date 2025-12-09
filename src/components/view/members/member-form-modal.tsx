@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -17,6 +17,16 @@ type Props = {
   initialData?: Partial<Member> | null;
   onSaved?: (row: Member) => void;
   layout?: "grid" | "list";
+};
+
+// Extended type to handle form state including flat address fields
+type MemberFormState = Partial<Member> & {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  pinCode?: string;
 };
 
 const validateEmail = (email?: string) => {
@@ -42,7 +52,8 @@ export function MemberFormModal({
 }: Props) {
   const isEdit = Boolean(initialData && initialData.memberId);
 
-  const empty: Partial<Member> = {
+  // Initialize empty state including address fields
+  const empty: MemberFormState = {
     familyId: initialData?.familyId ?? undefined,
     memberFirstName: initialData?.memberFirstName ?? "",
     memberMiddleName: initialData?.memberMiddleName ?? "",
@@ -59,24 +70,43 @@ export function MemberFormModal({
     idProofNumber: initialData?.idProofNumber ?? "",
     contactNumber: initialData?.contactNumber ?? "",
     transportMode: initialData?.transportMode ?? "self drive",
-    addressId: initialData?.addressId ?? undefined,
     remarks: initialData?.remarks ?? "",
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    country: "India",
+    pinCode: "",
   };
 
-  const [values, setValues] = useState<Partial<Member>>(empty);
+  const [values, setValues] = useState<MemberFormState>(empty);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setValues({ ...empty, ...(initialData ?? {}) });
+    // Check if initialData has a nested address object and flatten it for the form
+    const addressData = (initialData as any)?.address || {};
+
+    setValues({
+      ...empty,
+      ...(initialData ?? {}),
+      // Map nested address to flat state if editing
+      line1: addressData.line1 || "",
+      line2: addressData.line2 || "",
+      city: addressData.city || "",
+      state: addressData.state || "",
+      country: addressData.country || "India",
+      pinCode: addressData.pinCode || "",
+    });
+
     setError(null);
     setFieldErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
-  const onChange = (field: keyof Member, val: any) => {
+  const onChange = (field: keyof MemberFormState, val: any) => {
     setValues((p) => ({ ...p, [field]: val }));
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
@@ -102,7 +132,7 @@ export function MemberFormModal({
     },
     { name: "memberMiddleName", label: "Middle Name", type: "text" },
     { name: "memberLastName", label: "Last Name", type: "text" },
-    { name: "dob", label: "DOB", type: "date", required: true },
+    { name: "dob", label: "DOB", type: "Date", required: true },
     { name: "email", label: "Email", type: "text" },
     { name: "contactNumber", label: "Contact Number", type: "text" },
     { name: "relationship", label: "Relationship", type: "text" },
@@ -145,7 +175,6 @@ export function MemberFormModal({
       ],
       required: true,
     },
-    { name: "addressId", label: "Address ID", type: "text", required: true },
     { name: "schoolName", label: "School Name", type: "text" },
     { name: "qualification", label: "Qualification", type: "text" },
     {
@@ -162,6 +191,15 @@ export function MemberFormModal({
       ],
     },
     { name: "idProofNumber", label: "ID Proof Number", type: "text" },
+
+    // --- Address Section ---
+    { name: "line1", label: "Address Line 1", type: "text", required: true },
+    { name: "line2", label: "Address Line 2", type: "text" },
+    { name: "city", label: "City", type: "text", required: true },
+    { name: "state", label: "State", type: "text", required: true },
+    { name: "country", label: "Country", type: "text", required: true },
+    { name: "pinCode", label: "Pin Code", type: "text", required: true },
+
     {
       name: "status",
       label: "Status",
@@ -182,7 +220,7 @@ export function MemberFormModal({
 
     const newFieldErrors: Record<string, string> = {};
 
-    // required checks
+    // Member Checks
     if (!values.familyId && values.familyId !== 0)
       newFieldErrors.familyId = "Family ID is required";
     if (!values.memberFirstName || String(values.memberFirstName).trim() === "")
@@ -191,10 +229,20 @@ export function MemberFormModal({
     if (!values.gender) newFieldErrors.gender = "Gender is required";
     if (!values.transportMode)
       newFieldErrors.transportMode = "Transport mode is required";
-    if (!values.addressId && values.addressId !== 0)
-      newFieldErrors.addressId = "Address ID is required";
 
-    // conditional validations
+    // Address Checks
+    if (!values.line1 || String(values.line1).trim() === "")
+      newFieldErrors.line1 = "Address Line 1 is required";
+    if (!values.city || String(values.city).trim() === "")
+      newFieldErrors.city = "City is required";
+    if (!values.state || String(values.state).trim() === "")
+      newFieldErrors.state = "State is required";
+    if (!values.country || String(values.country).trim() === "")
+      newFieldErrors.country = "Country is required";
+    if (!values.pinCode || String(values.pinCode).trim() === "")
+      newFieldErrors.pinCode = "Pin Code is required";
+
+    // Conditional Validations
     const emailVal = String(values.email ?? "").trim();
     if (emailVal && !validateEmail(emailVal))
       newFieldErrors.email = "Enter a valid email";
@@ -211,7 +259,8 @@ export function MemberFormModal({
     }
 
     try {
-      const payload: Partial<Member> = {
+      // Construct Payload with nested address object
+      const payload: any = {
         familyId: Number(values.familyId),
         memberFirstName: String(values.memberFirstName ?? "").trim(),
         memberMiddleName: values.memberMiddleName ?? "",
@@ -219,17 +268,22 @@ export function MemberFormModal({
         dob: values.dob ? new Date(values.dob) : undefined,
         email: emailVal || undefined,
         relationship: values.relationship ?? "",
-        bloodGroup: values.bloodGroup as any,
-        gender: values.gender as any,
-        status: values.status as any,
+        bloodGroup: values.bloodGroup,
+        gender: values.gender,
+        status: values.status,
         schoolName: values.schoolName ?? "",
         qualification: values.qualification ?? "",
-        idProofType: values.idProofType as any,
+        idProofType: values.idProofType,
         idProofNumber: values.idProofNumber ?? "",
         contactNumber: contactVal || undefined,
-        transportMode: values.transportMode as any,
-        addressId: Number(values.addressId),
+        transportMode: values.transportMode,
         remarks: values.remarks ?? "",
+        line1: values.line1,
+        line2: values.line2,
+        city: values.city,
+        state: values.state,
+        country: values.country,
+        pinCode: values.pinCode
       };
 
       let res: any;
@@ -283,7 +337,7 @@ export function MemberFormModal({
     } finally {
       setIsSubmitting(false);
     }
-    
+
   }, [values, isEdit, initialData, onClose, onSaved]);
 
   return (
