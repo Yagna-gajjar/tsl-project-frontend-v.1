@@ -39,6 +39,8 @@ import Billing from "./pages/billing"
 import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
 import MembershipPage from "./pages/membership";
+import StaffAttendanceTable from "./pages/staff-attendance"
+import StaffAttendance from "./pages/staff-attendance"
 
 export default function App() {
   return (
@@ -97,6 +99,10 @@ export default function App() {
                 <Route
                   path="/staff-management/coach-skills"
                   element={<CoachSkillPage />}
+                />
+                <Route
+                  path="/staff-management/attendance"
+                  element={<StaffAttendance />}
                 />
                 <Route path="/courses" element={<CoursePage />} />
                 <Route path="/batch" element={<BatchPage />} />
