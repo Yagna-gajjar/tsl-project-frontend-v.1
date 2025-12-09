@@ -7,26 +7,13 @@ import { toast } from "@/hooks/use-toast";
 import { AcceptRequest, updateBatchMember } from "@/api/enrollmentActions.api";
 import { getEnrollmentById } from "@/api/enrollment.api";
 import type { Response } from "@/types/response";
-
-type RequestItem = {
-  batchMemberId: number;
-  batchId: number;
-  memberId: number;
-  status: string;
-  enrollmentId: number;
-  createdAt: string;
-  startDate: string | null;
-  endDate: string | null;
-  reason?: string | null;
-  batchName?: string | null;
-  memberName?: string | null;
-};
+import type { BatchMember } from "@/api/batchMember.api";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onAccepted?: () => void;
-  requestData: RequestItem[];
+  requestData: BatchMember[];
   setRequestLen: Dispatch<SetStateAction<number>>;
 };
 
@@ -38,7 +25,7 @@ export default function AcceptBatchRequest({
   setRequestLen,
 }: Props) {
   const [loading] = useState(false);
-  const [requests, setRequests] = useState<RequestItem[]>(requestData);
+  const [requests, setRequests] = useState<BatchMember[]>(requestData);
   const [acceptingIds, setAcceptingIds] = useState<Record<number, boolean>>({});
   const [rejectingIds, setRejectingIds] = useState<Record<number, boolean>>({});
   const [expandedRejectIds, setExpandedRejectIds] = useState<
@@ -59,7 +46,7 @@ export default function AcceptBatchRequest({
     }
   };
 
-  const handleAccept = async (item: RequestItem) => {
+  const handleAccept = async (item: BatchMember) => {
     if (acceptingIds[item.batchMemberId]) return;
     setAcceptingIds((s) => ({ ...s, [item.batchMemberId]: true }));
 
@@ -170,7 +157,7 @@ export default function AcceptBatchRequest({
     }
   };
 
-  const handleReject = (item: RequestItem) => {
+  const handleReject = (item: BatchMember) => {
     setExpandedRejectIds((s) => ({
       ...s,
       [item.batchMemberId]: !s[item.batchMemberId],
@@ -180,7 +167,7 @@ export default function AcceptBatchRequest({
     }
   };
 
-  const submitReject = async (item: RequestItem) => {
+  const submitReject = async (item: BatchMember) => {
     const id = item.batchMemberId;
     const reason = rejectReasons[id] || "";
 

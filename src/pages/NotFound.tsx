@@ -1,9 +1,11 @@
+// [00:00] Imports
 import { motion } from "framer-motion"
 import { Home, ArrowLeft, Wrench, HardHat, Bubbles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 
+// [00:05] Floating animation icon configurations
 const floatingElements = [
 	{ icon: Wrench, delay: 0.5, x: -80, y: 100 },
 	{ icon: HardHat, delay: 1, x: 120, y: -30 },
@@ -13,17 +15,17 @@ const floatingElements = [
 
 export default function PageNotFound() {
 	const navigate = useNavigate()
+
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 	const [isMouseMoving, setIsMouseMoving] = useState(false)
 
 	useEffect(() => {
-		let timeoutId:any = null;
+		let timeoutId: ReturnType<typeof setTimeout>
 
-		const handleMouseMove = (e:any) => {
+		const handleMouseMove = (e: MouseEvent) => {
 			setMousePosition({ x: e.clientX, y: e.clientY })
 			setIsMouseMoving(true)
 
-			// Hide follower after mouse stops moving
 			clearTimeout(timeoutId)
 			timeoutId = setTimeout(() => {
 				setIsMouseMoving(false)
@@ -34,27 +36,22 @@ export default function PageNotFound() {
 			setIsMouseMoving(false)
 		}
 
-		document.addEventListener('mousemove', handleMouseMove)
-		document.addEventListener('mouseleave', handleMouseLeave)
+		document.addEventListener("mousemove", handleMouseMove)
+		document.addEventListener("mouseleave", handleMouseLeave)
 
 		return () => {
-			document.removeEventListener('mousemove', handleMouseMove)
-			document.removeEventListener('mouseleave', handleMouseLeave)
+			document.removeEventListener("mousemove", handleMouseMove)
+			document.removeEventListener("mouseleave", handleMouseLeave)
 			clearTimeout(timeoutId)
 		}
 	}, [])
 
-	const handleGoHome = () => {
-		navigate("/")
-	}
-
-	const handleGoBack = () => {
-		navigate(-1)
-	}
+	const handleGoHome = () => navigate("/")
+	const handleGoBack = () => navigate(-1)
 
 	return (
 		<div className="min-h-[80vh] bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center relative overflow-hidden">
-			{/* Animated Background Elements */}
+
 			<div className="absolute inset-0 overflow-hidden">
 				{floatingElements.map((element, index) => {
 					const Icon = element.icon
@@ -87,23 +84,21 @@ export default function PageNotFound() {
 				})}
 			</div>
 
-			{/* Mouse Follower */}
 			<div
-				className={`fixed w-6 h-6 bg-primary/30 rounded-full pointer-events-none z-50 transition-opacity duration-200 ${isMouseMoving ? 'opacity-100' : 'opacity-0'
+				className={`fixed w-6 h-6 bg-primary/30 rounded-full pointer-events-none z-50 transition-opacity duration-200 ${isMouseMoving ? "opacity-100" : "opacity-0"
 					}`}
 				style={{
 					left: mousePosition.x - 12,
 					top: mousePosition.y - 12,
-					transform: 'translate3d(0, 0, 0)', // Hardware acceleration
-					transition: 'left 0.1s ease-out, top 0.1s ease-out',
+					transform: "translate3d(0, 0, 0)",
+					transition: "left 0.1s ease-out, top 0.1s ease-out",
 				}}
 			>
 				<div className="w-full h-full bg-primary/50 rounded-full animate-ping"></div>
 			</div>
 
-			{/* Main Content */}
 			<div className="text-center z-20 relative">
-				{/* 404 Number Animation */}
+
 				<motion.div
 					initial={{ opacity: 0, y: -100 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -111,7 +106,7 @@ export default function PageNotFound() {
 					className="relative mb-8"
 				>
 					<motion.h1
-						className="text-9xl md:text-[12rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-pink-500 dark:from-primary dark:via-purple-400 dark:to-pink-400"
+						className="text-9xl md:text-[12rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-pink-500"
 						animate={{
 							backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
 						}}
@@ -120,20 +115,14 @@ export default function PageNotFound() {
 							repeat: Number.POSITIVE_INFINITY,
 							ease: "linear",
 						}}
-						style={{
-							backgroundSize: "200% 200%",
-						}}
+						style={{ backgroundSize: "200% 200%" }}
 					>
 						404
 					</motion.h1>
 
-					{/* Glitch Effect */}
 					<motion.div
-						className="absolute inset-0 text-9xl md:text-[12rem] font-bold text-red-500 dark:text-red-400 opacity-20"
-						animate={{
-							x: [0, -2, 2, 0],
-							y: [0, 1, -1, 0],
-						}}
+						className="absolute inset-0 text-9xl md:text-[12rem] font-bold text-red-500 opacity-20"
+						animate={{ x: [0, -2, 2, 0], y: [0, 1, -1, 0] }}
 						transition={{
 							duration: 0.2,
 							repeat: Number.POSITIVE_INFINITY,
@@ -144,7 +133,6 @@ export default function PageNotFound() {
 					</motion.div>
 				</motion.div>
 
-				{/* Text Content */}
 				<motion.div
 					initial={{ opacity: 0, y: 50 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -158,7 +146,6 @@ export default function PageNotFound() {
 					</p>
 				</motion.div>
 
-				{/* Action Buttons */}
 				<motion.div
 					initial={{ opacity: 0, y: 50 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -180,7 +167,6 @@ export default function PageNotFound() {
 					</motion.div>
 				</motion.div>
 
-				{/* Loading Animation */}
 				<motion.div
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
@@ -193,34 +179,26 @@ export default function PageNotFound() {
 							<motion.div
 								key={i}
 								className="w-2 h-2 bg-primary rounded-full"
-								animate={{
-									scale: [1, 1.5, 1],
-									opacity: [0.5, 1, 0.5],
-								}}
-								transition={{
-									duration: 1,
-									delay: i * 0.2,
-									repeat: Number.POSITIVE_INFINITY,
-								}}
+								animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+								transition={{ duration: 1, delay: i * 0.2, repeat: Number.POSITIVE_INFINITY }}
 							/>
 						))}
 					</div>
 				</motion.div>
 			</div>
 
-			{/* Particle Effect */}
 			<div className="absolute inset-0 overflow-hidden pointer-events-none">
 				{Array.from({ length: 20 }).map((_, i) => (
 					<motion.div
 						key={i}
 						className="absolute w-1 h-1 bg-primary/30 rounded-full"
 						initial={{
-							x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-							y: typeof window !== 'undefined' ? window.innerHeight + 10 : 800,
+							x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1200),
+							y: typeof window !== "undefined" ? window.innerHeight + 10 : 800,
 						}}
 						animate={{
 							y: -10,
-							x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
+							x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1200),
 						}}
 						transition={{
 							duration: Math.random() * 3 + 2,

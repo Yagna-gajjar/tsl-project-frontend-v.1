@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- Types based on your JSON ---
 interface Session {
 	inOutId: number;
 	inTime: string;
@@ -47,7 +46,6 @@ const formatTime = (isoString: string | null) => {
 };
 
 const StaffAttendance = () => {
-	// State
 	const [selectedDate, setSelectedDate] = useState<string>(
 		new Date().toISOString().split("T")[0] // Default to YYYY-MM-DD
 	);
@@ -55,14 +53,11 @@ const StaffAttendance = () => {
 	const [loading, setLoading] = useState<boolean>(true);
 	const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
 
-	// Fetch Data
 	useEffect(() => {
 		const fetchData = async () => {
 			setLoading(true);
 			try {
 				const response: any = await getAttendanceByDate(selectedDate);
-				// Note: Casting to any first because your API return type might differ slightly in TS definition
-				// Assuming response structure matches the JSON provided
 				if (response?.success) {
 					setAttendanceData(response.users);
 				} else {
@@ -169,8 +164,8 @@ const UserCard = ({
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ delay: index * 0.05 }}
 			className={`overflow-hidden rounded-xl border transition-colors duration-200 ${isExpanded
-					? "bg-blue-50/50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800"
-					: "bg-white border-border hover:border-blue-300 dark:bg-gray-900 dark:border-gray-800 dark:hover:border-gray-700"
+				? "bg-blue-50/50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800"
+				: "bg-white border-border hover:border-blue-300 dark:bg-gray-900 dark:border-gray-800 dark:hover:border-gray-700"
 				}`}
 		>
 			{/* Summary Row (Always Visible) */}
@@ -269,8 +264,8 @@ const UserCard = ({
 															</span>
 															<span
 																className={`text-sm font-medium ${!session.outTime
-																		? "text-green-600 animate-pulse"
-																		: "text-foreground dark:text-gray-200"
+																	? "text-green-600 animate-pulse"
+																	: "text-foreground dark:text-gray-200"
 																	}`}
 															>
 																{formatTime(session.outTime)}

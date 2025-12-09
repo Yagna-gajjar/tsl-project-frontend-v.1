@@ -12,7 +12,8 @@ import {
   Dumbbell,
   Zap,
   Swords,
-  Volleyball
+  Volleyball,
+  type LucideIcon
 } from "lucide-react";
 import BillingPage from "@/components/view/billing/BillingPage";
 import type { Academy } from "@/types/academy";
@@ -50,8 +51,7 @@ export default function Billing() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response: Response<Academy[] | any> = await getAcademies({ limit: 500 });
-        // Artificial delay for smooth animation demonstration
+        const response: Response<Academy[]> = await getAcademies({ limit: 500 });
         setTimeout(() => {
           setAcademies(response.data as Academy[] || []);
           setLoading(false);
@@ -179,7 +179,6 @@ export default function Billing() {
   );
 }
 
-// --- SUB COMPONENT: THE ACTUAL CARD ---
 function AcademyCard({ academy, onClick, index }: { academy: Academy; onClick: () => void; index: number }) {
   const theme = getAcademyTheme(academy?.academyType ?? "unknown");
   const Icon = theme.icon;
@@ -238,14 +237,12 @@ function AcademyCard({ academy, onClick, index }: { academy: Academy; onClick: (
           </div>
         </div>
 
-        {/* Info Grid */}
         <div className="space-y-3 mb-6 flex-grow">
           <InfoRow icon={Mail} text={academy.email as string} />
           <InfoRow icon={Phone} text={academy.contactNumber as string} />
           <InfoRow icon={CalendarDays} text={`Joined ${new Date(academy?.registrationDate!).toLocaleDateString()}`} />
         </div>
 
-        {/* Footer */}
         <div className="pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 rounded-lg">
             <PieChart className="h-3.5 w-3.5" />
@@ -261,15 +258,13 @@ function AcademyCard({ academy, onClick, index }: { academy: Academy; onClick: (
   );
 }
 
-// --- SUB COMPONENT: SMALL INFO ROW ---
-const InfoRow = ({ icon: Icon, text }: { icon: any, text: string }) => (
+const InfoRow = ({ icon: Icon, text }: { icon: LucideIcon, text: string }) => (
   <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 group/row hover:text-gray-900 dark:hover:text-gray-200 transition-colors">
     <Icon className="h-4 w-4 text-gray-400 group-hover/row:text-blue-500 transition-colors" />
     <span className="truncate">{text}</span>
   </div>
 );
 
-// --- SUB COMPONENT: LOADING SKELETON ---
 function AcademyCardSkeleton() {
   return (
     <div className="h-[320px] bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">

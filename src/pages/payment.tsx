@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { View } from "lucide-react";
 import type { Payment } from "@/types/payment";
 import PaymentTable from "@/components/view/payment/payment-table";
 import PaymentViewModal from "@/components/view/payment/payment-view-modal";
@@ -7,11 +6,7 @@ import PaymentViewModal from "@/components/view/payment/payment-view-modal";
 export default function PaymentPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [viewData, setViewData] = useState<number>();
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const bumpRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
+  const [refreshKey] = useState(0);
 
   const openView = (row: Payment) => {
     setViewData(row.paymentId);

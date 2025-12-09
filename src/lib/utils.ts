@@ -10,12 +10,10 @@ export function formatTime(timestamp: number): string {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
 
-  // Less than 1 minute
   if (diff < 60000) {
     return "now"
   }
 
-  // Less than 1 hour
   if (diff < 3600000) {
     const minutes = Math.floor(diff / 60000)
     return `${minutes}m`
@@ -30,7 +28,6 @@ export function formatTime(timestamp: number): string {
     })
   }
 
-  // More than 24 hours
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",

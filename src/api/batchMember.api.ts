@@ -2,6 +2,7 @@ import { request } from "./helper";
 import type { Response } from "@/types/response";
 
 export interface BatchMember {
+  batchMemberId:number
   enrollmentId: number;
   batchId: number;
   memberId: number;
@@ -13,8 +14,8 @@ export interface BatchMember {
   endTime: string;
   coachId: number;
   coachName: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: Date | string;
+  endDate: Date | string;
   oldEnollmentEndDate: Date;
   newStartDate: Date;
   members: {

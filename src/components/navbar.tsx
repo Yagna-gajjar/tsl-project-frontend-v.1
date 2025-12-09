@@ -40,20 +40,6 @@ interface NavbarProps {
   onMenuClick: () => void;
 }
 
-type RequestItem = {
-  batchMemberId: number;
-  batchId: number;
-  memberId: number;
-  status: string;
-  enrollmentId: number;
-  createdAt: string;
-  startDate: string | null;
-  endDate: string | null;
-  reason?: string | null;
-  batchName?: string | null;
-  memberName?: string | null;
-};
-
 interface SettingsGroup {
   category: string;
   icon: React.ElementType;
@@ -95,8 +81,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const { theme, toggleTheme } = useTheme();
   const { logout, user, token } = useAuth();
   const navigate = useNavigate();
-  const [userImage, setUserImage] = useState<string>();
-  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [userImage] = useState<string>();
+  const [requests, setRequests] = useState<BatchMember[]>([]);
   const [requestLen, setRequestLen] = useState<number>(0);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -126,7 +112,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
   const fetchRequests = useCallback(async () => {
     try {
-      const data: Response<BatchMember[] | any> = await getBatchMemberRequests();
+      const data: Response<BatchMember[]> = await getBatchMemberRequests();
       setRequests(data?.data || []);
       setRequestLen(Array.isArray(data?.data) ? data.data.length : 0);
     } catch (err) {
@@ -145,7 +131,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const fetchStatus = async () => {
       if (user?.userId) {
         try {
-          const response: any = await isUserActive(user.userId);
+          const response: Response = await isUserActive(user.userId);
           // Set state based on response.data (true/false)
           if (response && typeof response.data === 'boolean') {
             setIsCheckedIn(response.data);

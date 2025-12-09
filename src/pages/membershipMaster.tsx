@@ -1,6 +1,3 @@
-// MembershipMasterPage.tsx
-"use client";
-
 import { useState } from "react";
 import MembershipMasterTable from "@/components/view/memberShipMaster/memberShipMaster-table";
 import MembershipMasterFormModal from "@/components/view/memberShipMaster/membershipMaster-form-modal";
@@ -10,15 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 export default function MembershipMasterPage() {
-  // view modal state: keep selected id (or null)
   const [viewOpen, setViewOpen] = useState(false);
   const [viewId, setViewId] = useState<number | null>(null);
 
-  // form modal state: editing row object or null for create
   const [formOpen, setFormOpen] = useState(false);
   const [editRow, setEditRow] = useState<membershipMaster | null>(null);
 
-  // increment to trigger table refresh
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
@@ -54,8 +48,6 @@ export default function MembershipMasterPage() {
 
       <MembershipMasterTable
         onView={openView}
-        // if your table supports an onEdit prop, pass it too:
-        // onEdit={openForm}
         refreshKey={refreshKey}
       />
 
