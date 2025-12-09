@@ -1,5 +1,5 @@
 export interface Enrollment {
-  enrollmentId: number;
+  enrollmentId?: number;
   enrollmentDate: Date;
   startDate: Date;
   endDate: Date;
@@ -14,10 +14,10 @@ export interface Enrollment {
   discountedAmount: number;
   commitedAmount: number;
   openEnrollment: boolean;
-  batchName: string;
+  batchName?: string;
   status: string;
   cndn: number;
-  debitAmount: number;
+  debitAmount?: number;
   billingRate: number;
   billingAmount: number;
   adjustment: number;

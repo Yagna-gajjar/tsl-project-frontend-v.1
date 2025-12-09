@@ -49,6 +49,9 @@ export default function AcademyFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [activity, setActivity] = useState<Activity[]>([]);
+  const [selectedActivity, setSelectedActivity] = useState<(string | number)[]>(
+    []
+  );
 
   const getAllActivity = async () => {
     try {
@@ -223,7 +226,7 @@ export default function AcademyFormModal({
     {
       name: "academyType",
       label: "Academy Type",
-      type: "select",
+      type: "multiselect",
       options: activity.map((a) => ({
         label: a.activityName,
         value: a.activityId,
