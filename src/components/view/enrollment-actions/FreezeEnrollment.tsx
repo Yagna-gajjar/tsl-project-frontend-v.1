@@ -20,6 +20,7 @@ import { getAcademies } from "@/api/academy.api";
 import { getCourses } from "@/api/course.api";
 import { getActivities } from "@/api/activity.api";
 import { toast } from "@/hooks/use-toast";
+import { enrollmentChange } from "@/api/enrollmentActions.api";
 
 const FreezeEnrollment = () => {
   const { id }: any = useParams();
@@ -63,17 +64,7 @@ const FreezeEnrollment = () => {
 
   const handleSubmit = async () => {
     try {
-      const res: Response<Enrollment | any> = await fetch(
-        "http://localhost:9705/api/enrollment-change/demo",
-        {
-          body: JSON.stringify(values),
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      ).then((r) => r.json());
-
+      const res: Response<Enrollment> = await enrollmentChange(values);
       if (res.success) {
         toast({
           title: "Success",
@@ -292,19 +283,19 @@ const FreezeEnrollment = () => {
     {
       name: "enrollmentDate",
       label: "Enrollment Date",
-      type: "date",
+      type: "Date",
       required: true,
     },
     {
       name: "startDate",
       label: "Start Date",
-      type: "date",
+      type: "Date",
       required: true,
     },
     {
       name: "endDate",
       label: "End Date",
-      type: "date",
+      type: "Date",
       required: false,
       disabled: true,
     },

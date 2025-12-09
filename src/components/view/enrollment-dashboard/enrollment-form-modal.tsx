@@ -56,6 +56,7 @@ const EnrollmentFormNew = ({
     batchName: string;
   } | null>(null);
 
+
   const [values, setValues] = useState<Enrollment>({
     memberId: Number(memberId),
     memberName: memberName ?? "Not Selected",
@@ -434,7 +435,6 @@ const EnrollmentFormNew = ({
     (field: string, value: any) => {
       const numFields = [
         "academyId",
-        "memberId",
         "courseId",
         "batchId",
         "numberOfDays",

@@ -53,8 +53,11 @@ export function updateBatchMember(
 export function enrollmentChange(
   payload: Enrollment
 ): Promise<Response<BatchMember>> {
-  return request<Response<BatchMember>>(`${API_BASE}/enrollment-change/demo`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return request<Response<BatchMember>>(
+    `${API_BASE}/enrollment-change/enrollment-change`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }
+  );
 }

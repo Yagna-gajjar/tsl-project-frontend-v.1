@@ -42,6 +42,7 @@ import MembershipPage from "./pages/membership";
 import StaffAttendanceTable from "./pages/staff-attendance"
 import StaffAttendance from "./pages/staff-attendance"
 import ParkingPage from "./pages/parking";
+import MedicalBreak from "./components/view/enrollment-actions/MedicalBreak";
 
 export default function App() {
   return (
@@ -73,6 +74,10 @@ export default function App() {
                 <Route
                   path="/enrollment/:id/freeze-enrollment"
                   element={<FreezeEnrollment />}
+                />
+                <Route
+                  path="/enrollment/:id/medical-extension"
+                  element={<MedicalBreak />}
                 />
                 <Route
                   path="/enrollment/:id/defreeze-enrollment"

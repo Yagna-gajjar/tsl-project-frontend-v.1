@@ -1,3 +1,4 @@
+import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +17,6 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import type { ReactNode } from "react";
 
 type Option = { label: string; value: number | string | Date };
 
@@ -46,9 +46,200 @@ interface Props {
   className?: string;
   index?: number;
 
+  // NEW: optional min/max date for date field (string "yyyy-mm-dd" or Date)
   minDate?: string | Date;
   maxDate?: string | Date;
   icon: ReactNode
+}
+
+function SearchableMultiselect({
+  options,
+  value,
+  onChange,
+  placeholder = "Search and select options...",
+  disabled = false,
+}: {
+  options: Option[];
+  value: (string | number)[];
+  onChange: (values: (string | number)[]) => void;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const filteredOptions = options.filter((opt) =>
+    opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const selectedOptions = options.filter((opt) => value.includes(opt.value));
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  const toggleOption = (optionValue: any) => {
+    const newValue = value.includes(optionValue)
+      ? value.filter((v) => v !== optionValue)
+      : [...value, optionValue];
+    onChange(newValue);
+  };
+
+  const removeOption = (optionValue: any) => {
+    onChange(value.filter((v) => v !== optionValue));
+  };
+
+  const clearAll = () => {
+    onChange([]);
+    setSearchQuery("");
+  };
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      {/* Main Input Container */}
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-background transition-all cursor-pointer ${
+          isOpen ? "border-primary ring-2 ring-primary/20" : "border-input"
+        } ${
+          disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary"
+        }`}
+      >
+        {/* Selected Tags */}
+        {selectedOptions.length > 0 ? (
+          selectedOptions.map((opt) => (
+            <span
+              key={opt.value}
+              className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
+            >
+              {opt.label}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeOption(opt.value);
+                }}
+                className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                type="button"
+              >
+                <X size={14} />
+              </button>
+            </span>
+          ))
+        ) : (
+          <span className="text-muted-foreground text-sm">{placeholder}</span>
+        )}
+
+        <div className="flex-grow" />
+
+        {/* Right Icons */}
+        <div className="flex items-center gap-1">
+          {selectedOptions.length > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                clearAll();
+              }}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              type="button"
+            >
+              <X size={16} className="text-muted-foreground" />
+            </button>
+          )}
+          <ChevronDown
+            size={18}
+            className={`text-muted-foreground transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
+        </div>
+      </div>
+
+      {/* Dropdown Menu */}
+      {isOpen && !disabled && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-input rounded-lg shadow-lg z-50 overflow-hidden">
+          {/* Search Input */}
+          <div className="p-3 border-b border-input">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            />
+          </div>
+
+          {/* Options List */}
+          <div className="max-h-64 overflow-y-auto">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => {
+                const isSelected = value.includes(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => toggleOption(opt.value)}
+                    type="button"
+                    className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                      isSelected
+                        ? "bg-primary/10 text-foreground"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    {/* Checkbox */}
+                    <div
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary"
+                          : "border-input"
+                      }`}
+                    >
+                      {isSelected && (
+                        <svg
+                          className="w-3 h-3 text-primary-foreground"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-sm">{opt.label}</span>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+                No options found
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function FormFieldInput({
@@ -161,25 +352,13 @@ export default function FormFieldInput({
 
       case "multiselect":
         return (
-          <select
-            id={name}
-            multiple
+          <SearchableMultiselect
+            options={options || []}
             value={Array.isArray(value) ? value.map(String) : []}
-            onChange={(e) => {
-              const vals = Array.from(e.target.selectedOptions).map(
-                (o) => o.value
-              );
-              onChange(vals);
-            }}
+            onChange={onChange}
+            placeholder={placeholder ?? `Select ${label.toLowerCase()}`}
             disabled={disabled}
-            className={`p-2 rounded border ${baseInputClass}`}
-          >
-            {options?.map((opt) => (
-              <option key={String(opt.value)} value={String(opt.value)}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          />
         );
 
       case "date":
@@ -271,3 +450,5 @@ export default function FormFieldInput({
     </div>
   );
 }
+
+export { SearchableMultiselect as MultiSelect };

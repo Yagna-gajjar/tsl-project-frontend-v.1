@@ -128,6 +128,8 @@ const CourseChange = () => {
 
   // --- Logic Helpers ---
   function calculateDays(startISO?: any, endISO?: any, inclusive = false) {
+    endISO = format(new Date(endISO), "yyyy-MM-dd") as any;
+
     if (!startISO || !endISO) return 0;
     const startDate = parseISO(startISO.slice(0, 10));
     const endDate = parseISO(endISO.slice(0, 10));
@@ -157,6 +159,9 @@ const CourseChange = () => {
 
   // --- Derived Calculations for UI ---
   // We calculate these on the fly to show the user exactly what's happening
+  console.log(oldEnrollment?.startDate);
+  console.log(values?.startDate);
+  
   const daysConsumed =
     oldEnrollment && values.startDate
       ? calculateDays(oldEnrollment.startDate, values.startDate) + 1
