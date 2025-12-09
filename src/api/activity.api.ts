@@ -14,18 +14,20 @@ export interface ActivityQuery {
 
 const ACTIVITY_BASE = import.meta.env.VITE_APP_API_URL + '/activity';
 
-export function getActivities(params: ActivityQuery = {}): Promise<Response<Activity>> {
-    const qs = toQueryString({
-        page: params.page ?? 1,
-        limit: params.limit ?? 10,
-        sortBy: params.sortBy ?? 'activityId',
-        sorting: params.sorting ?? (params.sorting ?? 'ASC'),
-        search: params.search ?? params.activityName,
-        activityName: params.activityName ?? undefined,
-        activityType: params.activityType ?? undefined,
-    });
+export function getActivities(
+  params: ActivityQuery = {}
+): Promise<Response<Activity[]>> {
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 10,
+    sortBy: params.sortBy ?? "activityId",
+    sorting: params.sorting ?? params.sorting ?? "ASC",
+    search: params.search ?? params.activityName,
+    activityName: params.activityName ?? undefined,
+    activityType: params.activityType ?? undefined,
+  });
 
-    return request<Response<Activity>>(`${ACTIVITY_BASE}${qs}`);
+  return request<Response<Activity[]>>(`${ACTIVITY_BASE}${qs}`);
 }
 
 export function getActivityById(id: number): Promise<Response> {

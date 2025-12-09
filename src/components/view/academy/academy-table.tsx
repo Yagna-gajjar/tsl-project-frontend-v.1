@@ -6,6 +6,7 @@ import { getAcademies, deleteAcademy } from "@/api/academy.api";
 import type { Academy } from "@/types/academy";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 
 type Props = {
   onView?: (row: Academy) => void;
@@ -21,14 +22,16 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
   const [limit] = useState<number>(20);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, string | number | undefined>>({});
+  const [filters, setFilters] = useState<
+    Record<string, string | number | undefined>
+  >({});
   const [sortBy, setSortBy] = useState<string>("academyId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getAcademies({
+      const res: Response<Academy[]> = await getAcademies({
         page,
         limit,
         sortBy,
@@ -38,18 +41,30 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
         academyType: filters.academyType as string | undefined,
       });
 
-      const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as Academy[] : []);
+      const rowsRaw = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? (res.data as Academy[])
+        : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-        registrationDate: r.registrationDate ? new Date(r.registrationDate) : undefined,
-        discontinuedDate: r.discontinuedDate ? new Date(r.discontinuedDate) : undefined,
+        registrationDate: r.registrationDate
+          ? new Date(r.registrationDate)
+          : undefined,
+        discontinuedDate: r.discontinuedDate
+          ? new Date(r.discontinuedDate)
+          : undefined,
       })) as Academy[];
 
       setData(rows);
-    } catch (err) {
-      console.error("Failed to fetch academies", err);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to fetch",
+        variant: "destructive",
+      });
       setData([]);
     } finally {
       setIsLoading(false);
@@ -65,7 +80,10 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-  const handleFilterChange = (filterKey: string, value: string | number | undefined) => {
+  const handleFilterChange = (
+    filterKey: string,
+    value: string | number | undefined
+  ) => {
     setFilters((prev) => ({
       ...prev,
       [filterKey]: value || undefined,
@@ -131,13 +149,18 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
     if (id === undefined) return;
 
     try {
-      await deleteAcademy(id);
-      toast({
-        title: "Success",
-        description: "Academy deleted successfully",
-      });
+      const res: Response = await deleteAcademy(id);
       setDeleteId(null);
       setDeleteOpen(false);
+      if (!res.success) {
+        throw new Error(res.message);
+      } else {
+        toast({
+          title: "Success",
+          description: "Academy deleted successfully",
+          variant: "success",
+        });
+      }
       await loadData();
     } catch {
       toast({
