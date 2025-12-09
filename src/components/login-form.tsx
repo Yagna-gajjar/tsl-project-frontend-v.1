@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   type LucideIcon
 } from 'lucide-react';
-import { login as userLogin } from "@/api/user.api";
+import { login as userLogin, type LoginResponseData } from "@/api/user.api";
+import type { Response } from '@/types/response';
 // Ensure you have this type defined or import it correctly
 // import type { Response } from '@/types/response'; 
 
@@ -124,7 +125,7 @@ export default function LoginForm() {
 
       const response = await userLogin(apiPayload);
       if (response.success) {
-        const { user, token } = response;
+        const { user, token }: LoginResponseData = response;
         login(user, token);
 
         toast({

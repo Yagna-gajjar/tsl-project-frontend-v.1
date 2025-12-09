@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	}
 
 	useEffect(() => {
-		// FIX: Do not validate while on /login page
 		if (window.location.pathname === "/login") return;
 
 		const validateToken = async () => {
@@ -70,7 +69,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				if (data.success) {
 					setUser(data.user)
 
-					// Refresh JWT if provided
 					if (data.token) {
 						setToken(data.token)
 						localStorage.setItem("token", data.token)

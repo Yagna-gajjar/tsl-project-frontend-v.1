@@ -25,6 +25,8 @@ export interface SignupPayload {
 export interface LoginResponseData {
 	token: string;
 	user: User;
+	success: boolean;
+	message: string
 }
 
 const USER_BASE = import.meta.env.VITE_APP_API_URL + "/user";
@@ -66,9 +68,9 @@ export function deleteUser(id: number): Promise<Response<User>> {
 	});
 }
 
-export function login(payload: LoginPayload): Promise<Response<LoginResponseData>> {
-	console.log(payload," payload");
-	return request<Response<LoginResponseData>>(`${USER_BASE}/login`, {
+export function login(payload: LoginPayload): Promise<LoginResponseData> {
+	console.log(payload, " payload");
+	return request<LoginResponseData>(`${USER_BASE}/login`, {
 		method: "POST",
 		body: JSON.stringify(payload),
 	});
