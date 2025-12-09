@@ -45,7 +45,7 @@ const fields: FieldConfig<membership>[] = [
     render: (v) => toRs(v as number),
   },
   {
-    key: "issueCharges",
+    key: "issueCharge",
     label: "Issue Charges",
     icon: CreditCard,
     render: (v) => toRs(v as number),

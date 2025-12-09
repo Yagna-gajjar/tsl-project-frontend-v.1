@@ -153,10 +153,10 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => `Rs. ${Number(r.committedAmount ?? 0).toFixed(2)}`,
     },
     {
-      key: "issueCharges",
+      key: "issueCharge",
       header: "Issue Charges",
       sortable: true,
-      render: (r) => `Rs. ${Number(r.issueCharges ?? 0).toFixed(2)}`,
+      render: (r) => `Rs. ${Number(r.issueCharge ?? 0).toFixed(2)}`,
     },
     {
       key: "refundedAmount",

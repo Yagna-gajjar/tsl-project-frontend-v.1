@@ -1,5 +1,5 @@
 // MembershipFormModal.tsx
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
@@ -10,6 +10,7 @@ import type { membership } from "@/types/membership";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
+import { format } from "date-fns";
 
 type SelectOption = { value: number | string; label: string };
 
@@ -28,7 +29,7 @@ const empty: membership = {
   endDate: new Date(),
   graceDate: new Date(),
   committedAmount: 0,
-  issueCharges: 0,
+  issueCharge: 0,
   minVBalance: 0,
   minFBalance: 0,
   minCBalance: 0,
@@ -59,13 +60,22 @@ export default function MembershipFormModal({
   const [membershipMasterOptions, setMembershipMasterOptions] = useState<
     SelectOption[]
   >([]);
+  // map of membershipMasterId -> membership master object so we can read min balances & issueCharge
+  const [membershipMastersMap, setMembershipMastersMap] = useState<
+    Record<number, any>
+  >({});
+
+  // store the last total of minF + minC so changes keep the total constant when user edits minF
+  const baseMinTotalRef = useRef<number>(0);
+  // store durationDays from membership master
+  const durationDaysRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
     // init values
     if (initialData) {
-      setValues({
+      const init = {
         ...initialData,
         startDate: initialData.startDate
           ? new Date(initialData.startDate)
@@ -85,21 +95,38 @@ export default function MembershipFormModal({
         updatedAt: initialData.updatedAt
           ? new Date(initialData.updatedAt)
           : new Date(),
-      } as membership);
+      } as membership;
+
+      // set base total for min balances
+      baseMinTotalRef.current =
+        Number(init.minFBalance || 0) + Number(init.minCBalance || 0);
+
+      // ensure actual balances mirror min balances and committedAmount is sum
+      init.actualFBalance = Number(init.minFBalance || 0);
+      init.actualCBalance = Number(init.minCBalance || 0);
+      init.committedAmount =
+        Number(init.minFBalance || 0) + Number(init.minCBalance || 0);
+
+      setValues(init);
     } else {
-      setValues({
+      const v = {
         ...empty,
         startDate: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      };
+      baseMinTotalRef.current = Number(v.minFBalance) + Number(v.minCBalance);
+      v.actualFBalance = v.minFBalance;
+      v.actualCBalance = v.minCBalance;
+      v.committedAmount = v.minFBalance + v.minCBalance;
+      setValues(v);
     }
 
     setFieldErrors({});
     setError(null);
   }, [initialData, isOpen]);
 
-  // load dropdown options
+  // load dropdown options and build membership master map
   useEffect(() => {
     if (!isOpen) return;
 
@@ -135,9 +162,70 @@ export default function MembershipFormModal({
             : String(m.membershipMasterId),
         }));
 
+        const mmMap: Record<number, any> = {};
+        mmRows.forEach((m: any) => {
+          if (m && m.membershipMasterId != null) {
+            mmMap[Number(m.membershipMasterId)] = m;
+          }
+        });
+
         if (!mounted) return;
         setFamilyOptions(famOpts);
         setMembershipMasterOptions(mmOpts);
+        setMembershipMastersMap(mmMap);
+
+        // if initialData exists and membershipMasterId is set, ensure min fields and issueCharge are set/locked
+        if (
+          initialData?.membershipMasterId &&
+          mmMap[Number(initialData.membershipMasterId)]
+        ) {
+          const mm = mmMap[Number(initialData.membershipMasterId)];
+
+          const minF =
+            mm.minFBalance !== undefined ? Number(mm.minFBalance) : undefined;
+          const minC =
+            mm.minCBalance !== undefined ? Number(mm.minCBalance) : undefined;
+
+          // compute base total
+          const total =
+            (minF ?? values.minFBalance) + (minC ?? values.minCBalance);
+          baseMinTotalRef.current = total;
+
+          setValues((prev) => ({
+            ...prev,
+            minFBalance: minF !== undefined ? minF : prev.minFBalance,
+            minCBalance: minC !== undefined ? minC : prev.minCBalance,
+            actualFBalance: minF !== undefined ? minF : prev.actualFBalance,
+            actualCBalance: minC !== undefined ? minC : prev.actualCBalance,
+            minVBalance:
+              mm.minVBalance !== undefined
+                ? Number(mm.minVBalance)
+                : prev.minVBalance,
+            issueCharge:
+              mm.issueCharge !== undefined
+                ? Number(mm.issueCharge)
+                : prev.issueCharge,
+            committedAmount:
+              (minF !== undefined ? minF : prev.minFBalance) +
+              (minC !== undefined ? minC : prev.minCBalance),
+            cancellationCharges:
+              mm.cancellationCharges !== undefined
+                ? Number(mm.cancellationCharges)
+                : prev.cancellationCharges,
+          }));
+
+          if (
+            mm.membershipDurationInDays !== undefined &&
+            mm.membershipDurationInDays !== null
+          ) {
+            durationDaysRef.current = Number(mm.membershipDurationInDays);
+            if (values.startDate) {
+              const end = new Date(values.startDate);
+              end.setDate(end.getDate() + Number(mm.membershipDurationInDays));
+              setValues((p) => ({ ...p, endDate: end } as membership));
+            }
+          }
+        }
       } catch (err) {
         console.error(
           "Failed to load family or membership master options",
@@ -146,6 +234,7 @@ export default function MembershipFormModal({
         if (!mounted) return;
         setFamilyOptions([]);
         setMembershipMasterOptions([]);
+        setMembershipMastersMap({});
       }
     };
 
@@ -153,13 +242,129 @@ export default function MembershipFormModal({
     return () => {
       mounted = false;
     };
-  }, [isOpen]);
+  }, [isOpen, initialData]);
+
+  // when membershipMasterId changes, populate min balances, cancellationCharges and issueCharge and lock them if master provides values
+  useEffect(() => {
+    const mmId = Number(values.membershipMasterId);
+    if (mmId && membershipMastersMap && membershipMastersMap[mmId]) {
+      const mm = membershipMastersMap[mmId];
+
+      const minF =
+        mm.minFBalance !== undefined ? Number(mm.minFBalance) : undefined;
+      const minC =
+        mm.minCBalance !== undefined ? Number(mm.minCBalance) : undefined;
+
+      const total = (minF ?? values.minFBalance) + (minC ?? values.minCBalance);
+      baseMinTotalRef.current = total;
+
+      setValues((prev) => ({
+        ...prev,
+        minFBalance: minF !== undefined ? minF : prev.minFBalance,
+        minCBalance: minC !== undefined ? minC : prev.minCBalance,
+        actualFBalance: minF !== undefined ? minF : prev.actualFBalance,
+        actualCBalance: minC !== undefined ? minC : prev.actualCBalance,
+        minVBalance:
+          mm.minVBalance !== undefined
+            ? Number(mm.minVBalance)
+            : prev.minVBalance,
+        issueCharge:
+          mm.issueCharge !== undefined
+            ? Number(mm.issueCharge)
+            : prev.issueCharge,
+        committedAmount:
+          (minF !== undefined ? minF : prev.minFBalance) +
+          (minC !== undefined ? minC : prev.minCBalance),
+        cancellationCharges:
+          mm.cancellationCharges !== undefined
+            ? Number(mm.cancellationCharges)
+            : prev.cancellationCharges,
+      }));
+    }
+  }, [values.membershipMasterId, membershipMastersMap]);
+
+  // compute endDate from startDate + durationDaysRef when startDate changes
+  useEffect(() => {
+    const sd = values.startDate ? new Date(values.startDate) : null;
+    const dur = durationDaysRef.current;
+    if (sd && typeof dur === "number" && !isNaN(dur)) {
+      const end = new Date(sd);
+      end.setDate(end.getDate() + Number(dur));
+      setValues((p) => ({ ...p, endDate: end } as membership));
+    }
+  }, [values.startDate]);
 
   const onChange = (
     field: keyof membership,
     val: string | number | boolean | Date
   ) => {
-    // convert select values (string) to number where needed
+    // special handling for numeric fields and for minFBalance to keep total constant
+    if (field === "minFBalance") {
+      const newMinF = typeof val === "string" ? Number(val) : Number(val);
+      const prevMinF = Number(values.minFBalance || 0);
+      const prevMinC = Number(values.minCBalance || 0);
+
+      // If both prev values are zero (fresh), use baseMinTotalRef as source of truth
+      const total = prevMinF + prevMinC || baseMinTotalRef.current || 0;
+
+      const newMinC = total - newMinF;
+
+      baseMinTotalRef.current = total; // keep base total unchanged
+
+      setValues(
+        (p) =>
+          ({
+            ...p,
+            minFBalance: newMinF,
+            minCBalance: newMinC,
+            committedAmount: newMinF + newMinC,
+            actualFBalance: newMinF,
+            actualCBalance: newMinC,
+          } as membership)
+      );
+
+      setFieldErrors((prev) => {
+        if (!prev[field as string]) return prev;
+        const copy = { ...prev };
+        delete copy[field as string];
+        return copy;
+      });
+
+      return;
+    }
+
+    if (field === "startDate") {
+      const mmId = Number(values.membershipMasterId);
+      const mm = membershipMastersMap[mmId];
+
+      if (mm.membershipDurationInDays == null) {
+        console.error("Duration is missing or invalid.");
+        durationDaysRef.current = null;
+        return;
+      }
+
+      const duration = Number(mm.membershipDurationInDays);
+      if (!values.startDate) {
+        console.error("Start date is missing.");
+        return;
+      }
+
+      const startDate = new Date(values.startDate);
+      if (isNaN(startDate.getTime())) {
+        console.error("Invalid start date:", values.startDate);
+        return;
+      }
+
+      const end = new Date(startDate);
+      end.setDate(startDate.getDate() + duration);
+
+      console.log(format(end, "yyyy-MM-dd"), "formatted end date");
+
+      setValues(
+        (p) => ({ ...p, endDate: format(end, "yyyy-MM-dd") } as membership)
+      );
+    }
+
     const normalized =
       field === "familyId" ||
       field === "membershipMasterId" ||
@@ -213,7 +418,7 @@ export default function MembershipFormModal({
         endDate: values.endDate,
         graceDate: values.graceDate,
         committedAmount: Number(values.committedAmount),
-        issueCharges: Number(values.issueCharges),
+        issueCharge: Number(values.issueCharge),
         minVBalance: Number(values.minVBalance),
         minFBalance: Number(values.minFBalance),
         minCBalance: Number(values.minCBalance),
@@ -283,16 +488,24 @@ export default function MembershipFormModal({
       required: true,
     },
     { name: "startDate", label: "Start Date", type: "Date", required: true },
-    { name: "endDate", label: "End Date", type: "Date", required: false },
+    // durationDays now comes from membership master; do not expose input
+    {
+      name: "endDate",
+      label: "End Date",
+      type: "Date",
+      required: false,
+      disabled: true,
+    },
     { name: "graceDate", label: "Grace Date", type: "Date", required: false },
     {
       name: "committedAmount",
       label: "Committed Amount",
       type: "number",
       required: false,
+      disabled: true, // disabled: computed from minF + minC
     },
     {
-      name: "issueCharges",
+      name: "issueCharge",
       label: "Issue Charges",
       type: "number",
       required: false,
@@ -314,6 +527,7 @@ export default function MembershipFormModal({
       label: "Min C Balance",
       type: "number",
       required: false,
+      disabled: true, // computed from minF to keep total constant
     },
     { name: "paymentId", label: "Payment ID", type: "text", required: false },
     {
@@ -334,16 +548,25 @@ export default function MembershipFormModal({
       required: false,
     },
     {
+      name: "cancellationCharges",
+      label: "Cancellation Charges",
+      type: "number",
+      required: false,
+      disabled: false,
+    },
+    {
       name: "actualFBalance",
       label: "Actual F Balance",
       type: "number",
       required: false,
+      disabled: true,
     },
     {
       name: "actualCBalance",
       label: "Actual C Balance",
       type: "number",
       required: false,
+      disabled: true,
     },
     {
       name: "refundedAmount",
@@ -354,12 +577,6 @@ export default function MembershipFormModal({
     {
       name: "refundedPaymentId",
       label: "Refunded Payment ID",
-      type: "number",
-      required: false,
-    },
-    {
-      name: "cancellationCharges",
-      label: "Cancellation Charges",
       type: "number",
       required: false,
     },

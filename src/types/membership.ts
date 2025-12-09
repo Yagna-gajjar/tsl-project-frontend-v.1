@@ -6,7 +6,7 @@ export interface membership {
   endDate: Date;
   graceDate: Date;
   committedAmount: number;
-  issueCharges: number;
+  issueCharge: number;
   minVBalance: number;
   minFBalance: number;
   minCBalance: number;
@@ -16,8 +16,8 @@ export interface membership {
   actualFBalance: number;
   actualCBalance: number;
   refundedAmount: number;
-    refundedPaymentId: number;
-    cancellationCharges: number;
-    createdAt: Date;
-    updatedAt: Date;
+  refundedPaymentId: number;
+  cancellationCharges: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
