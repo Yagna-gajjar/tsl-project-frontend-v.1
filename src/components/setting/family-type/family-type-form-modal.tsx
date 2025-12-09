@@ -10,6 +10,8 @@ import {
 } from "@/api/family-type.api";
 import type { FamilyType } from "@/types/familyType";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -36,7 +38,7 @@ export function FamilyTypeFormModal({
 
   const [values, setValues] = useState<Partial<FamilyType>>(empty);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +49,7 @@ export function FamilyTypeFormModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
-  const onChange = (field: keyof FamilyType, val: any) => {
+  const onChange = (field: keyof FamilyType, val: string | number | Date | Object) => {
     if (field === "prefix") {
       val = String(val).toUpperCase();
     }
@@ -86,7 +88,7 @@ export function FamilyTypeFormModal({
     }
 
     try {
-      let res: any;
+      let res: Response<FamilyType>;
       const payload: Partial<FamilyType> = {
         familyTypeName: String(values.familyTypeName ?? "").trim(),
         prefix: values.prefix ?? "",
@@ -99,16 +101,15 @@ export function FamilyTypeFormModal({
         res = await createFamilyType(payload as FamilyType);
       }
 
-      // prefer explicit success flag when available
       const ok =
         typeof res?.success !== "undefined" ? Boolean(res.success) : true;
-      const row = res && (res.data ?? res) ? res.data ?? res : res;
+      const row: FamilyType = res && (res.data ?? res) ? res.data ?? res : res;
 
       if (!ok) {
         // API responded but signalled failure
-        const msg = res?.message ?? res?.error ?? "failed to submit";
+        const msg = res?.message ?? "failed to submit";
         // show error toast and surface error to form
-        setError(msg); 
+        setError(msg);
         toast({
           title: "Save failed",
           description: msg,
@@ -129,21 +130,20 @@ export function FamilyTypeFormModal({
 
       onSaved?.(row as FamilyType);
       onClose();
-    } catch (err: any) {
-      const message = err?.message ?? "failed to submit";
-      setError(message);
+    } catch {
+      setError("failed to submit");
       toast({
         title: "Save failed",
-        description: message,
+        description: "failed to submit",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
-    
+
   }, [values, isEdit, initialData, onClose, onSaved]);
 
-  const fields = [
+  const fields: FormFieldConfig<FamilyType>[] = [
     {
       name: "familyTypeName",
       label: "Family Type Name",
@@ -157,7 +157,7 @@ export function FamilyTypeFormModal({
       type: "number",
       required: true,
     },
-  ] as any;
+  ];
 
   return (
     <Dialog

@@ -18,7 +18,7 @@ type Props = {
 
 export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Batch[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [_, setIsLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
   const [search, setSearch] = useState<string>("");
@@ -29,48 +29,39 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
   const navigate = useNavigate();
 
-  // Helper: format a time input (Date | "HH:mm" | ISO string | number) into "HH:mm"
   const formatTimeDisplay = (t: unknown): string => {
     if (t === undefined || t === null || t === "") return "-";
 
     try {
-      // if already a string like "HH:mm", return normalized
       if (typeof t === "string") {
         const s = t.trim();
-        // quick HH:mm match
         const hhmm = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(s);
         if (hhmm) {
           return `${hhmm[1].padStart(2, "0")}:${hhmm[2]}`;
         }
-        // try parse as date string (ISO or other)
         const d = new Date(s);
         if (!Number.isNaN(d.getTime())) {
           return format(d, "HH:mm");
         }
-        // fallback to raw string
         return s || "-";
       }
 
-      // if it's a Date
       if (t instanceof Date) {
         if (Number.isNaN(t.getTime())) return "-";
         return format(t, "HH:mm");
       }
 
-      // if it's a number (timestamp)
       if (typeof t === "number") {
         const d = new Date(t);
         if (!Number.isNaN(d.getTime())) return format(d, "HH:mm");
       }
 
-      // unknown/unsupported
       return "-";
     } catch {
       return "-";
     }
   };
 
-  // Optional helper: convert numeric week code (e.g. 12 or "134") to readable days
   const weekCodeToNames = (code: unknown): string => {
     if (code === undefined || code === null || code === "") return "-";
     const map: Record<string, string> = {
@@ -112,9 +103,8 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
           : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
-        // normalize createdAt/updatedAt as Date objects if present
-        createdAt: r.createdAt ? new Date(r.createdAt as any) : undefined,
-        updatedAt: r.updatedAt ? new Date(r.updatedAt as any) : undefined,
+        createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+        updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
       })) as Batch[];
       setData(rows);
     } catch (err) {
@@ -256,7 +246,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       render: (r) =>
         r.introduceDate
-          ? new Date(r.introduceDate as any).toLocaleDateString("en-US")
+          ? new Date(r.introduceDate).toLocaleDateString("en-US")
           : "-",
     },
     {
@@ -265,7 +255,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       render: (r) =>
         r.suspendedDate
-          ? new Date(r.suspendedDate as any).toLocaleDateString("en-US")
+          ? new Date(r.suspendedDate).toLocaleDateString("en-US")
           : "-",
     },
     {

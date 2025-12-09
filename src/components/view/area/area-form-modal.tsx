@@ -40,16 +40,14 @@ export default function AreaFormModal({
   const [facilityFields, setFacilityFields] = useState<[string, number][]>([]);
 
   useEffect(() => {
-    // Fetch facility options for the select field
     const fetchFacilities = async () => {
       try {
-        const res: Response = await getFacilities({ limit: 1000 });
+        const res: Response<Facility[]> = await getFacilities({ limit: 1000 });
         const data = Array.isArray(res?.data) ? (res.data as Facility[]) : [];
         const options = data.map((f) => ({
           label: String(f.facilityName ?? ""),
           value: Number(f.facilityId ?? 0),
         }));
-        // store as array of objects { label, value }
         setFacilityFields(options as unknown as [string, number][]);
       } catch (err) {
         toast({
@@ -122,8 +120,6 @@ export default function AreaFormModal({
         typeof res?.success !== "undefined"
           ? res.success === true || String(res.success) === "true"
           : true;
-
-      const row = res?.data ?? res;
 
       if (!ok) {
         const msg = res?.message ?? "Failed to save";

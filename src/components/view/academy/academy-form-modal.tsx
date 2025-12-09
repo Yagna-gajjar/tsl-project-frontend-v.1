@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import { getActivities } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 type Props = {
   isOpen: boolean;
   initialData?: Academy;
@@ -213,7 +214,7 @@ export default function AcademyFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields = [
+  const fields: FormFieldConfig<Academy>[] = [
     {
       name: "academyName",
       label: "Academy Name",
@@ -274,8 +275,7 @@ export default function AcademyFormModal({
       type: "date",
       required: false,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 

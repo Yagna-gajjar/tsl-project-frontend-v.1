@@ -17,8 +17,9 @@ import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
 import { toast } from "@/hooks/use-toast";
 import { IdCard } from "lucide-react";
+import type { Response } from "@/types/response";
 
-type Option = { label: string; value: any };
+type Option = { label: string; value: string | number | Date | boolean | Object };
 
 export function IdentityTypeFormModal({
   isOpen,
@@ -35,14 +36,14 @@ export function IdentityTypeFormModal({
 }) {
   const isEdit = Boolean(initialData && initialData.identityTypeId);
 
-  const empty: Partial<IdentityType> = {
+  const empty: IdentityType = {
     identityTypeName: initialData?.identityTypeName ?? "",
-    familyTypeId: initialData?.familyTypeId ?? undefined,
+    familyTypeId: initialData?.familyTypeId ?? 0,
     teamCategoryId: initialData?.teamCategoryId ?? undefined,
     discount: initialData?.discount ?? 0,
   };
 
-  const [values, setValues] = useState<Partial<IdentityType>>(empty);
+  const [values, setValues] = useState<IdentityType>(empty);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -55,7 +56,6 @@ export function IdentityTypeFormModal({
     setValues({ ...empty, ...(initialData ?? {}) });
     setFieldErrors({});
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
   useEffect(() => {
@@ -63,9 +63,9 @@ export function IdentityTypeFormModal({
     setLoading(true);
     (async () => {
       try {
-        const [fRes, tRes]: any = await Promise.all([
-          getFamilyTypes({ page: 1, limit: 500 } as any),
-          getTeamCategories({ page: 1, limit: 500 } as any),
+        const [fRes, tRes]: [fRes: Response<FamilyType[]>, tRes: Response<TeamCategory[]>] = await Promise.all([
+          getFamilyTypes({ page: 1, limit: 500 }),
+          getTeamCategories({ page: 1, limit: 500 }),
         ]);
 
         const fRows: FamilyType[] = Array.isArray(fRes)
@@ -89,7 +89,11 @@ export function IdentityTypeFormModal({
           })),
         ]);
       } catch (e) {
-        console.warn("dropdown load failed", e);
+        toast({
+          title: "Error",
+          description: "Dropdown load failed",
+          variant: "destructive"
+        })
         setFamilyOptions([]);
         setTeamOptions([{ label: "No category (null)", value: "null" }]);
       } finally {
@@ -98,13 +102,12 @@ export function IdentityTypeFormModal({
     })();
   }, [isOpen]);
 
-  // when editing fetch latest full record (no UI change)
   useEffect(() => {
     if (!isOpen || !isEdit || !initialData?.identityTypeId) return;
     setLoading(true);
     (async () => {
       try {
-        const res: any = await getIdentityTypesByID(
+        const res: Response<IdentityType> = await getIdentityTypesByID(
           Number(initialData.identityTypeId)
         );
         const row = res && (res.data ?? res) ? res.data ?? res : res;
@@ -117,7 +120,7 @@ export function IdentityTypeFormModal({
     })();
   }, [isOpen, isEdit, initialData]);
 
-  const onChange = (field: keyof IdentityType, val: any) => {
+  const onChange = (field: keyof IdentityType, val: number | string | boolean | Object | Date) => {
     setValues((p) => ({ ...p, [field]: val }));
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
@@ -168,7 +171,7 @@ export function IdentityTypeFormModal({
         discount: values.discount ?? 0,
       };
 
-      let res: any;
+      let res: Response<IdentityType>;
       if (isEdit && initialData?.identityTypeId) {
         res = await editIdentityTypes(
           Number(initialData.identityTypeId),
@@ -178,7 +181,6 @@ export function IdentityTypeFormModal({
         res = await createIdentityTypes(payload as IdentityType);
       }
 
-      // Prefer res.success if available
       const ok =
         typeof res?.success !== "undefined" ? Boolean(res.success) : true;
       const row = res && (res.data ?? res) ? res.data ?? res : res;
@@ -196,7 +198,6 @@ export function IdentityTypeFormModal({
         return;
       }
 
-      // SUCCESS TOAST
       toast({
         title: isEdit ? "Identity type updated" : "Identity type created",
         description: `${String(

@@ -12,6 +12,7 @@ import { ViewModal } from "@/components/view-modal/view-modal";
 import type { AcademyCoach } from "@/types/academyCoach";
 import { getAcademyCoachById } from "@/api/academyCoach.api";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -63,13 +64,9 @@ export default function AcademyCoachViewModal({
       const useId = id ?? academyCoachesId;
       if (!useId) throw new Error("Academy Coach ID missing");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getAcademyCoachById(Number(useId));
+      const res: Response<AcademyCoach> = await getAcademyCoachById(Number(useId));
 
-      // normalize: API may return { success, data } or raw academy coach
-      if (res && res.data) return res.data as AcademyCoach;
-
-      return res as AcademyCoach;
+      if (res && res.data) return res.data;
     },
     [academyCoachesId]
   );

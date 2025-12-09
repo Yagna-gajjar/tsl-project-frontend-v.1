@@ -43,8 +43,8 @@ interface TableToolbarProps<T> {
   columns: Column<T>[];
   visibleColumns: Set<string>;
   onColumnToggle: (key: string) => void;
-  filters: Record<string, any>;
-  onFilterChange: (key: string, value: any) => void;
+  filters: Record<string, string | number | Date>;
+  onFilterChange: (key: string, value: string | number | Date) => void;
   sortConfig: { key: string; direction: "asc" | "desc" } | null;
   onSortChange: (key: string, direction: "asc" | "desc") => void;
 }
@@ -58,37 +58,30 @@ export function TableToolbar<T>({
   sortConfig,
   onSortChange,
 }: TableToolbarProps<T>) {
-  // local copy for filters so typing doesn't trigger parent immediately
-  const [tempFilters, setTempFilters] = useState<Record<string, any>>(() => ({
+  const [tempFilters, setTempFilters] = useState<Record<string, string | number | Date | Object | boolean>>(() => ({
     ...filters,
   }));
   const [showApply, setShowApply] = useState(false);
 
-  // keep tempFilters in sync when parent filters change externally,
-  // but only overwrite if parent filters actually differ from tempFilters.
   useEffect(() => {
     try {
       const parentStr = JSON.stringify(filters || {});
       const localStr = JSON.stringify(tempFilters || {});
       if (parentStr !== localStr) {
-        // only overwrite when different (prevents wiping staged inputs right after Apply)
         setTempFilters({ ...filters });
         setShowApply(false);
       }
     } catch {
-      // fallback sync if stringify fails for some reason
       setTempFilters({ ...filters });
       setShowApply(false);
     }
-  }, [filters]); // intentional: only run when parent filters change
+  }, [filters]);
 
-  // small debounce for showing the Apply button to avoid flicker while typing fast
   const showApplyTimer = useRef<number | null>(null);
   const debounceShowApply = () => {
     if (showApplyTimer.current) {
       clearTimeout(showApplyTimer.current);
     }
-    // show apply after 250ms of typing
     showApplyTimer.current = window.setTimeout(() => {
       setShowApply(true);
     }, 250);
@@ -155,14 +148,12 @@ export function TableToolbar<T>({
                 return;
               }
 
-              // try to find the original option and preserve its original type (number/boolean/string)
               const opt = column.filterOptions?.find(
                 (o) => String(o.value) === val
               );
 
               const applied = opt ? opt.value : val;
 
-              // store typed value in tempFilters
               setTempFilters((p) => {
                 const np = { ...p };
                 np[key] = applied;
@@ -170,7 +161,6 @@ export function TableToolbar<T>({
               });
               console.log(key);
 
-              // apply immediately for select (UX)
               onFilterChange(key, applied);
               setShowApply(false);
             }}
@@ -248,54 +238,42 @@ export function TableToolbar<T>({
   };
 
   const applyFilters = () => {
-    // Only send differences between tempFilters and the parent's filters prop
-    // 1) send/update keys present in tempFilters that changed value
-    // 2) clear keys that are present in parent filters but removed from tempFilters
-
-    // shallow compare keys and values
     const parent = filters || {};
     const staged = tempFilters || {};
 
-    // send updates / additions
     Object.entries(staged).forEach(([k, v]) => {
       const prev = parent[k];
-      // treat Date objects specially by comparing ISO if needed
       const changed =
         prev === undefined
           ? true
           : prev instanceof Date && v instanceof Date
-          ? prev.getTime() !== v.getTime()
-          : String(prev) !== String(v);
+            ? prev.getTime() !== v.getTime()
+            : String(prev) !== String(v);
 
       if (changed) {
         onFilterChange(k, v ?? "");
       }
     });
 
-    // clear removals (only for keys that actually existed before)
     Object.keys(parent).forEach((k) => {
       if (!(k in staged)) {
         onFilterChange(k, "");
       }
     });
 
-    // Keep tempFilters as current (do not clear) so reopening shows applied values.
     setTempFilters((p) => ({ ...p }));
     setShowApply(false);
   };
 
   const cancelFilters = () => {
-    // revert temp filters back to actual applied filters
     setTempFilters({ ...filters });
     setShowApply(false);
   };
 
   const clearAllFilters = () => {
-    // reset both temp and parent immediately
     const filterKeys = columns
       .filter((col) => col.filterType)
       .map((col) => String(col.key));
-    // only clear keys that are actually set in parent to avoid extra calls
     filterKeys.forEach((k) => {
       if (filters && k in filters) onFilterChange(k, "");
     });

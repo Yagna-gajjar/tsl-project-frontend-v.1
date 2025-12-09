@@ -8,6 +8,7 @@ import type { Coach } from "@/types/coach";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -185,7 +186,6 @@ export default function CoachFormModal({
           ? res.success === true || String(res.success) === "true"
           : true;
 
-      const row = res?.data ?? res;
 
       if (!ok) {
         const msg = res?.message ?? "Failed to save";
@@ -220,7 +220,7 @@ export default function CoachFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields = [
+  const fields:FormFieldConfig<Coach>[] = [
     {
       name: "coachFirstName",
       label: "First Name",
@@ -317,8 +317,7 @@ export default function CoachFormModal({
       type: "text",
       required: false,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 

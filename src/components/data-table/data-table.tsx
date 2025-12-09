@@ -38,9 +38,8 @@ export function DataTable<T>({
     key: string;
     direction: "asc" | "desc";
   } | null>(null);
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, string | number | Date | Object | boolean>>({});
 
-  // Handle column visibility toggle
   const handleColumnToggle = (key: string) => {
     const newVisible = new Set(visibleColumns);
     if (newVisible.has(key)) {
@@ -51,7 +50,6 @@ export function DataTable<T>({
     setVisibleColumns(newVisible);
   };
 
-  // Handle sorting
   const handleSort = (key: string, direction?: "asc" | "desc") => {
     if (!key) {
       setSortConfig(null);
@@ -104,7 +102,7 @@ export function DataTable<T>({
     return (
       <div className="w-full space-y-4">
         <TableToolbar
-          onSearch={onSearchChange || (() => {})}
+          onSearch={onSearchChange || (() => { })}
           columns={columns}
           visibleColumns={visibleColumns}
           onColumnToggle={handleColumnToggle}
@@ -126,7 +124,7 @@ export function DataTable<T>({
   return (
     <div className="space-y-4 w-full">
       <TableToolbar
-        onSearch={onSearchChange || (() => {})}
+        onSearch={onSearchChange || (() => { })}
         columns={columns}
         visibleColumns={visibleColumns}
         onColumnToggle={handleColumnToggle}
@@ -136,7 +134,6 @@ export function DataTable<T>({
         onSortChange={handleSort}
       />
 
-      {/* Desktop View */}
       <div className="hidden md:block rounded-md border shadow-sm bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
@@ -236,7 +233,6 @@ export function DataTable<T>({
         </div>
       </div>
 
-      {/* Mobile View */}
       <TableMobileCard
         data={data}
         columns={displayColumns}
@@ -246,7 +242,6 @@ export function DataTable<T>({
         idKey={idKey}
       />
 
-      {/* Pagination */}
       {pagination && <TablePagination pagination={pagination} />}
     </div>
   );

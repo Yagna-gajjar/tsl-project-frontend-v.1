@@ -1,4 +1,3 @@
-import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,8 +16,9 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import type { ReactNode } from "react";
 
-type Option = { label: string; value: any };
+type Option = { label: string; value: number | string | Date };
 
 export type FieldType =
   | "text"
@@ -35,7 +35,7 @@ interface Props {
   type: FieldType;
   name: string;
   label: string;
-  value: any;
+  value: number|string|Date;
   onChange: (v: any) => void;
   placeholder?: string;
   description?: string;
@@ -46,9 +46,9 @@ interface Props {
   className?: string;
   index?: number;
 
-  // NEW: optional min/max date for date field (string "yyyy-mm-dd" or Date)
   minDate?: string | Date;
   maxDate?: string | Date;
+  icon: ReactNode
 }
 
 export default function FormFieldInput({
@@ -94,14 +94,6 @@ export default function FormFieldInput({
     );
   }
 
-  function toLocalYMD(d: Date) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-
-  // Normalize supplied min/max to start-of-day Date objects (or undefined)
   const normalizeToStartOfDay = (d?: string | Date) => {
     if (!d) return undefined;
     if (d instanceof Date) {
@@ -109,8 +101,6 @@ export default function FormFieldInput({
       dt.setHours(0, 0, 0, 0);
       return dt;
     }
-    // assume "yyyy-mm-dd" (or other ISO-ish) string; append T00:00:00 for local parsing
-    // If your strings are already ISO with timezone, adjust accordingly.
     const dt = new Date(String(d) + "T00:00:00");
     dt.setHours(0, 0, 0, 0);
     return dt;
@@ -204,8 +194,8 @@ export default function FormFieldInput({
                 {value && value instanceof Date
                   ? value.toLocaleDateString()
                   : value
-                  ? new Date(value).toLocaleDateString()
-                  : placeholder || `Select ${label.toLowerCase()}`}
+                    ? new Date(value).toLocaleDateString()
+                    : placeholder || `Select ${label.toLowerCase()}`}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -215,22 +205,21 @@ export default function FormFieldInput({
                   value && value instanceof Date
                     ? value
                     : value
-                    ? new Date(value)
-                    : undefined
+                      ? new Date(value)
+                      : undefined
                 }
                 disabled={
                   minDt || maxDt
                     ? [
-                        ...(minDt ? [{ before: minDt }] : []),
-                        ...(maxDt ? [{ after: maxDt }] : []),
-                      ]
+                      ...(minDt ? [{ before: minDt }] : []),
+                      ...(maxDt ? [{ after: maxDt }] : []),
+                    ]
                     : undefined
                 }
                 onSelect={(d) => {
-                  if (!d) return onChange(""); // optional: clear
+                  if (!d) return onChange("");
                   const picked = d as Date;
                   if (isOutOfRange(picked)) return;
-                  // Pass Date object into onChange (NOT string)
                   onChange(picked);
                 }}
               />

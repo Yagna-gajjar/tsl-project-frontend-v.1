@@ -19,11 +19,11 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
+  const [limit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, string | number | boolean | Date | Object>>({});
   const [sortBy, setSortBy] = useState<string>("familyTypeId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
@@ -146,7 +146,7 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
       if (!ok) {
         throw new Error(
           (res as Record<string, any>)?.message ||
-            "Failed to delete family type"
+          "Failed to delete family type"
         );
       }
 

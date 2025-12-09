@@ -10,14 +10,7 @@ import type { FormModalProps, FormErrors } from "./types"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useToast } from "@/hooks/use-toast"
 
-/**
- * Dynamic FormModal Component
- *
- * Fully typed with generics for production-ready form handling
- * Supports multiple field types, validation, and custom rendering
- * Mobile responsive with smooth animations and error handling
- */
-export function FormModal<T extends Record<string, any>>({
+export function FormModal<T extends Record<string, string | number | Date | Object | boolean>>({
   isOpen,
   onClose,
   title,
@@ -43,18 +36,15 @@ export function FormModal<T extends Record<string, any>>({
     }
   }, [isOpen, initialData])
 
-  // Validate single field
   const validateField = useCallback(
     (fieldName: keyof T, value: any): string | null => {
       const field = fields.find((f) => f.name === fieldName)
       if (!field) return null
 
-      // Check required
       if (field.required && (value === "" || value === null || value === undefined)) {
         return `${field.label} is required`
       }
 
-      // Type-specific validation
       switch (field.type) {
         case "email":
           if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -68,7 +58,6 @@ export function FormModal<T extends Record<string, any>>({
           break
       }
 
-      // Custom validation
       if (field.validation) {
         const result = field.validation(value)
         if (result !== true) {
@@ -81,7 +70,6 @@ export function FormModal<T extends Record<string, any>>({
     [fields],
   )
 
-  // Validate all fields
   const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors<T> = {}
     let isValid = true
@@ -98,12 +86,10 @@ export function FormModal<T extends Record<string, any>>({
     return isValid
   }, [fields, values, validateField])
 
-  // Handle field change
   const handleFieldChange = useCallback(
     (field: keyof T, value: any) => {
       setValues((prev) => ({ ...prev, [field]: value }))
 
-      // Clear error for this field on change
       if (errors[field]) {
         setErrors((prev) => {
           const newErrors = { ...prev }
@@ -115,7 +101,6 @@ export function FormModal<T extends Record<string, any>>({
     [errors],
   )
 
-  // Handle form submission
   const handleSubmit = async () => {
     if (!validateForm()) {
       return
@@ -155,9 +140,8 @@ export function FormModal<T extends Record<string, any>>({
       <AnimatePresence>
         {isOpen && (
           <DialogContent
-            className={`p-0 border-border/50 shadow-2xl rounded-xl overflow-hidden ${
-              isMobile ? "w-[95vw] max-h-[95vh]" : "max-w-2xl max-h-[90vh]"
-            }`}
+            className={`p-0 border-border/50 shadow-2xl rounded-xl overflow-hidden ${isMobile ? "w-[95vw] max-h-[95vh]" : "max-w-2xl max-h-[90vh]"
+              }`}
           >
             <motion.div
               initial={{ opacity: 0, scale: isMobile ? 1 : 0.95 }}

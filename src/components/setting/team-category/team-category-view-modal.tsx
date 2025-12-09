@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { ViewModal } from "@/components/view-modal/view-modal";
+import { ViewModal, type FieldConfig } from "@/components/view-modal/view-modal";
 import type { TeamCategory } from "@/types/teamCategory";
 import {
   Layers,
@@ -16,7 +16,7 @@ type Props = {
   item?: TeamCategory | null;
 };
 
-const fields = [
+const fields: FieldConfig<TeamCategory>[] = [
   { key: "categoryName", label: "Category", icon: Layers },
   { key: "shortName", label: "Short Name", icon: Text },
   { key: "access", label: "Access", icon: Key },
@@ -26,13 +26,13 @@ const fields = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: TeamCategory["createdAt"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: TeamCategory["updatedAt"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
 ];
 
@@ -42,7 +42,7 @@ export default function TeamCategoryViewModal({
   item,
 }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string) => {
+    async (_?: number | string) => {
       if (!item) throw new Error("No data");
       return item;
     },
@@ -55,7 +55,7 @@ export default function TeamCategoryViewModal({
       onClose={onClose}
       itemId={Number(item?.teamCategoryId)}
       fetchFn={fetchFn}
-      fields={fields as any}
+      fields={fields}
       title="View Team Category"
     />
   );

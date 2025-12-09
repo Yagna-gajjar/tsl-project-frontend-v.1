@@ -18,6 +18,7 @@ import {
   Clock,
 } from "lucide-react";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -51,13 +52,12 @@ const fields: FieldConfig<Coach>[] = [
     icon: Heart,
     render: (v) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          v === "active"
+        className={`px-2 py-1 rounded-full text-xs font-medium ${v === "active"
             ? "bg-green-100 text-green-800"
             : v === "inactive"
               ? "bg-yellow-100 text-yellow-800"
               : "bg-red-100 text-red-800"
-        }`}
+          }`}
       >
         {v || "-"}
       </span>
@@ -103,14 +103,9 @@ export default function CoachViewModal({ isOpen, coachId, onClose }: Props) {
     async (id?: number | string): Promise<Coach> => {
       const useId = id ?? coachId;
       if (!useId) throw new Error("Coach ID missing");
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getCoachById(Number(useId));
-
-      // normalize: API may return { success, data } or raw coach
-      if (res && res.data) return res.data as Coach;
-
-      return res as Coach;
+      const res: Response<Coach> = await getCoachById(Number(useId));
+      if (res && res.data) return res.data
+      return {} as Coach
     },
     [coachId]
   );

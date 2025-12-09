@@ -7,7 +7,7 @@ export interface Column<T> {
 	header: string
 	sortable?: boolean
 	filterType?: FilterType
-	filterOptions?: { label: string; value: string | number }[] // For select filter
+	filterOptions?: { label: string; value: string | number }[]
 	render?: (row: T) => ReactNode
 	width?: number | string
 	align?: "left" | "center" | "right"

@@ -1,4 +1,3 @@
-// src/api/facility.api.ts
 import type { Facility } from "@/types/facility";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";
@@ -17,7 +16,7 @@ export interface FacilitiesQuery {
 
 const FACILITY_BASE = import.meta.env.VITE_APP_API_URL + "/facility";
 
-export function getFacilities(params: FacilitiesQuery = {}): Promise<Facility[]> {
+export function getFacilities(params: FacilitiesQuery = {}): Promise<Response<Facility[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 20,
@@ -30,21 +29,12 @@ export function getFacilities(params: FacilitiesQuery = {}): Promise<Facility[]>
     academicCapacity: params.academicCapacity,
   });  
 
-  return request<Facility[]>(`${FACILITY_BASE}${qs}`);
+  return request<Response<Facility[]>>(`${FACILITY_BASE}${qs}`);
 }
-
-/**
- * Fetch a single facility by id.
- * Returns Response shaped object (success/message/data) like your controller sends.
- */
 export function getFacilityById(id: number | string): Promise<Response> {
   return request<Response>(`${FACILITY_BASE}/${id}`);
 }
 
-/**
- * Create a facility.
- * Expects payload matching Facility (or Partial depending on your needs); returns Response.
- */
 export function createFacility(payload: Facility): Promise<Response> {
   return request<Response>(FACILITY_BASE, {
     method: "POST",
@@ -52,9 +42,6 @@ export function createFacility(payload: Facility): Promise<Response> {
   });
 }
 
-/**
- * Update a facility by id.
- */
 export function updateFacility(id: number | string, payload: Partial<Facility>): Promise<Response> {
   return request<Response>(`${FACILITY_BASE}/${id}`, {
     method: "PUT",
@@ -62,9 +49,6 @@ export function updateFacility(id: number | string, payload: Partial<Facility>):
   });
 }
 
-/**
- * Delete a facility by id.
- */
 export function deleteFacility(id: number | string): Promise<Response> {
   return request<Response>(`${FACILITY_BASE}/${id}`, {
     method: "DELETE",

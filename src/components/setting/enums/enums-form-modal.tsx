@@ -42,7 +42,6 @@ export default function EnumsFormModal({
     []
   );
 
-  // onSubmit receives the whole values object (Partial<Enums>) because FormModal is generic
   const handleSubmit = useCallback(
     async (values: Partial<Enums>) => {
       const payload: Partial<Enums> = {
@@ -56,15 +55,9 @@ export default function EnumsFormModal({
       } else {
         res = await createEnum(payload as Enums);
       }
-
-      // normalize row from response
       const row = res && (res.data ?? res) ? res.data ?? res : res;
       if (!row) throw new Error((res as any)?.message ?? "Save failed");
-
-      // call parent callback (page) so it can refresh list
       onSaved?.(row as Enums);
-
-      // FormModal will handle closing via its own onClose prop in the caller.
       return row;
     },
     [isEdit, initialData, onSaved]

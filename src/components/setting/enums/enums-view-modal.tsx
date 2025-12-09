@@ -6,7 +6,6 @@ import {
   ViewModal,
   type FieldConfig,
 } from "@/components/view-modal/view-modal";
-import { number } from "framer-motion";
 
 type Props = {
   isOpen: boolean;
@@ -28,7 +27,7 @@ export default function EnumsViewModal({
   title = "View Enum",
 }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string) => {
+    async (_?: number | string) => {
       if (!item) throw new Error("No data");
       return item;
     },

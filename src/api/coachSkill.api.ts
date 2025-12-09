@@ -1,5 +1,6 @@
 import type { CoachSkill } from "@/types/coachSkill";
 import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface CoachSkillQuery {
   page?: number;
@@ -42,14 +43,14 @@ export function getCoachSkills(
   return request<CoachSkill[]>(`${COACH_SKILL_BASE}${qs}`);
 }
 
-export function getCoachSkillById(id: number): Promise<CoachSkill> {
-  return request<CoachSkill>(`${COACH_SKILL_BASE}/${id}`);
+export function getCoachSkillById(id: number): Promise<Response<CoachSkill>> {
+  return request<Response<CoachSkill>>(`${COACH_SKILL_BASE}/${id}`);
 }
 
 export function createCoachSkill(
   payload: Omit<CoachSkill, "coachSkillId" | "createdAt" | "updatedAt">
-): Promise<CoachSkill> {
-  return request<CoachSkill>(COACH_SKILL_BASE, {
+): Promise<Response<CoachSkill>> {
+  return request<Response<CoachSkill>>(COACH_SKILL_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -58,8 +59,8 @@ export function createCoachSkill(
 export function updateCoachSkill(
   id: number,
   payload: Partial<Omit<CoachSkill, "coachSkillId" | "createdAt" | "updatedAt">>
-): Promise<CoachSkill> {
-  return request<CoachSkill>(`${COACH_SKILL_BASE}/${id}`, {
+): Promise<Response<CoachSkill>> {
+  return request<Response<CoachSkill>>(`${COACH_SKILL_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });

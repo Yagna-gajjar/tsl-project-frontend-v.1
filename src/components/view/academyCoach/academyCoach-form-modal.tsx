@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { getCoaches } from "@/api/coach.api";
 import type { Academy } from "@/types/academy";
 import type { Coach } from "@/types/coach";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -82,9 +83,9 @@ export default function AcademyCoachFormModal({
         const res: Response<Academy[]> = await getAcademies();
         const academyoptions = Array.isArray(res.data)
           ? res.data.map((academy: Academy) => ({
-              value: academy.academyId as number,
-              label: academy.academyName as string,
-            }))
+            value: academy.academyId as number,
+            label: academy.academyName as string,
+          }))
           : [];
 
         setAcademyOptions(academyoptions);
@@ -93,14 +94,14 @@ export default function AcademyCoachFormModal({
 
         const coachoptions = Array.isArray(res1)
           ? res1.map((coach: Coach) => ({
-              value: coach.coachId,
-              label:
-                coach.coachFirstName +
-                " " +
-                coach.coachLastName +
-                " " +
-                coach.coachMiddleName,
-            }))
+            value: coach.coachId,
+            label:
+              coach.coachFirstName +
+              " " +
+              coach.coachLastName +
+              " " +
+              coach.coachMiddleName,
+          }))
           : [];
 
         setCoachOptions(coachoptions);
@@ -228,7 +229,7 @@ export default function AcademyCoachFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields = [
+  const fields: FormFieldConfig<AcademyCoach>[] = [
     {
       name: "coachId",
       label: "Coach ID",
@@ -279,8 +280,7 @@ export default function AcademyCoachFormModal({
       type: "text",
       required: false,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 

@@ -14,6 +14,7 @@ import { ViewModal } from "@/components/view-modal/view-modal";
 import type { CoachSkill } from "@/types/coachSkill";
 import { getCoachSkillById } from "@/api/coachSkill.api";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -60,14 +61,10 @@ export default function CoachSkillViewModal({
     async (id?: number | string): Promise<CoachSkill> => {
       const useId = id ?? coachSkillId;
       if (!useId) throw new Error("Coach Skill ID missing");
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getCoachSkillById(Number(useId));
-
-      // normalize: API may return { success, data } or raw coach skill
+      const res: Response<CoachSkill> = await getCoachSkillById(Number(useId));
       if (res && res.data) return res.data as CoachSkill;
 
-      return res as CoachSkill;
+      return {} as CoachSkill;
     },
     [coachSkillId]
   );

@@ -19,7 +19,7 @@ const ACADEMY_COACH_BASE =
 
 export function getAcademyCoaches(
   params: AcademyCoachQuery = {}
-): Promise<AcademyCoach[]> {
+): Promise<Response<AcademyCoach[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -32,11 +32,11 @@ export function getAcademyCoaches(
     academyId: params.academyId ?? undefined,
   });
 
-  return request<AcademyCoach[]>(`${ACADEMY_COACH_BASE}${qs}`);
+  return request<Response<AcademyCoach[]>>(`${ACADEMY_COACH_BASE}${qs}`);
 }
 
-export function getAcademyCoachById(id: number): Promise<AcademyCoach> {
-  return request<AcademyCoach>(`${ACADEMY_COACH_BASE}/${id}`);
+export function getAcademyCoachById(id: number): Promise<Response<AcademyCoach>> {
+  return request<Response<AcademyCoach>>(`${ACADEMY_COACH_BASE}/${id}`);
 }
 
 export function createAcademyCoach(

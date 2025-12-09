@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { ViewModal } from "@/components/view-modal/view-modal";
+import { ViewModal, type FieldConfig } from "@/components/view-modal/view-modal";
 import type { FamilyType } from "@/types/familyType";
 import {
   Type,
@@ -15,7 +15,7 @@ type Props = {
   item?: FamilyType | null;
 };
 
-const fields = [
+const fields: FieldConfig<FamilyType>[] = [
   { key: "familyTypeName", label: "Family Type", icon: Type },
   { key: "prefix", label: "Prefix", icon: Tag },
   { key: "maxMembers", label: "Max Members", icon: Users },
@@ -24,19 +24,21 @@ const fields = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: FamilyType["createdAt"]) =>
+      v ? new Date(v).toLocaleString() : "-",
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: FamilyType["updatedAt"]) =>
+      v ? new Date(v).toLocaleString() : "-",
   },
 ];
 
 export default function FamilyTypeViewModal({ isOpen, onClose, item }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string) => {
+    async (_?: number | string) => {
       if (!item) throw new Error("No data");
       return item;
     },
@@ -49,7 +51,7 @@ export default function FamilyTypeViewModal({ isOpen, onClose, item }: Props) {
       onClose={onClose}
       itemId={Number(item?.familyTypeId)}
       fetchFn={fetchFn}
-      fields={fields as any}
+      fields={fields}
       title="View Family Type"
     />
   );

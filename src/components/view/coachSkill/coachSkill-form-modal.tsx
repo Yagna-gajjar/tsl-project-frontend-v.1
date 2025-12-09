@@ -2,14 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
-import { createCoachSkill, getCoachSkills, updateCoachSkill } from "@/api/coachSkill.api";
+import { createCoachSkill, updateCoachSkill } from "@/api/coachSkill.api";
 import type { CoachSkill } from "@/types/coachSkill";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
-import { get } from "http";
 import { getActivities } from "@/api/activity.api";
 import { getCoaches } from "@/api/coach.api";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -41,13 +41,18 @@ export default function CoachSkillFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [coachOptions, setCoachOptions] = useState([]);
-  const [activityOptions, setActivityOptions] = useState([]);
+  const [coachOptions, setCoachOptions] = useState<{
+    value: string | number,
+    label: string
+  }[]>([]);
+  const [activityOptions, setActivityOptions] = useState<{
+    label: string,
+    value: string | number
+  }[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // set form values
         if (initialData) {
           setValues(initialData);
         } else {
@@ -57,35 +62,33 @@ export default function CoachSkillFormModal({
         setFieldErrors({});
         setError(null);
 
-        // Fetch both APIs parallel (faster + cleaner)
         const [resCoach, resActivity] = await Promise.all([
           getCoaches(),
           getActivities(),
         ]);
         const coachOpts = Array.isArray(resCoach)
           ? resCoach.map((coach) => ({
-              value: coach.coachId,
-              label: `${coach.coachFirstName} ${coach.coachLastName}`,
-            }))
+            value: coach.coachId,
+            label: `${coach.coachFirstName} ${coach.coachLastName}`,
+          }))
           : [];
 
         const activityOpts = Array.isArray(resActivity.data)
           ? resActivity.data.map((activity) => ({
-              value: activity.activityId,
-              label: `${activity.activityName}`,
-            }))
+            value: activity.activityId,
+            label: `${activity.activityName}`,
+          }))
           : [];
 
         setCoachOptions(coachOpts);
 
         setActivityOptions(activityOpts);
-      } catch (err: any) {
-        console.error("Error loading data:", err);
+      } catch {
 
         toast({
           variant: "destructive",
           title: "Failed to load data",
-          description: err?.message || "Something went wrong.",
+          description: "Something went wrong.",
         });
 
         setCoachOptions([]);
@@ -153,7 +156,7 @@ export default function CoachSkillFormModal({
         detailsOfServicesAvailable:
           values.detailsOfServicesAvailable || undefined,
       };
-      let res: Response;
+      let res: Response<CoachSkill>;
       if (initialData?.coachSkillId) {
         res = await updateCoachSkill(
           initialData.coachSkillId,
@@ -188,9 +191,8 @@ export default function CoachSkillFormModal({
       }
       toast({
         title: "Success",
-        description: `Coach skill ${
-          initialData?.coachSkillId ? "updated" : "created"
-        } successfully.`,
+        description: `Coach skill ${initialData?.coachSkillId ? "updated" : "created"
+          } successfully.`,
         variant: "success",
       });
 
@@ -199,9 +201,8 @@ export default function CoachSkillFormModal({
     } catch (err) {
       toast({
         title: "Error",
-        description: `Failed to ${
-          initialData?.coachSkillId ? "update" : "create"
-        } coach skill.`,
+        description: `Failed to ${initialData?.coachSkillId ? "update" : "create"
+          } coach skill.`,
         variant: "destructive",
       });
     } finally {
@@ -209,7 +210,7 @@ export default function CoachSkillFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields = [
+  const fields: FormFieldConfig<CoachSkill>[] = [
     {
       name: "coachId",
       label: "Coach Name",
@@ -266,8 +267,7 @@ export default function CoachSkillFormModal({
       type: "textarea",
       required: false,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 

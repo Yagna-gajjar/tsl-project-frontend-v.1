@@ -9,6 +9,9 @@ import { getAcademies } from "@/api/academy.api";
 import { getActivities } from "@/api/activity.api";
 import type { Response } from "@/types/response";
 import { format } from "date-fns";
+import type { FormFieldConfig } from "@/components/form-modal/types";
+import type { Activity } from "@/types/activity";
+import type { Academy } from "@/types/academy";
 
 type Props = {
   isOpen: boolean;
@@ -50,8 +53,14 @@ export default function CourseFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [activityOptions, setActivityOptions] = useState<any[]>([]);
-  const [academyOptions, setAcademyOptions] = useState<any[]>([]);
+  const [activityOptions, setActivityOptions] = useState<{
+    value: string | number,
+    label: string
+  }[]>([]);
+  const [academyOptions, setAcademyOptions] = useState<{
+    value: string | number,
+    label: string
+  }[]>([]);
   useEffect(() => {
     const loadData = async () => {
       if (initialData) {
@@ -59,9 +68,8 @@ export default function CourseFormModal({
           ...initialData,
           introductionDate: format(initialData?.introductionDate, "yyyy-MM-dd"),
           suspendDate: format(initialData?.suspendDate, "yyyy-MM-dd"),
-        } as any;
+        };
         if (typeof init.weekDays === "string" && init.weekDays.length > 0) {
-          // split each character and convert to number
           init.weekDays = init.weekDays
             .split("")
             .map((s: string) => Number(s))
@@ -70,7 +78,6 @@ export default function CourseFormModal({
         setValues(init);
         console.log(init, "opop");
       } else {
-        // ensure default active status for new course
         setValues({ ...empty, status: "active" } as Course);
       }
       setFieldErrors({});
@@ -83,16 +90,16 @@ export default function CourseFormModal({
         getAcademies(),
       ]);
       const activityopts = Array.isArray(resActivity.data)
-        ? resActivity.data.map((activity: any) => ({
-            value: activity.activityId,
-            label: activity.activityName,
-          }))
+        ? resActivity.data.map((activity: Activity) => ({
+          value: activity.activityId,
+          label: activity.activityName,
+        }))
         : [];
       const academyopts = Array.isArray(resAcademy.data)
-        ? resAcademy.data.map((academy: any) => ({
-            value: academy.academyId,
-            label: academy.academyName,
-          }))
+        ? resAcademy.data.map((academy: Academy) => ({
+          value: academy.academyId,
+          label: academy.academyName,
+        }))
         : [];
       setActivityOptions(activityopts);
       setAcademyOptions(academyopts);
@@ -101,7 +108,7 @@ export default function CourseFormModal({
     loadData();
   }, [initialData, isOpen]);
 
-  const onChange = (field: keyof Course, val: any) => {
+  const onChange = (field: keyof Course, val: string | number | boolean | Date | Object | undefined) => {
     setValues((p) => ({ ...p, [field]: val }));
 
     setFieldErrors((prev) => {
@@ -115,7 +122,6 @@ export default function CourseFormModal({
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
 
-    // required string fields
     if (!values.courseName || String(values.courseName).trim() === "") {
       errs.courseName = "Course name is required";
     }
@@ -123,7 +129,6 @@ export default function CourseFormModal({
       errs.typeOfCourse = "Type of course is required";
     }
 
-    // required numeric fields and non-negative checks
     const numericFields: Array<{ key: keyof Course; label: string }> = [
       { key: "minEnrollmentUnit", label: "Minimum enrollment unit" },
       { key: "totalParallelBatches", label: "Total parallel batches" },
@@ -134,7 +139,7 @@ export default function CourseFormModal({
     ];
 
     numericFields.forEach((f) => {
-      const val = Number((values as any)[f.key]);
+      const val = Number(values[f.key]);
       if (Number.isNaN(val) || val === undefined || val === null) {
         errs[f.key as string] = `${f.label} is required`;
       } else if (val < 0) {
@@ -142,9 +147,8 @@ export default function CourseFormModal({
       }
     });
 
-    // ages
-    const minAge = Number((values as any).minAge);
-    const maxAge = Number((values as any).maxAge);
+    const minAge = Number(values.minAge);
+    const maxAge = Number(values.maxAge);
     if (!Number.isFinite(minAge) || minAge < 1) {
       errs.minAge = "Minimum age is required and must be at least 1";
     }
@@ -155,14 +159,9 @@ export default function CourseFormModal({
       errs.minAge = "Minimum age cannot be greater than maximum age";
       errs.maxAge = "Maximum age cannot be less than minimum age";
     }
-
-    // dates
     if (!values.introductionDate) {
       errs.introductionDate = "Introduction date is required";
     }
-    // suspendDate is intentionally optional (no validation)
-
-    // enums
     if (
       !values.classificationType ||
       values.classificationType === undefined ||
@@ -192,7 +191,6 @@ export default function CourseFormModal({
       errs.status = "Status is required";
     }
 
-    // academy/activity selection
     if (
       values.academyId === undefined ||
       values.academyId === null ||
@@ -266,17 +264,16 @@ export default function CourseFormModal({
       errs.batchCapacity = "Batch Capacity is required";
     }
 
-    // weekDays logic: if noOfDaysInWeek > 0 then weekDays must be an array with exact selection count
-    if (Number((values as any).noOfDaysInWeek) > 0) {
-      const wd = (values as any).weekDays;
+    if (Number(values.noOfDaysInWeek) > 0) {
+      const wd = values.weekDays;
       if (!Array.isArray(wd) || wd.length === 0) {
         errs.weekDays = "Select weekday(s)";
       } else if (
         Array.isArray(wd) &&
-        wd.length !== Number((values as any).noOfDaysInWeek)
+        wd.length !== Number(values.noOfDaysInWeek)
       ) {
         errs.weekDays = `Select exactly ${Number(
-          (values as any).noOfDaysInWeek
+          values.noOfDaysInWeek
         )} day(s)`;
       }
     }
@@ -295,21 +292,18 @@ export default function CourseFormModal({
     }
 
     try {
-      // convert weekDays to required string format:
-      // user selects weekdays with values 1..7 (Mon=1 ... Sun=7)
       let weekDaysValue: string | undefined;
-      if (Array.isArray((values as any).weekDays)) {
-        const arr = (values as any).weekDays
-          .map((v: any) => Number(v))
+      if (Array.isArray(values.weekDays)) {
+        const arr = values.weekDays
+          .map((v: number) => Number(v))
           .filter((n: number) => Number.isFinite(n))
           .sort((a: number, b: number) => a - b);
         weekDaysValue = arr.join("");
       } else if (
-        (values as any).weekDays !== undefined &&
-        (values as any).weekDays !== null
+        (values).weekDays !== undefined &&
+        (values).weekDays !== null
       ) {
-        // if it's a single number, convert to string
-        weekDaysValue = String((values as any).weekDays);
+        weekDaysValue = String((values).weekDays);
       }
 
       const payload: Partial<Course> = {
@@ -325,8 +319,7 @@ export default function CourseFormModal({
         chargingPattern: values.chargingPattern,
         sessionMinutes: values.sessionMinutes,
         noOfDaysInWeek: values.noOfDaysInWeek,
-        // send weekDays as the compact string (e.g. Monday,Wed,Fri -> "135")
-        weekDays: weekDaysValue as any,
+        weekDays: weekDaysValue,
         unitRate: values.unitRate,
         batchCapacity: values.batchCapacity,
         minAge: values.minAge,
@@ -356,7 +349,6 @@ export default function CourseFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  // week starts from Monday = 1 ... Sunday = 7
   const weekdayOptions = [
     { label: "Monday", value: 1 },
     { label: "Tuesday", value: 2 },
@@ -367,8 +359,7 @@ export default function CourseFormModal({
     { label: "Sunday", value: 7 },
   ];
 
-  // dynamic fields: weekDays becomes multiselect when noOfDaysInWeek > 0
-  const fieldsBase: any[] = [
+  const fieldsBase: FormFieldConfig<Course>[] = [
     { name: "courseName", label: "Course Name", type: "text", required: true },
     {
       name: "academyId",
@@ -450,23 +441,23 @@ export default function CourseFormModal({
   ];
 
   const weekDaysField =
-    Number((values as any).noOfDaysInWeek) > 0
+    Number(values.noOfDaysInWeek) > 0
       ? {
-          name: "weekDays",
-          label: "Week Days",
-          type: "multiselect",
-          options: weekdayOptions,
-          required: true,
-        }
+        name: "weekDays",
+        label: "Week Days",
+        type: "multiselect",
+        options: weekdayOptions,
+        required: true,
+      }
       : {
-          name: "weekDays",
-          label: "Week Days",
-          type: "number",
-          required: true,
-        };
+        name: "weekDays",
+        label: "Week Days",
+        type: "number",
+        required: true,
+      };
 
-  const remainingFields: any[] = [
-    weekDaysField,
+  const remainingFields: FormFieldConfig<Course>[] = [
+    weekDaysField as any,
     { name: "unitRate", label: "Unit Rate", type: "number", required: true },
     {
       name: "batchCapacity",
@@ -497,7 +488,7 @@ export default function CourseFormModal({
         { label: "suspended", value: "suspended" },
       ],
       required: true,
-      disabled: !initialData, // disabled for adding new course
+      disabled: !initialData,
     },
   ];
 

@@ -62,7 +62,6 @@ export default function AreaViewModal({ isOpen, areaId, onClose }: Props) {
 
       const res: Response = await getAreaById(Number(useId));
 
-      // normalize: API may return { success, data } or raw area
       if (res && res.data) return res.data as Area;
 
       return res;

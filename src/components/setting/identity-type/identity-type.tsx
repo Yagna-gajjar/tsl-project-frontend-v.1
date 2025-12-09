@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import { useState } from "react";
 import IdentityTypeTable from "./identity-type-table";
 import IdentityTypeViewModal from "./identity-type-view-modal";
 import IdentityTypeFormModal from "./identity-type-form-modal";

@@ -33,7 +33,7 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getActivities({
+      const res: Response<Activity[]> = await getActivities({
         page,
         limit,
         sortBy,
@@ -45,9 +45,9 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
 
       const rowsRaw = Array.isArray(res)
         ? res
-        : Array.isArray((res as any)?.data)
-        ? (res as any).data
-        : [];
+        : Array.isArray(res?.data)
+          ? res.data
+          : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -156,7 +156,7 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
 
       if (!ok) {
         throw new Error(
-          (res as Record<string, any>)?.message || "Failed to delete activity"
+          (res)?.message || "Failed to delete activity"
         );
       }
       await loadData();

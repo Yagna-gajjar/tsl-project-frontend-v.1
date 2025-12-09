@@ -32,7 +32,6 @@ export function BatchFormModal({
   onSaved,
   layout = "grid",
 }: Props) {
-  // helper: convert incoming week code (e.g. 12 or "134") to array ["monday","tuesday"] etc.
   const numberToWeekArray = (code?: number | string | null): string[] => {
     if (code === undefined || code === null) return [];
     const s = String(code);
@@ -52,7 +51,6 @@ export function BatchFormModal({
     return arr;
   };
 
-  // helper: convert array of weekday keys to a numeric code like 12, 134 etc.
   const weekArrayToNumber = (arr?: any[]): number | undefined => {
     if (!Array.isArray(arr) || arr.length === 0) return undefined;
     const map: Record<string, number> = {
@@ -74,7 +72,6 @@ export function BatchFormModal({
     return Number(nums.join(""));
   };
 
-  // Accepts string "HH:mm" or Date -> returns "HH:mm" or undefined
   const normalizeTimeToHHmm = (t: any): string | undefined => {
     if (t === undefined || t === null) return undefined;
     if (typeof t === "string") {
@@ -109,7 +106,6 @@ export function BatchFormModal({
     return hh * 60 + mm;
   };
 
-  // Add minutes to a time and return "HH:mm"
   const addMinutesToTime = (
     t: any,
     minutesToAdd: number
@@ -118,20 +114,17 @@ export function BatchFormModal({
     if (base === null || !Number.isFinite(minutesToAdd)) return undefined;
     let total = base + minutesToAdd;
     const dayMinutes = 24 * 60;
-    total = ((total % dayMinutes) + dayMinutes) % dayMinutes; // wrap around day
+    total = ((total % dayMinutes) + dayMinutes) % dayMinutes;
     const hh = Math.floor(total / 60);
     const mm = total % 60;
     return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
   };
 
-  // safe format helpers (handle strings, Date or undefined)
   const formatTimeInput = (t: any): string | undefined => {
     if (t === undefined || t === null) return undefined;
-    // if already "HH:mm" string, normalizeTimeToHHmm will handle; reuse it
     return normalizeTimeToHHmm(t);
   };
 
-  // Activity options (shape: { label, value }) to feed FormContent select
   const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
 
   const getAllActivity = async () => {
@@ -158,13 +151,10 @@ export function BatchFormModal({
     coachId: initialData?.coachId ?? undefined,
     facilityId: initialData?.facilityId ?? undefined,
     areaId: initialData?.areaId ?? undefined,
-    // format dates as "yyyy-MM-dd" strings for date inputs
     introduceDate: formatDateInput(initialData?.introduceDate) ?? undefined,
     suspendedDate: formatDateInput(initialData?.suspendedDate) ?? undefined,
-    // format times as "HH:mm" for time inputs
     startTime: formatTimeInput(initialData?.startTime) ?? undefined,
     endTime: formatTimeInput(initialData?.endTime) ?? undefined,
-    // convert numeric code -> array for multiselect
     weekDays: numberToWeekArray(initialData?.weekDays as any) ?? [],
     status: (initialData?.status ?? "active") as "active" | "suspended",
   };
@@ -175,7 +165,6 @@ export function BatchFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  // ⬇ changed type to also keep sessionMinutes & weekDays from course
   const [academies, setAcademies] = useState<
     Array<{ id: number; name: string }>
   >([]);
@@ -196,7 +185,6 @@ export function BatchFormModal({
   const [areas, setAreas] = useState<Array<{ id: number; name: string }>>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
-  // Weekday options for multi-select
   const WEEKDAY_OPTIONS = useMemo(
     () => [
       { label: "Monday", value: "monday" },
@@ -210,18 +198,14 @@ export function BatchFormModal({
     []
   );
 
-  // load activities + facilities on open (academies will be fetched only when activityName is selected)
   useEffect(() => {
     if (!isOpen) return;
 
     const loadTopOptions = async () => {
       setLoadingOptions(true);
       try {
-        // Fetch facilities and activities now
         const [facilitiesData] = await Promise.all([getFacilities()]);
 
-        // facilities
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const facArr = Array.isArray(
           (facilitiesData as any)?.data ?? facilitiesData
         )
@@ -231,15 +215,12 @@ export function BatchFormModal({
           facArr.map((f: any) => ({ id: f.facilityId, name: f.facilityName }))
         );
 
-        // fetch activities for the activity select
         await getAllActivity();
 
-        // if editing and there's an activity present, load academies for that activity so academy field shows options
         if (initialData?.activityName) {
           await loadAcademiesByActivity(String(initialData.activityName));
         }
 
-        // if initialData has facilityId, load areas
         if (initialData?.facilityId) {
           await loadAreasByFacility(initialData.facilityId);
         }
@@ -256,18 +237,15 @@ export function BatchFormModal({
     };
 
     loadTopOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // helper: load academies filtered by selected activityName
   const loadAcademiesByActivity = useCallback(async (activityName?: string) => {
     try {
-      // small UX: show loading while fetching academies
       setLoadingOptions(true);
       const academiesData = await getAcademies({
         academyType: activityName,
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log(academiesData,"pppjas");
       const academyArr = Array.isArray(
         (academiesData as any)?.data ?? academiesData
       )
@@ -289,7 +267,6 @@ export function BatchFormModal({
     }
   }, []);
 
-  // helper: load courses and coaches filtered by academyId (academyId optional)
   const loadCoursesAndCoaches = useCallback(
     async (academyId?: number | string) => {
       try {
@@ -299,13 +276,11 @@ export function BatchFormModal({
           getAcademyCoaches({ academyId: id }),
         ]);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const coursesArr = Array.isArray(
           (coursesData as any)?.data ?? coursesData
         )
           ? (coursesData as any)?.data ?? coursesData
           : [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const coachesArr = Array.isArray(
           (coachesData as any)?.data ?? coachesData
         )
@@ -314,7 +289,6 @@ export function BatchFormModal({
           ? coachesData
           : [];
 
-        // ⬇ keep extra data from course: sessionMinutes & weekDays
         setCourses(
           coursesArr.map((c: any) => ({
             id: c.courseId,
@@ -343,13 +317,11 @@ export function BatchFormModal({
     []
   );
 
-  // helper: load areas filtered by facilityId
   const loadAreasByFacility = useCallback(
     async (facilityId?: number | string) => {
       try {
         const id = facilityId ? Number(facilityId) : undefined;
         const areasData = await getAreas({ facilityId: id });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const areasArr = Array.isArray((areasData as any)?.data ?? areasData)
           ? (areasData as any).data ?? areasData
           : [];
@@ -369,7 +341,6 @@ export function BatchFormModal({
     []
   );
 
-  // reset values when initialData changes or modal opens/closes
   useEffect(() => {
     const mapped = {
       ...empty,
@@ -397,12 +368,9 @@ export function BatchFormModal({
     setValues(mapped);
     setFieldErrors({});
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
-  // generic onChange: activityName, academy, course, facility, weekDays etc.
   const onChange = (field: keyof Batch, val: any) => {
-    // activity selection
     if (field === "activityName") {
       const activityName = val ? String(val) : undefined;
       setValues((p) => ({
@@ -425,7 +393,6 @@ export function BatchFormModal({
       return;
     }
 
-    // academy selection
     if (field === "academyId") {
       const academyId = val ? Number(val) : undefined;
       setValues((p) => ({
@@ -444,7 +411,6 @@ export function BatchFormModal({
       return;
     }
 
-    // course selection (OPTIONAL but with side-effects)
     if (field === "courseId") {
       const courseIdVal = val ? Number(val) : undefined;
       const selectedCourse = courseIdVal
@@ -452,7 +418,6 @@ export function BatchFormModal({
         : undefined;
 
       setValues((prev) => {
-        // auto-fill weekDays from course.weekDays if available
         let nextWeekDays = prev.weekDays;
         if (selectedCourse && selectedCourse.weekDays != null) {
           const auto = numberToWeekArray(selectedCourse.weekDays as any);
@@ -461,7 +426,6 @@ export function BatchFormModal({
           }
         }
 
-        // if we already have startTime and course has sessionMinutes -> compute endTime
         let nextEndTime = prev.endTime;
         if (
           selectedCourse &&
@@ -491,7 +455,6 @@ export function BatchFormModal({
       return;
     }
 
-    // facility selection
     if (field === "facilityId") {
       const facilityId = val ? Number(val) : undefined;
       setValues((p) => ({ ...p, facilityId, areaId: undefined }));
@@ -505,7 +468,6 @@ export function BatchFormModal({
       return;
     }
 
-    // area / coach simple changes
     if (field === "coachId" || field === "areaId") {
       setValues((p) => ({ ...p, [field]: val }));
       setFieldErrors((prev) => {
@@ -517,7 +479,6 @@ export function BatchFormModal({
       return;
     }
 
-    // weekDays multi-select
     if (field === "weekDays") {
       const newVal = Array.isArray(val) ? val : val ? [val] : [];
       setValues((p) => ({ ...p, weekDays: newVal }));
@@ -530,7 +491,6 @@ export function BatchFormModal({
       return;
     }
 
-    // special handling for startTime when course is selected
     if (field === "startTime") {
       const newStart = val;
       setValues((prev) => {
@@ -567,7 +527,6 @@ export function BatchFormModal({
       return;
     }
 
-    // default behavior (including endTime when no course is selected)
     setValues((p) => ({ ...p, [field]: val }));
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
@@ -585,7 +544,6 @@ export function BatchFormModal({
     if (!values.activityName) {
       errs.activityName = "Activity is required";
     }
-    // courseId is OPTIONAL now → no error
     if (!values.academyId) {
       errs.academyId = "Academy is required";
     }
@@ -599,7 +557,6 @@ export function BatchFormModal({
       errs.areaId = "Area is required";
     }
 
-    // startTime / endTime required
     if (!values.startTime) {
       errs.startTime = "Start time is required";
     }
@@ -607,7 +564,6 @@ export function BatchFormModal({
       errs.endTime = "End time is required";
     }
 
-    // weekDays must be an array with at least one selected
     if (
       !values.weekDays ||
       !Array.isArray(values.weekDays) ||
@@ -616,7 +572,6 @@ export function BatchFormModal({
       errs.weekDays = "Select at least one weekday";
     }
 
-    // time relationship validations (compare minutes)
     try {
       const startMin = timeToMinutes(values.startTime);
       const endMin = timeToMinutes(values.endTime);
@@ -630,7 +585,6 @@ export function BatchFormModal({
         errs.endTime = "End time cannot be before start time";
       }
     } catch {
-      // ignore parse errors here; generic checks above will catch missing times
     }
 
     try {
@@ -644,7 +598,6 @@ export function BatchFormModal({
         errs.suspendedDate = "Suspended date cannot be before introduce date";
       }
     } catch {
-      // ignore parse errors
     }
 
     return errs;
@@ -661,17 +614,14 @@ export function BatchFormModal({
     }
 
     try {
-      // normalize times to "HH:mm" string before sending
       const normalizedStart = normalizeTimeToHHmm(values.startTime);
       const normalizedEnd = normalizeTimeToHHmm(values.endTime);
 
-      // convert weekDays array to numeric code
       const weekCode = weekArrayToNumber(values.weekDays as any[]);
 
       const payload: Partial<Batch> = {
         batchName: String(values.batchName ?? "").trim(),
         academyId: Number(values.academyId),
-        // courseId is OPTIONAL now
         courseId: values.courseId ? Number(values.courseId) : undefined,
         coachId: Number(values.coachId),
         facilityId: Number(values.facilityId),
@@ -754,7 +704,7 @@ export function BatchFormModal({
       type: "select",
       options: activityOptions.map((a) => ({
         label: a.activityName,
-        value: a.activityId,
+        value: a.activityName,
       })),
       required: true,
     },
@@ -770,7 +720,7 @@ export function BatchFormModal({
       name: "courseId",
       label: "Course",
       type: "select",
-      required: false, // ⬅ optional now
+      required: false,
       options: courses.map((c) => ({ label: c.name, value: String(c.id) })),
       disabled: loadingOptions || !values.academyId,
     },
@@ -816,7 +766,6 @@ export function BatchFormModal({
       label: "End Time",
       type: "time",
       required: true,
-      // ⬇ when course selected, endTime is controlled by sessionMinutes
       disabled: !!values.courseId,
     },
     {

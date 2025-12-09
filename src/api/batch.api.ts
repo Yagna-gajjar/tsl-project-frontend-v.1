@@ -34,26 +34,26 @@ export function getBatch(params: BatchQuery = {}): Promise<Response<Batch[]>> {
   return request<Response<Batch[]>>(`${BATCH_BASE}${qs}`);
 }
 
-export function getBatchById(id: number): Promise<Response> {
-  return request<Response>(`${BATCH_BASE}/${id}`);
+export function getBatchById(id: number): Promise<Response<Batch>> {
+  return request<Response<Batch>>(`${BATCH_BASE}/${id}`);
 }
 
-export function createBatch(payload: Batch): Promise<Response> {
-  return request<Response>(BATCH_BASE, {
+export function createBatch(payload: Batch): Promise<Response<Batch>> {
+  return request<Response<Batch>>(BATCH_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function editBatch(id: number, payload: Partial<Batch>): Promise<Response> {
-  return request<Response>(`${BATCH_BASE}/${id}`, {
+export function editBatch(id: number, payload: Partial<Batch>): Promise<Response<Batch>> {
+  return request<Response<Batch>>(`${BATCH_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteBatch(id: number): Promise<Response> {
-  return request<Response>(`${BATCH_BASE}/${id}`, {
+export function deleteBatch(id: number): Promise<Response<Batch>> {
+  return request<Response<Batch>>(`${BATCH_BASE}/${id}`, {
     method: "DELETE",
   });
 }

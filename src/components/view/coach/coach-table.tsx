@@ -10,7 +10,6 @@ import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-// --- AVATAR CONSTANTS & HELPERS ---
 const AVATAR_COLORS = [
   "bg-red-500",
   "bg-orange-500",
@@ -37,7 +36,6 @@ const getPersistentBackgroundColor = (identifier: string) => {
   return AVATAR_COLORS[index];
 };
 
-// --- AVATAR CELL COMPONENT ---
 const AvatarCell = ({
   row,
   onClick,
@@ -48,18 +46,15 @@ const AvatarCell = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  // Fallback initial
   const initial = row.coachFirstName
     ? row.coachFirstName.charAt(0).toUpperCase()
     : "?";
 
-  // Unique key for background color hashing
   const uniqueKey = row.coachId
     ? String(row.coachId)
     : row.coachFirstName + (row.coachLastName || "");
   const bgColorClass = getPersistentBackgroundColor(uniqueKey);
 
-  // Construct Image URL (using 'photo' field)
   const baseUrl = import.meta.env.VITE_APP_R2_PUBLIC_ENDPOINT || "";
   const imageUrl = row.photo?.startsWith("http")
     ? row.photo
@@ -120,7 +115,6 @@ const AvatarCell = ({
   );
 };
 
-// --- MAIN COMPONENT ---
 type Props = {
   onView?: (row: Coach) => void;
   onEdit?: (row: Coach) => void;
@@ -139,11 +133,9 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
   const [sortBy, setSortBy] = useState<string>("coachId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
-  // --- DELETE COACH STATE ---
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // --- UPLOAD MODAL STATE ---
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -230,7 +222,6 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
     }
   };
 
-  // --- UPLOAD HANDLERS ---
   const openUploadModal = (coach: Coach) => {
     setSelectedCoach(coach);
 
@@ -271,7 +262,6 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       toast({ title: "Success", description: "Photo removed successfully" });
       await loadData();
 
-      // Update local state to reflect removal
       setSelectedCoach((prev) => (prev ? { ...prev, photo: undefined } : null));
       setPreviewUrl(null);
     } catch (error) {
@@ -306,7 +296,7 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
 
   const columns: Column<Coach>[] = [
     {
-      key: "photo", // Using 'photo' based on your schema
+      key: "photo",
       header: "Photo",
       sortable: false,
       render: (row) => (
@@ -387,7 +377,7 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
         pagination={{
           page,
           limit,
-          total: data.length, // Ideally backend should provide total count
+          total: data.length,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
@@ -402,7 +392,6 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
         idKey={"coachId"}
       />
 
-      {/* --- CONFIRM DELETE COACH DIALOG --- */}
       <ConfirmDialog
         isOpen={deleteOpen}
         onClose={() => {
@@ -417,14 +406,12 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
         variant="destructive"
       />
 
-      {/* --- UPLOAD PHOTO MODAL --- */}
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-lg bg-background border border-foreground p-6 shadow-xl animate-in fade-in zoom-in duration-200">
             <h3 className="text-lg font-semibold mb-4">Update Profile Picture</h3>
 
             <div className="flex flex-col items-center gap-6">
-              {/* Preview Circle */}
               <div className="relative h-32 w-32 rounded-full border-2 border-dashed border-foreground flex items-center justify-center overflow-hidden bg-background">
                 {previewUrl ? (
                   <img

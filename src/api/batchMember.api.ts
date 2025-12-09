@@ -38,8 +38,8 @@ export function changeBatch(
 
 export function getAttendance(
   batchId: number
-): Promise<Response> {
-  return request<Response>(`${BATCH_MEMBER_BASE}/attendance/${batchId}`, {
+): Promise<Response<BatchMember>> {
+  return request < Response<BatchMember>>(`${BATCH_MEMBER_BASE}/attendance/${batchId}`, {
     method: "GET",
   });
 }

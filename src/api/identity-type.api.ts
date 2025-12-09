@@ -16,9 +16,7 @@ export interface IdentityTypesQuery {
 
 const IDENTITY_TYPE_BASE = import.meta.env.VITE_APP_API_URL + '/identity-type';
 
-export function getIdentityTypes(params: IdentityTypesQuery = {}): Promise<Response> {
-
-  console.log(params," op00") 
+export function getIdentityTypes(params: IdentityTypesQuery = {}): Promise<Response<IdentityType[]>> {
 
   const qs = toQueryString({
     page: params.page ?? 1,
@@ -32,7 +30,7 @@ export function getIdentityTypes(params: IdentityTypesQuery = {}): Promise<Respo
     discount: params.discount
   });
 
-  return request<Response>(`${IDENTITY_TYPE_BASE}${qs}`);
+  return request<Response<IdentityType[]>>(`${IDENTITY_TYPE_BASE}${qs}`);
 }
 
 export function getIdentityTypesByCategoryAndFamily(teamCategoryId: number | null, familyTypeId: number): Promise<Response> {
@@ -42,19 +40,19 @@ export function getIdentityTypesByCategoryAndFamily(teamCategoryId: number | nul
   }));
 }
 
-export function getIdentityTypesByID(id: number): Promise<Response> {
-  return request<Response>(`${IDENTITY_TYPE_BASE}/${id}`)
+export function getIdentityTypesByID(id: number): Promise<Response<IdentityType>> {
+  return request<Response<IdentityType>>(`${IDENTITY_TYPE_BASE}/${id}`)
 }
 
-export function createIdentityTypes(payload: IdentityType): Promise<Response> {
-  return request<Response>(IDENTITY_TYPE_BASE, {
+export function createIdentityTypes(payload: IdentityType): Promise<Response<IdentityType>> {
+  return request < Response<IdentityType>>(IDENTITY_TYPE_BASE, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
-export function editIdentityTypes(id: number, payload: Partial<IdentityType>): Promise<Response> {
-  return request<Response>(`${IDENTITY_TYPE_BASE}/${id}`, {
+export function editIdentityTypes(id: number, payload: Partial<IdentityType>): Promise<Response<IdentityType>> {
+  return request < Response<IdentityType>>(`${IDENTITY_TYPE_BASE}/${id}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   })

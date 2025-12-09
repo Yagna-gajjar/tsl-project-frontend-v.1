@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { ViewModal } from "@/components/view-modal/view-modal";
+import { ViewModal, type FieldConfig } from "@/components/view-modal/view-modal";
 import type { Batch } from "@/types/batch";
 import { getBatchById } from "@/api/batch.api";
 import {
@@ -19,8 +19,7 @@ type Props = {
   item?: Batch | null;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fields: any = [
+const fields: FieldConfig<Batch>[] = [
   { key: "batchName", label: "Batch Name", icon: Type },
   { key: "courseName", label: "Course" },
   { key: "coachFirstName", label: "Coach", icon: Users },
@@ -30,43 +29,37 @@ const fields: any = [
     key: "startTime",
     label: "Start Time",
     icon: Calendar,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v: Batch["startTime"]) => (v ? new Date(v).toLocaleDateString() : "-"),
   },
   {
     key: "endTime",
     label: "End Time",
     icon: Calendar,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v: Batch["endTime"]) => (v ? new Date(v).toLocaleDateString() : "-"),
   },
   {
     key: "introduceDate",
     label: "Introduce Date",
     icon: Calendar,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v: Batch["introduceDate"]) => (v ? new Date(v).toLocaleDateString() : "-"),
   },
   {
     key: "suspendedDate",
     label: "Suspended Date",
     icon: Calendar,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v: Batch["suspendedDate"]) => (v ? new Date(v).toLocaleDateString() : "-"),
   },
   { key: "weekDays", label: "Week Days", icon: Hash },
   {
     key: "status",
     label: "Status",
     icon: Activity,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (
+    render: (v: Batch["status"]) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          v === "active"
+        className={`px-2 py-1 rounded-full text-xs font-medium ${v === "active"
             ? "bg-green-100 text-green-800"
             : "bg-yellow-100 text-yellow-800"
-        }`}
+          }`}
       >
         {v ?? "-"}
       </span>
@@ -76,15 +69,13 @@ const fields: any = [
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: Batch["createdAt"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: Batch["updatedAt"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
 ];
 
@@ -92,8 +83,7 @@ export default function BatchViewModal({ isOpen, onClose, item }: Props) {
   const fetchFn = useCallback(
     async (id: string | number) => {
       if (!id) throw new Error("No batch ID");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await getBatchById(Number(id)) as any;
+      const response = await getBatchById(Number(id));
       const resBatch = response.data;
 
       return resBatch as Batch;

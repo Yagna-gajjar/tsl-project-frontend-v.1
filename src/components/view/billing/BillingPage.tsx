@@ -1,30 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-	Calendar,
-	Download,
-	DollarSign,
-	BookOpen,
-	ChevronRight,
-	Loader2,
-	AlertCircle,
-	MinusCircle,
-	FileText,
-	TrendingDown,
-	TrendingUp,
-	Wallet,
-	PieChart,
-	Users,
-	Briefcase,
-	Building2,
-	Receipt
+	Calendar, Download, Loader2, MinusCircle, FileText, TrendingDown, TrendingUp, Wallet, PieChart, Users, Briefcase, Building2, Receipt
 } from "lucide-react";
 import { getBills } from "@/api/billing.api";
 import { getDebitNotes } from "@/api/debitNote.api";
 import type { Academy } from "@/types/academy";
 import type { DebitNote } from "@/types/debitNote";
 
-// --- Types ---
 interface MonthSlice {
 	year: string;
 	month: string;
@@ -56,7 +39,6 @@ interface BillingResponse {
 	};
 }
 
-// Extend Academy type to ensure we have the share fields
 interface AcademyWithShares extends Academy {
 	share_main?: number | null;
 	share_tanna?: number | null;
@@ -72,7 +54,6 @@ const BillingPage = ({ academy }: { academy: AcademyWithShares | null }) => {
 	const [startDate, setStartDate] = useState("2026-01-01");
 	const [endDate, setEndDate] = useState("2026-01-31");
 
-	// --- Fetch Logic ---
 	useEffect(() => {
 		if (!academy?.academyId || !startDate || !endDate) return;
 
@@ -103,28 +84,22 @@ const BillingPage = ({ academy }: { academy: AcademyWithShares | null }) => {
 		fetchData();
 	}, [academy, startDate, endDate]);
 
-	// --- Core Financial Engine ---
 	const financials = useMemo(() => {
 		const grossEarnings = billingData?.total || 0;
 		const totalDeductions = debitNotes.reduce((sum, note) => sum + note.debitNoteAmount, 0);
 
-		// 1. Get Percentages (Default to 0 if null)
 		const pctMain = academy?.share_main || 0;
 		const pctTanna = academy?.share_tanna || 0;
 		const pctTsl = academy?.share_tsl || 0;
 		const pctExpenses = academy?.share_expenses || 0;
 
-		// 2. Calculate Gross Share (Before Deductions)
 		const grossMain = grossEarnings * (pctMain / 100);
 		const grossTanna = grossEarnings * (pctTanna / 100);
 		const grossTsl = grossEarnings * (pctTsl / 100);
 		const grossExpenses = grossEarnings * (pctExpenses / 100);
 
-		// 3. Apply Deductions (ONLY to Main Share as requested)
 		const netMain = grossMain - totalDeductions;
 
-		// 4. Final Totals
-		// The mathematical total of the split distribution
 		const totalDistributed = netMain + grossTanna + grossTsl + grossExpenses;
 
 		return {
@@ -134,9 +109,9 @@ const BillingPage = ({ academy }: { academy: AcademyWithShares | null }) => {
 			totalDistributed,
 			shares: {
 				main: { percent: pctMain, gross: grossMain, net: netMain },
-				tanna: { percent: pctTanna, gross: grossTanna, net: grossTanna }, // No deduction
-				tsl: { percent: pctTsl, gross: grossTsl, net: grossTsl }, // No deduction
-				expenses: { percent: pctExpenses, gross: grossExpenses, net: grossExpenses } // No deduction
+				tanna: { percent: pctTanna, gross: grossTanna, net: grossTanna },
+				tsl: { percent: pctTsl, gross: grossTsl, net: grossTsl },
+				expenses: { percent: pctExpenses, gross: grossExpenses, net: grossExpenses }
 			}
 		};
 	}, [billingData, debitNotes, academy]);
@@ -408,7 +383,6 @@ const BillingPage = ({ academy }: { academy: AcademyWithShares | null }) => {
 	);
 };
 
-// --- Helper Component for Revenue Cards ---
 const ShareCard = ({
 	title,
 	icon,
@@ -426,7 +400,6 @@ const ShareCard = ({
 	net: number;
 	colorClass: "slate" | "indigo" | "blue" | "amber";
 }) => {
-	// Styles mapping
 	const styles = {
 		slate: "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-neutral-700",
 		indigo: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30",

@@ -26,30 +26,30 @@ export default function TeamCategoryTable({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
+  const [limit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, string | boolean | number | Object | Date | undefined>>({});
   const [sortBy, setSortBy] = useState<string>("teamCategoryId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res: any = await getTeamCategories({
+      const res: Response<TeamCategory[]> = await getTeamCategories({
         page,
         limit,
         sortBy,
         sortOrder,
         search: search || undefined,
-        categoryName: filters.categoryName ?? undefined,
-        shortName: filters.shortName ?? undefined,
-        access: filters.access ?? undefined,
-      } as any);
+        categoryName: String(filters.categoryName) ?? undefined,
+        shortName: String(filters.shortName) ?? undefined,
+        access: String(filters.access) ?? undefined,
+      });
 
       const rowsRaw = res?.data ?? res ?? [];
-      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => ({
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: TeamCategory) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
@@ -75,7 +75,7 @@ export default function TeamCategoryTable({
     setSearch(q);
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: string | boolean | Date | Object | number) => {
     setPage(1);
     setFilters((prev) => {
       const next = { ...prev };
@@ -93,16 +93,14 @@ export default function TeamCategoryTable({
   };
 
   const handlePageChange = (p: number) => setPage(p);
-  // Delete dialog state
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
-  // When user clicks "Delete" in the table
   const handleDelete = (id?: number) => {
     if (id === undefined || id === null) return;
     setDeleteId(id);
-    setDeleteOpen(true); // open your AlertDialog
+    setDeleteOpen(true);
   };
 
   const handleDeleteConfirmed = async () => {
@@ -117,8 +115,8 @@ export default function TeamCategoryTable({
 
       if (!ok) {
         throw new Error(
-          (res as Record<string, any>)?.message ||
-            "Failed to delete team category"
+          res?.message ||
+          "Failed to delete team category"
         );
       }
 

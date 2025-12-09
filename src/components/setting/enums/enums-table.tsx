@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
@@ -15,48 +13,16 @@ type Props = {
   refreshKey?: number;
 };
 
-function compareValues(a: any, b: any, direction: "ASC" | "DESC") {
-  if (a === b) return 0;
-  // handle undefined/null
-  if (a == null) return direction === "ASC" ? 1 : -1;
-  if (b == null) return direction === "ASC" ? -1 : 1;
-
-  // Dates
-  if (
-    a instanceof Date ||
-    b instanceof Date ||
-    (typeof a === "string" && !isNaN(Date.parse(a)))
-  ) {
-    const da = new Date(a).getTime();
-    const db = new Date(b).getTime();
-    return direction === "ASC" ? da - db : db - da;
-  }
-
-  // Numbers
-  if (typeof a === "number" || typeof b === "number") {
-    const na = Number(a);
-    const nb = Number(b);
-    return direction === "ASC" ? na - nb : nb - na;
-  }
-
-  // Fallback string compare
-  const sa = String(a).toLowerCase();
-  const sb = String(b).toLowerCase();
-  if (sa < sb) return direction === "ASC" ? -1 : 1;
-  if (sa > sb) return direction === "ASC" ? 1 : -1;
-  return 0;
-}
-
 export default function EnumsTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Enums[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
+  const [limit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, string | number | Date | Object>>({});
   const [sortBy, setSortBy] = useState<string>("id");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
@@ -68,7 +34,7 @@ export default function EnumsTable({ onView, onEdit, refreshKey }: Props) {
         const currentPage = opts?.page ?? page;
         const currentLimit = opts?.limit ?? limit;
 
-        const res: Response = await getAllEnums({
+        const res: Response<Enums[]> | any = await getAllEnums({
           page: currentPage,
           limit: currentLimit,
           search,
@@ -93,10 +59,8 @@ export default function EnumsTable({ onView, onEdit, refreshKey }: Props) {
   );
 
 
-  // initial & dependency-driven load
   useEffect(() => {
     loadData();
-    // refreshKey allows parent to force reload
   }, [loadData, refreshKey]);
 
   const columns: Column<Enums>[] = [

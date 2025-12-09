@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import TeamCategoryTable from "./team-category-table";
 import TeamCategoryViewModal from "./team-category-view-modal";
 import TeamCategoryFormModal from "./team-category-form-modal";

@@ -43,7 +43,6 @@ export function ActivityFormModal({
     setValues({ ...empty, ...(initialData ?? {}) });
     setFieldErrors({});
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof Activity, val: string) => {
@@ -141,7 +140,6 @@ export function ActivityFormModal({
       label: "Description",
       type: "textarea",
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ] as any;
 
   return (

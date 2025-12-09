@@ -7,11 +7,11 @@ export interface Batch {
   batchName: string;
   facilityId: number;
   areaId: number;
-  introduceDate: Date;
-  suspendedDate: Date;
-  startTime: Date;
-  endTime: Date;
-  weekDays: number;
+  introduceDate: Date | string;
+  suspendedDate: Date | string;
+  startTime: Date | string;
+  endTime: Date | string;
+  weekDays: string[] | number | undefined;
   photo: string | null;
   status: "active" | "suspended" | "inactive" | "cancelled";
   createdAt: Date;

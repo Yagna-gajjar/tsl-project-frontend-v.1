@@ -1,6 +1,7 @@
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react"
 
-export type FieldType = "text" | "email" | "password" | "number" | "textarea" | "select" | "checkbox" | "date" | "multiselect"
+export type FieldType = "text" | "email" | "password" | "number" | "textarea" | "select" | "checkbox" | "date" | "multiselect" | "time"
 
 export interface FormFieldConfig<T extends Record<string, any>> {
   name: keyof T;
@@ -11,7 +12,7 @@ export interface FormFieldConfig<T extends Record<string, any>> {
   required?: boolean;
   validation?: (value: any) => string | true;
   options?: Array<{ label: string; value: any }>; // For select fields
-  icon?: ReactNode;
+  icon?: ReactNode | LucideIcon;
   disabled?: boolean;
   className?: string;
   condition?: (values: Partial<T>) => boolean;

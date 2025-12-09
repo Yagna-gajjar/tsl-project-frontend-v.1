@@ -6,4 +6,8 @@ export interface IdentityType {
 	discount: number;
 	createdAt?: Date;
 	updatedAt?: Date;
+
+	familyTypeName?: string;
+	prefix?: string;
+	maxMembers?: string;
 }

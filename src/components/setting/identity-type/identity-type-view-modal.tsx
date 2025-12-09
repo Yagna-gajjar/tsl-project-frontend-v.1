@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { ViewModal } from "@/components/view-modal/view-modal";
+import { ViewModal, type FieldConfig } from "@/components/view-modal/view-modal";
 import type { IdentityType } from "@/types/identityType";
 import {
   Type,
@@ -15,22 +15,21 @@ type Props = {
   item?: IdentityType | null;
 };
 
-const fields = [
+const fields: FieldConfig<IdentityType>[] = [
   { key: "familyTypeName", label: "Family Type", icon: Type },
   { key: "prefix", label: "Prefix", icon: Tag },
   { key: "maxMembers", label: "Max Members", icon: Users },
-
   {
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: IdentityType["createdAt"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: IdentityType["updatedAt"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
 ];
 
@@ -40,7 +39,7 @@ export default function IdentityTypeViewModal({
   item,
 }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string) => {
+    async (_?: number | string) => {
       if (!item) throw new Error("No data");
       return item;
     },
@@ -53,7 +52,7 @@ export default function IdentityTypeViewModal({
       onClose={onClose}
       itemId={Number(item?.identityTypeId)}
       fetchFn={fetchFn}
-      fields={fields as any}
+      fields={fields}
       title="View Identity Type"
     />
   );

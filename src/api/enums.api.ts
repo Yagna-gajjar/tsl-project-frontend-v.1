@@ -8,11 +8,14 @@ export interface EnumsQuery {
     sortBy?: string;
     sorting?: SortOrder;
     search?: string;
+    filters?: Object;
+    sortOrder?: "ASC" | "DESC";
+    pagination?: Object
 }
 
 const ENUMS_BASE = import.meta.env.VITE_APP_API_URL + '/enum';
 
-export function getAllEnums(params: EnumsQuery = {}): Promise<Enums[]> {
+export function getAllEnums(params: EnumsQuery = {}): Promise<Response<Enums[]>> {
     const qs = toQueryString({
         page: params.page ?? 1,
         limit: params.limit ?? 10,
@@ -21,15 +24,15 @@ export function getAllEnums(params: EnumsQuery = {}): Promise<Enums[]> {
         search: params.search,
     });
 
-    return request<Enums[]>(`${ENUMS_BASE}${qs}`);
+    return request<Response<Enums[]>>(`${ENUMS_BASE}${qs}`);
 }
 
 export function getEnumsByCategory(categoryName: string): Promise<Enums[]> {
     return request<Enums[]>(`${ENUMS_BASE}/${categoryName}`);
 }
 
-export function createEnum(payload: Enums): Promise<Response> {
-    return request<Response>(ENUMS_BASE, {
+export function createEnum(payload: Enums): Promise<Response<Enums>> {
+    return request<Response<Enums>>(ENUMS_BASE, {
         method: 'POST',
         body: JSON.stringify(payload),
     })

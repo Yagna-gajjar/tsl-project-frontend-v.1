@@ -75,14 +75,12 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
   };
 
   const handleSectionClick = (section: NavigationItem) => {
-    // If the main section has an href, navigate there.
     if (section.href) {
       navigate(section.href);
       if (onClose) onClose();
       return;
     }
 
-    // Otherwise, only toggle when the sidebar is expanded (preserve original behavior).
     if (isExpanded) {
       toggleSection(section.name);
     }
@@ -192,7 +190,6 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
               );
             }
 
-            // Otherwise (has submenu or no href), render header as button that toggles submenu when expanded
             return (
               <div key={item.name} className="space-y-1">
                 <motion.button

@@ -24,17 +24,17 @@ const fields = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: Activity) => (v.createdAt ? new Date(v.createdAt).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
-  },
-] as any;
+    render: (v: Activity) => (
+      v.updatedAt ? new Date(v.updatedAt).toLocaleString() : "-"
+    ),
+  }
+];
 
 export default function ActivityViewModal({ isOpen, onClose, item }: Props) {
   const fetchFn = useCallback(
@@ -51,7 +51,7 @@ export default function ActivityViewModal({ isOpen, onClose, item }: Props) {
       onClose={onClose}
       itemId={Number(item?.activityId)}
       fetchFn={fetchFn}
-      fields={fields}
+      fields={fields as any}
       title="View Activity"
     />
   );

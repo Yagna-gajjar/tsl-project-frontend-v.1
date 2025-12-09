@@ -11,6 +11,8 @@ import {
 } from "@/api/team-category.api";
 import type { TeamCategory } from "@/types/teamCategory";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -29,14 +31,14 @@ export function TeamCategoryFormModal({
 }: Props) {
   const isEdit = Boolean(initialData && initialData.teamCategoryId);
 
-  const empty: Partial<TeamCategory> = {
+  const empty: TeamCategory = {
     categoryName: initialData?.categoryName ?? "",
     shortName: initialData?.shortName ?? "",
     access: initialData?.access ?? "active",
     details: initialData?.details ?? "",
   };
 
-  const [values, setValues] = useState<Partial<TeamCategory>>(empty);
+  const [values, setValues] = useState<TeamCategory>(empty);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -46,19 +48,17 @@ export function TeamCategoryFormModal({
     setValues({ ...empty, ...(initialData ?? {}) });
     setFieldErrors({});
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
-  // optionally fetch full item when editing (no UI change)
   useEffect(() => {
     if (!isOpen || !isEdit || !initialData?.teamCategoryId) return;
     setLoading(true);
     (async () => {
       try {
-        const res: any = await getTeamCategoriesByID(
+        const res: Response<TeamCategory> = await getTeamCategoriesByID(
           Number(initialData.teamCategoryId)
         );
-        const row = res && (res.data ?? res) ? res.data ?? res : res;
+        const row = Array.isArray(res.data) ? res.data : {} as TeamCategory;
         if (row) {
           setValues({
             categoryName: row.categoryName ?? "",
@@ -75,7 +75,7 @@ export function TeamCategoryFormModal({
     })();
   }, [isOpen, isEdit, initialData]);
 
-  const onChange = (field: keyof TeamCategory, val: any) => {
+  const onChange = (field: keyof TeamCategory, val: string | boolean | Date | Object | number) => {
     setValues((p) => ({ ...p, [field]: val }));
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
@@ -115,7 +115,7 @@ export function TeamCategoryFormModal({
         details: values.details ?? "",
       };
 
-      let res: any;
+      let res: Response<TeamCategory>;
       if (isEdit && initialData?.teamCategoryId) {
         res = await editTeamCategories(
           Number(initialData.teamCategoryId),
@@ -125,27 +125,25 @@ export function TeamCategoryFormModal({
         res = await createTeamCategories(payload as TeamCategory);
       }
 
-      // normalize response and prefer explicit success flag if present
       const ok =
         typeof res?.success !== "undefined"
           ? res === null
             ? false
             : res.success === true || String(res.success) === "true"
           : true;
-      const row = res && (res.data ?? res) ? res.data ?? res : res;
+      const row = res.data ? res.data : {} as TeamCategory;
 
       if (!ok) {
-        const msg = res?.message ?? res?.error ?? "Save failed";
+        const msg = res?.message ?? "Save failed";
         setError(msg);
         toast({
-          title: "Save failed",
-          description: msg,
+          title: "Error",
+          description: "Save failed",
           variant: "destructive",
         });
         return;
       }
 
-      // success
       toast({
         title: isEdit ? "Team category updated" : "Team category created",
         description: `${String(
@@ -156,8 +154,8 @@ export function TeamCategoryFormModal({
 
       onSaved?.(row as TeamCategory);
       onClose();
-    } catch (err: any) {
-      const message = err?.message ?? "Failed to save";
+    } catch {
+      const message = "Failed to save";
       setError(message);
       toast({
         title: "Save failed",
@@ -167,10 +165,10 @@ export function TeamCategoryFormModal({
     } finally {
       setIsSubmitting(false);
     }
-    
+
   }, [values, isEdit, initialData, onClose, onSaved]);
 
-  const fields = [
+  const fields: FormFieldConfig<TeamCategory>[] = [
     {
       name: "categoryName",
       label: "Category Name",
@@ -185,7 +183,7 @@ export function TeamCategoryFormModal({
       required: true,
     },
     { name: "details", label: "Details", type: "text" },
-  ] as any;
+  ];
 
   return (
     <Dialog
@@ -208,13 +206,13 @@ export function TeamCategoryFormModal({
               loading={loading}
               error={error}
               isSubmitting={isSubmitting}
-              onChange={onChange as any}
+              onChange={onChange}
               layout={layout}
             />
           </div>
           <FormFooter
             onClose={onClose}
-            onSubmit={handleSubmit as any}
+            onSubmit={handleSubmit}
             submitLabel={isEdit ? "Update" : "Create"}
             isSubmitting={isSubmitting}
           />

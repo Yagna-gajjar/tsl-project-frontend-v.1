@@ -22,7 +22,6 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import type { Batch } from '@/types/batch';
 
-// --- Shadcn Imports ---
 import {
 	Select,
 	SelectContent,
@@ -30,6 +29,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import type { Member } from '@/types/member';
 
 const formatTime = (timeStr: string) => {
 	if (!timeStr) return "";
@@ -53,7 +53,6 @@ const formatDate = (dateStr: string) => {
 	return format(new Date(dateStr), 'dd MMM yyyy');
 };
 
-// --- Types ---
 type ColumnKey = 'srNo' | 'name' | 'startDate' | 'endDate' | 'billingRate' | 'status';
 
 interface ExportColumn {
@@ -69,17 +68,14 @@ const AttendanceSheet = () => {
 	const [loading, setLoading] = useState(true);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-	// UI State for Export Menu
 	const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 	const exportMenuRef = useRef<HTMLDivElement>(null);
 
-	// --- STATES FOR SHIFT FUNCTIONALITY ---
 	const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
-	const [targetBatches, setTargetBatches] = useState<Batch[]>([]);
+	const [targetBatches, setTargetBatches] = useState<Batch[]>();
 	const [selectedTargetBatchId, setSelectedTargetBatchId] = useState<string>("");
 	const [isShifting, setIsShifting] = useState(false);
 
-	// Configuration for PDF Export Columns
 	const [exportColumns, setExportColumns] = useState<ExportColumn[]>([
 		{ id: 'srNo', label: 'Sr. No', enabled: true },
 		{ id: 'name', label: 'Member Name', enabled: true },
@@ -89,7 +85,6 @@ const AttendanceSheet = () => {
 		{ id: 'status', label: 'Present / Absent', enabled: true },
 	]);
 
-	// Handle clicking outside the export menu
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
@@ -100,11 +95,10 @@ const AttendanceSheet = () => {
 		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
 
-	// Fetch Attendance Data
 	const fetchAttendance = async () => {
 		try {
 			setLoading(true);
-			const res: Response<any> = await getAttendance(Number(id));
+			const res: Response<BatchMember> = await getAttendance(Number(id));
 			const data = res.data;
 			setBatchData(data);
 		} catch (err) {
@@ -123,14 +117,11 @@ const AttendanceSheet = () => {
 	}, [id]);
 
 	const members = batchData?.members ?? [];
-	const filteredMembers = members.filter((member: any) =>
+	const filteredMembers = members.filter((member) =>
 		member.memberName?.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	// --- Selection Logic (UPDATED TO USE MEMBER ID) ---
-
-	// Helper to extract ID
-	const getMemberId = (member: any) => member.memberId; // Assuming 'memberId' exists in your API response
+	const getMemberId = (member: Member) => member.memberId;
 
 	const toggleSelection = (memberId: number) => {
 		const newSet = new Set(selectedIds);
@@ -140,7 +131,7 @@ const AttendanceSheet = () => {
 	};
 
 	const toggleSelectAll = () => {
-		const visibleIds = filteredMembers.map((m: any) => getMemberId(m));
+		const visibleIds = filteredMembers.map((m: Member) => getMemberId(m));
 		const allSelected = visibleIds.every((id: number) => selectedIds.has(id));
 		const newSet = new Set(selectedIds);
 
@@ -155,9 +146,8 @@ const AttendanceSheet = () => {
 		));
 	};
 
-	const isAllSelected = filteredMembers.length > 0 && filteredMembers.every((m: any) => selectedIds.has(getMemberId(m)));
+	const isAllSelected = filteredMembers.length > 0 && filteredMembers.every((m: Member) => selectedIds.has(getMemberId(m)));
 
-	// --- SHIFT MEMBERS LOGIC ---
 
 	const openShiftModal = async () => {
 		if (!batchData || !batchData.courseId) {
@@ -166,14 +156,12 @@ const AttendanceSheet = () => {
 		}
 
 		try {
-			// Fetch available batches for this course
 			const res: Response<Batch[]> = await getBatch({
 				courseId: Number(batchData.courseId)
 			});
-			// Filter out current batch from the list
-			const validBatches = res?.data?.filter((b: any) => b.batchId !== Number(id));
+			const validBatches = res?.data?.filter((b: Batch) => b.batchId !== Number(id));
 
-			setTargetBatches(validBatches as any);
+			setTargetBatches(validBatches);
 			setIsShiftModalOpen(true);
 		} catch (error) {
 			toast({ title: "Error", description: "Failed to load batches.", variant: "destructive" });
@@ -190,18 +178,14 @@ const AttendanceSheet = () => {
 			setIsShifting(true);
 			const memberIdsArray = Array.from(selectedIds);
 
-			// API Call: shiftMembers(oldBatchId, newBatchId, memberIds)
-			// Note: memberIdsArray now contains memberIds, not batchMemberIds
 			await shiftMembers(Number(id), Number(selectedTargetBatchId), memberIdsArray);
 
 			toast({ title: "Success", description: "Members shifted successfully.", variant: "success" });
 
-			// Cleanup
 			setIsShiftModalOpen(false);
-			setSelectedIds(new Set()); // Clear selection
+			setSelectedIds(new Set());
 			setSelectedTargetBatchId("");
 
-			// Refresh Data
 			fetchAttendance();
 
 		} catch (error) {
@@ -211,11 +195,9 @@ const AttendanceSheet = () => {
 		}
 	};
 
-	// --- PDF Export Logic (Updated filter) ---
 	const handleExportPDF = () => {
 		if (!batchData) return;
-		// Filter based on memberId now
-		const membersToExport = filteredMembers.filter((m: any) => selectedIds.has(getMemberId(m)));
+		const membersToExport = filteredMembers.filter((m: Member) => selectedIds.has(getMemberId(m)));
 
 		if (membersToExport.length === 0) {
 			toast({ title: "Selection Empty", description: "Select members to export.", variant: "destructive" });
@@ -223,9 +205,7 @@ const AttendanceSheet = () => {
 		}
 
 		const doc = new jsPDF();
-		// ... (PDF Generation logic same as before) ...
 		doc.text("Attendance Sheet", 14, 20);
-		// ...
 		doc.save(`attendance_${batchData.batchName}.pdf`);
 		toast({ title: "Success", description: "PDF downloaded successfully.", variant: "success" });
 	};
@@ -233,7 +213,6 @@ const AttendanceSheet = () => {
 	return (
 		<div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 relative">
 
-			{/* --- SHIFT MEMBER MODAL --- */}
 			<AnimatePresence>
 				{isShiftModalOpen && (
 					<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -264,7 +243,6 @@ const AttendanceSheet = () => {
 										Select Target Batch
 									</label>
 
-									{/* --- SHADCN SELECT --- */}
 									<Select
 										onValueChange={setSelectedTargetBatchId}
 										value={selectedTargetBatchId}
@@ -273,14 +251,13 @@ const AttendanceSheet = () => {
 											<SelectValue placeholder="-- Select a Batch --" />
 										</SelectTrigger>
 										<SelectContent>
-											{targetBatches.map((batch: any) => (
+											{targetBatches.map((batch: Batch) => (
 												<SelectItem key={batch.batchId} value={String(batch.batchId)}>
-													{batch.batchName} ({batch.startTime} - {batch.endTime})
+													{batch.batchName} ({String(batch.startTime)} - {String(batch.endTime)})
 												</SelectItem>
 											))}
 										</SelectContent>
 									</Select>
-									{/* --------------------- */}
 
 								</div>
 							</div>
@@ -307,7 +284,6 @@ const AttendanceSheet = () => {
 			</AnimatePresence>
 
 			<div className="flex flex-col gap-6">
-				{/* --- Header Card --- */}
 				<div className="bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-600 dark:border-blue-500 p-4 md:p-6 rounded-r-lg shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors">
 					<div>
 						<h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -328,7 +304,6 @@ const AttendanceSheet = () => {
 					</div>
 
 					<div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-						{/* Search Bar */}
 						<div className="relative w-full sm:w-auto">
 							<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 							<input
@@ -340,10 +315,8 @@ const AttendanceSheet = () => {
 							/>
 						</div>
 
-						{/* Controls Group */}
 						<div className="flex items-center gap-2 w-full sm:w-auto relative" ref={exportMenuRef}>
 
-							{/* Shift Button */}
 							<motion.button
 								whileHover={{ scale: 1.02 }}
 								whileTap={{ scale: 0.98 }}
@@ -355,7 +328,6 @@ const AttendanceSheet = () => {
 								<span className="hidden md:inline">Shift Selected</span>
 							</motion.button>
 
-							{/* Export Options Dropdown Trigger */}
 							<motion.button
 								whileHover={{ scale: 1.02 }}
 								whileTap={{ scale: 0.98 }}
@@ -366,7 +338,6 @@ const AttendanceSheet = () => {
 								<ChevronDown className={`w-3 h-3 transition-transform ${isExportMenuOpen ? 'rotate-180' : ''}`} />
 							</motion.button>
 
-							{/* Export Options Dropdown Menu */}
 							<AnimatePresence>
 								{isExportMenuOpen && (
 									<motion.div
@@ -401,7 +372,6 @@ const AttendanceSheet = () => {
 								)}
 							</AnimatePresence>
 
-							{/* Export Button */}
 							<motion.button
 								whileHover={{ scale: 1.02 }}
 								whileTap={{ scale: 0.98 }}
@@ -417,7 +387,6 @@ const AttendanceSheet = () => {
 				</div>
 			</div>
 
-			{/* --- Table Container --- */}
 			<div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
 				<div className="overflow-x-auto">
 					<table className="w-full text-left border-collapse min-w-[800px]">
@@ -448,7 +417,7 @@ const AttendanceSheet = () => {
 								</tr>
 							) : filteredMembers.length > 0 ? (
 								<AnimatePresence>
-									{filteredMembers.map((member: any, index: number) => (
+									{filteredMembers.map((member, index: number) => (
 										<motion.tr
 											key={member.batchMemberId || index}
 											initial={{ opacity: 0, y: 5 }}

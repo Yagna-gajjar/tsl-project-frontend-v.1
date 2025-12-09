@@ -15,7 +15,7 @@ export interface TeamCategoriesQuery {
 
 const TEAM_CATEGORY_BASE = import.meta.env.VITE_APP_API_URL + '/team-category';
 
-export function getTeamCategories(params: TeamCategoriesQuery = {}): Promise<Response> {
+export function getTeamCategories(params: TeamCategoriesQuery = {}): Promise<Response<TeamCategory[]>> {
     const qs = toQueryString({
         page: params.page ?? 1,
         limit: params.limit ?? 10,
@@ -27,22 +27,22 @@ export function getTeamCategories(params: TeamCategoriesQuery = {}): Promise<Res
         access: params.access
     });
 
-    return request<Response>(`${TEAM_CATEGORY_BASE}${qs}`);
+    return request<Response<TeamCategory[]>>(`${TEAM_CATEGORY_BASE}${qs}`);
 }
 
-export function getTeamCategoriesByID(id: number): Promise<Response> {
-    return request<Response>(`${TEAM_CATEGORY_BASE}/${id}`)
+export function getTeamCategoriesByID(id: number): Promise<Response<TeamCategory>> {
+    return request<Response<TeamCategory>>(`${TEAM_CATEGORY_BASE}/${id}`)
 }
 
-export function createTeamCategories(payload: TeamCategory): Promise<Response> {
-    return request<Response>(TEAM_CATEGORY_BASE, {
+export function createTeamCategories(payload: TeamCategory): Promise<Response<TeamCategory>> {
+    return request < Response<TeamCategory>>(TEAM_CATEGORY_BASE, {
         method: 'POST',
         body: JSON.stringify(payload),
     })
 }
 
-export function editTeamCategories(id: number, payload: Partial<TeamCategory>): Promise<Response> {
-    return request<Response>(`${TEAM_CATEGORY_BASE}/${id}`, {
+export function editTeamCategories(id: number, payload: Partial<TeamCategory>): Promise<Response<TeamCategory>> {
+    return request < Response<TeamCategory>>(`${TEAM_CATEGORY_BASE}/${id}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
     })

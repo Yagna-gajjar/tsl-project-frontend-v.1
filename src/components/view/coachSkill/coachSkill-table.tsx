@@ -88,7 +88,7 @@ export default function CoachSkillTable({
 
   const handleSortChange = (column: string, direction: "ASC" | "DESC") => {
     if (column === "coachName") {
-      column = "coachFirstName"; // Default sort by first name if coachName is selected
+      column = "coachFirstName";
     }
     setSortBy(column);
     setSortOrder(direction);

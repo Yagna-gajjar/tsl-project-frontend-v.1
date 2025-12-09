@@ -7,7 +7,7 @@ import type { IdentityType } from "@/types/identityType";
 import type { FamilyType } from "@/types/familyType";
 import type { TeamCategory } from "@/types/teamCategory";
 
-import { getIdentityTypes, deleteIdentityTypes } from "@/api/identity-type.api";
+import { getIdentityTypes, deleteIdentityTypes, type IdentityTypesQuery } from "@/api/identity-type.api";
 import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
@@ -28,11 +28,11 @@ export default function IdentityTypeTable({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
+  const [limit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, string | number | boolean | Object | Date>>({});
   const [sortBy, setSortBy] = useState<string>("identityTypeId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
@@ -41,7 +41,7 @@ export default function IdentityTypeTable({
 
   const loadFilterOptions = useCallback(async () => {
     try {
-      const fRes: any = await getFamilyTypes({ page: 1, limit: 500 } as any);
+      const fRes: Response<FamilyType[]> = await getFamilyTypes({ page: 1, limit: 500 });
       const fRows: FamilyType[] = Array.isArray(fRes) ? fRes : fRes?.data ?? [];
       setFamilyOptions(
         (fRows || []).map((f) => ({
@@ -55,7 +55,7 @@ export default function IdentityTypeTable({
     }
 
     try {
-      const tRes: any = await getTeamCategories({ page: 1, limit: 500 } as any);
+      const tRes: Response<TeamCategory[]> = await getTeamCategories({ page: 1, limit: 500 });
       const tRows: TeamCategory[] = Array.isArray(tRes)
         ? tRes
         : tRes?.data ?? [];
@@ -73,20 +73,20 @@ export default function IdentityTypeTable({
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const params: any = { page, limit, sortBy, order: sortOrder };
+      const params: IdentityTypesQuery = { page, limit, sortBy, order: sortOrder };
       if (search) params.search = search;
       if (filters.familyTypeId !== undefined)
-        params.familyTypeId = filters.familyTypeId;
+        params.familyTypeId = Number(filters.familyTypeId);
       if (filters.teamCategoryId !== undefined)
-        params.teamCategoryId = filters.teamCategoryId;
-      if (filters.discount !== undefined) params.discount = filters.discount;
+        params.teamCategoryId = Number(filters.teamCategoryId);
+      if (filters.discount !== undefined) params.discount = Number(filters.discount);
       if (filters.identityTypeName !== undefined)
-        params.identityTypeName = filters.identityTypeName;
+        params.identityTypeName = String(filters.identityTypeName);
 
-      const res: any = await getIdentityTypes(params);
+      const res: Response<IdentityType[]> = await getIdentityTypes(params);
 
-      const rowsRaw: any[] = Array.isArray(res) ? res : res?.data ?? [];
-      const rows = (rowsRaw || []).map((r: any) => ({
+      const rowsRaw = Array.isArray(res) ? res : res?.data ?? [];
+      const rows = (rowsRaw || []).map((r: IdentityType) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
@@ -178,16 +178,16 @@ export default function IdentityTypeTable({
     setSearch(q);
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: string | boolean | number | Date | Object) => {
     setPage(1);
     const normalized =
       value === "" || value === null || value === undefined
         ? undefined
         : value === "all"
-        ? undefined
-        : value === "null"
-        ? "null"
-        : value;
+          ? undefined
+          : value === "null"
+            ? "null"
+            : value;
     setFilters((prev) => {
       const next = { ...prev };
       if (normalized === undefined) delete next[key];
@@ -229,8 +229,8 @@ export default function IdentityTypeTable({
 
       if (!ok) {
         throw new Error(
-          (res as Record<string, any>)?.message ||
-            "Failed to delete identity type"
+          res?.message ||
+          "Failed to delete identity type"
         );
       }
 

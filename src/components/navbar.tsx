@@ -382,7 +382,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         </div>
       </motion.nav>
 
-      {/* Sidebar component rendered here */}
       {requests && sidebarOpen && (
         <AcceptBatchRequest
           isOpen={sidebarOpen}
@@ -390,8 +389,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           setRequestLen={setRequestLen}
           requestData={requests}
           onAccepted={() => {
-            // optional: do extra work after accept (refresh UI)
-            // e.g. toast or refetch something
           }}
         />
       )}
