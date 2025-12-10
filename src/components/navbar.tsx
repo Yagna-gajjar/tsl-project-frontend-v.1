@@ -202,9 +202,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               }}
             >
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-background font-bold text-sm">CM</span>
+                <span className="text-background font-bold text-sm">TSL</span>
               </div>
-              <span className="font-bold text-xl hidden sm:block">TSL</span>
+              <span className="font-bold text-xl hidden sm:block">Tanna Sports</span>
             </motion.div>
           </div>
 
