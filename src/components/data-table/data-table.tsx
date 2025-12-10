@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import type React from "react";
+
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -38,7 +40,23 @@ export function DataTable<T>({
     key: string;
     direction: "asc" | "desc";
   } | null>(null);
-  const [filters, setFilters] = useState<Record<string, string | number | Date | Object | boolean>>({});
+  const [filters, setFilters] = useState<
+    Record<string, string | number | Date | Object | boolean>
+  >({});
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const resizingColumn = useRef<string | null>(null);
+  const startX = useRef<number>(0);
+  const startWidth = useRef<number>(0);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [columnWidths]);
 
   const handleColumnToggle = (key: string) => {
     const newVisible = new Set(visibleColumns);
@@ -85,10 +103,41 @@ export function DataTable<T>({
     sendFilterChange(key, value);
   };
 
+  const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault();
+    resizingColumn.current = columnKey;
+    startX.current = e.clientX;
+    startWidth.current = columnWidths[columnKey] || 150;
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!resizingColumn.current) return;
+
+    const diff = e.clientX - startX.current;
+    const newWidth = Math.max(80, startWidth.current + diff);
+
+    setColumnWidths((prev) => ({
+      ...prev,
+      [resizingColumn.current!]: newWidth,
+    }));
+  };
+
+  const handleMouseUp = () => {
+    resizingColumn.current = null;
+  };
+
   const displayColumns = useMemo(
     () => columns.filter((col) => visibleColumns.has(String(col.key))),
     [columns, visibleColumns]
   );
+
+  if (!columns || columns.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No columns configured
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -102,7 +151,7 @@ export function DataTable<T>({
     return (
       <div className="w-full space-y-4">
         <TableToolbar
-          onSearch={onSearchChange || (() => { })}
+          onSearch={onSearchChange || (() => {})}
           columns={columns}
           visibleColumns={visibleColumns}
           onColumnToggle={handleColumnToggle}
@@ -124,7 +173,7 @@ export function DataTable<T>({
   return (
     <div className="space-y-4 w-full">
       <TableToolbar
-        onSearch={onSearchChange || (() => { })}
+        onSearch={onSearchChange || (() => {})}
         columns={columns}
         visibleColumns={visibleColumns}
         onColumnToggle={handleColumnToggle}
@@ -136,100 +185,136 @@ export function DataTable<T>({
 
       <div className="hidden md:block rounded-md border shadow-sm bg-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/20 dark:to-background sticky top-0 z-10">
-              <TableRow>
-                {displayColumns.map((col) => (
-                  <TableHead
-                    key={String(col.key)}
-                    className={cn(
-                      "whitespace-nowrap p-4 font-semibold text-blue-900 dark:text-blue-100",
-                      col.align === "center" && "text-center",
-                      col.align === "right" && "text-right"
-                    )}
-                    style={{ width: col.width }}
-                  >
-                    <div className="flex items-center gap-2">{col.header}</div>
-                  </TableHead>
-                ))}
-                {(onView || onEdit || onDelete) && (
-                  <TableHead className="w-[100px] text-right p-4 font-semibold text-blue-900 dark:text-blue-100">
-                    Actions
-                  </TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <AnimatePresence mode="wait">
-                {data.map((row, index) => (
-                  <motion.tr
-                    key={String((row as any)[idKey] || index)}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2, delay: index * 0.03 }}
-                    className={cn(
-                      "group hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors",
-                      index % 2 === 0
-                        ? "bg-white dark:bg-background"
-                        : "bg-slate-50/50 dark:bg-muted/5"
-                    )}
-                  >
-                    {displayColumns.map((col) => (
-                      <TableCell
-                        key={String(col.key)}
-                        className={cn(
-                          "p-4",
-                          col.align === "center" && "text-center",
-                          col.align === "right" && "text-right"
-                        )}
-                      >
-                        {col.render
+          <div className="max-h-[600px] overflow-y-auto">
+            <Table>
+              <TableHeader className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/20 dark:to-background sticky top-0 z-20">
+                <TableRow className="">
+                  {displayColumns.map((col, idx) => (
+                    <TableHead
+                      key={String(col.key)}
+                      className={cn(
+                        "p-4 font-semibold text-blue-900 dark:text-blue-100 relative",
+                        col.align === "center" && "text-center",
+                        col.align === "right" && "text-right"
+                      )}
+                      style={{
+                        width:
+                          columnWidths[String(col.key)] || col.width || 150,
+                        minWidth: 80,
+                      }}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        {col.header}
+                      </div>
+                      {idx < displayColumns.length - 1 && (
+                        <div
+                          onMouseDown={(e) =>
+                            handleMouseDown(e, String(col.key))
+                          }
+                          className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-400 dark:hover:bg-blue-600 opacity-0 hover:opacity-100 transition-opacity"
+                          style={{ userSelect: "none" }}
+                        />
+                      )}
+                    </TableHead>
+                  ))}
+                  {(onView || onEdit || onDelete) && (
+                    <TableHead className="w-[100px] text-right p-4 font-semibold text-blue-900 dark:text-blue-100">
+                      Actions
+                    </TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <AnimatePresence mode="wait">
+                  {data.map((row, index) => (
+                    <motion.tr
+                      key={String((row as any)[idKey] || index)}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                      className={cn(
+                        "group hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors",
+                        index % 2 === 0
+                          ? "bg-white dark:bg-background"
+                          : "bg-slate-50/50 dark:bg-muted/5"
+                      )}
+                    >
+                      {displayColumns.map((col) => {
+                        const cellContent = col.render
                           ? col.render(row)
-                          : String((row as any)[col.key] ?? "")}
-                      </TableCell>
-                    ))}
-                    {(onView || onEdit || onDelete) && (
-                      <TableCell className="text-right p-4">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {onView && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
-                              onClick={() => onView(row)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {onEdit && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-100"
-                              onClick={() => onEdit(row)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {onDelete && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-100"
-                              onClick={() => onDelete((row as any)[idKey])}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    )}
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </TableBody>
-          </Table>
+                          : String((row as any)[col.key] ?? "");
+
+                        return (
+                          <TableCell
+                            key={String(col.key)}
+                            className={cn(
+                              "p-4 truncate",
+                              col.align === "center" && "text-center",
+                              col.align === "right" && "text-right"
+                            )}
+                            style={{
+                              width:
+                                columnWidths[String(col.key)] ||
+                                col.width ||
+                                150,
+                              minWidth: 80,
+                            }}
+                            title={
+                              typeof cellContent === "string"
+                                ? cellContent
+                                : undefined
+                            }
+                          >
+                            {cellContent}
+                          </TableCell>
+                        );
+                      })}
+                      {(onView || onEdit || onDelete) && (
+                        <TableCell className="text-right p-4">
+                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {onView && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                                onClick={() => onView(row)}
+                                title="View"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {onEdit && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-100"
+                                onClick={() => onEdit(row)}
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {onDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-100"
+                                onClick={() => onDelete((row as any)[idKey])}
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
 

@@ -1,12 +1,10 @@
 export interface Batch {
   batchId: number;
+  batchType: string;
   activityName: string;
   academyId: number;
   courseId: number;
-  coachId: number;
   batchName: string;
-  facilityId: number;
-  areaId: number;
   introduceDate: Date | string;
   suspendedDate: Date | string;
   startTime: Date | string;
@@ -14,11 +12,13 @@ export interface Batch {
   weekDays: string[] | number | undefined;
   photo: string | null;
   status: "active" | "suspended" | "inactive" | "cancelled";
+  admisionCriteria: string;
+  maxCapacity: number;
   createdAt: Date;
   updatedAt: Date;
 
-  batchCapacity: number,
-  activeMemberCount: number,
+  batchCapacity: number;
+  activeMemberCount: number;
   academyName: string;
   areaName?: string;
   facilityName?: string;

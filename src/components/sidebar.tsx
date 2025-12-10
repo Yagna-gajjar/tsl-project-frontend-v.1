@@ -24,6 +24,7 @@ import {
   IndianRupee,
   Crown,
   ParkingCircle,
+  icons,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,10 @@ const navigationItems: NavigationItem[] = [
     name: "Batch",
     href: "/batch",
     icon: Layers,
+    submenu: [
+      { label: "Batches", href: "batch/batch", icon: User },
+      { label: "Batch Connection", href: "batch/batch-connection", icon: User },
+    ],
   },
   {
     name: "Enrollment",
@@ -93,6 +98,11 @@ const navigationItems: NavigationItem[] = [
         href: "/infrastructure-configurations/facility",
       },
       {
+        label: "Facility Allotment",
+        icon: MapPinned,
+        href: "/infrastructure-configurations/facility-allotment",
+      },
+      {
         label: "Area",
         icon: LandPlot,
         href: "/infrastructure-configurations/area",
@@ -107,6 +117,11 @@ const navigationItems: NavigationItem[] = [
     icon: Users,
     submenu: [
       { label: "Coach", href: "/staff-management/coach", icon: Users },
+      {
+        label: "Coach Assignment",
+        href: "/staff-management/coach-assignment",
+        icon: Users,
+      },
       { label: "Skills", href: "/staff-management/coach-skills", icon: Award },
       {
         label: "Academy Coaches",
