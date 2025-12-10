@@ -19,7 +19,7 @@ export function getActivities(
 ): Promise<Response<Activity[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
-    limit: params.limit ?? 10,
+    limit: params.limit ?? 1000,
     sortBy: params.sortBy ?? "activityId",
     sorting: params.sorting ?? params.sorting ?? "ASC",
     search: params.search ?? params.activityName,

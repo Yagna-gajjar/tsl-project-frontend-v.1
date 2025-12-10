@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +37,7 @@ interface Props {
   type: FieldType;
   name: string;
   label: string;
-  value: number|string|Date;
+  value: number | string | Date | (number | string)[];
   onChange: (v: any) => void;
   placeholder?: string;
   description?: string;
@@ -52,7 +50,7 @@ interface Props {
 
   minDate?: string | Date;
   maxDate?: string | Date;
-  icon: ReactNode
+  icon?: ReactNode;
 }
 
 function SearchableMultiselect({
@@ -73,10 +71,16 @@ function SearchableMultiselect({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // normalize incoming value to strings for comparison
+  const valueStrings = new Set((value || []).map((v) => String(v)));
+
   const filteredOptions = options.filter((opt) =>
     opt.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const selectedOptions = options.filter((opt) => value.includes(opt.value));
+
+  const selectedOptions = options.filter((opt) =>
+    valueStrings.has(String(opt.value))
+  );
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -98,15 +102,26 @@ function SearchableMultiselect({
     }
   }, [isOpen]);
 
-  const toggleOption = (optionValue: any) => {
-    const newValue = value.includes(optionValue)
-      ? value.filter((v) => v !== optionValue)
-      : [...value, optionValue];
-    onChange(newValue);
+  const toggleOptionByString = (optionValueStr: string) => {
+    const opt = options.find((o) => String(o.value) === optionValueStr);
+    if (!opt) return;
+
+    const currentStrs = (value || []).map((v) => String(v));
+
+    const isSelected = currentStrs.includes(optionValueStr);
+
+    if (isSelected) {
+      const newVals = (value || []).filter((v) => String(v) !== optionValueStr);
+      onChange(newVals);
+    } else {
+      const newVals = [...(Array.isArray(value) ? value : []), opt.value];
+      onChange(newVals);
+    }
   };
 
-  const removeOption = (optionValue: any) => {
-    onChange(value.filter((v) => v !== optionValue));
+  const removeOptionByString = (optionValueStr: string) => {
+    const newVals = (value || []).filter((v) => String(v) !== optionValueStr);
+    onChange(newVals);
   };
 
   const clearAll = () => {
@@ -116,7 +131,6 @@ function SearchableMultiselect({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {/* Main Input Container */}
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={`flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-background transition-all cursor-pointer ${
@@ -125,33 +139,33 @@ function SearchableMultiselect({
           disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary"
         }`}
       >
-        {/* Selected Tags */}
-        {selectedOptions.length > 0 ? (
-          selectedOptions.map((opt) => (
-            <span
-              key={opt.value}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
-            >
-              {opt.label}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeOption(opt.value);
-                }}
-                className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                type="button"
+        <div className="truncate flex gap-1">
+          {selectedOptions.length > 0 ? (
+            selectedOptions.map((opt) => (
+              <span
+                key={String(opt.value)}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
               >
-                <X size={14} />
-              </button>
-            </span>
-          ))
-        ) : (
-          <span className="text-muted-foreground text-sm">{placeholder}</span>
-        )}
+                {opt.label}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeOptionByString(String(opt.value));
+                  }}
+                  className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                  type="button"
+                >
+                  <X size={14} />
+                </button>
+              </span>
+            ))
+          ) : (
+            <span className="text-muted-foreground text-sm">{placeholder}</span>
+          )}
+        </div>
 
         <div className="flex-grow" />
 
-        {/* Right Icons */}
         <div className="flex items-center gap-1">
           {selectedOptions.length > 0 && (
             <button
@@ -174,10 +188,8 @@ function SearchableMultiselect({
         </div>
       </div>
 
-      {/* Dropdown Menu */}
       {isOpen && !disabled && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-input rounded-lg shadow-lg z-50 overflow-hidden">
-          {/* Search Input */}
           <div className="p-3 border-b border-input">
             <input
               ref={inputRef}
@@ -189,15 +201,14 @@ function SearchableMultiselect({
             />
           </div>
 
-          {/* Options List */}
           <div className="max-h-64 overflow-y-auto">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt) => {
-                const isSelected = value.includes(opt.value);
+                const isSelected = valueStrings.has(String(opt.value));
                 return (
                   <button
-                    key={opt.value}
-                    onClick={() => toggleOption(opt.value)}
+                    key={String(opt.value)}
+                    onClick={() => toggleOptionByString(String(opt.value))}
                     type="button"
                     className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
                       isSelected
@@ -205,7 +216,6 @@ function SearchableMultiselect({
                         : "hover:bg-muted text-foreground"
                     }`}
                   >
-                    {/* Checkbox */}
                     <div
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                         isSelected
@@ -318,7 +328,7 @@ export default function FormFieldInput({
         return (
           <Textarea
             id={name}
-            value={value || ""}
+            value={(value as string) ?? ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
@@ -357,7 +367,7 @@ export default function FormFieldInput({
         return (
           <SearchableMultiselect
             options={options || []}
-            value={Array.isArray(value) ? value.map(String) : []}
+            value={Array.isArray(value) ? (value as (string | number)[]) : []}
             onChange={onChange}
             placeholder={placeholder ?? `Select ${label.toLowerCase()}`}
             disabled={disabled}
@@ -374,10 +384,10 @@ export default function FormFieldInput({
                 disabled={disabled}
               >
                 {value && value instanceof Date
-                  ? value.toLocaleDateString()
+                  ? (value as Date).toLocaleDateString()
                   : value
-                    ? new Date(value).toLocaleDateString()
-                    : placeholder || `Select ${label.toLowerCase()}`}
+                  ? new Date(String(value)).toLocaleDateString()
+                  : placeholder || `Select ${label.toLowerCase()}`}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -385,17 +395,17 @@ export default function FormFieldInput({
                 mode="single"
                 selected={
                   value && value instanceof Date
-                    ? value
+                    ? (value as Date)
                     : value
-                      ? new Date(value)
-                      : undefined
+                    ? new Date(String(value))
+                    : undefined
                 }
                 disabled={
                   minDt || maxDt
                     ? [
-                      ...(minDt ? [{ before: minDt }] : []),
-                      ...(maxDt ? [{ after: maxDt }] : []),
-                    ]
+                        ...(minDt ? [{ before: minDt }] : []),
+                        ...(maxDt ? [{ after: maxDt }] : []),
+                      ]
                     : undefined
                 }
                 onSelect={(d) => {
@@ -414,7 +424,7 @@ export default function FormFieldInput({
           <Input
             id={name}
             type={type}
-            value={value ?? ""}
+            value={(value as any) ?? ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
