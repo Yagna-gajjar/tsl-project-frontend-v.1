@@ -50,9 +50,6 @@ export default function AcademyFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [activity, setActivity] = useState<Activity[]>([]);
-  const [selectedActivity, setSelectedActivity] = useState<(string | number)[]>(
-    []
-  );
 
   const getAllActivity = async () => {
     try {
@@ -65,11 +62,12 @@ export default function AcademyFormModal({
       } else {
         toast({
           title: "Success",
-          description: "Academy coach created successfully",
+          description: "Academy data fetch successfully",
           variant: "success",
         });
       }
       setActivity(data);
+      console.log(data.length);
     } catch {
       toast({
         title: "Error",
@@ -111,13 +109,11 @@ export default function AcademyFormModal({
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof Academy, val: string | number) => {
-    // Handle date formatting for date fields
     let value: string | number | undefined = val;
     if (
       (field === "registrationDate" || field === "discontinuedDate") &&
       typeof val === "string"
     ) {
-      // If the value is empty, set undefined, otherwise keep the string for the date input
       value = val === "" ? undefined : val;
     }
 
@@ -164,7 +160,10 @@ export default function AcademyFormModal({
 
     try {
       const payload: Partial<Academy> = {
-        academyType: values.academyType || undefined,
+        academyType: Array.isArray(values.academyType)
+          ? (values.academyType as (string | number)[]).join(", ")
+          : (values.academyType as string) || undefined,
+
         registrationDate: values.registrationDate
           ? new Date(values.registrationDate)
           : undefined,
@@ -189,27 +188,41 @@ export default function AcademyFormModal({
           ? new Date(values.discontinuedDate)
           : undefined,
       };
-
       if (initialData?.academyId) {
-        await updateAcademy(initialData.academyId, payload);
+        const res: Response<Academy> = await updateAcademy(
+          initialData.academyId,
+          payload
+        );
+        if (res?.success) {
+          toast({
+            title: "Success",
+            description: "Academy created successfully",
+            variant: "success",
+          });
+        } else {
+          throw new Error("Failed to create academy coach");
+        }
       } else {
-        await createAcademy(
+        const res: Response<Academy> = await createAcademy(
           payload as Omit<Academy, "academyId" | "createdAt" | "updatedAt">
         );
+
+        if (res?.success) {
+          toast({
+            title: "Success",
+            description: "Academy updated successfully",
+            variant: "success",
+          });
+        } else {
+          throw new Error("Failed to create academy coach");
+        }
       }
       onSave();
       onClose();
-      toast({
-        title: "Success",
-        description: initialData?.academyId
-          ? "Academy updated successfully"
-          : "Academy created successfully",
-        variant: "success",
-      });
     } catch {
       toast({
         title: "Error",
-        description: "Failed to load facilities.",
+        description: "Failed to load academy.",
         variant: "destructive",
       });
     } finally {
@@ -230,14 +243,14 @@ export default function AcademyFormModal({
       type: "multiselect",
       options: activity.map((a) => ({
         label: a.activityName,
-        value: a.activityId,
+        value: a.activityName,
       })),
       required: false,
     },
     {
       name: "registrationDate",
       label: "Registration Date",
-      type: "date",
+      type: "Date",
       required: true,
     },
     {
@@ -275,7 +288,7 @@ export default function AcademyFormModal({
     {
       name: "discontinuedDate",
       label: "Discontinued Date",
-      type: "date",
+      type: "Date",
       required: false,
     },
   ];
