@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react"
 
-export type FieldType = "text" | "email" | "password" | "number" | "textarea" | "select" | "checkbox" | "date" | "multiselect" | "time"
+export type FieldType = "text" | "email" | "password" | "number" | "textarea" | "select" | "checkbox" | "date" | "multiselect" | "time" | "Date"
 
 export interface FormFieldConfig<T extends Record<string, any>> {
   name: keyof T;

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { ViewModal } from "@/components/view-modal/view-modal";
+import { ViewModal, type FieldConfig } from "@/components/view-modal/view-modal";
 import type { Parking } from "@/types/parking";
 import {
   User,
@@ -17,7 +17,7 @@ type Props = {
   item?: Parking | null;
 };
 
-const fields = [
+const fields: FieldConfig<Parking>[] = [
   { key: "parkingId", label: "ID", icon: Hash },
   { key: "memberId", label: "Member", icon: User },
   { key: "vehicleNumber", label: "Vehicle #", icon: Car },
@@ -27,13 +27,13 @@ const fields = [
     key: "startDate",
     label: "Start Date",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: Parking["startDate"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "endDate",
     label: "End Date",
     icon: Calendar,
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v: Parking["endDate"]) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "startTime",

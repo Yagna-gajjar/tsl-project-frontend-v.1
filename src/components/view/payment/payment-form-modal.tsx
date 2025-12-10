@@ -7,6 +7,7 @@ import { createPayment } from "@/api/payment.api";
 import { toast } from "@/hooks/use-toast";
 import type { Payment } from "@/types/payment";
 import type { Response } from "@/types/response";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type PaymentModalProps = {
   isOpen: boolean;
@@ -47,7 +48,7 @@ export function PaymentFormModal({
     if (!payment) return;
     setValues({
       paid: Number(payment.remaining) || 0,
-        paymentMode: "Online",
+      paymentMode: "Online",
       paymentType: "Reciept",
       transactionId: "",
       paymentRemarks: "",
@@ -56,7 +57,6 @@ export function PaymentFormModal({
   }, [payment, isOpen]);
 
   const onChange = (field: keyof PaymentFormValues, val: string | number) => {
-    // normalize numeric input for paid
     const next: Partial<PaymentFormValues> = {};
     if (field === "paid") {
       next.paid = Number(val || 0);
@@ -65,7 +65,6 @@ export function PaymentFormModal({
     }
     setValues((p) => ({ ...p, ...(next as PaymentFormValues) }));
 
-    // clear field error if present
     setFieldErrors((prev) => {
       if (!prev[field]) return prev;
       const copy = { ...prev };
@@ -85,7 +84,6 @@ export function PaymentFormModal({
     } else if (Number(values.paid) > remaining) {
       errs.paid = `Cannot pay more than ₹${remaining.toFixed(2)}`;
     }
-    // optionally require transactionId for online
     if (values.paymentMode === "Online" && !values.transactionId.trim()) {
       errs.transactionId = "Transaction ID is required for online payments";
     }
@@ -169,8 +167,7 @@ export function PaymentFormModal({
     [committedAmount, payment]
   );
 
-  // fields for FormContent (matches your dynamic form structure)
-  const fields = [
+  const fields: FormFieldConfig<Payment>[] = [
     {
       name: "paid",
       label: "Paying Now (₹)",
@@ -190,30 +187,30 @@ export function PaymentFormModal({
         { value: "Cheque", label: "Cheque" },
         { value: "Bank Transfer", label: "Bank Transfer" },
       ],
-      },
-      {
-          name: "paymentType",
-          label: "Payment Type",
-          type: "text",
-          disabled: true,
-          require: true
     },
-    ...(values.paymentMode.toLowerCase() !== "cash"
-      ? [
-          {
-            name: "transactionId",
-            label: "Transaction ID",
-            type: "text",
-            required: true,
-          },
-        ]
-      : []),
+    {
+      name: "paymentType",
+      label: "Payment Type",
+      type: "text",
+      disabled: true,
+      required: true
+    },
     {
       name: "paymentRemarks",
       label: "Remarks",
       type: "textarea",
       required: false,
     },
+    ...(values.paymentMode.toLowerCase() !== "cash"
+      ? [
+        {
+          name: "transactionId",
+          label: "Transaction ID",
+          type: "text",
+          required: true,
+        },
+      ]
+      : []) as any,
   ];
 
   if (!isOpen) return null;
@@ -229,7 +226,6 @@ export function PaymentFormModal({
         <div className="flex flex-col max-h-[90vh] overflow-hidden">
           <FormHeader
             title="Complete Payment"
-            subtitle={`Enrollment ID: ${payment?.enrollmentId ?? "-"}`}
             onClose={onClose}
           />
 

@@ -1,10 +1,10 @@
-// MembershipMasterViewModal.tsx
 import { useCallback } from "react";
 import { Hash, Calendar, BookOpen, CheckCircle, Users, CreditCard, Building2 } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { membershipMaster } from "@/types/memberShipMaster";
 import { getMembershipMasterById } from "@/api/membershipMaster.api";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -157,12 +157,10 @@ export default function MembershipMasterViewModal({
       const useId = id ?? membershipMasterId;
       if (!useId) throw new Error("MembershipMaster ID missing");
 
-      // API may return { success, data } or the raw object
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getMembershipMasterById(Number(useId));
+      const res: Response<membershipMaster> = await getMembershipMasterById(Number(useId));
 
       if (res && res.data) return res.data as membershipMaster;
-      return res as membershipMaster;
+      return {} as membershipMaster;
     },
     [membershipMasterId]
   );

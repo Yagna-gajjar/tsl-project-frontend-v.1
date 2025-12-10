@@ -1,4 +1,3 @@
-// MembershipMasterTable.tsx
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
@@ -6,10 +5,10 @@ import {
   getMembershipMasters,
   deleteMembershipMaster,
 } from "@/api/membershipMaster.api";
-import type { membershipMaster } from "@/types/membershipMaster";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import type { membershipMaster } from "@/types/memberShipMaster";
 
 type Props = {
   onView?: (row: membershipMaster) => void;
@@ -49,27 +48,27 @@ export default function MembershipMasterTable({
           filters.guardianEntry === "true"
             ? true
             : filters.guardianEntry === "false"
-            ? false
-            : undefined,
+              ? false
+              : undefined,
         guestAllowed:
           filters.guestAllowed === "true"
             ? true
             : filters.guestAllowed === "false"
-            ? false
-            : undefined,
+              ? false
+              : undefined,
         clubAccess:
           filters.clubAccess === "true"
             ? true
             : filters.clubAccess === "false"
-            ? false
-            : undefined,
+              ? false
+              : undefined,
       });
 
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as membershipMaster[])
-        : [];
+          ? ((res as Record<string, unknown>).data as membershipMaster[])
+          : [];
 
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
@@ -154,8 +153,8 @@ export default function MembershipMasterTable({
       header: "Duration (days)",
       key: "membershipDurationDays",
       render: (row) =>
-        typeof row.membershipDurationDays === "number"
-          ? row.membershipDurationDays
+        typeof row.membershipDurationInDays === "number"
+          ? row.membershipDurationInDays
           : "-",
       sortable: true,
       filterType: "number",

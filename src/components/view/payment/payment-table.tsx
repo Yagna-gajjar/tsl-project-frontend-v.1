@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 
 type Props = {
   onView?: (row: Payment) => void;
-  onEdit?: (row: Payment) => void; // kept for parity, though form is removed upstream
+  onEdit?: (row: Payment) => void;
   refreshKey?: number;
 };
 

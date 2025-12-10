@@ -16,7 +16,7 @@ type Props = {
 };
 
 export default function ParkingTable({ onView, onEdit, refreshKey }: Props) {
-  const [data, setData] = useState<Parking[]>([]);
+  const [data, setData] = useState<Parking[]>();
   const [isLoading, setIsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -33,7 +33,7 @@ export default function ParkingTable({ onView, onEdit, refreshKey }: Props) {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getParking({
+      const res: Response<Parking> = await getParking({
         page,
         limit,
         sortBy,
@@ -42,24 +42,27 @@ export default function ParkingTable({ onView, onEdit, refreshKey }: Props) {
         vehicleNumber: filters.vehicleNumber as string | undefined,
         memberId: filters.memberId as string | undefined,
       });
-        
-    
 
-        const rowsRaw = Array.isArray(res) ? res : (res as any)?.data ?? [];
-        console.log(rowsRaw);
-        
-    //   const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => ({
-    //     ...r,
-    //     startDate: r.startDate ? new Date(r.startDate) : undefined,
-    //     endDate: r.endDate ? new Date(r.endDate) : undefined,
-    //     startTime: r.startTime ? new Date(r.startTime) : undefined,
-    //     entTime: r.entTime ? new Date(r.entTime) : undefined,
-    //   })) as Parking[];
+
+
+      const rowsRaw = Array.isArray(res) ? res : res?.data ?? [] as Parking[];
+
+      //   const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => ({
+      //     ...r,
+      //     startDate: r.startDate ? new Date(r.startDate) : undefined,
+      //     endDate: r.endDate ? new Date(r.endDate) : undefined,
+      //     startTime: r.startTime ? new Date(r.startTime) : undefined,
+      //     entTime: r.entTime ? new Date(r.entTime) : undefined,
+      //   })) as Parking[];
 
       setData(rowsRaw);
-      setTotal(rowsRaw.length ?? 0);
+      setTotal(rowsRaw?.length ?? 0);
     } catch (err) {
-      console.error("Failed to fetch parking", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch parking",
+        variant: "destructive"
+      })
       setData([]);
       setTotal(0);
     } finally {
@@ -173,7 +176,7 @@ export default function ParkingTable({ onView, onEdit, refreshKey }: Props) {
           ? res.success === true || String(res.success) === "true"
           : true;
       if (!ok)
-        throw new Error((res as any)?.message || "Failed to delete parking");
+        throw new Error(res?.message || "Failed to delete parking");
       await loadData();
     } catch (err) {
       toast({

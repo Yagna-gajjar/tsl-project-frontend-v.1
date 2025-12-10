@@ -21,4 +21,11 @@ export interface Member {
 	remarks?: string;
 	createdAt?: Date;
 	updatedAt?: Date;
+
+	line1?: string;
+	line2?: string;
+	city?: string;
+	state?: string;
+	country?: string;
+	pinCode?: string;
 }	

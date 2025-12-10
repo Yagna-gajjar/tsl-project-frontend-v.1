@@ -80,19 +80,17 @@ export function MemberFormModal({
   };
 
   const [values, setValues] = useState<MemberFormState>(empty);
-  const [loading, setLoading] = useState(false);
+  const [loading,] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Check if initialData has a nested address object and flatten it for the form
-    const addressData = (initialData as any)?.address || {};
+    const addressData = initialData?.address || {};
 
     setValues({
       ...empty,
       ...(initialData ?? {}),
-      // Map nested address to flat state if editing
       line1: addressData.line1 || "",
       line2: addressData.line2 || "",
       city: addressData.city || "",
@@ -116,7 +114,7 @@ export function MemberFormModal({
     });
   };
 
-  const fields: FormFieldConfig[] = [
+  const fields: FormFieldConfig<Member>[] = [
     {
       name: "familyId",
       label: "Family ID",
@@ -192,7 +190,6 @@ export function MemberFormModal({
     },
     { name: "idProofNumber", label: "ID Proof Number", type: "text" },
 
-    // --- Address Section ---
     { name: "line1", label: "Address Line 1", type: "text", required: true },
     { name: "line2", label: "Address Line 2", type: "text" },
     { name: "city", label: "City", type: "text", required: true },

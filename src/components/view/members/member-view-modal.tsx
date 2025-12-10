@@ -33,7 +33,7 @@ const defaultFields = [
     key: "dob",
     label: "DOB",
     icon: Calendar,
-    render: (v: Member) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v: Member["dob"]) => (v ? new Date(v).toLocaleDateString() : "-"),
   },
 
   { key: "email", label: "Email", icon: Mail },
@@ -61,7 +61,7 @@ const defaultFields = [
 
 export default function MemberViewModal({ isOpen, onClose, item }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string) => {
+    async (_?: number | string) => {
       if (!item) throw new Error("No data");
       return item;
     },

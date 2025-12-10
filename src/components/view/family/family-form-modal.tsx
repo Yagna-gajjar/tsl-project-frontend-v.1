@@ -54,14 +54,12 @@ export function FamilyFormModal({
   const [teamCategoryOptions, setTeamCategoryOptions] = useState<Option[]>([]);
   const [identityTypeOptions, setIdentityTypeOptions] = useState<Option[]>([]);
   const [itRows, setItRows] = useState([]);
-  // field-level errors shown in the form
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setValues({ ...empty, ...(initialData ?? {}) });
     setError(null);
     setFieldErrors({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
   useEffect(() => {
@@ -113,7 +111,6 @@ export function FamilyFormModal({
     );
   }, [values]);
 
-  // determine whether selected family type is "team" (case-insensitive)
   const showTeamCategory = useMemo(() => {
     if (!values.familyTypeId) return false;
     const opt = familyTypeOptions.find(
@@ -122,7 +119,6 @@ export function FamilyFormModal({
     return Boolean(opt && String(opt.label).trim().toLowerCase() === "team");
   }, [values.familyTypeId, familyTypeOptions]);
 
-  // when familyType switches to non-team, clear teamCategoryId
   useEffect(() => {
     if (!showTeamCategory && values.teamCategoryId) {
       setValues((p) => ({ ...p, teamCategoryId: undefined }));
@@ -131,7 +127,6 @@ export function FamilyFormModal({
 
   const onChange = (field: keyof Family, val: any) => {
     setValues((p) => ({ ...p, [field]: val }));
-    // clear field-level error for that field when user changes it
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
       const copy = { ...prev };
@@ -140,7 +135,6 @@ export function FamilyFormModal({
     });
   };
 
-  // validation helpers
   const validateEmail = (email?: string) => {
     if (!email) return false;
     const s = String(email).trim();
@@ -151,9 +145,7 @@ export function FamilyFormModal({
   const validatePhone = (phone?: string) => {
     if (!phone) return false;
     const s = String(phone).trim();
-    // strip non-digit chars (keep leading + optional)
     const digits = s.replace(/\D/g, "");
-    // reasonable length check: 7-15 digits
     return digits.length == 10;
   };
 
@@ -162,18 +154,15 @@ export function FamilyFormModal({
     setError(null);
     setFieldErrors({});
 
-    // prepare values for validation
     const emailVal = String(values.email ?? "").trim();
     const contactVal = String(values.emergencyContact ?? "").trim();
 
     const newFieldErrors: Record<string, string> = {};
 
-    // email validation (if provided)
     if (emailVal && !validateEmail(emailVal)) {
       newFieldErrors.email = "Enter a valid email address";
     }
 
-    // contact validation (if provided) - require at least when non-empty
     if (contactVal && !validatePhone(contactVal)) {
       newFieldErrors.emergencyContact =
         "Enter a valid contact number (10 digits)";
@@ -214,7 +203,7 @@ export function FamilyFormModal({
         return;
       }
 
-      let res: Response;
+      let res: Response<Family>;
       if (isEdit && initialData?.familyId) {
         res = await updateFamily(Number(initialData.familyId), payload);
       } else {
@@ -251,13 +240,12 @@ export function FamilyFormModal({
 
       onSaved?.(row as Family);
       onClose();
-    } catch (err: any) {
-      const message = err?.message ?? "Failed to save";
-      setError(message);
+    } catch {
+      setError("Failed to save");
 
       toast({
         title: "Save failed",
-        description: message,
+        description: "Failed to save",
         variant: "destructive",
       });
     } finally {

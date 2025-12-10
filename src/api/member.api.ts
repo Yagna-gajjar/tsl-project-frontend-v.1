@@ -29,7 +29,7 @@ export interface MembersQuery {
 
 const MEMBER_BASE = import.meta.env.VITE_APP_API_URL + '/member'
 
-export function getMembers(params: MembersQuery = {}): Promise<Response<Member>> {
+export function getMembers(params: MembersQuery = {}): Promise<Response<Member[]>> {
 	const qs = toQueryString({
 		page: params.page ?? 1,
 		limit: params.limit ?? 10,
@@ -47,7 +47,7 @@ export function getMembers(params: MembersQuery = {}): Promise<Response<Member>>
 		familyId: params.familyId
 	})
 
-	return request<Response<Member>>(`${MEMBER_BASE}${qs}`)
+	return request<Response<Member[]>>(`${MEMBER_BASE}${qs}`)
 }
 
 export function getMemberById(id: number): Promise<Response<Member>> {
@@ -79,7 +79,7 @@ export function deleteMember(id: number): Promise<Response<Member>> {
 
 export async function saveUrlToMember(formData: FormData): Promise<Response> {
 	try {
-		console.log(formData," formData");
+		console.log(formData, " formData");
 		const res = await fetch(`${MEMBER_BASE}/avatar`, {
 			method: "POST",
 			body: formData,
@@ -93,7 +93,12 @@ export async function saveUrlToMember(formData: FormData): Promise<Response> {
 		return {
 			success: false,
 			message: "Failed to upload image",
-			data: null
+			data: null,
+			pagination: {
+				limit: 10,
+				page: 1,
+				total: 0
+			}
 		};
 	}
 }
@@ -118,7 +123,12 @@ export async function deleteAvatar(memberId: number, avatar: string): Promise<Re
 		return {
 			success: false,
 			message: "Failed to save Image in user.",
-			data: null
+			data: null,
+			pagination: {
+				limit: 10,
+				page: 1,
+				total: 0
+			}
 		}
 	}
 }

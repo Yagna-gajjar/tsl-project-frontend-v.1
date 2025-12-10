@@ -1,4 +1,3 @@
-// MembershipMasterFormModal.tsx
 import { useCallback, useEffect, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -7,10 +6,11 @@ import {
   createMembershipMaster,
   updateMembershipMaster,
 } from "@/api/membershipMaster.api";
-import type { membershipMaster } from "@/types/membershipMaster";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import type { FormFieldConfig } from "@/components/form-modal/types";
+import type { membershipMaster } from "@/types/memberShipMaster";
 
 type Props = {
   isOpen: boolean;
@@ -55,24 +55,22 @@ export default function MembershipMasterFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  // replace your current useEffect(...) that initializes values with this
   useEffect(() => {
     if (!isOpen) return;
 
     if (initialData) {
-      // Normalize date fields to yyyy-MM-dd strings (FormContent expects strings)
       const intro = initialData.introduceDate
         ? format(new Date(initialData.introduceDate), "yyyy-MM-dd")
         : format(new Date(), "yyyy-MM-dd");
 
       const suspend = initialData.suspendDate
         ? format(new Date(initialData.suspendDate), "yyyy-MM-dd")
-        : ""; // empty string when no suspend date
+        : "";
 
       setValues({
         ...initialData,
         introduceDate: intro as any,
-        suspendDate: suspend as unknown as Date, // keep type compatibility if TS forces it; ideally change membershipMaster type to allow string
+        suspendDate: suspend as unknown as Date,
         createdAt: initialData.createdAt
           ? new Date(initialData.createdAt)
           : new Date(),
@@ -124,7 +122,6 @@ export default function MembershipMasterFormModal({
     if (!values.introduceDate) {
       errs.introduceDate = "Introduce date is required";
     }
-    // optional: more rules can be added as required
     return errs;
   }, [values]);
 
@@ -209,7 +206,7 @@ export default function MembershipMasterFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields = [
+  const fields:FormFieldConfig<membershipMaster>[] = [
     {
       name: "membershipType",
       label: "Membership Type",
@@ -334,7 +331,7 @@ export default function MembershipMasterFormModal({
       type: "number",
       required: false,
     },
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 

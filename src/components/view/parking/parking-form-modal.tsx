@@ -10,6 +10,7 @@ import type { Response } from "@/types/response";
 import { createParking, editParking } from "@/api/parking.api";
 import { getMembers } from "@/api/member.api";
 import type { Member } from "@/types/member";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -42,12 +43,11 @@ export function ParkingFormModal({
       paymentMode: initialData?.paymentMode ?? "cash",
       transactionId: initialData?.transactionId ?? "",
       paid: initialData?.paid ?? 0,
-      // remaining will be calculated automatically
       remaining:
         typeof initialData?.remaining !== "undefined"
           ? initialData?.remaining
           : Number(initialData?.paymentAmount ?? 0) -
-              Number(initialData?.paid ?? 0) || 0,
+          Number(initialData?.paid ?? 0) || 0,
       paymentRemarks: initialData?.paymentRemarks ?? "",
     }),
     [initialData]
@@ -59,7 +59,7 @@ export function ParkingFormModal({
   const [error, setError] = useState<string | null>(null);
 
   const [members, setMembers] = useState<Member[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [_, setLoadingMembers] = useState(false);
 
   useEffect(() => {
     const merged = { ...empty, ...(initialData ?? {}) } as Partial<Parking>;
@@ -77,8 +77,8 @@ export function ParkingFormModal({
     const loadMembers = async () => {
       try {
         setLoadingMembers(true);
-        const res = await getMembers({ page: 1, limit: 500 });
-        const rows = (res as any)?.data ?? (Array.isArray(res) ? res : []);
+        const res: Response<Member[]> = await getMembers({ page: 1, limit: 500 });
+        const rows = res?.data ?? (Array.isArray(res) ? res : []);
         setMembers(Array.isArray(rows) ? rows : []);
       } catch (err) {
         console.error("Failed to load members", err);
@@ -112,11 +112,11 @@ export function ParkingFormModal({
               ? 0
               : val
             : copy.paymentAmount ?? 0
-          );
-          
-          const paidVal = Number(
-              field === "paid" ? (val === "" ? 0 : val) : copy.paid ?? 0
-            );
+        );
+
+        const paidVal = Number(
+          field === "paid" ? (val === "" ? 0 : val) : copy.paid ?? 0
+        );
         const rem = Number(total) - Number(paidVal);
         copy.remaining = Number.isFinite(rem) ? rem : 0;
       }
@@ -172,7 +172,7 @@ export function ParkingFormModal({
           : undefined,
         transactionId:
           values.paymentMode &&
-          String(values.paymentMode).toLowerCase() !== "cash"
+            String(values.paymentMode).toLowerCase() !== "cash"
             ? values.transactionId
               ? String(values.transactionId)
               : undefined
@@ -224,9 +224,8 @@ export function ParkingFormModal({
     label: `${m.memberFirstName} ${m.memberLastName}`,
   }));
 
-  // dynamic fields: keep remaining disabled; status & paymentMode are selects; hide transactionId if paymentMode === 'cash'
-  const fields = useMemo(() => {
-    const base: any[] = [
+  const fields: FormFieldConfig<Parking>[] | any = useMemo(() => {
+    const base = [
       {
         name: "memberId",
         label: "Member",
@@ -281,7 +280,6 @@ export function ParkingFormModal({
       },
     ];
 
-    // only include transactionId if paymentMode is not cash
     if (
       !values?.paymentMode ||
       String(values.paymentMode).toLowerCase() !== "cash"

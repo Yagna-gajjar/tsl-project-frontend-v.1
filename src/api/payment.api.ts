@@ -34,8 +34,8 @@ export function getPayments(params: PaymentQuery = {}): Promise<Payment[]> {
   return request<Payment[]>(`${PAYMENT_BASE}${qs}`);
 }
 
-export function getPaymentById(id: number): Promise<Response> {
-  return request<Response>(`${PAYMENT_BASE}/${id}`);
+export function getPaymentById(id: number): Promise<Response<Payment>> {
+  return request < Response<Payment>>(`${PAYMENT_BASE}/${id}`);
 }
 
 export function createPayment(

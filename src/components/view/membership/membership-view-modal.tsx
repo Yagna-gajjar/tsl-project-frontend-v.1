@@ -1,4 +1,3 @@
-// MembershipViewModal.tsx
 import { useCallback } from "react";
 import { Hash, Calendar, CreditCard, CheckCircle } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
@@ -24,19 +23,19 @@ const fields: FieldConfig<membership>[] = [
     key: "startDate",
     label: "Start Date",
     icon: Calendar,
-    render: (v) => dateRender(v),
+    render: (v) => dateRender(v as string | Date),
   },
   {
     key: "endDate",
     label: "End Date",
     icon: Calendar,
-    render: (v) => dateRender(v),
+    render: (v) => dateRender(v as string | Date),
   },
   {
     key: "graceDate",
     label: "Grace Date",
     icon: Calendar,
-    render: (v) => dateRender(v),
+    render: (v) => dateRender(v as string | Date),
   },
   {
     key: "committedAmount",
@@ -73,13 +72,13 @@ const fields: FieldConfig<membership>[] = [
     key: "status",
     label: "Status",
     icon: CheckCircle,
-    render: (v) => v || "-",
+    render: (v) => v as string || "-",
   },
   {
     key: "cancellationDate",
     label: "Cancellation Date",
     icon: Calendar,
-    render: (v) => dateRender(v),
+    render: (v) => dateRender(v as string | Date),
   },
   {
     key: "actualFBalance",
@@ -110,13 +109,13 @@ const fields: FieldConfig<membership>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v) => dateRender(v),
+    render: (v) => dateRender(v as string | Date),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Calendar,
-    render: (v) => dateRender(v),
+    render: (v) => dateRender(v as string | Date),
   },
 ];
 

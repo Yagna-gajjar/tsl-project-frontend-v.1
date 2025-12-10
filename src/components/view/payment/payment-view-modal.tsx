@@ -9,14 +9,14 @@ import { formatDateForInput } from "@/lib/utils";
 import {
   Tag,
   CreditCard,
-  Calendar,
   Clock,
   FileText,
   User,
-    Hash,
+  Hash,
   Banknote
 } from "lucide-react";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -41,7 +41,7 @@ const fields: FieldConfig<Payment>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    render: (v) => (v ? formatDateForInput(v) : "-"),
+    render: (v) => (v ? formatDateForInput(v as string) : "-"),
   },
 ];
 
@@ -55,12 +55,11 @@ export default function PaymentViewModal({
       const useId = id ?? paymentId;
       if (!useId) throw new Error("Payment ID missing");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getPaymentById(Number(useId));
+      const res: Response<Payment> = await getPaymentById(Number(useId));
 
       if (res && res.data) return res.data as Payment;
 
-      return res as Payment;
+      return {} as Payment;
     },
     [paymentId]
   );

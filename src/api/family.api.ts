@@ -45,8 +45,8 @@ export function getFamilyById(id: number): Promise<Response> {
 	return request<Response>(`${FAMILY_BASE}/${id}`)
 }
 
-export function createFamily(payload: Family): Promise<Response> {
-	return request<Response>(FAMILY_BASE, {
+export function createFamily(payload: Family): Promise<Response<Family>> {
+	return request<Response<Family>>(FAMILY_BASE, {
 		method: 'POST',
 		body: JSON.stringify(payload),
 	})
@@ -55,8 +55,8 @@ export function createFamily(payload: Family): Promise<Response> {
 export function updateFamily(
 	id: number,
 	payload: Partial<Family>
-): Promise<Response> {
-	return request<Response>(`${FAMILY_BASE}/${id}`, {
+): Promise<Response<Family>> {
+	return request<Response<Family>>(`${FAMILY_BASE}/${id}`, {
 		method: 'PUT',
 		body: JSON.stringify(payload),
 	})

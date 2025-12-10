@@ -1,4 +1,3 @@
-// MembershipTable.tsx
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
@@ -156,7 +155,7 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
       key: "issueCharges",
       header: "Issue Charges",
       sortable: true,
-      render: (r) => `Rs. ${Number(r.issueCharges ?? 0).toFixed(2)}`,
+      render: (r) => `Rs. ${Number(r.issueCharge ?? 0).toFixed(2)}`,
     },
     {
       key: "refundedAmount",

@@ -1,4 +1,3 @@
-// MembershipFormModal.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -11,6 +10,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import { format } from "date-fns";
+import type { FormFieldConfig } from "@/components/form-modal/types";
+import type { membershipMaster } from "@/types/memberShipMaster";
+import type { Family } from "@/types/family";
 
 type SelectOption = { value: number | string; label: string };
 
@@ -60,20 +62,16 @@ export default function MembershipFormModal({
   const [membershipMasterOptions, setMembershipMasterOptions] = useState<
     SelectOption[]
   >([]);
-  // map of membershipMasterId -> membership master object so we can read min balances & issueCharge
   const [membershipMastersMap, setMembershipMastersMap] = useState<
     Record<number, any>
   >({});
 
-  // store the last total of minF + minC so changes keep the total constant when user edits minF
   const baseMinTotalRef = useRef<number>(0);
-  // store durationDays from membership master
   const durationDaysRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    // init values
     if (initialData) {
       const init = {
         ...initialData,
@@ -97,11 +95,9 @@ export default function MembershipFormModal({
           : new Date(),
       } as membership;
 
-      // set base total for min balances
       baseMinTotalRef.current =
         Number(init.minFBalance || 0) + Number(init.minCBalance || 0);
 
-      // ensure actual balances mirror min balances and committedAmount is sum
       init.actualFBalance = Number(init.minFBalance || 0);
       init.actualCBalance = Number(init.minCBalance || 0);
       init.committedAmount =
@@ -126,7 +122,6 @@ export default function MembershipFormModal({
     setError(null);
   }, [initialData, isOpen]);
 
-  // load dropdown options and build membership master map
   useEffect(() => {
     if (!isOpen) return;
 
@@ -137,33 +132,33 @@ export default function MembershipFormModal({
         const famRows = Array.isArray(famRes)
           ? famRes
           : Array.isArray(famRes?.data)
-          ? famRes.data
-          : [];
-        const famOpts: SelectOption[] = famRows.map((f: any) => ({
-          value: f.familyId,
+            ? famRes.data
+            : [];
+        const famOpts: SelectOption[] = famRows.map((f: Family) => ({
+          value: f.familyId as number,
           label: f.familyName
             ? `${f.familyName} (${f.familyId})`
             : String(f.familyId),
         }));
 
-        const mmRes: Response = await getMembershipMasters({
+        const mmRes: Response<membershipMaster[]> = await getMembershipMasters({
           page: 1,
           limit: 1000,
         });
         const mmRows = Array.isArray(mmRes)
           ? mmRes
           : Array.isArray(mmRes?.data)
-          ? mmRes.data
-          : [];
-        const mmOpts: SelectOption[] = mmRows.map((m: any) => ({
-          value: m.membershipMasterId,
+            ? mmRes.data
+            : [];
+        const mmOpts: SelectOption[] = mmRows.map((m: membershipMaster) => ({
+          value: m.membershipMasterId as number,
           label: m.membershipType
             ? `${m.membershipType} (${m.membershipMasterId})`
             : String(m.membershipMasterId),
         }));
 
         const mmMap: Record<number, any> = {};
-        mmRows.forEach((m: any) => {
+        mmRows.forEach((m: membershipMaster) => {
           if (m && m.membershipMasterId != null) {
             mmMap[Number(m.membershipMasterId)] = m;
           }
@@ -174,7 +169,6 @@ export default function MembershipFormModal({
         setMembershipMasterOptions(mmOpts);
         setMembershipMastersMap(mmMap);
 
-        // if initialData exists and membershipMasterId is set, ensure min fields and issueCharge are set/locked
         if (
           initialData?.membershipMasterId &&
           mmMap[Number(initialData.membershipMasterId)]
@@ -186,7 +180,6 @@ export default function MembershipFormModal({
           const minC =
             mm.minCBalance !== undefined ? Number(mm.minCBalance) : undefined;
 
-          // compute base total
           const total =
             (minF ?? values.minFBalance) + (minC ?? values.minCBalance);
           baseMinTotalRef.current = total;
@@ -244,7 +237,6 @@ export default function MembershipFormModal({
     };
   }, [isOpen, initialData]);
 
-  // when membershipMasterId changes, populate min balances, cancellationCharges and issueCharge and lock them if master provides values
   useEffect(() => {
     const mmId = Number(values.membershipMasterId);
     if (mmId && membershipMastersMap && membershipMastersMap[mmId]) {
@@ -283,7 +275,6 @@ export default function MembershipFormModal({
     }
   }, [values.membershipMasterId, membershipMastersMap]);
 
-  // compute endDate from startDate + durationDaysRef when startDate changes
   useEffect(() => {
     const sd = values.startDate ? new Date(values.startDate) : null;
     const dur = durationDaysRef.current;
@@ -298,29 +289,27 @@ export default function MembershipFormModal({
     field: keyof membership,
     val: string | number | boolean | Date
   ) => {
-    // special handling for numeric fields and for minFBalance to keep total constant
     if (field === "minFBalance") {
       const newMinF = typeof val === "string" ? Number(val) : Number(val);
       const prevMinF = Number(values.minFBalance || 0);
       const prevMinC = Number(values.minCBalance || 0);
 
-      // If both prev values are zero (fresh), use baseMinTotalRef as source of truth
       const total = prevMinF + prevMinC || baseMinTotalRef.current || 0;
 
       const newMinC = total - newMinF;
 
-      baseMinTotalRef.current = total; // keep base total unchanged
+      baseMinTotalRef.current = total;
 
       setValues(
         (p) =>
-          ({
-            ...p,
-            minFBalance: newMinF,
-            minCBalance: newMinC,
-            committedAmount: newMinF + newMinC,
-            actualFBalance: newMinF,
-            actualCBalance: newMinC,
-          } as membership)
+        ({
+          ...p,
+          minFBalance: newMinF,
+          minCBalance: newMinC,
+          committedAmount: newMinF + newMinC,
+          actualFBalance: newMinF,
+          actualCBalance: newMinC,
+        } as membership)
       );
 
       setFieldErrors((prev) => {
@@ -360,15 +349,17 @@ export default function MembershipFormModal({
 
       console.log(format(end, "yyyy-MM-dd"), "formatted end date");
 
-      setValues(
-        (p) => ({ ...p, endDate: format(end, "yyyy-MM-dd") } as membership)
-      );
+      setValues((p) => ({
+        ...p,
+        endDate: format(end, "yyyy-MM-dd") as any,
+      }));
+
     }
 
     const normalized =
       field === "familyId" ||
-      field === "membershipMasterId" ||
-      field === "refundedPaymentId"
+        field === "membershipMasterId" ||
+        field === "refundedPaymentId"
         ? typeof val === "string"
           ? Number(val)
           : val
@@ -472,7 +463,7 @@ export default function MembershipFormModal({
     }
   }, [validate, values, initialData, onSaved, onClose]);
 
-  const fields = [
+  const fields: FormFieldConfig<membership>[] = [
     {
       name: "membershipMasterId",
       label: "Membership Master",
@@ -501,7 +492,7 @@ export default function MembershipFormModal({
       label: "Committed Amount",
       type: "number",
       required: false,
-      disabled: true, // disabled: computed from minF + minC
+      disabled: true,
     },
     {
       name: "issueCharge",
@@ -526,7 +517,7 @@ export default function MembershipFormModal({
       label: "Min C Balance",
       type: "number",
       required: false,
-      disabled: true, // computed from minF to keep total constant
+      disabled: true,
     },
     { name: "paymentId", label: "Payment ID", type: "text", required: false },
     {
@@ -579,7 +570,7 @@ export default function MembershipFormModal({
       type: "number",
       required: false,
     },
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 
