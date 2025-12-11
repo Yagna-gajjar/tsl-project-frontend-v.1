@@ -20,7 +20,7 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(20);
+  const [limit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
@@ -43,7 +43,7 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
         academicCapacity: filters.capacity as number | undefined
       });
 
-      const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as Facility[] : []);
+      const rowsRaw = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data as Facility[] : []);
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -51,8 +51,7 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
       })) as Facility[];
 
       setData(rows);
-      const totalCount = rows.length ?? 0;
-      setTotal(totalCount);
+      setTotal(res.pagination.total);
     } catch (err) {
       console.error("Failed to fetch facilities", err);
       setData([]);
