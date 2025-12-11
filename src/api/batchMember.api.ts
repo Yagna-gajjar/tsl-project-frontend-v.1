@@ -1,29 +1,6 @@
+import type { BatchMember } from "@/types/batchMember";
 import { request, toQueryString } from "./helper";
 import type { Response } from "@/types/response";
-
-export interface BatchMember {
-  batchMemberId: number;
-  enrollmentId: number;
-  batchId: number;
-  memberId: number;
-  status: string;
-  courseId: number;
-  memberFirstName?: string;
-  batchName: string;
-  startTime: string;
-  endTime: string;
-  coachId: number;
-  coachName: string;
-  startDate: Date | string;
-  endDate: Date | string;
-  oldEnollmentEndDate: Date;
-  newStartDate: Date;
-  members: {
-    batchMemberId: number;
-    memberId: number;
-    memberName: string;
-  }[];
-}
 
 export interface BatchMemberQuery {
   enrollmentId?: number;
@@ -70,4 +47,26 @@ export function shiftMembers(
       memberIds,
     }),
   });
+}
+
+interface appointment {
+  batchId: number | null;
+  memberId: number | null;
+  enrollmentId: number | null;
+  status: string | null;
+  startDate: string | Date;
+  endDate: string | Date;
+  weekDays: number | null;
+}
+
+export function makeAppointment(
+  payload: appointment
+): Promise<Response<appointment>> {
+  return request<Response<appointment>>(
+    `${BATCH_MEMBER_BASE}/make-appointments`,
+    {
+      method: "Post",
+      body: JSON.stringify({ appointments: payload }),
+    }
+  );
 }

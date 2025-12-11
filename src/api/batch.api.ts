@@ -11,7 +11,7 @@ export interface BatchQuery {
   batchName?: string;
   coachName?: string;
   facilityName?: string;
-  courseName?: string;
+  courseName?: string | null;
   courseId?: number;
   batchType?: string;
 }

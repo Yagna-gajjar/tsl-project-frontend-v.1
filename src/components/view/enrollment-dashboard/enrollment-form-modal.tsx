@@ -49,13 +49,11 @@ const EnrollmentFormNew = ({
   const [selectedCourse, setSelectedCourse] = useState<Course>();
   const [coaches, setCoaches] = useState<Coach[]>([]);
 
-  // modal state for batch requests
   const [showBatchRequest, setShowBatchRequest] = useState(false);
   const [requestBatchDetails, setRequestBatchDetails] = useState<{
     batchId: number;
     batchName: string;
   } | null>(null);
-
 
   const [values, setValues] = useState<Enrollment>({
     memberId: Number(memberId),
@@ -113,6 +111,36 @@ const EnrollmentFormNew = ({
 
   const navigate = useNavigate();
 
+  const AdjustBillingAmount = (amount: number) => {
+    const roundedAmount = Math.ceil(amount);
+    const newAdjust = roundedAmount - amount;
+
+    return {
+      amount: Number(roundedAmount.toFixed(2)),
+      adjust: Number(newAdjust.toFixed(2)),
+    };
+  };
+
+  const isCourseChargingBySession = (c?: Course | null) => {
+    if (!c) return false;
+    const maybe =
+      (c as any).chargingPattern ??
+      (c as any).chargePattern ??
+      (c as any).chargingType ??
+      (c as any).chargeBy;
+    if (typeof maybe === "string") return maybe.toLowerCase() === "session";
+    if (typeof maybe === "boolean") return Boolean(maybe);
+    if ((c as any).chargePerSession !== undefined)
+      return Boolean((c as any).chargePerSession);
+    return false;
+  };
+
+  const getActiveUnits = (vals = values, courseObj = selectedCourse) => {
+    return isCourseChargingBySession(courseObj)
+      ? Number(vals.sessionUnits || 0)
+      : Number(vals.numberOfDays || 0);
+  };
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedDays(values.numberOfDays);
@@ -143,16 +171,17 @@ const EnrollmentFormNew = ({
         commitedAmount: prev.commitedAmount - debouncedDebitAmount,
       }));
     } else {
+      const units = getActiveUnits(values, selectedCourse);
+      const billingAmount = units * (values.billingRate || 0);
       if (!discount) {
         setValues((prev) => ({
           ...prev,
-          commitedAmount: prev.numberOfDays * prev.billingRate,
+          commitedAmount: billingAmount,
         }));
       } else {
         setValues((prev) => ({
           ...prev,
-          commitedAmount:
-            prev.numberOfDays * prev.billingRate - prev.discountedAmount,
+          commitedAmount: billingAmount - prev.discountedAmount,
         }));
       }
     }
@@ -233,14 +262,20 @@ const EnrollmentFormNew = ({
 
     if (foundCourse) {
       setSelectedCourse(foundCourse);
-      const { amount, adjust } = AdjustBillingAmount(
-        foundCourse.minEnrollmentUnit * foundCourse.unitRate
-      );
+
+      const sessionCharging = isCourseChargingBySession(foundCourse);
+
+      const initialUnits = Number(foundCourse.minEnrollmentUnit ?? 0);
+      const unitRate = Number(foundCourse.unitRate ?? 0);
+
+      const { amount, adjust } = AdjustBillingAmount(initialUnits * unitRate);
+
       setValues((prev) => ({
         ...prev,
-        numberOfDays: foundCourse.minEnrollmentUnit,
-        billingRate: foundCourse.unitRate,
-        billingAmount: foundCourse.minEnrollmentUnit * foundCourse.unitRate,
+        numberOfDays: sessionCharging ? prev.numberOfDays : initialUnits,
+        sessionUnits: sessionCharging ? initialUnits : prev.sessionUnits || 0,
+        billingRate: unitRate,
+        billingAmount: initialUnits * unitRate,
         commitedAmount: amount,
         discountedAmount: 0,
         adjustment: adjust,
@@ -269,9 +304,11 @@ const EnrollmentFormNew = ({
     };
 
     loadBatches();
-    fetchDiscount();
-  }, [values?.courseId]);
+    fetchDiscount(); // will use proper units inside
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values?.courseId, course]);
 
+  // When discount toggled or discount object changes -> recalc committed using the active units
   useEffect(() => {
     if (values.isDiscounted) {
       const { amount, adjust } = AdjustBillingAmount(values.billingAmount);
@@ -286,10 +323,13 @@ const EnrollmentFormNew = ({
       return;
     }
 
+    const units = getActiveUnits(values, selectedCourse);
+    const totalBilling = units * (values.billingRate || 0);
+
     const discountedAmount =
-      (values.billingAmount * (discount?.discountPercentage ?? 0)) / 100;
+      (totalBilling * (discount?.discountPercentage ?? 0)) / 100;
     const { amount, adjust } = AdjustBillingAmount(
-      values.billingAmount - discountedAmount
+      totalBilling - discountedAmount
     );
     setValues((prev) => ({
       ...prev,
@@ -298,19 +338,28 @@ const EnrollmentFormNew = ({
       commitedAmount: amount,
       adjustment: adjust,
     }));
-  }, [discount, values.isDiscounted]);
+  }, [
+    discount,
+    values.isDiscounted,
+    values.sessionUnits,
+    values.numberOfDays,
+    values.billingRate,
+    selectedCourse,
+  ]);
 
   useEffect(() => {
     fetchDiscount();
-  }, [debouncedDays]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedDays, values.sessionUnits]);
 
   useEffect(() => {
     if (!debouncedCndn || debouncedCndn === 0) {
       if (!selectedCourse) return;
 
+      // Use the appropriate units for original billing amount:
+      const units = getActiveUnits(values, selectedCourse);
       const originalBillingAmount =
-        values?.numberOfDays * selectedCourse.unitRate -
-        values.discountedAmount;
+        units * (selectedCourse.unitRate ?? 0) - values.discountedAmount;
 
       const { amount, adjust } = AdjustBillingAmount(originalBillingAmount);
       setValues((prev) => ({
@@ -323,21 +372,24 @@ const EnrollmentFormNew = ({
       return;
     }
 
-    if (!values.numberOfDays || !debouncedCndn) return;
+    if (!getActiveUnits(values, selectedCourse) || !debouncedCndn) return;
 
+    // When CNDN present: compute effective billing rate per active unit
     if (!discount) {
       const unitRate = Number(selectedCourse?.unitRate ?? 0);
       const fp = Number(unitRate);
-      const sp = Number((debouncedCndn / values.numberOfDays).toFixed(2));
+      const units = getActiveUnits(values, selectedCourse);
+      // sp = cndn per total units -> convert to per-unit numeric effect
+      const sp = Number((debouncedCndn / units).toFixed(2));
       const effectiveBillingRate = Number((fp - sp).toFixed(2));
 
       const { amount, adjust } = AdjustBillingAmount(
-        effectiveBillingRate * values?.numberOfDays
+        effectiveBillingRate * units
       );
       setValues((prev) => ({
         ...prev,
         billingRate: effectiveBillingRate,
-        billingAmount: (selectedCourse?.unitRate ?? 0) * values?.numberOfDays,
+        billingAmount: (selectedCourse?.unitRate ?? 0) * units,
         commitedAmount: amount,
         adjustment: adjust,
       }));
@@ -345,21 +397,28 @@ const EnrollmentFormNew = ({
       const unitRate = Number(selectedCourse?.unitRate ?? 0);
       const percentage = Number(discount?.discountPercentage ?? 0);
       const fp = Number(((unitRate * percentage) / 100).toFixed(2));
-      const sp = Number((debouncedCndn / values.numberOfDays).toFixed(2));
+      const units = getActiveUnits(values, selectedCourse);
+      const sp = Number((debouncedCndn / units).toFixed(2));
       const effectiveBillingRate = Number((fp - sp).toFixed(2));
 
       const { amount, adjust } = AdjustBillingAmount(
-        effectiveBillingRate * values?.numberOfDays
+        effectiveBillingRate * units
       );
       setValues((prev) => ({
         ...prev,
         billingRate: effectiveBillingRate,
-        billingAmount: (selectedCourse?.unitRate ?? 0) * values?.numberOfDays,
+        billingAmount: (selectedCourse?.unitRate ?? 0) * units,
         commitedAmount: amount,
         adjustment: adjust,
       }));
     }
-  }, [debouncedCndn]);
+  }, [
+    debouncedCndn,
+    values.sessionUnits,
+    values.numberOfDays,
+    selectedCourse,
+    discount,
+  ]);
 
   useEffect(() => {
     if (!debouncedCndn || debouncedCndn === 0) {
@@ -421,16 +480,6 @@ const EnrollmentFormNew = ({
     setPaymentValues((prev) => ({ ...prev, remaining }));
   }, [values.commitedAmount, paymentValues.paid]);
 
-  const AdjustBillingAmount = (amount: number) => {
-    const roundedAmount = Math.ceil(amount);
-    const newAdjust = roundedAmount - amount;
-
-    return {
-      amount: Number(roundedAmount.toFixed(2)),
-      adjust: Number(newAdjust.toFixed(2)),
-    };
-  };
-
   const onChange = useCallback(
     (field: string, value: any) => {
       const numFields = [
@@ -439,6 +488,7 @@ const EnrollmentFormNew = ({
         "batchId",
         "numberOfDays",
         "freeDays",
+        "sessionUnits",
       ];
 
       if (numFields.includes(field)) {
@@ -461,18 +511,15 @@ const EnrollmentFormNew = ({
             Number(selectedBatch.activeMemberCount) >=
             Number(selectedBatch.batchCapacity);
           if (isFull) {
-            // open request modal instead of selecting the batch
             setRequestBatchDetails({
               batchId: Number(selectedBatch.batchId),
               batchName: selectedBatch.batchName || "",
             });
             setShowBatchRequest(true);
-            // do not set values.batchId or call onBatchSelect
             return;
           }
         }
 
-        // not full -> normal behavior:
         setValues((prev) => ({ ...prev, [field]: value }));
         onBatchSelect(Number(value));
         return;
@@ -498,8 +545,42 @@ const EnrollmentFormNew = ({
       }
 
       setValues((prev) => ({ ...prev, [field]: value }));
+
+      if (field === "numberOfDays" || field === "sessionUnits") {
+        const units =
+          field === "numberOfDays"
+            ? Number(value)
+            : Number(values.numberOfDays);
+        const sUnits =
+          field === "sessionUnits"
+            ? Number(value)
+            : Number(values.sessionUnits);
+        const activeUnits = isCourseChargingBySession(selectedCourse)
+          ? sUnits
+          : units;
+        const billingAmount =
+          activeUnits * (values.billingRate || selectedCourse?.unitRate || 0);
+        const { amount, adjust } = AdjustBillingAmount(billingAmount);
+
+        setValues((prev) => ({
+          ...prev,
+          billingAmount,
+          commitedAmount: amount,
+          adjustment: adjust,
+        }));
+
+        fetchDiscount(activeUnits);
+      }
     },
-    [activity, onBatchSelect, batches]
+    [
+      activity,
+      onBatchSelect,
+      batches,
+      selectedCourse,
+      values.billingRate,
+      values.numberOfDays,
+      values.sessionUnits,
+    ]
   );
 
   const onDebitNoteChange = (field: string, value: any) => {
@@ -601,23 +682,29 @@ const EnrollmentFormNew = ({
     setValues({} as any);
   };
 
-  const fetchDiscount = async () => {
+  const fetchDiscount = async (overrideUnits?: number) => {
     if (!values?.courseId) return;
-    if (!values?.numberOfDays) return;
+    const units =
+      typeof overrideUnits === "number"
+        ? overrideUnits
+        : getActiveUnits(values, selectedCourse);
+    if (!units) return;
     try {
       const res: Response<Discount> | any = await getDiscounts({
         courseId: Number(values?.courseId),
-        aboveUnits: Number(values?.numberOfDays),
+        aboveUnits: Number(units),
         sortBy: "aboveUnits",
         sortOrder: "DESC",
         status: "active",
       });
       const data = res.data[0];
+      const billingAmount =
+        units * (values.billingRate || selectedCourse?.unitRate || 0);
       setValues((prev) => ({
         ...prev,
         discountId: data?.discountId || 0,
-        billingAmount: values?.numberOfDays * values?.billingRate,
-        commitedAmount: values?.numberOfDays * values?.billingRate,
+        billingAmount,
+        commitedAmount: billingAmount,
       }));
       setDiscount(data);
     } catch {
@@ -955,7 +1042,6 @@ const EnrollmentFormNew = ({
         isSubmitting={false}
       />
 
-      {/* Batch request modal */}
       <BatchRequestedForm
         isOpen={showBatchRequest}
         onClose={() => setShowBatchRequest(false)}
@@ -963,9 +1049,7 @@ const EnrollmentFormNew = ({
         batchName={requestBatchDetails?.batchName || ""}
         enrollment={values as Enrollment}
         onSuccess={() => {
-          // called when request succeeded
           setShowBatchRequest(false);
-          // optional: show toast or refresh batches here
           toast({
             title: "Requested",
             description: "Spot request submitted.",
