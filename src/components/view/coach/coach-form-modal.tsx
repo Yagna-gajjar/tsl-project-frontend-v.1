@@ -220,7 +220,7 @@ export default function CoachFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields:FormFieldConfig<Coach>[] = [
+  const fields: FormFieldConfig<Coach>[] = [
     {
       name: "coachFirstName",
       label: "First Name",
@@ -246,8 +246,8 @@ export default function CoachFormModal({
       type: "text",
       required: true,
     },
-    { name: "dob", label: "Date of Birth", type: "date", required: true },
-    { name: "joinDate", label: "Join Date", type: "date", required: false },
+    { name: "dob", label: "Date of Birth", type: "Date", required: true },
+    { name: "joinDate", label: "Join Date", type: "Date", required: false },
     { name: "remarks", label: "Remarks", type: "textarea", required: false },
     {
       name: "status",

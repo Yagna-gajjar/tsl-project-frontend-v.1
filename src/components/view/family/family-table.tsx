@@ -28,7 +28,7 @@ export default function FamilyTable({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(5);
   const [total, setTotal] = useState<number>(0);
 
   const [filters, setFilters] = useState<Record<string, any>>({});
