@@ -15,7 +15,7 @@ function DebitNoteTable({ onView, onEdit }: Props) {
   const [total, setTotal] = useState<number>(0);
 
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(20);
+  const [limit] = useState<number>(10);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<

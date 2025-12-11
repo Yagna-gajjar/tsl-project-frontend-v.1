@@ -19,7 +19,7 @@ const FACILITY_BASE = import.meta.env.VITE_APP_API_URL + "/facility";
 export function getFacilities(params: FacilitiesQuery = {}): Promise<Response<Facility[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
-    limit: params.limit ?? 20,
+    limit: params.limit ?? 10,
     sortBy: params.sortBy ?? "facilityId",
     sortOrder: params.sortOrder ?? "ASC",
     search: params.search,

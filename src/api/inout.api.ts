@@ -35,7 +35,7 @@ export function isUserActive(userId: number): Promise<Response> {
 export function getLogs(params: InOutQuery = {}): Promise<Response<InOutLog[]>> {
 	const qs = toQueryString({
 		page: params.page ?? 1,
-		limit: params.limit ?? 20,
+		limit: params.limit ?? 10,
 		userId: params.userId,
 		isActive: params.isActive,
 		role: params.role,

@@ -115,7 +115,7 @@ const navigationItems: NavigationItem[] = [
       },
       {
         label: "Staff Attendance",
-        href: "staff-management/attendance",
+        href: "/staff-management/attendance",
         icon: User,
       },
     ],

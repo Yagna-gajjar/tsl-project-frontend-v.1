@@ -20,7 +20,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Batch[]>([]);
   const [_, setIsLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(20);
+  const [limit] = useState<number>(10);
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<
     Record<string, string | number | undefined>
