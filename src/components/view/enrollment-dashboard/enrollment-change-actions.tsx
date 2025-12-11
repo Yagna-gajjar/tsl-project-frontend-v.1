@@ -24,6 +24,7 @@ export interface EnrollmentSummary {
   enrollmentId: number;
   courseName?: string | null;
   academyName?: string | null;
+  sessionUnita?: number | null;
 }
 
 interface Props {

@@ -1,9 +1,14 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
-import { ThemeProvider } from "./contexts/theme-context"
-import { ConfirmationProvider } from "./contexts/confirmation-context"
-import Layout from "./components/layout"
-import Dashboard from "./pages/dashboard"
-import Projects from "./pages/projects"
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { ThemeProvider } from "./contexts/theme-context";
+import { ConfirmationProvider } from "./contexts/confirmation-context";
+import Layout from "./components/layout";
+import Dashboard from "./pages/dashboard";
+import Projects from "./pages/projects";
 import EnumsPage from "./components/setting/enums/enums";
 import { Toaster } from "./components/ui/toaster";
 import LoginForm from "./components/login-form";
@@ -35,13 +40,17 @@ import AttendanceSheet from "./components/view/batch/attendance-sheet";
 import DefreezeEnrollment from "./components/view/enrollment-actions/DefreezeEnrollment";
 import DebitNote from "./pages/debitNote";
 import PaymentPage from "./pages/payment";
-import Billing from "./pages/billing"
+import Billing from "./pages/billing";
 import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
 import MembershipPage from "./pages/membership";
-import StaffAttendance from "./pages/staff-attendance"
+import StaffAttendance from "./pages/staff-attendance";
 import ParkingPage from "./pages/parking";
 import MedicalBreak from "./components/view/enrollment-actions/MedicalBreak";
+import BatchConnectionsPage from "./pages/batchConnection";
+import CoachAssignmentsPage from "./pages/coachAssignment";
+import FacilityAllotmentsPage from "./pages/facilityAllotment";
+import AppointmentsPage from "./pages/appointment";
 
 export default function App() {
   return (
@@ -86,6 +95,7 @@ export default function App() {
                   path="/enrollment/:id/refund"
                   element={<RefundFormModal />}
                 />
+                <Route path="/appointment" element={<AppointmentsPage />} />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route
@@ -93,6 +103,10 @@ export default function App() {
                   element={
                     <Navigate to="/infrastructure-configurations/facility" />
                   }
+                />
+                <Route
+                  path="/infrastructure-configurations/facility-allotment"
+                  element={<FacilityAllotmentsPage />}
                 />
                 <Route path="/member" element={<MemberPage />} />
                 <Route path="/academy" element={<AcademyPage />} />
@@ -110,11 +124,19 @@ export default function App() {
                   path="/staff-management/attendance"
                   element={<StaffAttendance />}
                 />
+                <Route
+                  path="/staff-management/coach-assignment"
+                  element={<CoachAssignmentsPage />}
+                />
                 <Route path="/courses" element={<CoursePage />} />
-                <Route path="/batch" element={<BatchPage />} />
+                <Route path="/batch/batch" element={<BatchPage />} />
                 <Route
                   path="/batch/attendance-sheet/:id"
                   element={<AttendanceSheet />}
+                />
+                <Route
+                  path="/batch/batch-connection"
+                  element={<BatchConnectionsPage />}
                 />
                 <Route
                   path="/infrastructure-configurations/facility"

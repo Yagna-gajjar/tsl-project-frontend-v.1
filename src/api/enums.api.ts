@@ -27,8 +27,10 @@ export function getAllEnums(params: EnumsQuery = {}): Promise<Response<Enums[]>>
     return request<Response<Enums[]>>(`${ENUMS_BASE}${qs}`);
 }
 
-export function getEnumsByCategory(categoryName: string): Promise<Enums[]> {
-    return request<Enums[]>(`${ENUMS_BASE}/${categoryName}`);
+export function getEnumsByCategory(
+  categoryName: string
+): Promise<Response<Enums[]>> {
+  return request<Response<Enums[]>>(`${ENUMS_BASE}/${categoryName}`);
 }
 
 export function createEnum(payload: Enums): Promise<Response<Enums>> {

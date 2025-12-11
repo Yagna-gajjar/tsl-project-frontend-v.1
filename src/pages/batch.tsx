@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import BatchTable from "@/components/view/batch/batch-table";
 import BatchFormModal from "@/components/view/batch/batch-form-modal";

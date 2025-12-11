@@ -6,9 +6,6 @@ import { FormContent } from "@/components/form-modal/form-content";
 
 import { createBatch, editBatch } from "@/api/batch.api";
 import { getCourses } from "@/api/course.api";
-import { getAcademyCoaches } from "@/api/academyCoach.api";
-import { getFacilities } from "@/api/facility.api";
-import { getAreas } from "@/api/area.api";
 import { getAcademies } from "@/api/academy.api";
 import type { Batch } from "@/types/batch";
 import { toast } from "@/hooks/use-toast";
@@ -16,6 +13,9 @@ import { format as dfFormat } from "date-fns";
 import type { Response } from "@/types/response";
 import { getActivities } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
+import { getEnumsByCategory } from "@/api/enums.api";
+import type { Enums } from "@/types/enums";
+import { Value } from "@radix-ui/react-select";
 
 type Props = {
   isOpen: boolean;
@@ -147,10 +147,8 @@ export function BatchFormModal({
     batchName: initialData?.batchName ?? "",
     academyId: initialData?.academyId ?? undefined,
     courseId: initialData?.courseId ?? undefined,
+    maxCapacity: initialData?.batchCapacity ?? undefined,
     activityName: initialData?.activityName ?? undefined,
-    coachId: initialData?.coachId ?? undefined,
-    facilityId: initialData?.facilityId ?? undefined,
-    areaId: initialData?.areaId ?? undefined,
     introduceDate: formatDateInput(initialData?.introduceDate) ?? undefined,
     suspendedDate: formatDateInput(initialData?.suspendedDate) ?? undefined,
     startTime: formatTimeInput(initialData?.startTime) ?? undefined,
@@ -174,16 +172,12 @@ export function BatchFormModal({
       name: string;
       sessionMinutes?: number;
       weekDays?: number | string | null;
+      maxCapacity?: number | null;
     }>
   >([]);
-  const [coaches, setCoaches] = useState<Array<{ id: number; name: string }>>(
-    []
-  );
-  const [facilities, setFacilities] = useState<
-    Array<{ id: number; name: string }>
-  >([]);
-  const [areas, setAreas] = useState<Array<{ id: number; name: string }>>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
+
+  const [batchType, setBatchType] = useState<Enums[]>([]);
 
   const WEEKDAY_OPTIONS = useMemo(
     () => [
@@ -204,25 +198,10 @@ export function BatchFormModal({
     const loadTopOptions = async () => {
       setLoadingOptions(true);
       try {
-        const [facilitiesData] = await Promise.all([getFacilities()]);
-
-        const facArr = Array.isArray(
-          (facilitiesData as any)?.data ?? facilitiesData
-        )
-          ? (facilitiesData as any)?.data ?? facilitiesData
-          : [];
-        setFacilities(
-          facArr.map((f: any) => ({ id: f.facilityId, name: f.facilityName }))
-        );
-
         await getAllActivity();
 
         if (initialData?.activityName) {
           await loadAcademiesByActivity(String(initialData.activityName));
-        }
-
-        if (initialData?.facilityId) {
-          await loadAreasByFacility(initialData.facilityId);
         }
       } catch (err) {
         console.error("Failed to load top-level options:", err);
@@ -239,13 +218,41 @@ export function BatchFormModal({
     loadTopOptions();
   }, [isOpen]);
 
+  // safer loadBatchType
+  const loadBatchType = useCallback(async () => {
+    try {
+      const res: Response<Enums[]> = await getEnumsByCategory("batchType");
+
+      // Defensive: ensure we got an array
+      const items = Array.isArray((res as any)?.data) ? (res as any).data : [];
+
+      setBatchType(items);
+
+      if (!res?.success) {
+        // still show a toast but don't crash the UI
+        toast({
+          title: "Warning",
+          description: "Failed to fetch enum (server returned error)",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Failed",
+        description: "failed to fetch enum",
+        variant: "destructive",
+      });
+      setBatchType([]);
+    }
+  }, []);
+
   const loadAcademiesByActivity = useCallback(async (activityName?: string) => {
     try {
       setLoadingOptions(true);
       const academiesData = await getAcademies({
         academyType: activityName,
       });
-      console.log(academiesData,"pppjas");
+      console.log(academiesData, "pppjas");
       const academyArr = Array.isArray(
         (academiesData as any)?.data ?? academiesData
       )
@@ -267,79 +274,36 @@ export function BatchFormModal({
     }
   }, []);
 
-  const loadCoursesAndCoaches = useCallback(
-    async (academyId?: number | string) => {
-      try {
-        const id = academyId ? Number(academyId) : undefined;
-        const [coursesData, coachesData] = await Promise.all([
-          getCourses({ academyId: id }),
-          getAcademyCoaches({ academyId: id }),
-        ]);
+  const loadCourses = useCallback(async (academyId?: number | string) => {
+    try {
+      const id = academyId ? Number(academyId) : undefined;
+      const coursesData = await getCourses({ academyId: id });
 
-        const coursesArr = Array.isArray(
-          (coursesData as any)?.data ?? coursesData
-        )
-          ? (coursesData as any)?.data ?? coursesData
-          : [];
-        const coachesArr = Array.isArray(
-          (coachesData as any)?.data ?? coachesData
-        )
-          ? (coachesData as any)?.data ?? coachesData
-          : Array.isArray(coachesData)
-          ? coachesData
-          : [];
+      const coursesArr = Array.isArray(
+        (coursesData as any)?.data ?? coursesData
+      )
+        ? (coursesData as any)?.data ?? coursesData
+        : [];
 
-        setCourses(
-          coursesArr.map((c: any) => ({
-            id: c.courseId,
-            name: c.courseName,
-            sessionMinutes: c.sessionMinutes,
-            weekDays: c.weekDays,
-          }))
-        );
-        setCoaches(
-          coachesArr.map((c: any) => ({
-            id: c.coachId,
-            name: `${c.coachFirstName || ""} ${c.coachLastName || ""}`,
-          }))
-        );
-      } catch (err) {
-        console.error("Failed to load courses/coaches:", err);
-        setCourses([]);
-        setCoaches([]);
-        toast({
-          title: "Error",
-          description: "Failed to load courses or coaches",
-          variant: "destructive",
-        });
-      }
-    },
-    []
-  );
-
-  const loadAreasByFacility = useCallback(
-    async (facilityId?: number | string) => {
-      try {
-        const id = facilityId ? Number(facilityId) : undefined;
-        const areasData = await getAreas({ facilityId: id });
-        const areasArr = Array.isArray((areasData as any)?.data ?? areasData)
-          ? (areasData as any).data ?? areasData
-          : [];
-        setAreas(
-          areasArr.map((a: any) => ({ id: a.areaId, name: a.areaName }))
-        );
-      } catch (err) {
-        console.error("Failed to load areas by facility:", err);
-        setAreas([]);
-        toast({
-          title: "Error",
-          description: "Failed to load areas",
-          variant: "destructive",
-        });
-      }
-    },
-    []
-  );
+      setCourses(
+        coursesArr.map((c: any) => ({
+          id: c.courseId,
+          name: c.courseName,
+          sessionMinutes: c.sessionMinutes,
+          weekDays: c.weekDays,
+          maxCapacity: c.batchCapacity,
+        }))
+      );
+    } catch (err) {
+      console.error("Failed to load courses", err);
+      setCourses([]);
+      toast({
+        title: "Error",
+        description: "Failed to load courses",
+        variant: "destructive",
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const mapped = {
@@ -349,9 +313,6 @@ export function BatchFormModal({
         academyId: initialData.academyId ?? empty.academyId,
         courseId: initialData.courseId ?? empty.courseId,
         activityName: initialData.activityName ?? empty.activityName,
-        coachId: initialData.coachId ?? empty.coachId,
-        facilityId: initialData.facilityId ?? empty.facilityId,
-        areaId: initialData.areaId ?? empty.areaId,
         introduceDate:
           formatDateInput(initialData?.introduceDate) ?? empty.introduceDate,
         suspendedDate:
@@ -363,6 +324,8 @@ export function BatchFormModal({
         status: initialData?.status ?? empty.status,
       }),
     };
+
+    loadBatchType();
 
     getAllActivity();
     setValues(mapped);
@@ -378,7 +341,6 @@ export function BatchFormModal({
         activityName,
         academyId: undefined,
         courseId: undefined,
-        coachId: undefined,
       }));
       setAcademies([]);
       if (activityName) {
@@ -399,9 +361,8 @@ export function BatchFormModal({
         ...p,
         academyId,
         courseId: undefined,
-        coachId: undefined,
       }));
-      loadCoursesAndCoaches(academyId);
+      loadCourses(academyId);
       setFieldErrors((prev) => {
         if (!prev.academyId) return prev;
         const copy = { ...prev };
@@ -437,12 +398,19 @@ export function BatchFormModal({
             selectedCourse.sessionMinutes
           );
         }
+        let maxCapacity: number | null | undefined = prev.maxCapacity
+          ? prev.maxCapacity
+          : null;
+        if (selectedCourse) {
+          maxCapacity = selectedCourse.maxCapacity;
+        }
 
         return {
           ...prev,
           courseId: courseIdVal,
           weekDays: nextWeekDays,
           endTime: nextEndTime,
+          maxCapacity: maxCapacity,
         };
       });
 
@@ -450,30 +418,6 @@ export function BatchFormModal({
         if (!prev.courseId) return prev;
         const copy = { ...prev };
         delete copy.courseId;
-        return copy;
-      });
-      return;
-    }
-
-    if (field === "facilityId") {
-      const facilityId = val ? Number(val) : undefined;
-      setValues((p) => ({ ...p, facilityId, areaId: undefined }));
-      loadAreasByFacility(facilityId);
-      setFieldErrors((prev) => {
-        if (!prev.facilityId) return prev;
-        const copy = { ...prev };
-        delete copy.facilityId;
-        return copy;
-      });
-      return;
-    }
-
-    if (field === "coachId" || field === "areaId") {
-      setValues((p) => ({ ...p, [field]: val }));
-      setFieldErrors((prev) => {
-        if (!prev[field as string]) return prev;
-        const copy = { ...prev };
-        delete copy[field as string];
         return copy;
       });
       return;
@@ -547,15 +491,6 @@ export function BatchFormModal({
     if (!values.academyId) {
       errs.academyId = "Academy is required";
     }
-    if (!values.coachId) {
-      errs.coachId = "Coach is required";
-    }
-    if (!values.facilityId) {
-      errs.facilityId = "Facility is required";
-    }
-    if (!values.areaId) {
-      errs.areaId = "Area is required";
-    }
 
     if (!values.startTime) {
       errs.startTime = "Start time is required";
@@ -584,8 +519,7 @@ export function BatchFormModal({
       if (startMin !== null && endMin !== null && endMin < startMin) {
         errs.endTime = "End time cannot be before start time";
       }
-    } catch {
-    }
+    } catch {}
 
     try {
       const intro = values.introduceDate
@@ -597,8 +531,7 @@ export function BatchFormModal({
       if (intro && susp && susp < intro) {
         errs.suspendedDate = "Suspended date cannot be before introduce date";
       }
-    } catch {
-    }
+    } catch {}
 
     return errs;
   }, [values]);
@@ -621,11 +554,9 @@ export function BatchFormModal({
 
       const payload: Partial<Batch> = {
         batchName: String(values.batchName ?? "").trim(),
+        batchType: values.batchType,
         academyId: Number(values.academyId),
         courseId: values.courseId ? Number(values.courseId) : undefined,
-        coachId: Number(values.coachId),
-        facilityId: Number(values.facilityId),
-        areaId: Number(values.areaId),
         activityName: values.activityName
           ? String(values.activityName)
           : undefined,
@@ -699,6 +630,16 @@ export function BatchFormModal({
       required: true,
     },
     {
+      name: "batchType",
+      label: "Batch Type",
+      type: "select",
+      options: batchType.map((b) => ({
+        value: b.value,
+        label: String(b.value),
+      })),
+      required: true,
+    },
+    {
       name: "activityName",
       label: "Activity",
       type: "select",
@@ -725,30 +666,6 @@ export function BatchFormModal({
       disabled: loadingOptions || !values.academyId,
     },
     {
-      name: "coachId",
-      label: "Coach",
-      type: "select",
-      required: true,
-      options: coaches.map((c) => ({ label: c.name, value: String(c.id) })),
-      disabled: loadingOptions || !values.academyId,
-    },
-    {
-      name: "facilityId",
-      label: "Facility",
-      type: "select",
-      required: true,
-      options: facilities.map((f) => ({ label: f.name, value: String(f.id) })),
-      disabled: loadingOptions,
-    },
-    {
-      name: "areaId",
-      label: "Area",
-      type: "select",
-      required: true,
-      options: areas.map((a) => ({ label: a.name, value: String(a.id) })),
-      disabled: loadingOptions || !values.facilityId,
-    },
-    {
       name: "weekDays",
       label: "Week Days",
       type: "multiselect",
@@ -769,14 +686,25 @@ export function BatchFormModal({
       disabled: !!values.courseId,
     },
     {
+      name: "admissionCriteria",
+      label: "Admission Criteria",
+      type: "text",
+    },
+    {
+      name: "maxCapacity",
+      label: "Max Capacity",
+      type: "text",
+      required: true,
+    },
+    {
       name: "introduceDate",
       label: "Introduce Date",
-      type: "date",
+      type: "Date",
     },
     {
       name: "suspendedDate",
       label: "Suspended Date",
-      type: "date",
+      type: "Date",
     },
     {
       name: "status",
