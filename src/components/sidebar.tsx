@@ -25,6 +25,7 @@ import {
   Crown,
   ParkingCircle,
   icons,
+  Calendar1Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,11 @@ const navigationItems: NavigationItem[] = [
     name: "Enrollment Dashboard",
     href: "/enrollment-dashboard",
     icon: Book,
+  },
+  {
+    name: "Appointment",
+    href: "/appointment",
+    icon: Calendar1Icon,
   },
   {
     name: "Family",

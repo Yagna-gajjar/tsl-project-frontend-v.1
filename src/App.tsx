@@ -50,6 +50,7 @@ import MedicalBreak from "./components/view/enrollment-actions/MedicalBreak";
 import BatchConnectionsPage from "./pages/batchConnection";
 import CoachAssignmentsPage from "./pages/coachAssignment";
 import FacilityAllotmentsPage from "./pages/facilityAllotment";
+import AppointmentsPage from "./pages/appointment";
 
 export default function App() {
   return (
@@ -94,6 +95,7 @@ export default function App() {
                   path="/enrollment/:id/refund"
                   element={<RefundFormModal />}
                 />
+                <Route path="/appointment" element={<AppointmentsPage />} />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route

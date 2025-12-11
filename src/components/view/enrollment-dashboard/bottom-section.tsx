@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import EnrollmentChangeActions, {
   type EnrollmentSummary,
 } from "./enrollment-change-actions";
+import AppointmentModal from "./appointment-modal";
 
 export interface EnrollmentHistoryItem {
   enrollmentId: number;
@@ -40,6 +41,7 @@ export interface EnrollmentHistoryItem {
   payments?: Payment[];
   batches?: Batch[];
   adjustment?: string | number | null;
+  sessionUnits?: number | null;
 }
 
 interface EnrollmentHistoryProps {
@@ -257,6 +259,8 @@ export default function EnrollmentHistory({
 
   const [changeDialogOpen, setChangeDialogOpen] = useState(false);
 
+  const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
+
   const toggleExpand = (enrollmentId: number) => {
     setExpandedItems((prev) =>
       prev.includes(enrollmentId)
@@ -293,6 +297,16 @@ export default function EnrollmentHistory({
       academyName: item.academyName,
     });
     setChangeDialogOpen(true);
+  };
+
+  const openAppointmentDialog = (item: EnrollmentHistoryItem) => {
+    setSelectedEnrollment({
+      enrollmentId: item.enrollmentId,
+      courseName: item.courseName,
+      academyName: item.academyName,
+      sessionUnits: item.sessionUnits,
+    });
+    setAppointmentDialogOpen(true);
   };
 
   return (
@@ -424,7 +438,16 @@ export default function EnrollmentHistory({
                             )}
                             {item.source}
                           </span>
+
                           <div className="flex gap-3">
+                            {item.sessionUnits && item.sessionUnits !== 0 && (
+                              <Button
+                                className={`text-sm`}
+                                onClick={() => openAppointmentDialog(item)}
+                              >
+                                Appointment
+                              </Button>
+                            )}
                             {!item.changeType &&
                               item.status.toLowerCase() === "active" && (
                                 <Button
@@ -535,6 +558,11 @@ export default function EnrollmentHistory({
       <EnrollmentChangeActions
         open={changeDialogOpen}
         onOpenChange={(v) => setChangeDialogOpen(v)}
+        selectedEnrollment={selectedEnrollment}
+      />
+      <AppointmentModal
+        open={appointmentDialogOpen}
+        onOpenChange={(v) => setAppointmentDialogOpen(v)}
         selectedEnrollment={selectedEnrollment}
       />
     </>

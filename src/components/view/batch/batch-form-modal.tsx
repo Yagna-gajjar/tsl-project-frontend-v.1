@@ -147,6 +147,7 @@ export function BatchFormModal({
     batchName: initialData?.batchName ?? "",
     academyId: initialData?.academyId ?? undefined,
     courseId: initialData?.courseId ?? undefined,
+    maxCapacity: initialData?.batchCapacity ?? undefined,
     activityName: initialData?.activityName ?? undefined,
     introduceDate: formatDateInput(initialData?.introduceDate) ?? undefined,
     suspendedDate: formatDateInput(initialData?.suspendedDate) ?? undefined,
@@ -171,6 +172,7 @@ export function BatchFormModal({
       name: string;
       sessionMinutes?: number;
       weekDays?: number | string | null;
+      maxCapacity?: number | null;
     }>
   >([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
@@ -289,6 +291,7 @@ export function BatchFormModal({
           name: c.courseName,
           sessionMinutes: c.sessionMinutes,
           weekDays: c.weekDays,
+          maxCapacity: c.batchCapacity,
         }))
       );
     } catch (err) {
@@ -395,12 +398,19 @@ export function BatchFormModal({
             selectedCourse.sessionMinutes
           );
         }
+        let maxCapacity: number | null | undefined = prev.maxCapacity
+          ? prev.maxCapacity
+          : null;
+        if (selectedCourse) {
+          maxCapacity = selectedCourse.maxCapacity;
+        }
 
         return {
           ...prev,
           courseId: courseIdVal,
           weekDays: nextWeekDays,
           endTime: nextEndTime,
+          maxCapacity: maxCapacity,
         };
       });
 
@@ -674,6 +684,17 @@ export function BatchFormModal({
       type: "time",
       required: true,
       disabled: !!values.courseId,
+    },
+    {
+      name: "admissionCriteria",
+      label: "Admission Criteria",
+      type: "text",
+    },
+    {
+      name: "maxCapacity",
+      label: "Max Capacity",
+      type: "text",
+      required: true,
     },
     {
       name: "introduceDate",
