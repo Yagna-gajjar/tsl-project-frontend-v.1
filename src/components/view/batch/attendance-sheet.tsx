@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import { getAttendance, shiftMembers, type BatchMember } from "@/api/batchMember.api";
+import { getAttendance, shiftMembers } from "@/api/batchMember.api";
 import { getBatch } from '@/api/batch.api';
 import { toast } from '@/hooks/use-toast';
 import type { Response } from '@/types/response';
@@ -14,14 +14,21 @@ import {
 	Clock,
 	Settings2,
 	Check,
-	ChevronDown,
 	ArrowRightLeft,
-	X
+	X,
+	Calendar as CalendarIcon
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
-import type { Batch } from '@/types/batch';
+import { cn } from "@/lib/utils";
 
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover"
 import {
 	Select,
 	SelectContent,
@@ -29,7 +36,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+
+import type { Batch } from '@/types/batch';
 import type { Member } from '@/types/member';
+import type { BatchMember } from '@/types/batchMember';
 
 const formatTime = (timeStr: string) => {
 	if (!timeStr) return "";
@@ -63,6 +73,9 @@ interface ExportColumn {
 
 const AttendanceSheet = () => {
 	const { id } = useParams();
+
+	const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+
 	const [batchData, setBatchData] = useState<BatchMember | null>(null);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [loading, setLoading] = useState(true);
@@ -98,7 +111,7 @@ const AttendanceSheet = () => {
 	const fetchAttendance = async () => {
 		try {
 			setLoading(true);
-			const res: Response<BatchMember> = await getAttendance(Number(id));
+			const res: Response<BatchMember> = await getAttendance(Number(id), selectedDate);
 			const data = res.data;
 			setBatchData(data);
 		} catch (err) {
@@ -114,14 +127,14 @@ const AttendanceSheet = () => {
 
 	useEffect(() => {
 		fetchAttendance();
-	}, [id]);
+	}, [id, selectedDate]);
 
 	const members = batchData?.members ?? [];
 	const filteredMembers = members.filter((member) =>
 		member.memberName?.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	const getMemberId = (member: Member) => member.memberId;
+	const getMemberId = (member: Member) => Number(member.memberId);
 
 	const toggleSelection = (memberId: number) => {
 		const newSet = new Set(selectedIds);
@@ -131,12 +144,12 @@ const AttendanceSheet = () => {
 	};
 
 	const toggleSelectAll = () => {
-		const visibleIds = filteredMembers.map((m: Member) => getMemberId(m));
-		const allSelected = visibleIds.every((id: number) => selectedIds.has(id));
+		const visibleIds = filteredMembers.map((m: Member | any) => getMemberId(m));
+		const allSelected = visibleIds.every((id: number | any) => selectedIds.has(id));
 		const newSet = new Set(selectedIds);
 
-		if (allSelected) visibleIds.forEach((id: number) => newSet.delete(id));
-		else visibleIds.forEach((id: number) => newSet.add(id));
+		if (allSelected) visibleIds.forEach((id: number | any) => newSet.delete(Number(id)));
+		else visibleIds.forEach((id: number | any) => newSet.add(id));
 		setSelectedIds(newSet);
 	};
 
@@ -146,21 +159,16 @@ const AttendanceSheet = () => {
 		));
 	};
 
-	const isAllSelected = filteredMembers.length > 0 && filteredMembers.every((m: Member) => selectedIds.has(getMemberId(m)));
-
+	const isAllSelected = filteredMembers.length > 0 && filteredMembers.every((m: Member | any) => selectedIds.has(getMemberId(m) as number));
 
 	const openShiftModal = async () => {
 		if (!batchData || !batchData.courseId) {
 			toast({ title: "Error", description: "Course information missing.", variant: "destructive" });
 			return;
 		}
-
 		try {
-			const res: Response<Batch[]> = await getBatch({
-				courseId: Number(batchData.courseId)
-			});
+			const res: Response<Batch[]> = await getBatch({ courseId: Number(batchData.courseId) });
 			const validBatches = res?.data?.filter((b: Batch) => b.batchId !== Number(id));
-
 			setTargetBatches(validBatches);
 			setIsShiftModalOpen(true);
 		} catch (error) {
@@ -173,21 +181,15 @@ const AttendanceSheet = () => {
 			toast({ title: "Validation", description: "Please select a target batch.", variant: "destructive" });
 			return;
 		}
-
 		try {
 			setIsShifting(true);
 			const memberIdsArray = Array.from(selectedIds);
-
 			await shiftMembers(Number(id), Number(selectedTargetBatchId), memberIdsArray);
-
 			toast({ title: "Success", description: "Members shifted successfully.", variant: "success" });
-
 			setIsShiftModalOpen(false);
 			setSelectedIds(new Set());
 			setSelectedTargetBatchId("");
-
 			fetchAttendance();
-
 		} catch (error) {
 			toast({ title: "Error", description: "Failed to shift members.", variant: "destructive" });
 		} finally {
@@ -197,22 +199,21 @@ const AttendanceSheet = () => {
 
 	const handleExportPDF = () => {
 		if (!batchData) return;
-		const membersToExport = filteredMembers.filter((m: Member) => selectedIds.has(getMemberId(m)));
-
+		const membersToExport = filteredMembers.filter((m: Member | any) => selectedIds.has(getMemberId(m) as number));
 		if (membersToExport.length === 0) {
 			toast({ title: "Selection Empty", description: "Select members to export.", variant: "destructive" });
 			return;
 		}
-
 		const doc = new jsPDF();
-		doc.text("Attendance Sheet", 14, 20);
-		doc.save(`attendance_${batchData.batchName}.pdf`);
+		doc.text(`Attendance Sheet - ${formatDate(selectedDate)}`, 14, 20);
+		doc.save(`attendance_${batchData.batchName}_${selectedDate}.pdf`);
 		toast({ title: "Success", description: "PDF downloaded successfully.", variant: "success" });
 	};
 
 	return (
 		<div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 relative">
 
+			{/* Shift Modal */}
 			<AnimatePresence>
 				{isShiftModalOpen && (
 					<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -231,37 +232,29 @@ const AttendanceSheet = () => {
 									<X className="w-5 h-5" />
 								</button>
 							</div>
-
 							<div className="p-6 space-y-4">
 								<div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300">
 									You are about to move <strong>{selectedIds.size}</strong> members from
 									<span className="font-semibold"> {batchData?.batchName}</span>.
 								</div>
-
 								<div className="space-y-2">
 									<label className="text-sm font-medium text-gray-700 dark:text-gray-300">
 										Select Target Batch
 									</label>
-
-									<Select
-										onValueChange={setSelectedTargetBatchId}
-										value={selectedTargetBatchId}
-									>
+									<Select onValueChange={setSelectedTargetBatchId} value={selectedTargetBatchId}>
 										<SelectTrigger className="w-full bg-white dark:bg-gray-950">
 											<SelectValue placeholder="-- Select a Batch --" />
 										</SelectTrigger>
 										<SelectContent>
-											{targetBatches.map((batch: Batch) => (
+											{targetBatches?.map((batch: Batch) => (
 												<SelectItem key={batch.batchId} value={String(batch.batchId)}>
 													{batch.batchName} ({String(batch.startTime)} - {String(batch.endTime)})
 												</SelectItem>
 											))}
 										</SelectContent>
 									</Select>
-
 								</div>
 							</div>
-
 							<div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3 bg-gray-50 dark:bg-gray-900/50">
 								<button
 									onClick={() => setIsShiftModalOpen(false)}
@@ -284,17 +277,22 @@ const AttendanceSheet = () => {
 			</AnimatePresence>
 
 			<div className="flex flex-col gap-6">
-				<div className="bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-600 dark:border-blue-500 p-4 md:p-6 rounded-r-lg shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors">
-					<div>
+				{/* Main Header Card */}
+				<div className="bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-600 dark:border-blue-500 p-4 md:p-6 rounded-r-lg shadow-sm flex flex-col xl:flex-row justify-between gap-6 transition-colors">
+
+					{/* LEFT SECTION: Batch Info */}
+					<div className="flex-shrink-0">
 						<h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
 							{batchData?.batchName || "Loading Batch..."}
 						</h1>
-						<div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-6 mt-2 text-sm text-gray-600 dark:text-gray-400">
-							<span className="flex items-center gap-1">
+						<div className="flex flex-wrap gap-x-6 gap-y-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
+							<span className="flex items-center gap-1.5">
 								<User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-								<span className="font-semibold text-gray-900 dark:text-gray-200">{batchData?.coachName || "-"}</span>
+								<span className="font-semibold text-gray-900 dark:text-gray-200">
+									{batchData?.coachName || "-"}
+								</span>
 							</span>
-							<span className="flex items-center gap-1">
+							<span className="flex items-center gap-1.5">
 								<Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
 								<span className="font-semibold text-gray-900 dark:text-gray-200">
 									{batchData ? `${formatTime(batchData.startTime)} - ${formatTime(batchData.endTime)}` : "-"}
@@ -303,81 +301,117 @@ const AttendanceSheet = () => {
 						</div>
 					</div>
 
-					<div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-						<div className="relative w-full sm:w-auto">
-							<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-							<input
-								type="text"
-								placeholder="Search student..."
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className="pl-9 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100 w-full sm:w-64"
-							/>
+					{/* RIGHT SECTION: Controls Grid */}
+					<div className="flex flex-col gap-3 w-full xl:max-w-lg">
+
+						{/* ROW 1: Filters (Date Picker & Search) */}
+						<div className="flex flex-col sm:flex-row gap-3 w-full">
+
+							{/* SHADCN DATE PICKER */}
+							<div className="relative w-full sm:w-auto">
+								<Popover>
+									<PopoverTrigger asChild>
+										<Button
+											variant={"outline"}
+											className={cn(
+												"w-full sm:w-[200px] h-10 justify-start text-left font-normal bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700",
+												!selectedDate && "text-muted-foreground"
+											)}
+										>
+											<CalendarIcon className="mr-2 h-4 w-4" />
+											{selectedDate ? format(new Date(selectedDate), "PPP") : <span>Pick a date</span>}
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent className="w-auto p-0" align="start">
+										<Calendar
+											mode="single"
+											selected={new Date(selectedDate)}
+											onSelect={(date) => {
+												if (date) {
+													setSelectedDate(format(date, 'yyyy-MM-dd'));
+												}
+											}}
+											initialFocus
+										/>
+									</PopoverContent>
+								</Popover>
+							</div>
+
+							{/* Search Bar */}
+							<div className="relative flex-1">
+								<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+								<input
+									type="text"
+									placeholder="Search student..."
+									value={searchTerm}
+									onChange={(e) => setSearchTerm(e.target.value)}
+									className="h-10 w-full pl-10 pr-4 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100 text-sm"
+								/>
+							</div>
 						</div>
 
-						<div className="flex items-center gap-2 w-full sm:w-auto relative" ref={exportMenuRef}>
+						{/* ROW 2: Actions Buttons */}
+						<div className="flex items-center justify-start sm:justify-end gap-2 w-full" ref={exportMenuRef}>
 
 							<motion.button
 								whileHover={{ scale: 1.02 }}
 								whileTap={{ scale: 0.98 }}
 								onClick={openShiftModal}
 								disabled={loading || selectedIds.size === 0}
-								className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-700 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+								className="h-10 flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-700 text-white px-4 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
 							>
 								<ArrowRightLeft className="w-4 h-4" />
-								<span className="hidden md:inline">Shift Selected</span>
+								<span>Shift Selected</span>
 							</motion.button>
 
-							<motion.button
-								whileHover={{ scale: 1.02 }}
-								whileTap={{ scale: 0.98 }}
-								onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-								className="flex items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
-							>
-								<Settings2 className="w-4 h-4" />
-								<ChevronDown className={`w-3 h-3 transition-transform ${isExportMenuOpen ? 'rotate-180' : ''}`} />
-							</motion.button>
+							<div className="relative">
+								<motion.button
+									whileHover={{ scale: 1.02 }}
+									whileTap={{ scale: 0.98 }}
+									onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+									className="h-10 w-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+								>
+									<Settings2 className="w-4 h-4" />
+								</motion.button>
 
-							<AnimatePresence>
-								{isExportMenuOpen && (
-									<motion.div
-										initial={{ opacity: 0, y: 10, scale: 0.95 }}
-										animate={{ opacity: 1, y: 0, scale: 1 }}
-										exit={{ opacity: 0, y: 10, scale: 0.95 }}
-										className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-10 overflow-hidden"
-									>
-										<div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
-											<p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">PDF Columns</p>
-										</div>
-										<div className="p-2 space-y-1 max-h-60 overflow-y-auto">
-											{exportColumns.map((col) => (
-												<button
-													key={col.id}
-													onClick={() => toggleExportColumn(col.id)}
-													className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
-												>
-													<div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${col.enabled
-														? 'bg-blue-600 border-blue-600 text-white'
-														: 'border-gray-300 dark:border-gray-600'
-														}`}>
-														{col.enabled && <Check className="w-3 h-3" />}
-													</div>
-													<span className={col.enabled ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-500'}>
-														{col.label}
-													</span>
-												</button>
-											))}
-										</div>
-									</motion.div>
-								)}
-							</AnimatePresence>
+								<AnimatePresence>
+									{isExportMenuOpen && (
+										<motion.div
+											initial={{ opacity: 0, y: 10, scale: 0.95 }}
+											animate={{ opacity: 1, y: 0, scale: 1 }}
+											exit={{ opacity: 0, y: 10, scale: 0.95 }}
+											className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-20 overflow-hidden"
+										>
+											<div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
+												<p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">PDF Columns</p>
+											</div>
+											<div className="p-2 space-y-1 max-h-60 overflow-y-auto">
+												{exportColumns.map((col) => (
+													<button
+														key={col.id}
+														onClick={() => toggleExportColumn(col.id)}
+														className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+													>
+														<div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${col.enabled ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+															{col.enabled && <Check className="w-3 h-3" />}
+														</div>
+														<span className={col.enabled ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-500'}>
+															{col.label}
+														</span>
+													</button>
+												))}
+											</div>
+										</motion.div>
+									)}
+								</AnimatePresence>
+							</div>
 
 							<motion.button
 								whileHover={{ scale: 1.02 }}
 								whileTap={{ scale: 0.98 }}
 								onClick={handleExportPDF}
 								disabled={loading || !batchData || selectedIds.size === 0}
-								className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+								className="h-10 flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 dark:bg-blue-700 text-white px-6 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
 							>
 								<FileDown className="w-4 h-4" />
 								<span>Export PDF</span>
@@ -417,12 +451,12 @@ const AttendanceSheet = () => {
 								</tr>
 							) : filteredMembers.length > 0 ? (
 								<AnimatePresence>
-									{filteredMembers.map((member, index: number) => (
+									{filteredMembers.map((member: any, index: number) => (
 										<motion.tr
 											key={member.batchMemberId || index}
 											initial={{ opacity: 0, y: 5 }}
 											animate={{ opacity: 1, y: 0 }}
-											className={`transition-colors group border-b dark:border-gray-800 last:border-0 ${selectedIds.has(getMemberId(member))
+											className={`transition-colors group border-b dark:border-gray-800 last:border-0 ${selectedIds.has(getMemberId(member as any) as number)
 												? 'bg-blue-50/50 dark:bg-blue-900/10'
 												: 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50'
 												}`}
@@ -430,8 +464,8 @@ const AttendanceSheet = () => {
 											<td className="px-4 py-4 text-center">
 												<input
 													type="checkbox"
-													checked={selectedIds.has(getMemberId(member))}
-													onChange={() => toggleSelection(getMemberId(member))}
+													checked={selectedIds.has(getMemberId(member) as number)}
+													onChange={() => toggleSelection(getMemberId(member) as number)}
 													className="w-4 h-4 text-blue-600 rounded border-gray-300 cursor-pointer accent-blue-600"
 												/>
 											</td>
@@ -458,7 +492,7 @@ const AttendanceSheet = () => {
 												{formatDate(member.endDate)}
 											</td>
 											<td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200 text-right font-mono whitespace-nowrap">
-												{formatCurrency(member.billingRate || 0)}
+												{formatCurrency(Number(member.billingRate) || 0)}
 											</td>
 										</motion.tr>
 									))}

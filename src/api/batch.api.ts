@@ -9,7 +9,7 @@ export interface BatchQuery {
   sortOrder?: SortOrder;
   search?: string;
   batchName?: string;
-  coachFirstName?: string;
+  coachName?: string;
   facilityName?: string;
   courseName?: string | null;
   courseId?: number;
@@ -26,7 +26,7 @@ export function getBatch(params: BatchQuery = {}): Promise<Response<Batch[]>> {
     sortOrder: params.sortOrder ?? params.sortOrder ?? "ASC",
     search: params.search ?? params.batchName,
     batchName: params.batchName ?? undefined,
-    coachFirstName: params.coachFirstName ?? undefined,
+    coachName: params.coachName ?? undefined,
     facilityName: params.facilityName ?? undefined,
     courseName: params.courseName ?? undefined,
     courseId: params.courseId ?? undefined,

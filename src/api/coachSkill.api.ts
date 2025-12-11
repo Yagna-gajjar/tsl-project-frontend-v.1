@@ -21,7 +21,7 @@ const COACH_SKILL_BASE = import.meta.env.VITE_APP_API_URL + "/coach-skill";
 
 export function getCoachSkills(
   params: CoachSkillQuery = {}
-): Promise<CoachSkill[]> {
+): Promise<Response<CoachSkill[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -40,7 +40,7 @@ export function getCoachSkills(
   console.log(params);
   
 
-  return request<CoachSkill[]>(`${COACH_SKILL_BASE}${qs}`);
+  return request<Response<CoachSkill[]>>(`${COACH_SKILL_BASE}${qs}`);
 }
 
 export function getCoachSkillById(id: number): Promise<Response<CoachSkill>> {

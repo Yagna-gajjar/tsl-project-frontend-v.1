@@ -91,7 +91,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
         sortOrder: sortOrder,
         search: search || undefined,
         batchName: filters.batchName as string | undefined,
-        coachFirstName: filters.coachFirstName as string | undefined,
+        coachName: filters.coachName as string | undefined,
         facilityName: filters.facilityName as string | undefined,
         courseName: filters.courseName as string | undefined,
       });
@@ -206,14 +206,14 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       ),
     },
     {
-      key: "coachFirstName",
+      key: "coachName",
       header: "Coach Name",
       sortable: true,
       filterType: "text",
       render: (r) => (
         <div className="flex flex-col">
           <span className="font-medium">
-            {r.coachFirstName} {r.coachLastName}{" "}
+            {r.coachName??"-"}{" "}
           </span>
         </div>
       ),
@@ -225,7 +225,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       filterType: "text",
       render: (r) => (
         <div className="flex flex-col">
-          <span className="font-medium">{r.facilityName}</span>
+          <span className="font-medium">{r.facilityName ?? "-"}</span>
         </div>
       ),
     },
@@ -236,7 +236,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       filterType: "text",
       render: (r) => (
         <div className="flex flex-col">
-          <span className="font-medium">{r.areaName}</span>
+          <span className="font-medium">{r.areaName ?? "-"}</span>
         </div>
       ),
     },

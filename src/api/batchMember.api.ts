@@ -25,9 +25,9 @@ export function changeBatch(payload: BatchMember): Promise<Response> {
   });
 }
 
-export function getAttendance(batchId: number): Promise<Response<BatchMember>> {
+export function getAttendance(batchId: number, date: string): Promise<Response<BatchMember>> {
   return request<Response<BatchMember>>(
-    `${BATCH_MEMBER_BASE}/attendance/${batchId}`,
+    `${BATCH_MEMBER_BASE}/attendance/${batchId}?date=${date}`,
     {
       method: "GET",
     }

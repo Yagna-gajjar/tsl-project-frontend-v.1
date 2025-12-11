@@ -5,6 +5,7 @@ import { getCoachSkills, deleteCoachSkill } from "@/api/coachSkill.api";
 import type { CoachSkill } from "@/types/coachSkill";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
 
 type Props = {
   onView?: (row: CoachSkill) => void;
@@ -22,6 +23,7 @@ export default function CoachSkillTable({
 
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<Record<string, string | number | undefined>>({});
@@ -34,7 +36,7 @@ export default function CoachSkillTable({
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getCoachSkills({
+      const res: Response<CoachSkill[]> = await getCoachSkills({
         page,
         limit,
         sortBy,
@@ -49,13 +51,13 @@ export default function CoachSkillTable({
         currentlyInTeam: filters.currentlyInTeam as string | undefined,
       });
 
-      const rowsRaw = Array.isArray(res) ? res : (Array.isArray((res as Record<string, unknown>)?.data) ? (res as Record<string, unknown>).data as CoachSkill[] : []);
+      const rowsRaw = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data as CoachSkill[] : []);
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
       })) as CoachSkill[];
-      
+      setTotal(res.pagination.total)
       setData(rows);
     } catch {
       console.error("Failed to fetch coach skills");
@@ -168,7 +170,7 @@ export default function CoachSkillTable({
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}

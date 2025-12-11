@@ -21,7 +21,8 @@ export default function AppointmentTable({
   const [isLoading, setIsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(10);
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<
@@ -57,10 +58,11 @@ export default function AppointmentTable({
           ? new Date((r as any).updatedAt)
           : undefined,
       })) as Appointment[];
-
+      setTotal(res.pagination.total);
       setData(rows);
     } catch (err) {
       console.error("Failed to fetch appointments", err);
+      setTotal(0);
       setData([]);
     } finally {
       setIsLoading(false);
@@ -167,7 +169,7 @@ export default function AppointmentTable({
         pagination={{
           page,
           limit,
-          total: data.length,
+          total: total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
