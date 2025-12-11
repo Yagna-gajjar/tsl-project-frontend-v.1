@@ -49,7 +49,6 @@ const EnrollmentFormNew = ({
   const [selectedCourse, setSelectedCourse] = useState<Course>();
   const [coaches, setCoaches] = useState<Coach[]>([]);
 
-  // modal state for batch requests
   const [showBatchRequest, setShowBatchRequest] = useState(false);
   const [requestBatchDetails, setRequestBatchDetails] = useState<{
     batchId: number;
@@ -112,7 +111,6 @@ const EnrollmentFormNew = ({
 
   const navigate = useNavigate();
 
-  // ---------- Helper utilities ----------
   const AdjustBillingAmount = (amount: number) => {
     const roundedAmount = Math.ceil(amount);
     const newAdjust = roundedAmount - amount;
@@ -123,10 +121,6 @@ const EnrollmentFormNew = ({
     };
   };
 
-  /**
-   * Decide whether the selected course charges by 'session'.
-   * Defensive: checks multiple possible property names and values.
-   */
   const isCourseChargingBySession = (c?: Course | null) => {
     if (!c) return false;
     const maybe =
@@ -135,25 +129,18 @@ const EnrollmentFormNew = ({
       (c as any).chargingType ??
       (c as any).chargeBy;
     if (typeof maybe === "string") return maybe.toLowerCase() === "session";
-    if (typeof maybe === "boolean") return Boolean(maybe); // if a boolean flag is used
-    // fallback: check explicit field 'chargePerSession' etc
+    if (typeof maybe === "boolean") return Boolean(maybe);
     if ((c as any).chargePerSession !== undefined)
       return Boolean((c as any).chargePerSession);
     return false;
   };
 
-  /**
-   * Return the unit count we should use for billing/committed calculations:
-   * - if course charges by session => sessionUnits
-   * - otherwise => numberOfDays
-   */
   const getActiveUnits = (vals = values, courseObj = selectedCourse) => {
     return isCourseChargingBySession(courseObj)
       ? Number(vals.sessionUnits || 0)
       : Number(vals.numberOfDays || 0);
   };
 
-  // ---------- Debounces ----------
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedDays(values.numberOfDays);
@@ -200,7 +187,6 @@ const EnrollmentFormNew = ({
     }
   }, [debouncedDebitAmount]);
 
-  // ---------- Initial load ----------
   useEffect(() => {
     const loadInit = async () => {
       try {
@@ -267,7 +253,6 @@ const EnrollmentFormNew = ({
     loadCourses();
   }, [values?.academyId]);
 
-  // when courseId changes -> set selectedCourse and initialize rates/units depending on charging pattern
   useEffect(() => {
     if (!values?.courseId) return;
 
@@ -280,13 +265,11 @@ const EnrollmentFormNew = ({
 
       const sessionCharging = isCourseChargingBySession(foundCourse);
 
-      // Determine starting units and rates depending on charging pattern
       const initialUnits = Number(foundCourse.minEnrollmentUnit ?? 0);
       const unitRate = Number(foundCourse.unitRate ?? 0);
 
       const { amount, adjust } = AdjustBillingAmount(initialUnits * unitRate);
 
-      // set appropriate unit value (sessionUnits or numberOfDays) and billing fields
       setValues((prev) => ({
         ...prev,
         numberOfDays: sessionCharging ? prev.numberOfDays : initialUnits,
@@ -497,7 +480,6 @@ const EnrollmentFormNew = ({
     setPaymentValues((prev) => ({ ...prev, remaining }));
   }, [values.commitedAmount, paymentValues.paid]);
 
-  // ---------- onChange handlers ----------
   const onChange = useCallback(
     (field: string, value: any) => {
       const numFields = [
@@ -529,18 +511,15 @@ const EnrollmentFormNew = ({
             Number(selectedBatch.activeMemberCount) >=
             Number(selectedBatch.batchCapacity);
           if (isFull) {
-            // open request modal instead of selecting the batch
             setRequestBatchDetails({
               batchId: Number(selectedBatch.batchId),
               batchName: selectedBatch.batchName || "",
             });
             setShowBatchRequest(true);
-            // do not set values.batchId or call onBatchSelect
             return;
           }
         }
 
-        // not full -> normal behavior:
         setValues((prev) => ({ ...prev, [field]: value }));
         onBatchSelect(Number(value));
         return;
@@ -565,10 +544,8 @@ const EnrollmentFormNew = ({
         }));
       }
 
-      // update the value
       setValues((prev) => ({ ...prev, [field]: value }));
 
-      // If units changed we should recompute billingAmount/committed immediately
       if (field === "numberOfDays" || field === "sessionUnits") {
         const units =
           field === "numberOfDays"
@@ -592,7 +569,6 @@ const EnrollmentFormNew = ({
           adjustment: adjust,
         }));
 
-        // refresh discount for the new units
         fetchDiscount(activeUnits);
       }
     },
@@ -630,7 +606,6 @@ const EnrollmentFormNew = ({
     setPaymentValues((prev) => ({ ...prev, [field]: value }));
   };
 
-  // ---------- submit ----------
   const handleSubmit = async () => {
     try {
       const mustHaveTransaction =
@@ -707,7 +682,6 @@ const EnrollmentFormNew = ({
     setValues({} as any);
   };
 
-  // ---------- fetchDiscount updated to accept optional units override ----------
   const fetchDiscount = async (overrideUnits?: number) => {
     if (!values?.courseId) return;
     const units =
@@ -738,7 +712,6 @@ const EnrollmentFormNew = ({
     }
   };
 
-  // ---------- fields definitions remain mostly same ----------
   const fields = [
     {
       name: "memberName",
@@ -1069,7 +1042,6 @@ const EnrollmentFormNew = ({
         isSubmitting={false}
       />
 
-      {/* Batch request modal */}
       <BatchRequestedForm
         isOpen={showBatchRequest}
         onClose={() => setShowBatchRequest(false)}
@@ -1077,9 +1049,7 @@ const EnrollmentFormNew = ({
         batchName={requestBatchDetails?.batchName || ""}
         enrollment={values as Enrollment}
         onSuccess={() => {
-          // called when request succeeded
           setShowBatchRequest(false);
-          // optional: show toast or refresh batches here
           toast({
             title: "Requested",
             description: "Spot request submitted.",

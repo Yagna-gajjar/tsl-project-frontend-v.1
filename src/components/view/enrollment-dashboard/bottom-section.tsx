@@ -42,6 +42,7 @@ export interface EnrollmentHistoryItem {
   batches?: Batch[];
   adjustment?: string | number | null;
   sessionUnits?: number | null;
+  memberId?: number | null;
 }
 
 interface EnrollmentHistoryProps {
@@ -300,8 +301,11 @@ export default function EnrollmentHistory({
   };
 
   const openAppointmentDialog = (item: EnrollmentHistoryItem) => {
+    console.log(item, selectedMemberId);
+
     setSelectedEnrollment({
       enrollmentId: item.enrollmentId,
+      memberId: selectedMemberId,
       courseName: item.courseName,
       academyName: item.academyName,
       sessionUnits: item.sessionUnits,
@@ -560,11 +564,13 @@ export default function EnrollmentHistory({
         onOpenChange={(v) => setChangeDialogOpen(v)}
         selectedEnrollment={selectedEnrollment}
       />
-      <AppointmentModal
-        open={appointmentDialogOpen}
-        onOpenChange={(v) => setAppointmentDialogOpen(v)}
-        selectedEnrollment={selectedEnrollment}
-      />
+      {selectedEnrollment?.memberId && (
+        <AppointmentModal
+          open={appointmentDialogOpen}
+          onOpenChange={(v) => setAppointmentDialogOpen(v)}
+          selectedEnrollment={selectedEnrollment}
+        />
+      )}
     </>
   );
 }
