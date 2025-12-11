@@ -21,7 +21,7 @@ const ADDRESS_BASE = import.meta.env.VITE_APP_API_URL + '/address'
 export function getAddresses(params: AddressesQuery = {}): Promise<Response> {
 	const qs = toQueryString({
 		page: params.page ?? 1,
-		limit: params.limit ?? 20,
+		limit: params.limit ?? 10,
 		sortBy: params.sortBy ?? 'addressId',
 		sortOrder: params.sortOrder ?? 'ASC',
 

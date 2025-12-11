@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	})
 
 	const redirectToLogin = () => {
-		window.location.replace("/login")
+		// window.location.replace("/login")
 	}
 
 	const login = (user: User, token: string) => {

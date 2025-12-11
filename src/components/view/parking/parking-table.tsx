@@ -20,7 +20,7 @@ export default function ParkingTable({ onView, onEdit, refreshKey }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit] = useState(10);
   const [total, setTotal] = useState(0);
 
   const [search, setSearch] = useState("");

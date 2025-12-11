@@ -25,7 +25,7 @@ export default function MembershipMasterTable({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(20);
+  const [limit] = useState<number>(10);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<

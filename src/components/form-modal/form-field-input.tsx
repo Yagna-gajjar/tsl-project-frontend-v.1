@@ -115,7 +115,7 @@ function SearchableMultiselect({
       onChange(newVals);
     } else {
       const newVals = [...(Array.isArray(value) ? value : []), opt.value];
-      onChange(newVals);
+      onChange(newVals as any);
     }
   };
 
