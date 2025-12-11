@@ -19,7 +19,8 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(20);
+  const [total, setTotal] = useState<number>(0);
+  const [limit] = useState<number>(10);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<
@@ -40,6 +41,8 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
         academyName: filters.academyName as string | undefined,
         academyType: filters.academyType as string | undefined,
       });
+
+      setTotal(res.pagination.total);
 
       const rowsRaw = Array.isArray(res)
         ? res
@@ -180,7 +183,7 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}

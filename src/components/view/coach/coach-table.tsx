@@ -87,8 +87,9 @@ const AvatarCell = ({
             loading="lazy"
             onLoad={() => setIsLoaded(true)}
             onError={() => setHasError(true)}
-            className={`h-full w-full object-cover transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"
-              }`}
+            className={`h-full w-full object-cover transition-opacity duration-500 ${
+              isLoaded ? "opacity-100" : "opacity-0"
+            }`}
           />
         )}
 
@@ -124,12 +125,15 @@ type Props = {
 export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Coach[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [total, setTotal] = useState(0);
 
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(20);
+  const [limit] = useState<number>(10);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, string | number | undefined>>({});
+  const [filters, setFilters] = useState<
+    Record<string, string | number | undefined>
+  >({});
   const [sortBy, setSortBy] = useState<string>("coachId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
@@ -155,12 +159,15 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
         coachFirstName: filters.coachFirstName as string | undefined,
         status: filters.status as string | undefined,
       });
+      console.log(res?.pagination?.total);
+
+      setTotal(res?.pagination?.total);
 
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray((res as Record<string, unknown>)?.data)
-          ? ((res as Record<string, unknown>).data as Coach[])
-          : [];
+        ? ((res as Record<string, unknown>).data as Coach[])
+        : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -187,7 +194,10 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-  const handleFilterChange = (filterKey: string, value: string | number | undefined) => {
+  const handleFilterChange = (
+    filterKey: string,
+    value: string | number | undefined
+  ) => {
     setFilters((prev) => ({
       ...prev,
       [filterKey]: value || undefined,
@@ -255,7 +265,8 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
   };
 
   const handleRemovePhoto = async () => {
-    if (!selectedCoach || !selectedCoach.photo || !selectedCoach.coachId) return;
+    if (!selectedCoach || !selectedCoach.photo || !selectedCoach.coachId)
+      return;
     try {
       setIsUploading(true);
       await deletePhoto(selectedCoach.coachId, selectedCoach.photo);
@@ -266,7 +277,11 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       setPreviewUrl(null);
     } catch (error) {
       console.error("Remove photo failed", error);
-      toast({ title: "Error", description: "Failed to remove photo", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to remove photo",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -288,7 +303,11 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       closeUploadModal();
     } catch (error) {
       console.error("Upload failed", error);
-      toast({ title: "Error", description: "Failed to upload photo", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to upload photo",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -329,12 +348,13 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       ],
       render: (r) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${r.status === "active"
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            r.status === "active"
               ? "bg-green-100 text-green-800"
               : r.status === "inactive"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
-            }`}
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
+          }`}
         >
           {r.status || "-"}
         </span>
@@ -377,7 +397,7 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
@@ -409,7 +429,9 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-lg bg-background border border-foreground p-6 shadow-xl animate-in fade-in zoom-in duration-200">
-            <h3 className="text-lg font-semibold mb-4">Update Profile Picture</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Update Profile Picture
+            </h3>
 
             <div className="flex flex-col items-center gap-6">
               <div className="relative h-32 w-32 rounded-full border-2 border-dashed border-foreground flex items-center justify-center overflow-hidden bg-background">
@@ -443,7 +465,8 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
               ) : (
                 <div className="text-center w-full px-4 py-2 bg-amber-700/20 rounded-md">
                   <p className="text-sm text-amber-700 font-medium">
-                    You must remove the current picture before uploading a new one.
+                    You must remove the current picture before uploading a new
+                    one.
                   </p>
                 </div>
               )}

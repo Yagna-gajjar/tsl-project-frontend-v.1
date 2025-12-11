@@ -1,129 +1,74 @@
 import type { Coach } from "@/types/coach";
-import { toQueryString } from "./helper";
+import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface CoachesQuery {
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sortOrder?: SortOrder;
   search?: string;
+
   coachFirstName?: string;
   status?: string;
-  sortBy?: string;
-  sortOrder?: "ASC" | "DESC";
 }
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+const COACH_BASE = import.meta.env.VITE_APP_API_URL + "/coach";
 
-async function getCoaches(params?: CoachesQuery) {
-  try {
-    const url = `${API_URL}/coach?${toQueryString(params || {})}`;
-    const response = await fetch(url);
-    const data = await response.json();
+export function getCoaches(params: CoachesQuery = {}): Promise<Response> {
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 20,
+    sortBy: params.sortBy ?? "coachId",
+    sortOrder: params.sortOrder ?? "ASC",
 
-    if (data.data && Array.isArray(data.data)) {
-      return data.data;
-    }
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.error("Error fetching coaches:", err);
-    throw err;
-  }
+    search: params.search,
+    coachFirstName: params.coachFirstName,
+    status: params.status,
+  });
+
+  return request<Response>(`${COACH_BASE}${qs}`);
 }
 
-async function getCoachById(id: number) {
-  try {
-    const url = `${API_URL}/coach/${id}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error fetching coach:", err);
-    throw err;
-  }
+export function getCoachById(id: number): Promise<Response> {
+  return request<Response>(`${COACH_BASE}/${id}`);
 }
 
-async function createCoach(payload: Omit<Coach, "coachId" | "createdAt" | "updatedAt">) {
-  try {
-    const url = `${API_URL}/coach`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error creating coach:", err);
-    throw err;
-  }
+export function createCoach(
+  payload: Omit<Coach, "coachId" | "createdAt" | "updatedAt">
+): Promise<Response> {
+  return request<Response>(COACH_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
-async function updateCoach(id: number, payload: Partial<Coach>) {
-  try {
-    const url = `${API_URL}/coach/${id}`;
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error updating coach:", err);
-    throw err;
-  }
+export function updateCoach(
+  id: number,
+  payload: Partial<Coach>
+): Promise<Response> {
+  return request<Response>(`${COACH_BASE}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
-async function deleteCoach(id: number) {
-  try {
-    const url = `${API_URL}/coach/${id}`;
-    const response = await fetch(url, { method: "DELETE" });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error deleting coach:", err);
-    throw err;
-  }
+export function deleteCoach(id: number): Promise<Coach> {
+  return request<Coach>(`${COACH_BASE}/${id}`, {
+    method: "DELETE",
+  });
 }
 
-async function saveUrlToCoach(formData: FormData) {
-  try {
-    // Assuming backend endpoint is /coach/photo to match member pattern
-    const url = `${API_URL}/coach/photo`;
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData, // Content-Type header is auto-set by browser for FormData
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error uploading coach photo:", err);
-    throw err;
-  }
+export function saveUrlToCoach(formData: FormData): Promise<Response> {
+  return request<Response>(`${COACH_BASE}/photo`, {
+    method: "POST",
+    body: formData as unknown as string,
+  });
 }
 
-async function deletePhoto(coachId: number, photo: string) {
-  try {
-    // Assuming backend endpoint is /coach/remove to match member pattern
-    const url = `${API_URL}/coach/remove`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ coachId, photo }),
-    });
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error deleting coach photo:", err);
-    throw err;
-  }
+export function deletePhoto(coachId: number, photo: string): Promise<Response> {
+  return request<Response>(`${COACH_BASE}/remove`, {
+    method: "POST",
+    body: JSON.stringify({ coachId, photo }),
+  });
 }
-
-export {
-  getCoaches,
-  getCoachById,
-  createCoach,
-  updateCoach,
-  deleteCoach,
-  saveUrlToCoach,
-  deletePhoto
-};
