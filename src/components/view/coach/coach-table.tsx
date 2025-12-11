@@ -87,9 +87,8 @@ const AvatarCell = ({
             loading="lazy"
             onLoad={() => setIsLoaded(true)}
             onError={() => setHasError(true)}
-            className={`h-full w-full object-cover transition-opacity duration-500 ${
-              isLoaded ? "opacity-100" : "opacity-0"
-            }`}
+            className={`h-full w-full object-cover transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"
+              }`}
           />
         )}
 
@@ -165,9 +164,9 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
 
       const rowsRaw = Array.isArray(res)
         ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Coach[])
-        : [];
+        : Array.isArray(res?.data)
+          ? (res.data as Coach[])
+          : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -348,13 +347,12 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       ],
       render: (r) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            r.status === "active"
+          className={`px-2 py-1 rounded-full text-xs font-medium ${r.status === "active"
               ? "bg-green-100 text-green-800"
               : r.status === "inactive"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
-          }`}
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+            }`}
         >
           {r.status || "-"}
         </span>
