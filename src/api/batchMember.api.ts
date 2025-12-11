@@ -49,14 +49,24 @@ export function shiftMembers(
   });
 }
 
+interface appointment {
+  batchId: number | null;
+  memberId: number | null;
+  enrollmentId: number | null;
+  status: string | null;
+  startDate: string | Date;
+  endDate: string | Date;
+  weekDays: number | null;
+}
+
 export function makeAppointment(
-  payload: BatchMember
-): Promise<Response<BatchMember>> {
-  return request<Response<BatchMember>>(
-    `${BATCH_MEMBER_BASE}/makeAppointments`,
+  payload: appointment
+): Promise<Response<appointment>> {
+  return request<Response<appointment>>(
+    `${BATCH_MEMBER_BASE}/make-appointments`,
     {
       method: "Post",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ appointments: payload }),
     }
   );
 }

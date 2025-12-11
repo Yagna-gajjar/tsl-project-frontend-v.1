@@ -54,7 +54,6 @@ export default function AppointmentModal({
     ? sessionUnits.length
     : Number(sessionUnits) || 0;
 
-  // ------------- fetch batch members ----------------
   const fetchBatchMembers = useCallback(async () => {
     setError(null);
     setBatchMembers([]);
@@ -85,7 +84,6 @@ export default function AppointmentModal({
     }
   }, [selectedEnrollment]);
 
-  // ------------- load batches (by course name) ----------------
   const loadBatches = useCallback(async (courseName?: string | null) => {
     setLoadingBatches(true);
     try {
@@ -101,7 +99,6 @@ export default function AppointmentModal({
     }
   }, []);
 
-  // ------------- rows initialization ----------------
   useEffect(() => {
     const base: Row[] = Array.from({ length: rowCount }).map(() => ({
       batchId: null,
@@ -124,7 +121,6 @@ export default function AppointmentModal({
     setEditingIndex(null);
   }, [batchMembers, rowCount]);
 
-  // load data when modal opens
   useEffect(() => {
     if (open && selectedEnrollment?.enrollmentId) {
       void fetchBatchMembers();
@@ -140,7 +136,6 @@ export default function AppointmentModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, selectedEnrollment, fetchBatchMembers]);
 
-  // ------------- helpers ----------------
   function toLocalDateTimeValue(dt?: string | Date): string {
     if (!dt) return "";
     try {
@@ -251,7 +246,7 @@ export default function AppointmentModal({
 
     try {
       // POST to your controller (adjust URL if your route differs)
-      const res = await makeAppointment(payloadAppt);
+      const res = await makeAppointment([payloadAppt]);
 
       // API returns created rows in data.data (per your earlier controller)
       const created =
@@ -287,19 +282,6 @@ export default function AppointmentModal({
     }
   }
 
-  function handleDelete(index: number) {
-    const orig = rows[index]?.original;
-    if (!orig) return;
-    const payload = {
-      enrollmentId: selectedEnrollment?.enrollmentId,
-      appointmentId: (orig as any).id ?? orig?.appointmentId ?? null,
-      sessionIndex: index,
-      original: orig,
-    };
-    onAction?.("delete", payload);
-  }
-
-  // ------------- render ----------------
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] h-[90vh] w-[95%] rounded-xl p-6 bg-white border-0 shadow-2xl">
@@ -384,17 +366,6 @@ export default function AppointmentModal({
                         }
                         className="p-2 border rounded flex-1"
                       />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {isExisting && (
-                        <button
-                          onClick={() => handleDelete(idx)}
-                          className="px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm"
-                        >
-                          Delete
-                        </button>
-                      )}
                     </div>
                   </div>
 
