@@ -83,25 +83,21 @@ export default function AcademyCoachFormModal({
         const res: Response<Academy[]> = await getAcademies();
         const academyoptions = Array.isArray(res.data)
           ? res.data.map((academy: Academy) => ({
-            value: academy.academyId as number,
-            label: academy.academyName as string,
-          }))
+              value: academy.academyId as number,
+              label: academy.academyName as string,
+            }))
           : [];
 
         setAcademyOptions(academyoptions);
 
         const res1: Response = await getCoaches();
+        console.log(res1.data);
 
-        const coachoptions = Array.isArray(res1)
-          ? res1.map((coach: Coach) => ({
-            value: coach.coachId,
-            label:
-              coach.coachFirstName +
-              " " +
-              coach.coachLastName +
-              " " +
-              coach.coachMiddleName,
-          }))
+        const coachoptions = Array.isArray(res1?.data)
+          ? res1?.data.map((coach: Coach) => ({
+              value: coach.coachId,
+              label: coach.coachFirstName + " " + coach.coachLastName,
+            }))
           : [];
 
         setCoachOptions(coachoptions);
@@ -247,13 +243,13 @@ export default function AcademyCoachFormModal({
     {
       name: "joiningDate",
       label: "Joining Date",
-      type: "date",
+      type: "Date",
       required: true,
     },
     {
       name: "relievedDate",
       label: "Relieved Date",
-      type: "date",
+      type: "Date",
       required: false,
     },
     {
@@ -302,7 +298,7 @@ export default function AcademyCoachFormModal({
               }
               onClose={onClose}
             />
-            <div className="overflow-auto">
+            <div className="overflow">
               {error && (
                 <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
                   {error}

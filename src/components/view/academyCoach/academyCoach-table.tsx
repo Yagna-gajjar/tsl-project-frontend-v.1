@@ -21,7 +21,8 @@ export default function AcademyCoachTable({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(20);
+  const [limit] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<
@@ -43,6 +44,8 @@ export default function AcademyCoachTable({
         academyName: filters.academyName as string | undefined,
         coachName: filters.coachName as string | undefined,
       });
+
+      setTotal(res?.pagination.total);
 
       const rowsRaw = Array.isArray(res)
         ? res
@@ -188,7 +191,7 @@ export default function AcademyCoachTable({
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
