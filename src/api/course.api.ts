@@ -1,5 +1,6 @@
 import type { Course } from "@/types/course";
 import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface CourseQuery {
   page?: number;
@@ -15,7 +16,7 @@ export interface CourseQuery {
 
 const COURSE_BASE = import.meta.env.VITE_APP_API_URL + "/course";
 
-export function getCourses(params: CourseQuery = {}): Promise<Course[]> {
+export function getCourses(params: CourseQuery = {}): Promise<Response<Course[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -28,7 +29,7 @@ export function getCourses(params: CourseQuery = {}): Promise<Course[]> {
     status: params.status ?? undefined,
   });
 
-  return request<Course[]>(`${COURSE_BASE}${qs}`);
+  return request<Response<Course[]>>(`${COURSE_BASE}${qs}`);
 }
 
 export function getCourseByAcademy(academyId: number): Promise<Course[]> {
