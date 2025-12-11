@@ -628,7 +628,11 @@ const EnrollmentFormNew = ({
         return;
       }
 
-      const payload: any = { ...values };
+      const payload: any = {
+        ...values,
+        weekDays: Number(selectedCourse?.weekDays),
+      };
+      
 
       if (debouncedCndn && Number(debitNoteValues.debitNoteAmount) > 0) {
         Object.assign(payload, {
