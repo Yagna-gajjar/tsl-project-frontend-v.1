@@ -49,8 +49,8 @@ export default function AcademyCoachTable({
 
       const rowsRaw = Array.isArray(res)
         ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as AcademyCoach[])
+        : Array.isArray(res?.data)
+        ? (res.data as AcademyCoach[])
         : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
