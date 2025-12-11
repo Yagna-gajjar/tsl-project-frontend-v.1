@@ -251,6 +251,7 @@ export function BatchFormModal({
       setLoadingOptions(true);
       const academiesData = await getAcademies({
         academyType: activityName,
+        limit: 100,
       });
       console.log(academiesData, "pppjas");
       const academyArr = Array.isArray(

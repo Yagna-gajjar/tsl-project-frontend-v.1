@@ -83,32 +83,23 @@ export default function CourseFormModal({
       setFieldErrors({});
       setError(null);
 
-      const [resActivity, resAcademy] = await Promise.all([
-        getActivities({
-          limit: 300,
-        }),
-        getAcademies(),
-      ]);
+      const resActivity = await getActivities({ limit: 300 });
       const activityopts = Array.isArray(resActivity.data)
         ? resActivity.data.map((activity: Activity) => ({
-          value: activity.activityId,
-          label: activity.activityName,
-        }))
-        : [];
-      const academyopts = Array.isArray(resAcademy.data)
-        ? resAcademy.data.map((academy: Academy) => ({
-          value: academy.academyId,
-          label: academy.academyName,
-        }))
+            value: activity.activityId,
+            label: activity.activityName,
+          }))
         : [];
       setActivityOptions(activityopts);
-      setAcademyOptions(academyopts);
     };
 
     loadData();
   }, [initialData, isOpen]);
 
-  const onChange = (field: keyof Course, val: string | number | boolean | Date | Object | undefined) => {
+  const onChange = (
+    field: keyof Course,
+    val: string | number | boolean | Date | Object | undefined
+  ) => {
     setValues((p) => ({ ...p, [field]: val }));
 
     setFieldErrors((prev) => {
@@ -117,6 +108,32 @@ export default function CourseFormModal({
       delete copy[field as string];
       return copy;
     });
+
+    const fetchAcademy = async (val: string | undefined) => {
+      const resAcademy = await getAcademies({ academyType: val });
+      const academyopts = Array.isArray(resAcademy.data)
+        ? resAcademy.data.map((academy: Academy) => ({
+            value: academy.academyId,
+            label: academy.academyName,
+          }))
+        : [];
+      setAcademyOptions(academyopts);
+    };
+
+    if (field === "activityId") {
+      const selected = activityOptions.find(
+        (a) => Number(a.value) === Number(val)
+      );
+
+      setValues((p) => ({
+        ...p,
+        activityId: val,
+        activityName: selected?.label,
+      }));
+
+      fetchAcademy(selected?.label);
+      return;
+    }
   };
 
   const validate = useCallback(() => {
@@ -299,11 +316,8 @@ export default function CourseFormModal({
           .filter((n: number) => Number.isFinite(n))
           .sort((a: number, b: number) => a - b);
         weekDaysValue = arr.join("");
-      } else if (
-        (values).weekDays !== undefined &&
-        (values).weekDays !== null
-      ) {
-        weekDaysValue = String((values).weekDays);
+      } else if (values.weekDays !== undefined && values.weekDays !== null) {
+        weekDaysValue = String(values.weekDays);
       }
 
       const payload: Partial<Course> = {
@@ -362,17 +376,17 @@ export default function CourseFormModal({
   const fieldsBase: FormFieldConfig<Course>[] = [
     { name: "courseName", label: "Course Name", type: "text", required: true },
     {
-      name: "academyId",
-      label: "Academy Name",
-      type: "select",
-      options: academyOptions,
-      required: true,
-    },
-    {
       name: "activityId",
       label: "Activity Name",
       type: "select",
       options: activityOptions,
+      required: true,
+    },
+    {
+      name: "academyId",
+      label: "Academy Name",
+      type: "select",
+      options: academyOptions,
       required: true,
     },
     {
