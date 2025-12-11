@@ -24,7 +24,8 @@ export default function FacilityAllotmentTable({
   const [isLoading, setIsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<
@@ -50,8 +51,8 @@ export default function FacilityAllotmentTable({
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray(res?.data)
-        ? res.data
-        : [];
+          ? res.data
+          : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: (r as any).createdAt
@@ -61,10 +62,11 @@ export default function FacilityAllotmentTable({
           ? new Date((r as any).updatedAt)
           : undefined,
       })) as FacilityAllotment[];
-
+      setTotal(res.pagination.total);
       setData(rows);
     } catch (err) {
       console.error("Failed to fetch facility allotments", err);
+      setTotal(0);
       setData([]);
     } finally {
       setIsLoading(false);
@@ -188,7 +190,7 @@ export default function FacilityAllotmentTable({
         pagination={{
           page,
           limit,
-          total: data.length,
+          total: total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
