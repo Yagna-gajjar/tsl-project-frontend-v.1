@@ -22,7 +22,6 @@ export interface Batch {
   academyName: string;
   areaName?: string;
   facilityName?: string;
-  coachFirstName?: string;
-  coachLastName?: string;
+  coachName?: string;
   courseName?: string;
 }
