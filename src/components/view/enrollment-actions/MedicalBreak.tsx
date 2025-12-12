@@ -226,7 +226,6 @@ const MedicalBreak = () => {
       differenceInCalendarDays(newStart, oldStart) > 0
         ? differenceInCalendarDays(newStart, oldStart)
         : 0;
-    console.log(diffDays);
 
     const newCommittedAmount =
       diffDays * Number(oldEnrollment.billingRate ?? 0);

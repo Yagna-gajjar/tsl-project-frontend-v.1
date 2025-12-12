@@ -71,7 +71,6 @@ function SearchableMultiselect({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // normalize incoming value to strings for comparison
   const valueStrings = new Set((value || []).map((v) => String(v)));
 
   const filteredOptions = options.filter((opt) =>

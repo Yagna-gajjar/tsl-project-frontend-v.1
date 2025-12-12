@@ -347,8 +347,6 @@ export default function MembershipFormModal({
       const end = new Date(startDate);
       end.setDate(startDate.getDate() + duration);
 
-      console.log(format(end, "yyyy-MM-dd"), "formatted end date");
-
       setValues((p) => ({
         ...p,
         endDate: format(end, "yyyy-MM-dd") as any,

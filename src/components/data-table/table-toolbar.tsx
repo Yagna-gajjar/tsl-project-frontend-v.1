@@ -159,7 +159,6 @@ export function TableToolbar<T>({
                 np[key] = applied;
                 return np;
               });
-              console.log(key);
 
               onFilterChange(key, applied);
               setShowApply(false);

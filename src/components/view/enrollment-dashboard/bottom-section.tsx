@@ -301,7 +301,6 @@ export default function EnrollmentHistory({
   };
 
   const openAppointmentDialog = (item: EnrollmentHistoryItem) => {
-    console.log(item, selectedMemberId);
 
     setSelectedEnrollment({
       enrollmentId: item.enrollmentId,

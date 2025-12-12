@@ -157,11 +157,6 @@ const CourseChange = () => {
     return format(newDate, "yyyy-MM-dd");
   }
 
-  // --- Derived Calculations for UI ---
-  // We calculate these on the fly to show the user exactly what's happening
-  console.log(oldEnrollment?.startDate);
-  console.log(values?.startDate);
-  
   const daysConsumed =
     oldEnrollment && values.startDate
       ? calculateDays(oldEnrollment.startDate, values.startDate) + 1

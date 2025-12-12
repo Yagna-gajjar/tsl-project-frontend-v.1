@@ -25,10 +25,7 @@ const DefreezeEnrollment = () => {
   const [oldEnrollment, setOldEnrollment] = useState<Enrollment>();
   const [fieldErrors] = useState<any>({});
   const [isSubmitting] = useState<boolean>(false);
-  const [course, setCourse] = useState<Course>([]);
-  const [ActivityName, setActivityName] = useState("");
-  const [academyName, setAcademyName] = useState("");
-  const [courseName, setCourseName] = useState("");
+  const [course, setCourse] = useState<Course>();
   const [lastEnrollment, setLastEnrollment] = useState<Enrollment | any>();
   const navigate = useNavigate();
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -36,9 +33,9 @@ const DefreezeEnrollment = () => {
     enrollmentId: Number(id),
     memberId: oldEnrollment?.memberId || 0,
     academyId: 0,
-    academyName: academyName ?? "",
-    activityName: ActivityName ?? "",
-    courseName: courseName ?? "",
+    academyName: "",
+    activityName: "",
+    courseName: "",
     adjustment: 0,
     batchId: 0,
     billingAmount: 0,
@@ -65,7 +62,7 @@ const DefreezeEnrollment = () => {
 
   const handleSubmit = async () => {
     try {
-      const res: Response = await enrollmentChange(values);
+      await enrollmentChange(values);
       navigate("/enrollment");
     } catch (err) {
       setError("Failed to submit!");
@@ -127,12 +124,12 @@ const DefreezeEnrollment = () => {
 
     const fetchCourse = async (id: number) => {
       try {
-        const res = await getCourseById(id);
+        const res: Response<Course> = await getCourseById(id);
         if (!mounted) return;
-        setCourse(res.data);
+        setCourse(res?.data || {} as Course);
         setValues((prev) => ({
           ...prev,
-          activityName: res.data.activityName || "",
+          activityName: res?.data!.activityName || "",
         }));
         return res.data;
       } catch (err) {
@@ -144,9 +141,8 @@ const DefreezeEnrollment = () => {
 
     const fetchOldEnrollmentAndBatches = async () => {
       try {
-        const response: Response<Batch[] | any> = await getEnrollmentById(oldEnrollment.oldEnrollmentId);
+        const response: Response<Batch[] | any> = await getEnrollmentById(Number(oldEnrollment.oldEnrollmentId));
         const data = response?.data;
-        console.log("getEnrollmentById returned:", data);
         if (!data) {
           setError("No enrollment data returned");
           return;
@@ -162,14 +158,11 @@ const DefreezeEnrollment = () => {
           return;
         }
 
-        // Fetch course and wait (so any course-dependent state is set)
         try {
           await fetchCourse(Number(data.courseId));
         } catch (err) {
-          // fetchCourse already logged error
         }
 
-        // set form values derived from old enrollment
         setValues((prev) => ({
           ...prev,
           activityName: data.activityName || "",
@@ -182,11 +175,6 @@ const DefreezeEnrollment = () => {
 
         // --- Attempt to fetch batches. Try the two most common argument shapes ---
         try {
-          console.log(
-            "Calling getBatch with object shape: { courseId:",
-            data.courseId,
-            "}"
-          );
           let batchRes;
 
           // Try object param first
@@ -198,10 +186,11 @@ const DefreezeEnrollment = () => {
               errObj
             );
             // Try primitive param fallback
-            batchRes = await getBatch(Number(data.courseId));
+            batchRes = await getBatch({
+              courseId: Number(data.courseId)
+            });
           }
 
-          console.log("getBatch response:", batchRes);
           const batchesData = batchRes?.data ?? [];
           if (mounted) setBatches(batchesData);
         } catch (err) {
@@ -209,7 +198,6 @@ const DefreezeEnrollment = () => {
           if (mounted) setError("Failed to load batches.");
         }
 
-        console.log(data, "fetched old enrollment full flow");
       } catch (err) {
         console.error("fetchOldEnrollmentAndBatches error:", err);
         if (mounted) setError("Failed to fetch enrollment details");

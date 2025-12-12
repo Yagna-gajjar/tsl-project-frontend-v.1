@@ -186,7 +186,6 @@ const SignupForm = () => {
 		else {
 			navigate('/login');
 		}
-		console.log("🚀 Payload:", payload);
 		setIsSubmitting(false);
 	};
 

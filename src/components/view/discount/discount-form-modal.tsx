@@ -54,7 +54,6 @@ export default function DiscountFormModal({
       setError(null);
 
       const resCourse: Response = await getCourses();
-      console.log(resCourse);
       
       // Handle Course data
       const courseArray = Array.isArray(resCourse.data) ? resCourse.data : [];

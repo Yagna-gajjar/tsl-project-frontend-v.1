@@ -102,10 +102,6 @@ export default function BatchDetailsPanel({
     }
   }, [batch?.courseId]);
 
-  useEffect(() => {
-    if (batch) console.log("Updated batch:", batch);
-  }, [batch]);
-
   if (selectedBatch == null) {
     return (
       <motion.div

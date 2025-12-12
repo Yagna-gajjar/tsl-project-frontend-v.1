@@ -67,7 +67,6 @@ export default function AcademyFormModal({
         });
       }
       setActivity(data);
-      console.log(data.length);
     } catch {
       toast({
         title: "Error",

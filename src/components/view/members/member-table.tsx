@@ -266,10 +266,7 @@ export default function MemberTable({
     if (!selectedMember || !selectedMember.avatar) return;
     try {
       setIsUploading(true);
-      const deleteRes = await deleteAvatar(selectedMember.memberId!, selectedMember.avatar);
-      console.log("Delete Image Response:", deleteRes);
-
-      console.log("Save Member Response (Delete):", deleteRes);
+      await deleteAvatar(selectedMember.memberId!, selectedMember.avatar);
 
       await fetchMembers();
       setSelectedMember(prev => prev ? { ...prev, avatar: null } : null);
@@ -292,7 +289,6 @@ export default function MemberTable({
       formData.append("memberId", String(selectedMember?.memberId));
 
       const uploadRes: any = await saveUrlToMember(formData);
-      console.log("Upload Response:", uploadRes);
 
       await fetchMembers();
       closeUploadModal();

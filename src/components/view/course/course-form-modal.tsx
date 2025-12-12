@@ -76,7 +76,6 @@ export default function CourseFormModal({
             .filter((n: number) => Number.isFinite(n));
         }
         setValues(init);
-        console.log(init, "opop");
       } else {
         setValues({ ...empty, status: "active" } as Course);
       }

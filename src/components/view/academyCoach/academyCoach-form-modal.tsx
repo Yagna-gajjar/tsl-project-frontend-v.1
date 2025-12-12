@@ -95,7 +95,6 @@ export default function AcademyCoachFormModal({
         const res1: Response = await getCoaches({
           limit: 500
         });
-        console.log(res1.data);
 
         const coachoptions = Array.isArray(res1?.data)
           ? res1?.data.map((coach: Coach) => ({
