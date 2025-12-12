@@ -15,7 +15,6 @@ import { getActivities } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
-import { Value } from "@radix-ui/react-select";
 
 type Props = {
   isOpen: boolean;
@@ -129,7 +128,7 @@ export function BatchFormModal({
 
   const getAllActivity = async () => {
     try {
-      const response: Response = await getActivities({ limit: 100 });
+      const response: Response<Activity[]> = await getActivities({ limit: 100 });
       const items = response?.data || [];
 
       setActivityOptions(items);
@@ -379,7 +378,7 @@ export function BatchFormModal({
         ? courses.find((c) => Number(c.id) === Number(courseIdVal))
         : undefined;
 
-      setValues((prev) => {
+      setValues((prev: any) => {
         let nextWeekDays = prev.weekDays;
         if (selectedCourse && selectedCourse.weekDays != null) {
           const auto = numberToWeekArray(selectedCourse.weekDays as any);
@@ -520,7 +519,7 @@ export function BatchFormModal({
       if (startMin !== null && endMin !== null && endMin < startMin) {
         errs.endTime = "End time cannot be before start time";
       }
-    } catch {}
+    } catch { }
 
     try {
       const intro = values.introduceDate
@@ -532,7 +531,7 @@ export function BatchFormModal({
       if (intro && susp && susp < intro) {
         errs.suspendedDate = "Suspended date cannot be before introduce date";
       }
-    } catch {}
+    } catch { }
 
     return errs;
   }, [values]);

@@ -3,7 +3,7 @@ import AppointmentTable from "@/components/view/appointment/appointment-table";
 import AppointmentViewModal from "@/components/view/appointment/appointment-view-modal";
 
 export default function AppointmentsPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey] = useState(0);
 
 
   const [viewOpen, setViewOpen] = useState(false);

@@ -14,6 +14,7 @@ export interface EnrollmentSummary {
   courseName?: string | null;
   academyName?: string | null;
   sessionUnits?: number[] | number;
+  memberId?: number;
 }
 
 interface Props {
@@ -87,7 +88,9 @@ export default function AppointmentModal({
 
     setLoading(true);
     try {
-      const res = await getBatchMember(enrollmentId);
+      const res = await getBatchMember({
+        enrollmentId: enrollmentId
+      });
       let members: any = [];
       if (Array.isArray(res)) members = res;
       else if (Array.isArray((res as any).data)) members = (res as any).data;
@@ -421,9 +424,8 @@ export default function AppointmentModal({
                                     )} - ${format(
                                       new Date(`2023-01-01T${b.endTime}`),
                                       "hh:mm a"
-                                    )} | Seats: ${b.activeMemberCount} / ${
-                                      b.batchCapacity
-                                    }`}
+                                    )} | Seats: ${b.activeMemberCount} / ${b.batchCapacity
+                                      }`}
                                   </option>
                                 ))}
                               </motion.select>

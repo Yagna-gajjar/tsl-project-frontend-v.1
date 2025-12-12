@@ -19,7 +19,7 @@ export default function EnrollmentPanel({
   memberName,
   onBatchSelect,
 }: EnrollmentPanelProps) {
-  const [error, setError] = useState<string | null>(null);
+  const [error, _] = useState<string | null>(null);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -65,8 +65,8 @@ export default function EnrollmentPanel({
       >
         <EnrollmentFormNew
           memberId={selectedMemberId}
-          memberName={memberName}
-          onBatchSelect={onBatchSelect}
+          memberName={memberName as string}
+          onBatchSelect={onBatchSelect as any}
         />
       </motion.div>
 

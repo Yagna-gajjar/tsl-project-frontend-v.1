@@ -23,8 +23,6 @@ import {
   Book,
   IndianRupee,
   Crown,
-  ParkingCircle,
-  icons,
   Calendar1Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -142,7 +140,6 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   { name: "payment", href: "/payment", icon: BarChart3 },
-  { name: "Parking", href: "/parking", icon: ParkingCircle },
   { name: "Debit Note", href: "/debit-note", icon: CreditCard },
   {
     name: "Membership",

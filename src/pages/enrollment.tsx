@@ -6,7 +6,7 @@ import EnrollmentViewModal from "@/components/view/enrollment/enrollment-view-mo
 export default function EnrollmentPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [viewData, setViewData] = useState<number>();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey] = useState(0);
 
   const openView = (row: Enrollment) => {
     setViewData(row.enrollmentId);

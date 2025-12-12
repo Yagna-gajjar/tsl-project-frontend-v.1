@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Users, Building2, Clipboard, Clock, X } from "lucide-react";
+import { BookOpen, Users, Building2, Clock, X } from "lucide-react";
 import type { Batch } from "@/types/batch";
 import { useCallback, useEffect, useState } from "react";
 import type { Response } from "@/types/response";
@@ -39,7 +39,6 @@ export default function BatchDetailsPanel({
 
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(false);
-  const [allBatches, setAllBatches] = useState<Batch[] | null>(null);
 
   useEffect(() => {
     const fetchBatch = async (id: number) => {
@@ -141,9 +140,9 @@ export default function BatchDetailsPanel({
   }
 
   const coachFullName =
-    batch?.coachFirstName && batch?.coachLastName
-      ? `${batch.coachFirstName} ${batch.coachLastName}`
-      : batch?.coachFirstName || "Unknown Coach";
+    batch?.coachName
+      ? `${batch.coachName}`
+      : "Unknown Coach";
 
   const fallbackLetter = coachFullName
     ? coachFullName.charAt(0).toUpperCase()
@@ -382,8 +381,8 @@ export default function BatchDetailsPanel({
                                 <div className="flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
                                   <span>
-                                    {b.startTime?.slice(0, 5) ?? "-"} -{" "}
-                                    {b.endTime?.slice(0, 5) ?? "-"}
+                                    {(b?.startTime as string).slice(0, 5) ?? "-"} -{" "}
+                                    {(b?.endTime as string).slice(0, 5) ?? "-"}
                                   </span>
                                 </div>
 
@@ -391,10 +390,8 @@ export default function BatchDetailsPanel({
                                   <Users className="h-3.5 w-3.5" />
                                   <span>
                                     Coach:{" "}
-                                    {b.coachFirstName
-                                      ? `${b.coachFirstName} ${
-                                          b.coachLastName ?? ""
-                                        }`
+                                    {b.coachName
+                                      ? `${b.coachName}`
                                       : "N/A"}
                                   </span>
                                 </div>
@@ -408,9 +405,8 @@ export default function BatchDetailsPanel({
                                 Seats
                               </div>
                               <div
-                                className={`text-sm font-medium ${
-                                  isFull ? "text-red-600" : "text-foreground"
-                                }`}
+                                className={`text-sm font-medium ${isFull ? "text-red-600" : "text-foreground"
+                                  }`}
                               >
                                 {b.activeMemberCount} / {b.batchCapacity}
                               </div>

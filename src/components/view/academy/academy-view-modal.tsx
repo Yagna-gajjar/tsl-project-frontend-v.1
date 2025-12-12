@@ -47,26 +47,26 @@ const fields: FieldConfig<Academy>[] = [
     key: "registrationDate",
     label: "Registration Date",
     icon: Calendar,
-    render: (v) => (v ? formatDateForInput(v) : "-"),
+    render: (v) => (v ? formatDateForInput(v as string) : "-"),
   },
   {
     key: "discontinuedDate",
     label: "Discontinued Date",
     icon: Calendar,
-    render: (v) => (v ? formatDateForInput(v) : "-"),
+    render: (v) => (v ? formatDateForInput(v as string) : "-"),
   },
   { key: "addressId", label: "Address ID", icon: MapPin },
   {
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    render: (v) => (v ? formatDateForInput(v) : "-"),
+    render: (v) => (v ? formatDateForInput(v as string) : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v) => (v ? formatDateForInput(v) : "-"),
+    render: (v) => (v ? formatDateForInput(v as string) : "-"),
   },
 ];
 

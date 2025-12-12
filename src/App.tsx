@@ -45,7 +45,6 @@ import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
 import MembershipPage from "./pages/membership";
 import StaffAttendance from "./pages/staff-attendance";
-import ParkingPage from "./pages/parking";
 import MedicalBreak from "./components/view/enrollment-actions/MedicalBreak";
 import BatchConnectionsPage from "./pages/batchConnection";
 import CoachAssignmentsPage from "./pages/coachAssignment";
@@ -110,7 +109,6 @@ export default function App() {
                 />
                 <Route path="/member" element={<MemberPage />} />
                 <Route path="/academy" element={<AcademyPage />} />
-                <Route path="/parking" element={<ParkingPage />} />
                 <Route path="/staff-management/coach" element={<CoachPage />} />
                 <Route
                   path="/staff-management/academy-coaches"

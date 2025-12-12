@@ -38,8 +38,8 @@ export function getAcademyById(id: number): Promise<Response<Academy>> {
 
 export function createAcademy(
   payload: Omit<Academy, "academyId" | "createdAt" | "updatedAt">
-): Promise<Response> {
-  return request<Response>(ACADEMY_BASE, {
+): Promise<Response<Academy>> {
+  return request<Response<Academy>>(ACADEMY_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -48,8 +48,8 @@ export function createAcademy(
 export function updateAcademy(
   id: number,
   payload: Partial<Academy>
-): Promise<Response> {
-  return request<Response>(`${ACADEMY_BASE}/${id}`, {
+): Promise<Response<Academy>> {
+  return request<Response<Academy>>(`${ACADEMY_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });

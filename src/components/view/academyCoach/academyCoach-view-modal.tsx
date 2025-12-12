@@ -60,13 +60,13 @@ export default function AcademyCoachViewModal({
   onClose,
 }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string): Promise<AcademyCoach> => {
+    async (id?: number | string): Promise<AcademyCoach | any> => {
       const useId = id ?? academyCoachesId;
       if (!useId) throw new Error("Academy Coach ID missing");
 
       const res: Response<AcademyCoach> = await getAcademyCoachById(Number(useId));
 
-      if (res && res.data) return res.data;
+      if (res && res.data) return res?.data;
     },
     [academyCoachesId]
   );

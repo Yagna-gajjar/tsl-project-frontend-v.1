@@ -22,46 +22,46 @@ type Props = {
 const fields: FieldConfig<Batch>[] = [
   { key: "batchName", label: "Batch Name", icon: Type },
   { key: "courseName", label: "Course" },
-  { key: "coachFirstName", label: "Coach", icon: Users },
+  { key: "coachName", label: "Coach", icon: Users },
   { key: "facilityName", label: "Facility", icon: Building2 },
   { key: "areaName", label: "Area", icon: MapPin },
   {
     key: "startTime",
     label: "Start Time",
     icon: Calendar,
-    render: (v: Batch["startTime"]) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v) => (v ? new Date(v as number).toLocaleDateString() : "-"),
   },
   {
     key: "endTime",
     label: "End Time",
     icon: Calendar,
-    render: (v: Batch["endTime"]) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v) => (v ? new Date(v as number).toLocaleDateString() : "-"),
   },
   {
     key: "introduceDate",
     label: "Introduce Date",
     icon: Calendar,
-    render: (v: Batch["introduceDate"]) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v) => (v ? new Date(v as number).toLocaleDateString() : "-"),
   },
   {
     key: "suspendedDate",
     label: "Suspended Date",
     icon: Calendar,
-    render: (v: Batch["suspendedDate"]) => (v ? new Date(v).toLocaleDateString() : "-"),
+    render: (v) => (v ? new Date(v as number).toLocaleDateString() : "-"),
   },
   { key: "weekDays", label: "Week Days", icon: Hash },
   {
     key: "status",
     label: "Status",
     icon: Activity,
-    render: (v: Batch["status"]) => (
+    render: (v) => (
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${v === "active"
-            ? "bg-green-100 text-green-800"
-            : "bg-yellow-100 text-yellow-800"
+          ? "bg-green-100 text-green-800"
+          : "bg-yellow-100 text-yellow-800"
           }`}
       >
-        {v ?? "-"}
+        {v as number ?? "-"}
       </span>
     ),
   },
@@ -69,13 +69,13 @@ const fields: FieldConfig<Batch>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    render: (v: Batch["createdAt"]) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as number).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: Batch["updatedAt"]) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as number).toLocaleString() : "-"),
   },
 ];
 

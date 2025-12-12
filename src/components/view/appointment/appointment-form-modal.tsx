@@ -8,7 +8,6 @@ import {
   createAppointment,
   updateAppointment,
 } from "@/api/appointment.api";
-import type { Response } from "@/types/response";
 import { toast } from "@/hooks/use-toast";
 import { getEnrollments } from "@/api/enrollment.api";
 import { getBatch } from "@/api/batch.api";
