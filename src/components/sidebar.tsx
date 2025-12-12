@@ -74,8 +74,8 @@ const navigationItems: NavigationItem[] = [
     href: "/batch",
     icon: Layers,
     submenu: [
-      { label: "Batches", href: "batch/batch", icon: User },
-      { label: "Batch Connection", href: "batch/batch-connection", icon: User },
+      { label: "Batches", href: "/batch/batches", icon: User },
+      { label: "Batch Connection", href: "/batch/batch-connection", icon: User },
     ],
   },
   {

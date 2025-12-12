@@ -18,7 +18,7 @@ type Props = {
 
 export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Batch[]>([]);
-  const [_, setIsLoading] = useState(true);
+  const [loading, setIsLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
   const [search, setSearch] = useState<string>("");
@@ -213,7 +213,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => (
         <div className="flex flex-col">
           <span className="font-medium">
-            {r.coachName??"-"}{" "}
+            {r.coachName ?? "-"}{" "}
           </span>
         </div>
       ),
@@ -329,6 +329,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
     <div>
       <DataTable<Batch>
         data={data}
+        isLoading={loading}
         columns={columns}
         pagination={{
           page,

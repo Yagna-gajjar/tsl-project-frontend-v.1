@@ -80,24 +80,28 @@ export default function AcademyCoachFormModal({
         setFieldErrors({});
         setError(null);
 
-        const res: Response<Academy[]> = await getAcademies();
+        const res: Response<Academy[]> = await getAcademies({
+          limit: 100
+        });
         const academyoptions = Array.isArray(res.data)
           ? res.data.map((academy: Academy) => ({
-              value: academy.academyId as number,
-              label: academy.academyName as string,
-            }))
+            value: academy.academyId as number,
+            label: academy.academyName as string,
+          }))
           : [];
 
         setAcademyOptions(academyoptions);
 
-        const res1: Response = await getCoaches();
+        const res1: Response = await getCoaches({
+          limit: 500
+        });
         console.log(res1.data);
 
         const coachoptions = Array.isArray(res1?.data)
           ? res1?.data.map((coach: Coach) => ({
-              value: coach.coachId,
-              label: coach.coachFirstName + " " + coach.coachLastName,
-            }))
+            value: coach.coachId,
+            label: coach.coachFirstName + " " + coach.coachLastName,
+          }))
           : [];
 
         setCoachOptions(coachoptions);

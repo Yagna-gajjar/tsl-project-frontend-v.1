@@ -14,6 +14,7 @@ export interface BatchQuery {
   courseName?: string | null;
   courseId?: number;
   batchType?: string;
+  academyId?: number;
 }
 
 const BATCH_BASE = import.meta.env.VITE_APP_API_URL + "/batch";
@@ -31,6 +32,7 @@ export function getBatch(params: BatchQuery = {}): Promise<Response<Batch[]>> {
     courseName: params.courseName ?? undefined,
     courseId: params.courseId ?? undefined,
     batchType: params.batchType ?? undefined,
+    academyId: params.academyId ?? undefined,
   });
 
   return request<Response<Batch[]>>(`${BATCH_BASE}${qs}`);

@@ -129,7 +129,7 @@ export default function App() {
                   element={<CoachAssignmentsPage />}
                 />
                 <Route path="/courses" element={<CoursePage />} />
-                <Route path="/batch/batch" element={<BatchPage />} />
+                <Route path="/batch/batches" element={<BatchPage />} />
                 <Route
                   path="/batch/attendance-sheet/:id"
                   element={<AttendanceSheet />}

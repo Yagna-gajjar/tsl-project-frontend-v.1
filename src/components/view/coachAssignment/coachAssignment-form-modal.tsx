@@ -89,9 +89,8 @@ export default function CoachAssignmentFormModal({
           bRes: Response<Batch[]>
         ] = await Promise.all([
           getAcademyCoaches({ limit: 1000, academyId: values.academyId }),
-          getBatch({ limit: 1000 }),
+          getBatch({ limit: 1000, academyId: values.academyId }),
         ]);
-        console.log(cRes, " = academy");
 
         const coaches = Array.isArray(cRes?.data)
           ? cRes.data
@@ -103,7 +102,6 @@ export default function CoachAssignmentFormModal({
           : Array.isArray(bRes)
           ? bRes
           : [];
-        console.log(coaches, "jjdo");
         setCoachOptions(coaches);
 
         setBatchOptions(batches);
