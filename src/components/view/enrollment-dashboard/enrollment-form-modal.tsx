@@ -308,7 +308,7 @@ const EnrollmentFormNew = ({
         }
 
         const res: Response<Batch[]> | any = await getBatch({
-          courseId: courseIdNum,
+          academyId: values.academyId
         });
 
         const allBatches = res?.data || [];
@@ -322,8 +322,7 @@ const EnrollmentFormNew = ({
 
     loadBatches();
     fetchDiscount();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values?.courseId, course]);
+  }, [values?.courseId, course, values.academyId]);
 
   useEffect(() => {
     if (values.isDiscounted) {
@@ -826,17 +825,16 @@ const EnrollmentFormNew = ({
     ...(Number(values.sessionUnits) > 0
       ? []
       : [
-          {
-            name: "weekDays",
-            label: `Week Days (Max ${
-              (selectedCourse as any)?.noOfDaysInWeek || 7
+        {
+          name: "weekDays",
+          label: `Week Days (Max ${(selectedCourse as any)?.noOfDaysInWeek || 7
             })`,
-            type: "multiselect",
-            options: WEEK_DAYS,
-            // IMPORTANT: FormContent should expect the value for this field in values.weekDays (number[])
-            required: true,
-          },
-        ]),
+          type: "multiselect",
+          options: WEEK_DAYS,
+          // IMPORTANT: FormContent should expect the value for this field in values.weekDays (number[])
+          required: true,
+        },
+      ]),
     {
       name: "enrollmentDate",
       label: "Enrollment Date",
@@ -968,9 +966,8 @@ const EnrollmentFormNew = ({
       label: "Coach Name",
       type: "select",
       options: coaches.map((c) => ({
-        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${
-          c.coachLastName
-        }`.trim(),
+        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${c.coachLastName
+          }`.trim(),
         value: c.coachId,
       })),
     },
@@ -1017,14 +1014,14 @@ const EnrollmentFormNew = ({
     },
     ...(paymentValues.paymentMode !== "cash"
       ? [
-          {
-            name: "transactionId",
-            label: "Transaction ID",
-            type: "text",
-            required: true,
-            disabled: false,
-          },
-        ]
+        {
+          name: "transactionId",
+          label: "Transaction ID",
+          type: "text",
+          required: true,
+          disabled: false,
+        },
+      ]
       : []),
     {
       name: "paid",
