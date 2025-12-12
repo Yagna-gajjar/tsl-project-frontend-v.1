@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
@@ -80,7 +78,7 @@ export function MemberFormModal({
   };
 
   const [values, setValues] = useState<MemberFormState>(empty);
-  const [loading,] = useState(false);
+  const [loading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -246,8 +244,7 @@ export function MemberFormModal({
 
     const contactVal = String(values.contactNumber ?? "").trim();
     if (contactVal && !validatePhone(contactVal))
-      newFieldErrors.contactNumber =
-        "Enter a valid contact number (10 digits)";
+      newFieldErrors.contactNumber = "Enter a valid contact number (10 digits)";
 
     if (Object.keys(newFieldErrors).length > 0) {
       setFieldErrors(newFieldErrors);
@@ -280,7 +277,7 @@ export function MemberFormModal({
         city: values.city,
         state: values.state,
         country: values.country,
-        pinCode: values.pinCode
+        pinCode: values.pinCode,
       };
 
       let res: any;
@@ -311,7 +308,6 @@ export function MemberFormModal({
         return;
       }
 
-      // SUCCESS TOAST
       toast({
         title: isEdit ? "Member updated" : "Member created",
         description: `${String(
@@ -322,8 +318,8 @@ export function MemberFormModal({
 
       onSaved?.(row as Member);
       onClose();
-    } catch (err: any) {
-      const message = err?.message ?? "Failed to save";
+    } catch {
+      const message = "Failed to save";
       setError(message);
 
       toast({
@@ -334,7 +330,6 @@ export function MemberFormModal({
     } finally {
       setIsSubmitting(false);
     }
-
   }, [values, isEdit, initialData, onClose, onSaved]);
 
   return (
@@ -358,13 +353,13 @@ export function MemberFormModal({
               loading={loading}
               error={error}
               isSubmitting={isSubmitting}
-              onChange={onChange as any}
+              onChange={onChange}
               layout={layout}
             />
           </div>
           <FormFooter
             onClose={onClose}
-            onSubmit={handleSubmit as any}
+            onSubmit={handleSubmit}
             submitLabel={isEdit ? "Update" : "Create"}
             isSubmitting={isSubmitting}
           />

@@ -22,7 +22,7 @@ type Props = {
 const empty: membershipMaster = {
   membershipMasterId: 0,
   membershipType: "",
-  introduceDate: format(new Date(), "yyyy-MM-dd") as any,
+  introduceDate: format(new Date(), "yyyy-MM-dd"),
   suspendDate: undefined as unknown as Date,
   membershipDetails: "",
   membershipDurationInDays: 0,
@@ -69,7 +69,7 @@ export default function MembershipMasterFormModal({
 
       setValues({
         ...initialData,
-        introduceDate: intro as any,
+        introduceDate: intro,
         suspendDate: suspend as unknown as Date,
         createdAt: initialData.createdAt
           ? new Date(initialData.createdAt)
@@ -81,7 +81,7 @@ export default function MembershipMasterFormModal({
     } else {
       setValues({
         ...empty,
-        introduceDate: format(new Date(), "yyyy-MM-dd") as any,
+        introduceDate: format(new Date(), "yyyy-MM-dd"),
         suspendDate: "" as unknown as Date,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -206,7 +206,7 @@ export default function MembershipMasterFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields:FormFieldConfig<membershipMaster>[] = [
+  const fields: FormFieldConfig<membershipMaster>[] = [
     {
       name: "membershipType",
       label: "Membership Type",

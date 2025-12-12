@@ -48,27 +48,27 @@ export default function MembershipMasterTable({
           filters.guardianEntry === "true"
             ? true
             : filters.guardianEntry === "false"
-              ? false
-              : undefined,
+            ? false
+            : undefined,
         guestAllowed:
           filters.guestAllowed === "true"
             ? true
             : filters.guestAllowed === "false"
-              ? false
-              : undefined,
+            ? false
+            : undefined,
         clubAccess:
           filters.clubAccess === "true"
             ? true
             : filters.clubAccess === "false"
-              ? false
-              : undefined,
+            ? false
+            : undefined,
       });
 
       const rowsRaw = Array.isArray(res)
         ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-          ? ((res as Record<string, unknown>).data as membershipMaster[])
-          : [];
+        : Array.isArray(res?.data)
+        ? (res.data as membershipMaster[])
+        : [];
 
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
@@ -287,7 +287,7 @@ export default function MembershipMasterTable({
       setDeleteId(null);
       setDeleteOpen(false);
       await loadData();
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to delete membership master",

@@ -150,7 +150,7 @@ export function PaymentFormModal({
         variant: "success",
       });
       onClose();
-    } catch (err) {
+    } catch{
       toast({
         title: "Error",
         description: "Failed to submit payment.",
