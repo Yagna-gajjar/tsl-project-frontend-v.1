@@ -28,6 +28,17 @@ import type { Coach } from "@/types/coach";
 
 import BatchRequestedForm from "@/components/view/enrollment-actions/BatchRequestedForm";
 
+// 1. Constant for mapping days
+const WEEK_DAYS = [
+  { label: "Monday", value: "1" },
+  { label: "Tuesday", value: "2" },
+  { label: "Wednesday", value: "3" },
+  { label: "Thursday", value: "4" },
+  { label: "Friday", value: "5" },
+  { label: "Saturday", value: "6" },
+  { label: "Sunday", value: "7" },
+];
+
 const EnrollmentFormNew = ({
   memberId,
   memberName,
@@ -48,6 +59,9 @@ const EnrollmentFormNew = ({
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [selectedCourse, setSelectedCourse] = useState<Course>();
   const [coaches, setCoaches] = useState<Coach[]>([]);
+
+  // 2. State to hold the array of selected strings for the UI (e.g. ["1", "2"])
+  const [selectedDayList, setSelectedDayList] = useState<string[]>([]);
 
   const [showBatchRequest, setShowBatchRequest] = useState(false);
   const [requestBatchDetails, setRequestBatchDetails] = useState<{
@@ -78,6 +92,7 @@ const EnrollmentFormNew = ({
     startDate: format(Date.now(), "yyyy-MM-dd") as any,
     status: "active",
     batchName: "",
+    weekDays: 0, // Initial value
   });
 
   const [debouncedDays, setDebouncedDays] = useState(values.numberOfDays);
@@ -263,6 +278,10 @@ const EnrollmentFormNew = ({
     if (foundCourse) {
       setSelectedCourse(foundCourse);
 
+      // 3. Reset selected days when course changes
+      setSelectedDayList([]);
+      setValues((prev) => ({ ...prev, weekDays: 0 }));
+
       const sessionCharging = isCourseChargingBySession(foundCourse);
 
       const initialUnits = Number(foundCourse.minEnrollmentUnit ?? 0);
@@ -304,11 +323,10 @@ const EnrollmentFormNew = ({
     };
 
     loadBatches();
-    fetchDiscount(); // will use proper units inside
+    fetchDiscount();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values?.courseId, course]);
 
-  // When discount toggled or discount object changes -> recalc committed using the active units
   useEffect(() => {
     if (values.isDiscounted) {
       const { amount, adjust } = AdjustBillingAmount(values.billingAmount);
@@ -356,7 +374,6 @@ const EnrollmentFormNew = ({
     if (!debouncedCndn || debouncedCndn === 0) {
       if (!selectedCourse) return;
 
-      // Use the appropriate units for original billing amount:
       const units = getActiveUnits(values, selectedCourse);
       const originalBillingAmount =
         units * (selectedCourse.unitRate ?? 0) - values.discountedAmount;
@@ -374,12 +391,10 @@ const EnrollmentFormNew = ({
 
     if (!getActiveUnits(values, selectedCourse) || !debouncedCndn) return;
 
-    // When CNDN present: compute effective billing rate per active unit
     if (!discount) {
       const unitRate = Number(selectedCourse?.unitRate ?? 0);
       const fp = Number(unitRate);
       const units = getActiveUnits(values, selectedCourse);
-      // sp = cndn per total units -> convert to per-unit numeric effect
       const sp = Number((debouncedCndn / units).toFixed(2));
       const effectiveBillingRate = Number((fp - sp).toFixed(2));
 
@@ -500,8 +515,31 @@ const EnrollmentFormNew = ({
         setSelectedActivity(data?.activityName || "");
       }
 
+      if (field === "weekDays") {
+        const limit = (selectedCourse as any)?.noOfDaysInWeek || 7;
+
+        if (Array.isArray(value)) {
+          if (value.length > limit) {
+            toast({
+              title: "Limit Exceeded",
+              description: `You can only select up to ${limit} days for this course.`,
+              variant: "destructive"
+            });
+            return;
+          }
+
+          setSelectedDayList(value);
+
+          const sorted = [...value].sort();
+          const joined = sorted.join("");
+          const numValue = joined ? Number(joined) : 0;
+
+          setValues((prev) => ({ ...prev, weekDays: numValue }));
+          return;
+        }
+      }
+
       if (field === "batchId") {
-        // find the batch, check capacity
         const selectedBatch = batches.find(
           (b) => Number(b.batchId) === Number(value)
         );
@@ -628,11 +666,11 @@ const EnrollmentFormNew = ({
         return;
       }
 
+      // 5. Removed hardcoded weekDays overwrite, allowing user selection from 'values'
       const payload: any = {
         ...values,
-        weekDays: Number(selectedCourse?.weekDays),
+        // weekDays: Number(selectedCourse?.weekDays),  <-- REMOVED THIS
       };
-      
 
       if (debouncedCndn && Number(debitNoteValues.debitNoteAmount) > 0) {
         Object.assign(payload, {
@@ -716,6 +754,7 @@ const EnrollmentFormNew = ({
     }
   };
 
+  // 6. Define Fields, inserting weekDays conditionally
   const fields = [
     {
       name: "memberName",
@@ -774,6 +813,20 @@ const EnrollmentFormNew = ({
       }),
       required: true,
     },
+    // ---- WeekDays Field Logic ----
+    // Only show if sessionUnits are not present (time-based enrollment)
+    ...(Number(values.sessionUnits) > 0
+      ? []
+      : [{
+        name: "weekDays",
+        label: `Week Days (Max ${(selectedCourse as any)?.noOfDaysInWeek || 7})`,
+        type: "multiselect",
+        options: WEEK_DAYS,
+        value: selectedDayList, // Pass array for UI selection
+        required: true,
+      }]
+    ),
+    // -----------------------------
     {
       name: "enrollmentDate",
       label: "Enrollment Date",
@@ -905,9 +958,8 @@ const EnrollmentFormNew = ({
       label: "Coach Name",
       type: "select",
       options: coaches.map((c) => ({
-        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${
-          c.coachLastName
-        }`.trim(),
+        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${c.coachLastName
+          }`.trim(),
         value: c.coachId,
       })),
     },
@@ -954,14 +1006,14 @@ const EnrollmentFormNew = ({
     },
     ...(paymentValues.paymentMode !== "cash"
       ? [
-          {
-            name: "transactionId",
-            label: "Transaction ID",
-            type: "text",
-            required: true,
-            disabled: false,
-          },
-        ]
+        {
+          name: "transactionId",
+          label: "Transaction ID",
+          type: "text",
+          required: true,
+          disabled: false,
+        },
+      ]
       : []),
     {
       name: "paid",
