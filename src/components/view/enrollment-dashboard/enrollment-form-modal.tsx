@@ -28,15 +28,15 @@ import type { Coach } from "@/types/coach";
 
 import BatchRequestedForm from "@/components/view/enrollment-actions/BatchRequestedForm";
 
-// 1. Constant for mapping days
+// WEEK_DAYS constant stays as numbers (1..7)
 const WEEK_DAYS = [
-  { label: "Monday", value: "1" },
-  { label: "Tuesday", value: "2" },
-  { label: "Wednesday", value: "3" },
-  { label: "Thursday", value: "4" },
-  { label: "Friday", value: "5" },
-  { label: "Saturday", value: "6" },
-  { label: "Sunday", value: "7" },
+  { label: "Monday", value: 1 },
+  { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 },
+  { label: "Saturday", value: 6 },
+  { label: "Sunday", value: 7 },
 ];
 
 const EnrollmentFormNew = ({
@@ -60,8 +60,7 @@ const EnrollmentFormNew = ({
   const [selectedCourse, setSelectedCourse] = useState<Course>();
   const [coaches, setCoaches] = useState<Coach[]>([]);
 
-  // 2. State to hold the array of selected strings for the UI (e.g. ["1", "2"])
-  const [selectedDayList, setSelectedDayList] = useState<string[]>([]);
+  // removed selectedDayList; weekDays will be number[] in values
 
   const [showBatchRequest, setShowBatchRequest] = useState(false);
   const [requestBatchDetails, setRequestBatchDetails] = useState<{
@@ -92,7 +91,7 @@ const EnrollmentFormNew = ({
     startDate: format(Date.now(), "yyyy-MM-dd") as any,
     status: "active",
     batchName: "",
-    weekDays: 0, // Initial value
+    weekDays: [], // <-- changed to number[]
   });
 
   const [debouncedDays, setDebouncedDays] = useState(values.numberOfDays);
@@ -278,9 +277,8 @@ const EnrollmentFormNew = ({
     if (foundCourse) {
       setSelectedCourse(foundCourse);
 
-      // 3. Reset selected days when course changes
-      setSelectedDayList([]);
-      setValues((prev) => ({ ...prev, weekDays: 0 }));
+      // Reset weekDays array when course changes
+      setValues((prev) => ({ ...prev, weekDays: [] }));
 
       const sessionCharging = isCourseChargingBySession(foundCourse);
 
@@ -516,25 +514,28 @@ const EnrollmentFormNew = ({
       }
 
       if (field === "weekDays") {
-        const limit = (selectedCourse as any)?.noOfDaysInWeek || 7;
-
+        // Expecting value as array of numbers (or strings that can be Number'ed)
         if (Array.isArray(value)) {
+          // limit is based on selectedCourse.noOfDaysInWeek or 7
+          const limit = (selectedCourse as any)?.noOfDaysInWeek || 7;
+
           if (value.length > limit) {
             toast({
               title: "Limit Exceeded",
               description: `You can only select up to ${limit} days for this course.`,
-              variant: "destructive"
+              variant: "destructive",
             });
             return;
           }
 
-          setSelectedDayList(value);
+          // convert to number[], filter invalid, unique, sort
+          const nums = value
+            .map((v: any) => Number(v))
+            .filter((n: number) => Number.isFinite(n) && n >= 1 && n <= 7);
 
-          const sorted = [...value].sort();
-          const joined = sorted.join("");
-          const numValue = joined ? Number(joined) : 0;
+          const uniqueSorted = Array.from(new Set(nums)).sort((a, b) => a - b);
 
-          setValues((prev) => ({ ...prev, weekDays: numValue }));
+          setValues((prev) => ({ ...prev, weekDays: uniqueSorted }));
           return;
         }
       }
@@ -666,11 +667,20 @@ const EnrollmentFormNew = ({
         return;
       }
 
-      // 5. Removed hardcoded weekDays overwrite, allowing user selection from 'values'
-      const payload: any = {
-        ...values,
-        // weekDays: Number(selectedCourse?.weekDays),  <-- REMOVED THIS
-      };
+      // Build payload: convert weekDays array to compact numeric representation expected by backend
+      const payload: any = { ...values };
+
+      if (Array.isArray(values.weekDays)) {
+        // e.g. [1,3,5] -> "135" -> 135
+        const joined = values.weekDays
+          .map((n) => Number(n))
+          .filter(Number.isFinite)
+          .sort((a, b) => a - b)
+          .join("");
+        payload.weekDays = joined ? Number(joined) : 0;
+      } else if (values.weekDays === null || values.weekDays === undefined) {
+        payload.weekDays = 0;
+      }
 
       if (debouncedCndn && Number(debitNoteValues.debitNoteAmount) > 0) {
         Object.assign(payload, {
@@ -754,7 +764,7 @@ const EnrollmentFormNew = ({
     }
   };
 
-  // 6. Define Fields, inserting weekDays conditionally
+  // Fields: multiselect uses values.weekDays (number[]) directly
   const fields = [
     {
       name: "memberName",
@@ -813,20 +823,20 @@ const EnrollmentFormNew = ({
       }),
       required: true,
     },
-    // ---- WeekDays Field Logic ----
-    // Only show if sessionUnits are not present (time-based enrollment)
     ...(Number(values.sessionUnits) > 0
       ? []
-      : [{
-        name: "weekDays",
-        label: `Week Days (Max ${(selectedCourse as any)?.noOfDaysInWeek || 7})`,
-        type: "multiselect",
-        options: WEEK_DAYS,
-        value: selectedDayList, // Pass array for UI selection
-        required: true,
-      }]
-    ),
-    // -----------------------------
+      : [
+          {
+            name: "weekDays",
+            label: `Week Days (Max ${
+              (selectedCourse as any)?.noOfDaysInWeek || 7
+            })`,
+            type: "multiselect",
+            options: WEEK_DAYS,
+            // IMPORTANT: FormContent should expect the value for this field in values.weekDays (number[])
+            required: true,
+          },
+        ]),
     {
       name: "enrollmentDate",
       label: "Enrollment Date",
@@ -958,8 +968,9 @@ const EnrollmentFormNew = ({
       label: "Coach Name",
       type: "select",
       options: coaches.map((c) => ({
-        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${c.coachLastName
-          }`.trim(),
+        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${
+          c.coachLastName
+        }`.trim(),
         value: c.coachId,
       })),
     },
@@ -1006,14 +1017,14 @@ const EnrollmentFormNew = ({
     },
     ...(paymentValues.paymentMode !== "cash"
       ? [
-        {
-          name: "transactionId",
-          label: "Transaction ID",
-          type: "text",
-          required: true,
-          disabled: false,
-        },
-      ]
+          {
+            name: "transactionId",
+            label: "Transaction ID",
+            type: "text",
+            required: true,
+            disabled: false,
+          },
+        ]
       : []),
     {
       name: "paid",

@@ -66,6 +66,8 @@ function SearchableMultiselect({
   placeholder?: string;
   disabled?: boolean;
 }) {
+  console.log(value);
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -364,6 +366,8 @@ export default function FormFieldInput({
         );
 
       case "multiselect":
+        console.log(value);
+
         return (
           <SearchableMultiselect
             options={options || []}

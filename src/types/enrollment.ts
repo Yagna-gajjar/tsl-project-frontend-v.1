@@ -23,6 +23,7 @@ export interface Enrollment {
   adjustment: number;
   remarks?: string;
   createdAt?: Date;
+  weekDays?: number[];
   updatedAt?: Date;
 
   memberFirstName?: string;

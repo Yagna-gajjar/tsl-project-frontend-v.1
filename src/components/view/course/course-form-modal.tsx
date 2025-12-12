@@ -98,7 +98,7 @@ export default function CourseFormModal({
 
   const onChange = (
     field: keyof Course,
-    val: string | number | boolean | Date | Object | undefined
+    val: string | number | boolean | Date | undefined
   ) => {
     setValues((p) => ({ ...p, [field]: val }));
 
@@ -457,18 +457,19 @@ export default function CourseFormModal({
   const weekDaysField =
     Number(values.noOfDaysInWeek) > 0
       ? {
-        name: "weekDays",
-        label: "Week Days",
-        type: "multiselect",
-        options: weekdayOptions,
-        required: true,
-      }
+          name: "weekDays",
+          label: "Week Days",
+          type: "multiselect",
+          options: weekdayOptions,
+          required: true,
+        }
       : {
-        name: "weekDays",
-        label: "Week Days",
-        type: "number",
-        required: true,
-      };
+          name: "weekDays",
+          label: "Week Days",
+          type: "text",
+          disabled: true,
+          required: true,
+        };
 
   const remainingFields: FormFieldConfig<Course>[] = [
     weekDaysField as any,
