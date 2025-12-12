@@ -36,8 +36,8 @@ export function getCourseByAcademy(academyId: number): Promise<Course[]> {
   return request<Course[]>(`${COURSE_BASE}?academyId=${academyId}`);
 }
 
-export function getCourseById(id: number): Promise<Course> {
-  return request<Course>(`${COURSE_BASE}/${id}`);
+export function getCourseById(id: number): Promise<Response<Course>> {
+  return request<Response<Course>>(`${COURSE_BASE}/${id}`);
 }
 
 export function createCourse(

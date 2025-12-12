@@ -66,14 +66,12 @@ function SearchableMultiselect({
   placeholder?: string;
   disabled?: boolean;
 }) {
-  console.log(value);
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // normalize incoming value to strings for comparison
   const valueStrings = new Set((value || []).map((v) => String(v)));
 
   const filteredOptions = options.filter((opt) =>
@@ -366,8 +364,6 @@ export default function FormFieldInput({
         );
 
       case "multiselect":
-        console.log(value);
-
         return (
           <SearchableMultiselect
             options={options || []}

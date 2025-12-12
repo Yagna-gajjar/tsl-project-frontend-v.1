@@ -130,9 +130,6 @@ const BatchChange = () => {
       };
 
       const result = await changeBatch(payload);
-
-      console.log(result);
-
       if (result.success) {
         toast({
           title: "Success!",

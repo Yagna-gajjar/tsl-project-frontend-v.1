@@ -100,7 +100,6 @@ export function FamilyFormModal({
   }, [isOpen]);
 
   useEffect(() => {
-    console.log(itRows, "ppp", values);
     setIdentityTypeOptions(
       itRows
         .filter((r: any) => r.familyTypeId === Number(values.familyTypeId))

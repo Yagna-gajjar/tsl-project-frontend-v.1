@@ -157,10 +157,7 @@ export default function BatchConnectionFormModal({
     } finally {
       setIsSubmitting(false);
     }
-  }, [validate, values, initialData, onSave, onClose]);
-    
-    console.log(mainOptions);
-    
+  }, [validate, values, initialData, onSave, onClose]);    
 
   const fields = [
     {

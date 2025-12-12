@@ -79,14 +79,12 @@ export function deleteMember(id: number): Promise<Response<Member>> {
 
 export async function saveUrlToMember(formData: FormData): Promise<Response> {
 	try {
-		console.log(formData, " formData");
 		const res = await fetch(`${MEMBER_BASE}/avatar`, {
 			method: "POST",
 			body: formData,
 		});
 
 		const data = await res.json();
-		console.log(data, "api.ts no code");
 		return data;
 	} catch (error) {
 		console.error("Upload failed:", error);

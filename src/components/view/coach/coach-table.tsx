@@ -158,7 +158,6 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
         coachFirstName: filters.coachFirstName as string | undefined,
         status: filters.status as string | undefined,
       });
-      console.log(res?.pagination?.total);
 
       setTotal(res?.pagination?.total);
 

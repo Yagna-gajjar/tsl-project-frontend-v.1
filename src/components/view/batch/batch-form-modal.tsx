@@ -252,7 +252,6 @@ export function BatchFormModal({
         academyType: activityName,
         limit: 100,
       });
-      console.log(academiesData, "pppjas");
       const academyArr = Array.isArray(
         (academiesData as any)?.data ?? academiesData
       )

@@ -69,7 +69,6 @@ export function deleteUser(id: number): Promise<Response<User>> {
 }
 
 export function login(payload: LoginPayload): Promise<LoginResponseData> {
-	console.log(payload, " payload");
 	return request<LoginResponseData>(`${USER_BASE}/login`, {
 		method: "POST",
 		body: JSON.stringify(payload),

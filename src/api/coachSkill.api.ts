@@ -37,9 +37,6 @@ export function getCoachSkills(
     currentlyInTeam: params.currentlyInTeam ?? undefined,
   });
 
-  console.log(params);
-  
-
   return request<Response<CoachSkill[]>>(`${COACH_SKILL_BASE}${qs}`);
 }
 

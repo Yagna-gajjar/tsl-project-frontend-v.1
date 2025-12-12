@@ -29,7 +29,6 @@ const FreezeEnrollment = () => {
   const [oldEnrollment, setOldEnrollment] = useState<Enrollment>();
   const [fieldErrors] = useState<any>({});
   const [isSubmitting] = useState<boolean>(false);
-  const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [activity, setActivity] = useState<Activity[]>([]);
   const [academy, setAcademy] = useState<Academy[]>([]);
   const [course, setCourse] = useState<Course[]>([]);
@@ -140,13 +139,10 @@ const FreezeEnrollment = () => {
         });
         const data = Array.isArray(res?.data) ? res.data : [];
         if (data.length > 0) {
-          // your select expects the activity id stored in values.activityName
           setValues((prev: any) => ({
             ...prev,
             activityName: Number(data[0].activityId),
           }));
-          // also set selectedActivity text so academies search can use it
-          setSelectedActivity(data[0].activityName || "");
         }
         setActivity(data as any);
       } catch (err) {
@@ -415,11 +411,6 @@ const FreezeEnrollment = () => {
 
     if (numFields.includes(field)) {
       value = Number(value);
-    }
-
-    if (field === "activityName") {
-      const data = activity.find((e) => e.activityId === Number(value));
-      setSelectedActivity(data?.activityName || "");
     }
 
     setValues((prev) => ({ ...prev, [field]: value }));

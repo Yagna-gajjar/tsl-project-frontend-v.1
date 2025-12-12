@@ -17,7 +17,8 @@ import {
   Calculator,
   Grid3X3,
   List,
-  ArrowDown, // Added for visual separation
+  ArrowDown,
+  type LucideIcon, // Added for visual separation
 } from "lucide-react";
 
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -120,7 +121,7 @@ const RefundEnrollment = () => {
     const fetchCourse = async () => {
       if (!oldEnrollment?.courseId) return;
       try {
-        const res: Response<Course | any> = await getCourseById(
+        const res: Response<Course> = await getCourseById(
           Number(oldEnrollment.courseId)
         );
         const c = res?.data;
@@ -145,7 +146,7 @@ const RefundEnrollment = () => {
     const usedDays = calculateDays(oldEnrollment.startDate, refundDate);
     const remainingDays = Math.max(0, totalDays - usedDays);
     const fullDailyRate = Number(course.unitRate ?? 0);
-    const refundBeforeProcessing = Number(
+    const refundBeforeProcessing: number | any = Number(
       oldEnrollment.commitedAmount - usedDays * fullDailyRate
     ).toFixed(2);
     const fullTotalAtFullRate = totalDays * fullDailyRate;
@@ -157,7 +158,7 @@ const RefundEnrollment = () => {
     const processingCharge = Number(values.processingCharge ?? 0);
     const finalRefundAmount = Math.max(
       0,
-      refundBeforeProcessing - processingCharge
+      Number(refundBeforeProcessing) - processingCharge
     );
 
     setComputed({
@@ -282,7 +283,9 @@ const RefundEnrollment = () => {
   };
 
   // Helper Component for Detailed List Items
-  const DetailRow = ({ icon: Icon, label, value, valueClass = "" }) => (
+  const DetailRow = ({ icon: Icon, label, value, valueClass = "" }: {
+    icon: LucideIcon, label: string, value: string | Date | number | boolean, valueClass?: string
+  }) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
       <span className="flex items-center text-sm text-gray-600 dark:text-gray-400">
         <Icon className="w-4 h-4 mr-2 text-blue-500 shrink-0" />
@@ -291,7 +294,7 @@ const RefundEnrollment = () => {
       <span
         className={`text-sm font-medium text-gray-900 dark:text-white ${valueClass} text-right break-words`}
       >
-        {value}
+        {value as any}
       </span>
     </div>
   );
@@ -334,13 +337,10 @@ const RefundEnrollment = () => {
             error={error}
             isSubmitting={isSubmitting}
             onChange={onChange as any}
-            // Use responsive grid for form content
             layout="grid"
-            gridClasses="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
           />
         </motion.div>
 
-        {/* --- Visual Separator --- */}
         <motion.div
           variants={itemVariants}
           className="flex justify-center py-2"
@@ -502,7 +502,6 @@ const RefundEnrollment = () => {
             2
           )})`}
           isSubmitting={isSubmitting}
-          className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3 shadow-2xl"
         />
       </div>
     </div>
