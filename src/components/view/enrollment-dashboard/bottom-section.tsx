@@ -358,32 +358,26 @@ export default function EnrollmentHistory({
                       transition={{ delay: index * 0.05 }}
                       className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                     >
-                      {/* Main Content */}
                       <div className="p-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                          {/* Left Section */}
                           <div className="space-y-2 flex-1">
-                            {/* Badge */}
                             <span
-                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
-                                item.status === "active"
-                                  ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
-                                  : item.changeType === "course-change"
+                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${item.status === "active"
+                                ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
+                                : item.changeType === "course-change"
                                   ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
                                   : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                              }`}
+                                }`}
                             >
                               {item.changeType
                                 ? item.changeType.replace("-", " ")
                                 : item.status}
                             </span>
 
-                            {/* Course Name */}
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                               {item.courseName}
                             </h3>
 
-                            {/* Academy Name */}
                             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                               <TrendingUp className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                               <span className="font-semibold">
@@ -392,7 +386,6 @@ export default function EnrollmentHistory({
                             </div>
                           </div>
 
-                          {/* Right Section - Amount & Duration */}
                           <div className="flex flex-col sm:items-end gap-2">
                             <div className="flex items-baseline gap-1">
                               <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -476,9 +469,8 @@ export default function EnrollmentHistory({
                                     links
                                   </span>
                                   <ChevronDown
-                                    className={`h-4 w-4 transition-transform ${
-                                      isExpanded ? "rotate-180" : ""
-                                    }`}
+                                    className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
+                                      }`}
                                   />
                                 </button>
                               )}
@@ -547,7 +539,6 @@ export default function EnrollmentHistory({
         </div>
       </motion.div>
 
-      {/* Payment Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <PaymentFormModal
@@ -567,7 +558,7 @@ export default function EnrollmentHistory({
         <AppointmentModal
           open={appointmentDialogOpen}
           onOpenChange={(v) => setAppointmentDialogOpen(v)}
-          selectedEnrollment={selectedEnrollment}
+          selectedEnrollment={selectedEnrollment as any}
         />
       )}
     </>

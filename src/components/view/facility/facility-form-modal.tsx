@@ -118,8 +118,6 @@ export function FacilityFormModal({
           ? res.success === true || String(res.success) === "true"
           : true;
 
-      const row = res?.data ?? res;
-
       if (!ok) {
         const msg = res?.message ?? "Failed to save";
         setError(msg);

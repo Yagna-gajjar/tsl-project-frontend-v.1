@@ -49,7 +49,7 @@ const EnrollmentFormNew = ({
   onBatchSelect: (id: number) => void;
 }) => {
   const [error, setError] = useState<string>("");
-  const [members, setMembers] = useState<Member[]>([]);
+  const [_, setMembers] = useState<Member[]>([]);
   const [activity, setActivity] = useState<Activity[]>([]);
   const [academy, setAcademy] = useState<Academy[]>([]);
   const [allAcademies, setAllAcademies] = useState<Academy[]>([]);
@@ -712,7 +712,7 @@ const EnrollmentFormNew = ({
 
       Object.assign(payload, paymentPayload);
 
-      const res: Response<Enrollment> = await createEnrollment(payload as any);
+      const res: Response<Enrollment> = await createEnrollment(payload);
       if (res.success) {
         toast({
           title: "Success",
@@ -810,8 +810,8 @@ const EnrollmentFormNew = ({
 
         const isFull = b.activeMemberCount >= b.batchCapacity;
 
-        const label = `${b.batchName} | ${format(b.startTime)}-${format(
-          b.endTime
+        const label = `${b.batchName} | ${format(b.startTime as string)}-${format(
+          b.endTime as string
         )} | Seats: ${b.activeMemberCount} / ${b.batchCapacity}`;
 
         return {
@@ -1074,7 +1074,7 @@ const EnrollmentFormNew = ({
               error={error}
               isSubmitting={false}
               onChange={(name: string | number, val: any) => {
-                onPaymentChange(name, val);
+                onPaymentChange(name as string, val);
               }}
               layout="grid"
             />

@@ -22,7 +22,7 @@ export interface EnrollmentQuery {
 
 const ENROLLMENT_BASE = import.meta.env.VITE_APP_API_URL + "/enrollment";
 
-export function getEnrollments(params: EnrollmentQuery = {}): Promise<Enrollment[]> {
+export function getEnrollments(params: EnrollmentQuery = {}): Promise<Response<Enrollment[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -38,17 +38,17 @@ export function getEnrollments(params: EnrollmentQuery = {}): Promise<Enrollment
     courseName: params.courseName ?? undefined,
   });
 
-  return request<Enrollment[]>(`${ENROLLMENT_BASE}${qs}`);
+  return request<Response<Enrollment[]>>(`${ENROLLMENT_BASE}${qs}`);
 }
 
-export function getEnrollmentById(id: number): Promise<Response> {
-  return request<Response>(`${ENROLLMENT_BASE}/${id}`);
+export function getEnrollmentById(id: number): Promise<Response<Enrollment>> {
+  return request<Response<Enrollment>>(`${ENROLLMENT_BASE}/${id}`);
 }
 
 export function createEnrollment(
   payload: Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">
-): Promise<Enrollment> {
-  return request<Enrollment>(ENROLLMENT_BASE, {
+): Promise<Response<Enrollment>> {
+  return request<Response<Enrollment>>(ENROLLMENT_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -57,15 +57,15 @@ export function createEnrollment(
 export function updateEnrollment(
   id: number,
   payload: Partial<Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">>
-): Promise<Enrollment> {
-  return request<Enrollment>(`${ENROLLMENT_BASE}/${id}`, {
+): Promise<Response<Enrollment>> {
+  return request<Response<Enrollment>>(`${ENROLLMENT_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteEnrollment(id: number): Promise<Enrollment> {
-  return request<Enrollment>(`${ENROLLMENT_BASE}/${id}`, {
+export function deleteEnrollment(id: number): Promise<Response<Enrollment>> {
+  return request<Response<Enrollment>>(`${ENROLLMENT_BASE}/${id}`, {
     method: "DELETE",
   });
 }

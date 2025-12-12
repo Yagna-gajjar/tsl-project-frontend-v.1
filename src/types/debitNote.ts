@@ -12,4 +12,5 @@ export interface DebitNote {
 
   academyName?: string | undefined;
   coachName?: string | undefined;
+  academyId?: number | null;
 }

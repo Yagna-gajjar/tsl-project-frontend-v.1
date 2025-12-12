@@ -62,8 +62,8 @@ export function updateFamily(
 	})
 }
 
-export function deleteFamily(id: number): Promise<Family> {
-	return request<Family>(`${FAMILY_BASE}/${id}`, {
+export function deleteFamily(id: number): Promise<Response<Family>> {
+	return request<Response<Family>>(`${FAMILY_BASE}/${id}`, {
 		method: 'DELETE',
 	})
 }

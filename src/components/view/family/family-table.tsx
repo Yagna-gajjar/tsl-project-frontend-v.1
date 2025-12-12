@@ -16,7 +16,7 @@ type SelectOption = { label: string; value: any };
 type Props = {
   onOpenView: (row: Family) => void;
   onOpenForm: (row?: Family | null) => void;
-  refreshKey?: number; // when this changes, reload data
+  refreshKey?: number;
 };
 
 export default function FamilyTable({
@@ -28,7 +28,7 @@ export default function FamilyTable({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(5);
+  const [pageSize] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
 
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -239,19 +239,17 @@ export default function FamilyTable({
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
-  // When user clicks "Delete" in the table
   const handleDelete = (id?: number) => {
     if (id === undefined || id === null) return;
     setDeleteId(id);
-    setDeleteOpen(true); // open your AlertDialog
+    setDeleteOpen(true);
   };
 
-  // When user confirms delete in the dialog
   const handleDeleteConfirmed = async () => {
     if (!deleteId) return;
     try {
       setLoadingDelete(true);
-      const res: Response = await deleteFamily(deleteId);
+      const res: Response<Family> = await deleteFamily(deleteId);
       const ok =
         typeof res?.success !== "undefined"
           ? res.success === true || String(res.success) === "true"
