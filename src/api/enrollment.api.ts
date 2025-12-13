@@ -22,7 +22,9 @@ export interface EnrollmentQuery {
 
 const ENROLLMENT_BASE = import.meta.env.VITE_APP_API_URL + "/enrollment";
 
-export function getEnrollments(params: EnrollmentQuery = {}): Promise<Enrollment[]> {
+export function getEnrollments(
+  params: EnrollmentQuery = {}
+): Promise<Response<Enrollment[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,

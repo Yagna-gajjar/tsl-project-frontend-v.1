@@ -10,26 +10,29 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import type { FormFieldConfig } from "@/components/form-modal/types";
-import type { membershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/memberShipMaster";
+import type { Response } from "@/types/response";
+import { getEntities } from "@/api/entity.api";
+import type { Entity } from "@/types/entity";
 
 type Props = {
   isOpen: boolean;
-  initialData?: membershipMaster;
+  initialData?: MembershipMaster;
   onClose: () => void;
   onSave: () => void;
 };
 
-const empty: membershipMaster = {
+const empty: MembershipMaster = {
   membershipMasterId: 0,
   membershipType: "",
-  introduceDate: format(new Date(), "yyyy-MM-dd"),
-  suspendDate: undefined as unknown as Date,
+  introductionDate: format(new Date(), "yyyy-MM-dd"),
+  suspensionDate: undefined as unknown as Date,
   membershipDetails: "",
-  membershipDurationInDays: 0,
-  issueCharge: 0,
-  minFBalance: 0,
+  durationDays: 1,
+  minIssueCharge: 0,
+  minDeposite: 0,
   minCBalance: 0,
-  minVBalance: 0,
+  giftVoucher: 0,
   bookingDiscount: 0,
   graceDays: 0,
   regMemberIncluded: 0,
@@ -37,11 +40,12 @@ const empty: membershipMaster = {
   guestAllowed: false,
   rfid: "",
   clubAccess: false,
-  birthdayVenueUsage: false,
-  anniversaryVenueUsage: false,
-  cancallationCharges: 0,
+  birthdayVenueUsage: 0, // DB stores as INT
+  anniversaryVenueUsage: 0, // DB stores as INT
+  cancellationCharges: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
+  perMemberRegCharge: 0,
 };
 
 export default function MembershipMasterFormModal({
@@ -50,27 +54,28 @@ export default function MembershipMasterFormModal({
   onClose,
   onSave,
 }: Props) {
-  const [values, setValues] = useState<membershipMaster>(empty);
+  const [values, setValues] = useState<MembershipMaster>(empty);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [identityTypeOpt, setIdentityTypeOpt] = useState<Entity[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (initialData) {
-      const intro = initialData.introduceDate
-        ? format(new Date(initialData.introduceDate), "yyyy-MM-dd")
+      const intro = initialData.introductionDate
+        ? format(new Date(initialData.introductionDate), "yyyy-MM-dd")
         : format(new Date(), "yyyy-MM-dd");
 
-      const suspend = initialData.suspendDate
-        ? format(new Date(initialData.suspendDate), "yyyy-MM-dd")
+      const suspend = initialData.suspensionDate
+        ? format(new Date(initialData.suspensionDate), "yyyy-MM-dd")
         : "";
 
       setValues({
         ...initialData,
-        introduceDate: intro,
-        suspendDate: suspend as unknown as Date,
+        introductionDate: intro,
+        suspensionDate: suspend as unknown as Date,
         createdAt: initialData.createdAt
           ? new Date(initialData.createdAt)
           : new Date(),
@@ -81,20 +86,30 @@ export default function MembershipMasterFormModal({
     } else {
       setValues({
         ...empty,
-        introduceDate: format(new Date(), "yyyy-MM-dd"),
-        suspendDate: "" as unknown as Date,
+        introductionDate: format(new Date(), "yyyy-MM-dd"),
+        suspensionDate: "" as unknown as Date,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     }
+
+    const fetchIdentyType = async () => {
+      const res: Response<Entity[]> = await getEntities();
+      const resOpt = res?.data as Entity[];
+      setIdentityTypeOpt(resOpt);
+    };
+
+    fetchIdentyType();
+
     setFieldErrors({});
     setError(null);
   }, [initialData, isOpen]);
+
   const onChange = (
-    field: keyof membershipMaster,
+    field: keyof MembershipMaster,
     val: string | number | boolean | Date
   ) => {
-    setValues((p) => ({ ...p, [field]: val } as membershipMaster));
+    setValues((p) => ({ ...p, [field]: val } as MembershipMaster));
 
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
@@ -110,17 +125,20 @@ export default function MembershipMasterFormModal({
       errs.membershipType = "Membership type is required";
     }
     if (
-      values.membershipDurationInDays === undefined ||
-      values.membershipDurationInDays === null ||
-      Number(values.membershipDurationInDays) <= 0
+      values.durationDays === undefined ||
+      values.durationDays === null ||
+      Number(values.durationDays) <= 0
     ) {
-      errs.membershipDurationInDays = "Duration (days) is required";
+      errs.durationDays = "Duration (days) is required and must be > 0";
     }
-    if (values.issueCharge === undefined || Number(values.issueCharge) < 0) {
-      errs.issueCharge = "Issue charge is required (>= 0)";
+    if (
+      values.minIssueCharge === undefined ||
+      Number(values.minIssueCharge) < 0
+    ) {
+      errs.minIssueCharge = "Issue charge is required (>= 0)";
     }
-    if (!values.introduceDate) {
-      errs.introduceDate = "Introduce date is required";
+    if (!values.introductionDate) {
+      errs.introductionDate = "Introduce date is required";
     }
     return errs;
   }, [values]);
@@ -137,18 +155,19 @@ export default function MembershipMasterFormModal({
     }
 
     try {
-      const payload: Partial<membershipMaster> = {
+      const payload: Partial<MembershipMaster> = {
         membershipType: String(values.membershipType),
-        introduceDate: new Date(values.introduceDate).toISOString(),
-        suspendDate: values.suspendDate
-          ? new Date(values.suspendDate).toISOString()
+        introductionDate: new Date(values.introductionDate).toISOString(),
+        suspensionDate: values.suspensionDate
+          ? new Date(values.suspensionDate).toISOString()
           : undefined,
+        billingEntityOfFamily: values.billingEntityOfFamily,
         membershipDetails: values.membershipDetails,
-        membershipDurationInDays: Number(values.membershipDurationInDays),
-        issueCharge: Number(values.issueCharge),
-        minFBalance: Number(values.minFBalance),
+        durationDays: Number(values.durationDays),
+        minIssueCharge: Number(values.minIssueCharge),
+        minDeposite: Number(values.minDeposite),
         minCBalance: Number(values.minCBalance),
-        minVBalance: Number(values.minVBalance),
+        giftVoucher: Number(values.giftVoucher),
         bookingDiscount: Number(values.bookingDiscount),
         graceDays: Number(values.graceDays),
         regMemberIncluded: Number(values.regMemberIncluded),
@@ -156,9 +175,9 @@ export default function MembershipMasterFormModal({
         guestAllowed: Boolean(values.guestAllowed),
         rfid: String(values.rfid || ""),
         clubAccess: Boolean(values.clubAccess),
-        birthdayVenueUsage: Boolean(values.birthdayVenueUsage),
-        anniversaryVenueUsage: Boolean(values.anniversaryVenueUsage),
-        cancallationCharges: Number(values.cancallationCharges),
+        birthdayVenueUsage: Number(values.birthdayVenueUsage),
+        anniversaryVenueUsage: Number(values.anniversaryVenueUsage),
+        cancellationCharges: Number(values.cancellationCharges),
       };
 
       if (initialData?.membershipMasterId) {
@@ -166,8 +185,8 @@ export default function MembershipMasterFormModal({
           initialData.membershipMasterId,
           payload as Partial<
             Omit<
-              membershipMaster,
-              "membershipMasterId" | "createdAt" | "updatedAt"
+              MembershipMaster,
+              "MembershipMasterId" | "createdAt" | "updatedAt"
             >
           >
         );
@@ -179,8 +198,8 @@ export default function MembershipMasterFormModal({
       } else {
         await createMembershipMaster(
           payload as Omit<
-            membershipMaster,
-            "membershipMasterId" | "createdAt" | "updatedAt"
+            MembershipMaster,
+            "MembershipMasterId" | "createdAt" | "updatedAt"
           >
         );
         toast({
@@ -206,7 +225,7 @@ export default function MembershipMasterFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields: FormFieldConfig<membershipMaster>[] = [
+  const fields: FormFieldConfig<MembershipMaster>[] = [
     {
       name: "membershipType",
       label: "Membership Type",
@@ -214,15 +233,31 @@ export default function MembershipMasterFormModal({
       required: true,
     },
     {
-      name: "introduceDate",
+      name: "identityTypeId",
+      label: "Identity Type",
+      type: "select",
+      options: identityTypeOpt?.map((i) => ({
+        value: i.entityId,
+        label: i.entityName,
+      })),
+      required: true,
+    },
+    {
+      name: "introductionDate",
       label: "Introduce Date",
       type: "Date",
       required: true,
     },
     {
-      name: "suspendDate",
+      name: "suspensionDate",
       label: "Suspend Date",
       type: "Date",
+      required: false,
+    },
+    {
+      name: "billingEntityOfFamily",
+      label: "Billing Entity Of Family",
+      type: "text",
       required: false,
     },
     {
@@ -232,32 +267,68 @@ export default function MembershipMasterFormModal({
       required: false,
     },
     {
-      name: "membershipDurationInDays",
+      name: "durationDays",
       label: "Duration (days)",
       type: "number",
       required: true,
     },
     {
-      name: "issueCharge",
+      name: "minDeposite",
+      label: "Minimum Deposit",
+      type: "number",
+      required: true,
+    },
+    {
+      name: "minIssueCharge",
       label: "Issue Charge",
       type: "number",
       required: true,
     },
     {
-      name: "minFBalance",
-      label: "Min F Balance",
+      name: "perMemberRegCharge",
+      label: "Per Member Registration Charge",
+      type: "number",
+      required: true,
+    },
+    {
+      name: "commPerMonthPerMember",
+      label: "Commission / Month / Member",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "memberLimit",
+      label: "Member Limit",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "commDiscountPerMember",
+      label: "Commission Discount / Member",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "decreaseCommByPR",
+      label: "Decrease Commission by PR",
+      type: "number",
+      required: false,
+    },
+    {
+      name: "feePaymentComm",
+      label: "Fee Payment Commission",
       type: "number",
       required: false,
     },
     {
       name: "minCBalance",
-      label: "Min C Balance",
+      label: "Minimum C Balance",
       type: "number",
       required: false,
     },
     {
-      name: "minVBalance",
-      label: "Min V Balance",
+      name: "giftVoucher",
+      label: "Gift Voucher",
       type: "number",
       required: false,
     },
@@ -267,10 +338,15 @@ export default function MembershipMasterFormModal({
       type: "number",
       required: false,
     },
-    { name: "graceDays", label: "Grace Days", type: "number", required: false },
+    {
+      name: "graceDays",
+      label: "Grace Days",
+      type: "number",
+      required: false,
+    },
     {
       name: "regMemberIncluded",
-      label: "Reg Members Included",
+      label: "Registered Members Included",
       type: "number",
       required: false,
     },
@@ -294,7 +370,12 @@ export default function MembershipMasterFormModal({
       ],
       required: false,
     },
-    { name: "rfid", label: "RFID", type: "text", required: false },
+    {
+      name: "rfid",
+      label: "RFID",
+      type: "text",
+      required: false,
+    },
     {
       name: "clubAccess",
       label: "Club Access",
@@ -307,26 +388,18 @@ export default function MembershipMasterFormModal({
     },
     {
       name: "birthdayVenueUsage",
-      label: "Birthday Venue Usage",
-      type: "select",
-      options: [
-        { label: "Yes", value: true },
-        { label: "No", value: false },
-      ],
+      label: "Birthday Venue Usage (count)",
+      type: "number",
       required: false,
     },
     {
       name: "anniversaryVenueUsage",
-      label: "Anniversary Venue Usage",
-      type: "select",
-      options: [
-        { label: "Yes", value: true },
-        { label: "No", value: false },
-      ],
+      label: "Anniversary Venue Usage (count)",
+      type: "number",
       required: false,
     },
     {
-      name: "cancallationCharges",
+      name: "cancellationCharges",
       label: "Cancellation Charges",
       type: "number",
       required: false,
@@ -368,7 +441,7 @@ export default function MembershipMasterFormModal({
                 isSubmitting={isSubmitting}
                 onChange={
                   onChange as (
-                    field: keyof membershipMaster,
+                    field: keyof MembershipMaster,
                     value: string | number | boolean
                   ) => void
                 }

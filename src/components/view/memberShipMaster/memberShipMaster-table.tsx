@@ -8,11 +8,11 @@ import {
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import type { membershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/memberShipMaster";
 
 type Props = {
-  onView?: (row: membershipMaster) => void;
-  onEdit?: (row: membershipMaster) => void;
+  onView?: (row: MembershipMaster) => void;
+  onEdit?: (row: MembershipMaster) => void;
   refreshKey?: number;
 };
 
@@ -21,7 +21,7 @@ export default function MembershipMasterTable({
   onEdit,
   refreshKey,
 }: Props) {
-  const [data, setData] = useState<membershipMaster[]>([]);
+  const [data, setData] = useState<MembershipMaster[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
@@ -67,16 +67,23 @@ export default function MembershipMasterTable({
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray(res?.data)
-        ? (res.data as membershipMaster[])
+        ? (res.data as MembershipMaster[])
         : [];
 
+      // Map backend fields to JS Date objects and normalize names
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
-        introduceDate: r.introduceDate ? new Date(r.introduceDate) : undefined,
-        suspendDate: r.suspendDate ? new Date(r.suspendDate) : undefined,
+        // interface uses "introductionDate" and "suspensionDate"
+        introductionDate: r.introductionDate
+          ? new Date(r.introductionDate)
+          : undefined,
+        suspensionDate: r.suspensionDate
+          ? new Date(r.suspensionDate)
+          : undefined,
+        // durationDays is number - keep as is
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-      })) as membershipMaster[];
+      })) as MembershipMaster[];
 
       setData(rows);
     } catch (err) {
@@ -123,7 +130,7 @@ export default function MembershipMasterTable({
   const formatDate = (d?: Date | string) =>
     d ? format(new Date(d), "dd MMM yyyy") : "-";
 
-  const columns: Column<membershipMaster>[] = [
+  const columns: Column<MembershipMaster>[] = [
     {
       header: "ID",
       key: "membershipMasterId",
@@ -139,37 +146,35 @@ export default function MembershipMasterTable({
     },
     {
       header: "Introduce Date",
-      key: "introduceDate",
-      render: (row) => formatDate(row.introduceDate),
+      key: "introductionDate",
+      render: (row) => formatDate(row.introductionDate),
       sortable: true,
     },
     {
       header: "Suspend Date",
-      key: "suspendDate",
-      render: (row) => formatDate(row.suspendDate),
+      key: "suspensionDate",
+      render: (row) => formatDate(row.suspensionDate),
       sortable: true,
     },
     {
       header: "Duration (days)",
-      key: "membershipDurationDays",
+      key: "durationDays",
       render: (row) =>
-        typeof row.membershipDurationInDays === "number"
-          ? row.membershipDurationInDays
-          : "-",
+        typeof row.durationDays === "number" ? row.durationDays : "-",
       sortable: true,
       filterType: "number",
     },
     {
       header: "Issue Charge",
-      key: "issueCharge",
-      render: (row) => `Rs. ${Number(row.issueCharge ?? 0).toFixed(2)}`,
+      key: "minIssueCharge",
+      render: (row) => `Rs. ${Number(row.minIssueCharge ?? 0).toFixed(2)}`,
       sortable: true,
       filterType: "number",
     },
     {
       header: "Min F Balance",
-      key: "minFBalance",
-      render: (row) => Number(row.minFBalance ?? 0).toFixed(2),
+      key: "minDeposite",
+      render: (row) => Number(row.minDeposite ?? 0).toFixed(2),
       sortable: true,
       filterType: "number",
     },
@@ -182,8 +187,8 @@ export default function MembershipMasterTable({
     },
     {
       header: "Min V Balance",
-      key: "minVBalance",
-      render: (row) => Number(row.minVBalance ?? 0).toFixed(2),
+      key: "giftVoucher",
+      render: (row) => Number(row.giftVoucher ?? 0).toFixed(2),
       sortable: true,
       filterType: "number",
     },
@@ -250,8 +255,8 @@ export default function MembershipMasterTable({
     },
     {
       header: "Cancellation Charges",
-      key: "cancallationCharges",
-      render: (row) => `Rs. ${Number(row.cancallationCharges ?? 0).toFixed(2)}`,
+      key: "cancellationCharges",
+      render: (row) => `Rs. ${Number(row.cancellationCharges ?? 0).toFixed(2)}`,
       sortable: true,
     },
     {
@@ -298,7 +303,7 @@ export default function MembershipMasterTable({
 
   return (
     <div>
-      <DataTable<membershipMaster>
+      <DataTable<MembershipMaster>
         data={data}
         columns={columns}
         isLoading={isLoading}

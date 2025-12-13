@@ -177,11 +177,14 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
         <div className="flex flex-col">
           <Button
             variant={"outline"}
-            onClick={() => { navigate(`/batch/attendance-sheet/${r?.batchId}`) }}>
+            onClick={() => {
+              navigate(`/batch/attendance-sheet/${r?.batchId}`);
+            }}
+          >
             <ExternalLink />
           </Button>
         </div>
-      )
+      ),
     },
     {
       key: "batchName",
@@ -191,6 +194,17 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => (
         <div className="flex flex-col">
           <span className="font-medium">{r.batchName}</span>
+        </div>
+      ),
+    },
+    {
+      key: "academyName",
+      header: "Academy Name",
+      sortable: true,
+      filterType: "text",
+      render: (r) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{r.academyName}</span>
         </div>
       ),
     },
@@ -212,9 +226,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       filterType: "text",
       render: (r) => (
         <div className="flex flex-col">
-          <span className="font-medium">
-            {r.coachName ?? "-"}{" "}
-          </span>
+          <span className="font-medium">{r.coachName ?? "-"} </span>
         </div>
       ),
     },
@@ -285,7 +297,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       header: "Active Members",
       sortable: true,
       render: (r) => {
-        const percentage = (r.activeMemberCount / r.batchCapacity) * 100;
+        const percentage = (r.activeMemberCount / r.maxCapacity) * 100;
 
         let textColorClass = "text-gray-900";
 
@@ -300,7 +312,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
         return (
           <div className="flex flex-col">
             <span className={`font-medium ${textColorClass}`}>
-              {r.activeMemberCount}/{r.batchCapacity}
+              {r.activeMemberCount}/{r.maxCapacity}
             </span>
           </div>
         );
@@ -313,10 +325,11 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => (
         <div className="flex flex-col">
           <span
-            className={`font-medium ${r.status === "active"
-              ? "bg-green-600/30 px-3 w-fit pb-1 rounded-lg text-green-600"
-              : "bg-red-600/30 px-2 w-fit pb-1 rounded-lg text-red-600"
-              }`}
+            className={`font-medium ${
+              r.status === "active"
+                ? "bg-green-600/30 px-3 w-fit pb-1 rounded-lg text-green-600"
+                : "bg-red-600/30 px-2 w-fit pb-1 rounded-lg text-red-600"
+            }`}
           >
             {r.status}
           </span>

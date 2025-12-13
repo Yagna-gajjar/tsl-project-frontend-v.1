@@ -49,7 +49,7 @@ export function FormContent<T extends Record<string, any>>({
   }
 
   return (
-    <div className="p-6 bg-background overflow-auto">
+    <div className="p-6 bg-background overflow-y-auto">
       <AnimatePresence>
         {error && (
           <motion.div

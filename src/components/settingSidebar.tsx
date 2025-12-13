@@ -50,6 +50,12 @@ const navigationItems: NavigationItem[] = [
     submenu: null,
     href: "/setting/activity",
   },
+  {
+    name: "Entity",
+    icon: Menu,
+    submenu: null,
+    href: "/setting/entity",
+  },
 ];
 
 export default function SettingSidebar({ onClose }: { onClose?: () => void }) {

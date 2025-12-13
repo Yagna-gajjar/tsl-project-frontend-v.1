@@ -49,7 +49,8 @@ import MedicalBreak from "./components/view/enrollment-actions/MedicalBreak";
 import BatchConnectionsPage from "./pages/batchConnection";
 import CoachAssignmentsPage from "./pages/coachAssignment";
 import FacilityAllotmentsPage from "./pages/facilityAllotment";
-import AppointmentsPage from "./pages/appointment";
+import EntityPage from "./pages/entity";
+import AccountPage from "./pages/account";
 
 export default function App() {
   return (
@@ -68,8 +69,9 @@ export default function App() {
                   path="/enrollment-dashboard"
                   element={<EnrollmentDashboard />}
                 />
-                <Route path="/family" element={<FamilyPage />} />
+                {/* <Route path="/family" element={<FamilyPage />} /> */}
                 <Route path="/enrollment" element={<EnrollmentPage />} />
+                <Route path="/account" element={<AccountPage />} />
                 <Route
                   path="/enrollment/:id/course-change"
                   element={<CourseChange />}
@@ -94,7 +96,6 @@ export default function App() {
                   path="/enrollment/:id/refund"
                   element={<RefundFormModal />}
                 />
-                <Route path="/appointment" element={<AppointmentsPage />} />
                 <Route path="/discount" element={<DiscountPage />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route
@@ -158,6 +159,7 @@ export default function App() {
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route path="/setting" element={<Setting />}>
+                <Route path="/setting/entity" element={<EntityPage />} />
                 <Route
                   path="/setting/family-type"
                   element={<FamilyTypePage />}

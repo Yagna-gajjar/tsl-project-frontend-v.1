@@ -23,7 +23,6 @@ import {
   Book,
   IndianRupee,
   Crown,
-  Calendar1Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -53,14 +52,9 @@ const navigationItems: NavigationItem[] = [
     icon: Book,
   },
   {
-    name: "Appointment",
-    href: "/appointment",
-    icon: Calendar1Icon,
-  },
-  {
-    name: "Family",
+    name: "Account",
     icon: User2,
-    href: "/family",
+    href: "/account",
   },
   {
     name: "Courses",
@@ -73,7 +67,11 @@ const navigationItems: NavigationItem[] = [
     icon: Layers,
     submenu: [
       { label: "Batches", href: "/batch/batches", icon: User },
-      { label: "Batch Connection", href: "/batch/batch-connection", icon: User },
+      {
+        label: "Batch Connection",
+        href: "/batch/batch-connection",
+        icon: User,
+      },
     ],
   },
   {

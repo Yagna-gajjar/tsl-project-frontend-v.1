@@ -91,7 +91,7 @@ const EnrollmentFormNew = ({
     startDate: format(Date.now(), "yyyy-MM-dd") as any,
     status: "active",
     batchName: "",
-    weekDays: [], // <-- changed to number[]
+    weekDays: [],
   });
 
   const [debouncedDays, setDebouncedDays] = useState(values.numberOfDays);
@@ -299,17 +299,17 @@ const EnrollmentFormNew = ({
       }));
     }
 
+    fetchDiscount();
+  }, [values?.courseId, course]);
+
+  useEffect(() => {
+    if (!values?.academyId) return;
     const loadBatches = async () => {
       try {
-        const courseIdNum = Number(values.courseId);
-        if (!courseIdNum) {
-          setBatches([]);
-          return;
-        }
-
         const res: Response<Batch[]> | any = await getBatch({
-          academyId: values.academyId
+          academyId: values.academyId,
         });
+        console.log(res, " = batch by academy");
 
         const allBatches = res?.data || [];
 
@@ -321,8 +321,7 @@ const EnrollmentFormNew = ({
     };
 
     loadBatches();
-    fetchDiscount();
-  }, [values?.courseId, course, values.academyId]);
+  }, [values?.academyId]);
 
   useEffect(() => {
     if (values.isDiscounted) {
@@ -547,7 +546,7 @@ const EnrollmentFormNew = ({
         if (selectedBatch) {
           const isFull =
             Number(selectedBatch.activeMemberCount) >=
-            Number(selectedBatch.batchCapacity);
+            Number(selectedBatch.maxCapacity);
           if (isFull) {
             setRequestBatchDetails({
               batchId: Number(selectedBatch.batchId),
@@ -808,11 +807,11 @@ const EnrollmentFormNew = ({
       options: batches.map((b) => {
         const format = (t: string) => (t ? t.slice(0, 5) : "");
 
-        const isFull = b.activeMemberCount >= b.batchCapacity;
+        const isFull = b.activeMemberCount >= b.maxCapacity;
 
         const label = `${b.batchName} | ${format(b.startTime)}-${format(
           b.endTime
-        )} | Seats: ${b.activeMemberCount} / ${b.batchCapacity}`;
+        )} | Seats: ${b.activeMemberCount} / ${b.maxCapacity}`;
 
         return {
           label,
@@ -825,16 +824,17 @@ const EnrollmentFormNew = ({
     ...(Number(values.sessionUnits) > 0
       ? []
       : [
-        {
-          name: "weekDays",
-          label: `Week Days (Max ${(selectedCourse as any)?.noOfDaysInWeek || 7
+          {
+            name: "weekDays",
+            label: `Week Days (Max ${
+              (selectedCourse as any)?.noOfDaysInWeek || 7
             })`,
-          type: "multiselect",
-          options: WEEK_DAYS,
-          // IMPORTANT: FormContent should expect the value for this field in values.weekDays (number[])
-          required: true,
-        },
-      ]),
+            type: "multiselect",
+            options: WEEK_DAYS,
+            // IMPORTANT: FormContent should expect the value for this field in values.weekDays (number[])
+            required: true,
+          },
+        ]),
     {
       name: "enrollmentDate",
       label: "Enrollment Date",
