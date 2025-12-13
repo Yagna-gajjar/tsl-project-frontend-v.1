@@ -183,27 +183,31 @@ export default function MembershipFormModal({
     const perMemberRegCharge = Number(selectedMembership.perMemberRegCharge ?? 0);
     const perMemberPerMonthCharge = Number(
       selectedMembership.commPerMonthPerMember ?? 0
-    );
-    const totalIssueCharges = perMemberRegCharge * members;
+    );  
+    const totalIssueCharges = Math.max(perMemberRegCharge * members, selectedMembership.minIssueCharge);
 
     /* 2. Applicable Discount */
     const memberLimit = Number(selectedMembership.commDiscountPerMember);
     const discountPerMember =
       Number(selectedMembership.decreaseCommByPR ?? 0) / 100;
 
-    let applicableMembers = 1;
+    let applicableMembers;
     if (members === 1) {
       applicableMembers = 1;
     } else {
       applicableMembers = Math.min(members, memberLimit);
     }
 
-    const appDisc = 1 - (applicableMembers - 1) * discountPerMember;
+    const appDisc =
+      applicableMembers === 1
+        ? 1
+        : 1 - (applicableMembers - 1) * discountPerMember;
 
     /* 3. Total Spent (Intermediate) */
     const durationMultiplier = Math.floor(
       Number(selectedMembership.durationDays ?? 0) / 30
     );
+
     const intermediate = Number(
       (
         appDisc *
@@ -252,7 +256,6 @@ export default function MembershipFormModal({
       giftVouchers: giftVouchers,
     }));
   }, [debouncedMembers, selectedMembership]);
-
   const onChange = (
     field: keyof membership,
     value: string | number | boolean | Date
