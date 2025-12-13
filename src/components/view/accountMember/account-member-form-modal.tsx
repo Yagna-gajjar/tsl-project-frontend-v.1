@@ -89,6 +89,8 @@ export default function AccountMemberFormModal({
           page: 1,
           limit: 1000,
         });
+        console.log(resMember);
+        
         setMemberOptions(Array.isArray(resMember?.data) ? resMember.data : []);
 
         const resAccount: Response<Account[]> = await getAccounts({

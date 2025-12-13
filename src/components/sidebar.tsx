@@ -56,7 +56,7 @@ const navigationItems: NavigationItem[] = [
     icon: User2,
     submenu: [
       { label: "Accounts", href: "/account/accounts", icon: User },
-      { label: "Accounts", href: "/account/account-member", icon: User },
+      { label: "Accounts Member", href: "/account/account-member", icon: User },
     ],
   },
   {

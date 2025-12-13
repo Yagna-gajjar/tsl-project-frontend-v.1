@@ -52,7 +52,6 @@ export function MemberFormModal({
 
   // Initialize empty state including address fields
   const empty: MemberFormState = {
-    familyId: initialData?.familyId ?? undefined,
     memberFirstName: initialData?.memberFirstName ?? "",
     memberMiddleName: initialData?.memberMiddleName ?? "",
     memberLastName: initialData?.memberLastName ?? "",
@@ -113,13 +112,6 @@ export function MemberFormModal({
   };
 
   const fields: FormFieldConfig<Member>[] = [
-    {
-      name: "familyId",
-      label: "Family ID",
-      type: "text",
-      required: true,
-      disabled: true,
-    },
     {
       name: "memberFirstName",
       label: "First Name",
@@ -215,9 +207,6 @@ export function MemberFormModal({
 
     const newFieldErrors: Record<string, string> = {};
 
-    // Member Checks
-    if (!values.familyId && values.familyId !== 0)
-      newFieldErrors.familyId = "Family ID is required";
     if (!values.memberFirstName || String(values.memberFirstName).trim() === "")
       newFieldErrors.memberFirstName = "First name is required";
     if (!values.dob) newFieldErrors.dob = "Date of birth is required";
@@ -253,9 +242,7 @@ export function MemberFormModal({
     }
 
     try {
-      // Construct Payload with nested address object
       const payload: any = {
-        familyId: Number(values.familyId),
         memberFirstName: String(values.memberFirstName ?? "").trim(),
         memberMiddleName: values.memberMiddleName ?? "",
         memberLastName: values.memberLastName ?? "",
@@ -279,7 +266,6 @@ export function MemberFormModal({
         country: values.country,
         pinCode: values.pinCode,
       };
-
       let res: any;
       if (isEdit && initialData?.memberId) {
         res = await updateMember(Number(initialData.memberId), payload);
