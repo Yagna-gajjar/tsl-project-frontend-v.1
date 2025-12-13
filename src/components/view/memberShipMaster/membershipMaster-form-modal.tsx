@@ -40,8 +40,8 @@ const empty: MembershipMaster = {
   guestAllowed: false,
   rfid: "",
   clubAccess: false,
-  birthdayVenueUsage: 0, // DB stores as INT
-  anniversaryVenueUsage: 0, // DB stores as INT
+  birthdayVenueUsage: 0,
+  anniversaryVenueUsage: 0,
   cancellationCharges: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
