@@ -51,6 +51,7 @@ import CoachAssignmentsPage from "./pages/coachAssignment";
 import FacilityAllotmentsPage from "./pages/facilityAllotment";
 import EntityPage from "./pages/entity";
 import AccountPage from "./pages/account";
+import AccountMemberPage from "./pages/accountMember";
 
 export default function App() {
   return (
@@ -71,7 +72,11 @@ export default function App() {
                 />
                 {/* <Route path="/family" element={<FamilyPage />} /> */}
                 <Route path="/enrollment" element={<EnrollmentPage />} />
-                <Route path="/account" element={<AccountPage />} />
+                <Route path="/account/accounts" element={<AccountPage />} />
+                <Route
+                  path="/account/account-member"
+                  element={<AccountMemberPage />}
+                />
                 <Route
                   path="/enrollment/:id/course-change"
                   element={<CourseChange />}

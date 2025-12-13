@@ -1,0 +1,50 @@
+import { request, toQueryString } from "./helper";
+import type { Response } from "@/types/response";
+import type { AccountMember } from "@/types/accountMember";
+
+const BASE_URL = import.meta.env.VITE_APP_API_URL + "/account-member";
+
+export interface AccountMemberQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  memberId?: number;
+  accountId?: number;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+export function getAccountMembers(
+  params: AccountMemberQuery = {}
+): Promise<Response<AccountMember[]>> {
+  return request(`${BASE_URL}?${toQueryString(params)}`, { method: "GET" });
+}
+
+export function getAccountMemberById(
+  id: number
+): Promise<Response<AccountMember>> {
+  return request(`${BASE_URL}/${id}`, { method: "GET" });
+}
+
+export function createAccountMember(
+  payload: Omit<AccountMember, "accountMemberId" | "createdAt" | "updatedAt">
+): Promise<Response<AccountMember>> {
+  return request(BASE_URL, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateAccountMember(
+  id: number,
+  payload: Partial<AccountMember>
+): Promise<Response<AccountMember>> {
+  return request(`${BASE_URL}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteAccountMember(id: number): Promise<Response<void>> {
+  return request(`${BASE_URL}/${id}`, { method: "DELETE" });
+}
