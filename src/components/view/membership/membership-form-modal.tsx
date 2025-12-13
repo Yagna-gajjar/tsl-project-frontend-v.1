@@ -366,19 +366,19 @@ export default function MembershipFormModal({
         graceDate: values.graceDate,
         cancelationDate: values.cancelationDate,
 
-        members: values.members,
-        totalIssueCharges: values.totalIssueCharges,
-        appDiscount: values.appDiscount,
+        members: Number(values.members),
+        totalIssueCharges: Number(values.totalIssueCharges),
+        appDiscount: Number(values.appDiscount),
 
-        totalFBalance: values.totalFBalance,
-        totalCBalance: values.totalCBalance,
-        totalSpendComm: values.totalSpendComm,
+        totalFBalance: Number(values.totalFBalance),
+        totalCBalance: Number(values.totalCBalance),
+        totalSpendComm: Number(values.totalSpendComm),
 
-        minDepositeRequiredFBalance: values.minDepositeRequiredFBalance,
-        minDepositeRequiredCBalance: values.minDepositeRequiredCBalance,
-        depositeReq: values.depositeReq,
+        minDepositeRequiredFBalance: Number(values.minDepositeRequiredFBalance),
+        minDepositeRequiredCBalance: Number(values.minDepositeRequiredCBalance),
+        depositeReq: Number(values.depositeReq),
 
-        giftVouchers: values.giftVouchers,
+        giftVouchers: Number(values.giftVouchers),
         status: values.status,
       };
 
