@@ -155,8 +155,10 @@ export default function MembershipMasterFormModal({
     }
 
     try {
+      console.log(values.identityTypeId);
       const payload: Partial<MembershipMaster> = {
         membershipType: String(values.membershipType),
+        identityTypeId: Number(values.identityTypeId),
         introductionDate: new Date(values.introductionDate).toISOString(),
         suspensionDate: values.suspensionDate
           ? new Date(values.suspensionDate).toISOString()
@@ -164,9 +166,14 @@ export default function MembershipMasterFormModal({
         billingEntityOfFamily: values.billingEntityOfFamily,
         membershipDetails: values.membershipDetails,
         durationDays: Number(values.durationDays),
+        minDeposite: Number(values.minDeposite),
         minIssueCharge: Number(values.minIssueCharge),
         perMemberRegCharge: Number(values.perMemberRegCharge),
-        minDeposite: Number(values.minDeposite),
+        memberLimit: Number(values.memberLimit),
+        commPerMonthPerMember: Number(values.commPerMonthPerMember),
+        commDiscountPerMember: Number(values.commDiscountPerMember),
+        decreaseCommByPR: Number(values.decreaseCommByPR),
+        feePaymentComm: Number(values.feePaymentComm),
         minCBalance: Number(values.minCBalance),
         giftVoucher: Number(values.giftVoucher),
         bookingDiscount: Number(values.bookingDiscount),
