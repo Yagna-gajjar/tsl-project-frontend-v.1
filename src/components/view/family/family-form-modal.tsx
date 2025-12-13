@@ -209,14 +209,9 @@ export function FamilyFormModal({
         res = await createFamily(payload as Family);
       }
 
-      const ok =
-        typeof res?.success !== "undefined"
-          ? res.success === true || String(res.success) === "true"
-          : true;
+      const row: Family = res?.data || {} as Family;
 
-      const row = res?.data ?? res;
-
-      if (!ok) {
+      if (!res?.success) {
         const msg = res?.message ?? "Failed to save";
         setError(msg);
 

@@ -100,7 +100,7 @@ const baseViewFields: FieldConfig<Family | any>[] = [
 
 export default function FamilyViewModal({ isOpen, onClose, item }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string) => {
+    async (_?: number | string) => {
       if (!item) throw new Error("No data");
       return item;
     },

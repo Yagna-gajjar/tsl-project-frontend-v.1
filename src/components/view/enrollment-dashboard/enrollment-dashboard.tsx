@@ -102,7 +102,7 @@ export default function EnrollmentDashboard() {
           memberDetails={memberDetails}
           onFamilySelect={setSelectedFamilyId}
           onMemberSelect={setSelectedMemberId}
-          onBatchSelect={setSelectedBatch}
+          onBatchSelect={setSelectedBatch as any}
           onMemberDetailsChange={setMemberDetails}
         />
       </motion.div>

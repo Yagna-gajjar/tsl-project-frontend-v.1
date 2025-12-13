@@ -195,7 +195,7 @@ export default function FamilyPanel({
   };
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    function handleClick(_: MouseEvent) {
       if (!dropdownRef.current) return;
     }
     document.addEventListener("mousedown", handleClick);

@@ -8,8 +8,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   BookOpen,
-  Currency,
-  DollarSign,
   HelpCircle,
   IndianRupee,
   Snowflake,
@@ -24,7 +22,8 @@ export interface EnrollmentSummary {
   enrollmentId: number;
   courseName?: string | null;
   academyName?: string | null;
-  sessionUnita?: number | null;
+  sessionUnits?: number | null;
+  memberId?: number | null;
 }
 
 interface Props {

@@ -56,9 +56,9 @@ const fields: FieldConfig<Enrollment>[] = [
         v === "active"
           ? "text-green-600"
           : v === "inactive"
-          ? "text-yellow-600"
-          : "text-blue-600";
-      return <span className={statusColor}>{v || "unknown"}</span>;
+            ? "text-yellow-600"
+            : "text-blue-600";
+      return <span className={statusColor}>{v as string || "unknown"}</span>;
     },
   },
   { key: "freeDays", label: "Free Days", icon: Hash },
