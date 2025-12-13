@@ -69,15 +69,21 @@ export default function MembershipFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+
+  // State to track the currently selected master object (needed for date calcs)
   const [selectedMembership, setSelectedMembership] = useState<MembershipMaster>();
+
+  // Debounce state
   const [debouncedMembers, setDebouncedMembers] = useState<number>(
     initialData?.members || 1
   );
+
   const [membershipMasterOptions, setMembershipMasterOptions] = useState<
     MembershipMaster[]
   >([]);
   const [accountOptions, setAccountOptions] = useState<Account[]>([]);
 
+  // 1. Initialize Form Data
   useEffect(() => {
     if (!isOpen) return;
 
@@ -88,7 +94,7 @@ export default function MembershipFormModal({
           ? format(new Date(initialData.startDate), "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd"),
         endDate: initialData.endDate
-          ? format(new Date(initialData.endDate), "yyy-MM-dd")
+          ? format(new Date(initialData.endDate), "yyyy-MM-dd")
           : undefined,
         graceDate: initialData.graceDate
           ? format(new Date(initialData.graceDate), "yyyy-MM-dd")
@@ -97,19 +103,24 @@ export default function MembershipFormModal({
           ? format(new Date(initialData.cancelationDate), "yyyy-MM-dd")
           : undefined,
       });
+      setDebouncedMembers(initialData.members || 1);
     } else {
       setValues({
         ...empty,
         startDate: format(new Date(), "yyyy-MM-dd"),
-        createdAt: format(new Date(), "yyyy-MM-dd"),
-        updatedAt: format(new Date(), "yyyy-MM-dd"),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
+      setDebouncedMembers(1);
     }
 
     setFieldErrors({});
     setError(null);
+    // Note: We don't set selectedMembership here; we do it in the API load 
+    // to ensure we have the full object list first.
   }, [isOpen, initialData]);
 
+  // 2. Load API Data & Set Initial Selected Master
   useEffect(() => {
     if (!isOpen) return;
 
@@ -121,8 +132,15 @@ export default function MembershipFormModal({
         });
 
         const mmRows = mmRes?.data as MembershipMaster[];
-
         setMembershipMasterOptions(mmRows);
+
+        // If editing, find the active master object so calculations work immediately
+        if (initialData?.membershipMasterId) {
+          const activeMaster = mmRows.find(
+            (m) => m.membershipMasterId === initialData.membershipMasterId
+          );
+          if (activeMaster) setSelectedMembership(activeMaster);
+        }
 
         const accRes: Response<Account[]> = await getAccounts({
           page: 1,
@@ -132,18 +150,19 @@ export default function MembershipFormModal({
         setAccountOptions(accRows);
       } catch (err) {
         toast({
-          title: "Erro",
-          description: "Failed to make memebrship",
-          variant: "destructive"
-        })
+          title: "Error",
+          description: "Failed to load dropdown data",
+          variant: "destructive",
+        });
         setMembershipMasterOptions([]);
         setAccountOptions([]);
       }
     };
 
     load();
-  }, [isOpen]);
+  }, [isOpen, initialData]);
 
+  // 3. Debounce Effect for Members Input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedMembers(Number(values.members));
@@ -154,6 +173,7 @@ export default function MembershipFormModal({
     };
   }, [values.members]);
 
+  // 4. Calculations Effect (Runs when debounced members or selected master changes)
   useEffect(() => {
     if (!debouncedMembers || !selectedMembership) return;
 
@@ -161,25 +181,24 @@ export default function MembershipFormModal({
 
     /* 1. Total Issue Charge */
     const perMemberRegCharge = Number(selectedMembership.perMemberRegCharge ?? 0);
-    const perMemberPerMonthCharge = Number(selectedMembership.commPerMonthPerMember ?? 0);
+    const perMemberPerMonthCharge = Number(
+      selectedMembership.commPerMonthPerMember ?? 0
+    );
     const totalIssueCharges = perMemberRegCharge * members;
 
     /* 2. Applicable Discount */
     const memberLimit = Number(selectedMembership.commDiscountPerMember);
     const discountPerMember =
       Number(selectedMembership.decreaseCommByPR ?? 0) / 100;
-    let applicableMembers;
-    Math.min(members, memberLimit);
 
-    if (members == 1) {
+    let applicableMembers = 1;
+    if (members === 1) {
       applicableMembers = 1;
-    }
-    else {
+    } else {
       applicableMembers = Math.min(members, memberLimit);
     }
 
-    const appDisc =
-      1 - (applicableMembers - 1) * discountPerMember;
+    const appDisc = 1 - (applicableMembers - 1) * discountPerMember;
 
     /* 3. Total Spent (Intermediate) */
     const durationMultiplier = Math.floor(
@@ -193,20 +212,20 @@ export default function MembershipFormModal({
         members
       ).toFixed(2)
     );
+
     /* 4. Total F Balance */
-    const feePaymentComm = selectedMembership?.feePaymentComm as number / 100;
-    const tfBal = Math.floor(intermediate * feePaymentComm / 100) * 100;
+    const feePaymentComm = (selectedMembership?.feePaymentComm as number) / 100;
+    const tfBal = Math.floor((intermediate * feePaymentComm) / 100) * 100;
 
     /* 5. Total C Balance */
     const minCBalance = selectedMembership.minCBalance / 100;
-    const tcBal = Math.floor(intermediate * minCBalance / 100) * 100;
+    const tcBal = Math.floor((intermediate * minCBalance) / 100) * 100;
 
     /* 6. Total Spent */
     const totalSpent = tfBal + tcBal;
 
     /* 7. Min Deposit F Balance Required */
     const minDepositRate = Number(selectedMembership.minDeposite ?? 0) / 100;
-
     const minDepositFBalanceReq = Math.floor(tfBal * minDepositRate);
 
     /* 8. Min Deposit C Balance Required */
@@ -216,10 +235,12 @@ export default function MembershipFormModal({
     const depositReq = totalSpent + totalIssueCharges;
 
     /* 10. Gift Vouchers */
-    const giftVouchers = Math.ceil(((totalSpent / 100) * selectedMembership?.giftVoucher) / 100) * 100;
+    const giftVouchers =
+      Math.ceil(((totalSpent / 100) * selectedMembership?.giftVoucher) / 100) *
+      100;
 
-    setValues({
-      ...values,
+    setValues((prev) => ({
+      ...prev,
       totalIssueCharges: totalIssueCharges,
       appDiscount: appDisc,
       totalSpendComm: totalSpent,
@@ -228,9 +249,8 @@ export default function MembershipFormModal({
       minDepositeRequiredFBalance: minDepositFBalanceReq,
       minDepositeRequiredCBalance: minDepositCBalanceReq,
       depositeReq: depositReq,
-      giftVouchers: giftVouchers
-    })
-
+      giftVouchers: giftVouchers,
+    }));
   }, [debouncedMembers, selectedMembership]);
 
   const onChange = (
@@ -238,33 +258,71 @@ export default function MembershipFormModal({
     value: string | number | boolean | Date
   ) => {
     if (field === "membershipMasterId") {
-      const selectedMembership = membershipMasterOptions.find((m) => {
-        if (m.membershipMasterId == Number(value)) return m;
+      const selected = membershipMasterOptions.find((m) => {
+        return m.membershipMasterId === Number(value);
       });
-      setSelectedMembership(selectedMembership);
+
+      setSelectedMembership(selected);
+
       setValues((prev) => ({
         ...prev,
+        membershipMasterId: Number(value),
         endDate: format(
-          addDays(prev.startDate, Number(selectedMembership?.durationDays)),
+          addDays(prev.startDate, Number(selected?.durationDays || 0)),
           "yyyy-MM-dd"
         ),
         graceDate: format(
           addDays(
             prev.startDate,
-            Number(selectedMembership?.durationDays) +
-            Number(selectedMembership?.graceDays)
+            Number(selected?.durationDays || 0) +
+            Number(selected?.graceDays || 0)
           ),
           "yyyy-MM-dd"
         ),
       }));
+
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[field as string];
+        return copy;
+      });
+      return;
+    }
+
+    if (field === "startDate") {
+      const newStartDate = new Date(value as string);
+
+      setValues((prev) => {
+        const updates: Partial<membership> = { [field]: value };
+
+        if (selectedMembership) {
+          updates.endDate = format(
+            addDays(newStartDate, Number(selectedMembership.durationDays || 0)),
+            "yyyy-MM-dd"
+          );
+          updates.graceDate = format(
+            addDays(
+              newStartDate,
+              Number(selectedMembership.durationDays || 0) +
+              Number(selectedMembership.graceDays || 0)
+            ),
+            "yyyy-MM-dd"
+          );
+        }
+        return { ...prev, ...updates };
+      });
+
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[field as string];
+        return copy;
+      });
+      return;
     }
 
     setValues((prev) => ({
       ...prev,
-      [field]:
-        field === "membershipMasterId" || field === "accountId"
-          ? Number(value)
-          : value,
+      [field]: field === "accountId" ? Number(value) : value,
     }));
 
     setFieldErrors((prev) => {
@@ -277,16 +335,11 @@ export default function MembershipFormModal({
 
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
-
     if (!values.membershipMasterId)
       errs.membershipMasterId = "Membership Master is required";
-
     if (!values.accountId) errs.accountId = "Account is required";
-
     if (!values.startDate) errs.startDate = "Start date is required";
-
     if (!values.status) errs.status = "Status is required";
-
     return errs;
   }, [values]);
 
@@ -368,7 +421,7 @@ export default function MembershipFormModal({
     },
     { name: "startDate", label: "Start Date", type: "Date", required: true },
     { name: "endDate", label: "End Date", type: "Date", disabled: true },
-    { name: "graceDate", label: "Grace Date", type: "Date" },
+    { name: "graceDate", label: "Grace Date", type: "Date", disabled: true },
 
     { name: "members", label: "Members", type: "number" },
 
