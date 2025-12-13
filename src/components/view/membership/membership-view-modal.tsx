@@ -17,107 +17,58 @@ const dateRender = (v?: Date | string | null) =>
 
 const fields: FieldConfig<membership>[] = [
   { key: "membershipId", label: "ID", icon: Hash },
-  { key: "membershipMasterId", label: "Master ID", icon: Hash },
-  { key: "familyId", label: "Family ID", icon: Hash },
+  { key: "membershipMasterId", label: "Membership Master", icon: Hash },
+  { key: "accountId", label: "Account", icon: Hash },
+
+  { key: "startDate", label: "Start Date", icon: Calendar, render: dateRender },
+  { key: "endDate", label: "End Date", icon: Calendar, render: dateRender },
+  { key: "graceDate", label: "Grace Date", icon: Calendar, render: dateRender },
+
+  { key: "members", label: "Members", icon: Hash },
+
   {
-    key: "startDate",
-    label: "Start Date",
-    icon: Calendar,
-    render: (v) => dateRender(v as string | Date),
-  },
-  {
-    key: "endDate",
-    label: "End Date",
-    icon: Calendar,
-    render: (v) => dateRender(v as string | Date),
-  },
-  {
-    key: "graceDate",
-    label: "Grace Date",
-    icon: Calendar,
-    render: (v) => dateRender(v as string | Date),
-  },
-  {
-    key: "committedAmount",
-    label: "Committed Amount",
-    icon: CreditCard,
-    render: (v) => toRs(v as number),
-  },
-  {
-    key: "issueCharge",
+    key: "totalIssueCharges",
     label: "Issue Charges",
     icon: CreditCard,
-    render: (v) => toRs(v as number),
+    render: toRs,
   },
   {
-    key: "minVBalance",
-    label: "Min V Balance",
+    key: "appDiscount",
+    label: "App Discount",
     icon: CreditCard,
-    render: (v) => Number(v ?? 0).toFixed(2),
+    render: toRs,
   },
   {
-    key: "minFBalance",
-    label: "Min F Balance",
+    key: "totalSpendComm",
+    label: "Total Spent",
     icon: CreditCard,
-    render: (v) => Number(v ?? 0).toFixed(2),
+    render: toRs,
   },
-  {
-    key: "minCBalance",
-    label: "Min C Balance",
-    icon: CreditCard,
-    render: (v) => Number(v ?? 0).toFixed(2),
-  },
-  { key: "paymentId", label: "Payment ID", icon: Hash },
   {
     key: "status",
     label: "Status",
     icon: CheckCircle,
-    render: (v) => v as string || "-",
   },
   {
-    key: "cancellationDate",
+    key: "cancelationDate",
     label: "Cancellation Date",
     icon: Calendar,
-    render: (v) => dateRender(v as string | Date),
-  },
-  {
-    key: "actualFBalance",
-    label: "Actual F Balance",
-    icon: CreditCard,
-    render: (v) => Number(v ?? 0).toFixed(2),
-  },
-  {
-    key: "actualCBalance",
-    label: "Actual C Balance",
-    icon: CreditCard,
-    render: (v) => Number(v ?? 0).toFixed(2),
-  },
-  {
-    key: "refundedAmount",
-    label: "Refunded Amount",
-    icon: CreditCard,
-    render: (v) => toRs(v as number),
-  },
-  { key: "refundedPaymentId", label: "Refunded Payment ID", icon: Hash },
-  {
-    key: "cancellationCharges",
-    label: "Cancellation Charges",
-    icon: CreditCard,
-    render: (v) => toRs(v as number),
+    render: dateRender,
   },
   {
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v) => dateRender(v as string | Date),
+    render: dateRender,
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Calendar,
-    render: (v) => dateRender(v as string | Date),
+    render: dateRender,
   },
 ];
+
 
 export default function MembershipViewModal({
   isOpen,

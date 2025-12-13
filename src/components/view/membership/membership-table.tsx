@@ -51,8 +51,8 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
         startDate: r.startDate ? new Date(r.startDate) : undefined,
         endDate: r.endDate ? new Date(r.endDate) : undefined,
         graceDate: r.graceDate ? new Date(r.graceDate) : undefined,
-        cancellationDate: r.cancellationDate
-          ? new Date(r.cancellationDate)
+        cancellationDate: r.cancelationDate
+          ? new Date(r.cancelationDate)
           : undefined,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
@@ -99,25 +99,19 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const columns: Column<membership>[] = [
-    {
-      key: "membershipId",
-      header: "ID",
-      sortable: true,
-      render: (r) => r.membershipId ?? "-",
-    },
+    { key: "membershipId", header: "ID", sortable: true },
+
     {
       key: "membershipMasterId",
-      header: "Master ID",
+      header: "Membership Master",
       sortable: true,
       filterType: "number",
-      render: (r) => r.membershipMasterId ?? "-",
     },
     {
-      key: "familyId",
-      header: "Family ID",
+      key: "accountId",
+      header: "Account",
       sortable: true,
       filterType: "number",
-      render: (r) => r.familyId ?? "-",
     },
     {
       key: "startDate",
@@ -134,6 +128,23 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
         r.endDate ? new Date(r.endDate).toLocaleDateString() : "-",
     },
     {
+      key: "members",
+      header: "Members",
+      sortable: true,
+    },
+    {
+      key: "totalIssueCharges",
+      header: "Issue Charges",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.totalIssueCharges ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "totalSpendComm",
+      header: "Spent",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.totalSpendComm ?? 0).toFixed(2)}`,
+    },
+    {
       key: "status",
       header: "Status",
       sortable: true,
@@ -143,31 +154,6 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
         { value: "inactive", label: "Inactive" },
         { value: "cancelled", label: "Cancelled" },
       ],
-      render: (r) => r.status || "-",
-    },
-    {
-      key: "committedAmount",
-      header: "Committed",
-      sortable: true,
-      render: (r) => `Rs. ${Number(r.committedAmount ?? 0).toFixed(2)}`,
-    },
-    {
-      key: "issueCharges",
-      header: "Issue Charges",
-      sortable: true,
-      render: (r) => `Rs. ${Number(r.issueCharge ?? 0).toFixed(2)}`,
-    },
-    {
-      key: "refundedAmount",
-      header: "Refunded",
-      sortable: true,
-      render: (r) => `Rs. ${Number(r.refundedAmount ?? 0).toFixed(2)}`,
-    },
-    {
-      key: "cancellationCharges",
-      header: "Cancellation Charges",
-      sortable: true,
-      render: (r) => `Rs. ${Number(r.cancellationCharges ?? 0).toFixed(2)}`,
     },
     {
       key: "createdAt",
@@ -189,7 +175,7 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
       setDeleteId(null);
       setDeleteOpen(false);
       await loadData();
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to delete membership",

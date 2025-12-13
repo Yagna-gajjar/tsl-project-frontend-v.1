@@ -1,54 +1,43 @@
-// ✔ FILE UPDATED: membershipMaster.ts (your type/interface file)
-
 export interface MembershipMaster {
   membershipMasterId?: number;
 
-  // ---- Updated / Renamed to match DB ----
   membershipType: string;
-  identityTypeId?: number; // added because DB has "IdentityTypeId"
+  identityTypeId?: number;
 
-  // ---- Updated to match "introductionDate" / "suspensionDate" ----
-  introductionDate: Date | string; // renamed from introduceDate
-  suspensionDate: Date | string; // renamed from suspendDate
+  introductionDate: Date | string;
+  suspensionDate: Date | string;
 
-  // ---- Added new fields from DB ----
-  billingEntityOfFamily?: string; // VARCHAR(20)
+  billingEntityOfFamily?: string;
 
-  membershipDetails: string; // same as DB
+  membershipDetails: string;
 
-  // ---- Renamed fields to match DB ----
-  durationDays: number; // renamed from membershipDurationInDays
-  minDeposite: number; // new from DB
-  minIssueCharge: number; // DB field
-  perMemberRegCharge: number; // new
-  commPerMonthPerMember?: number; // optional since your DB allows NULL
-  memberLimit?: number; // optional
-  commDiscountPerMember?: number; // optional
-  decreaseCommByPR?: number; // optional
-  feePaymentComm?: number; // optional
-  minCBalance: number; // same
-  giftVoucher?: number; // new
+  durationDays: number;
+  minDeposite: number;
+  minIssueCharge: number;
+  perMemberRegCharge: number;
+  commPerMonthPerMember?: number;
+  memberLimit?: number;
+  commDiscountPerMember?: number;
+  decreaseCommByPR?: number;
+  feePaymentComm?: number;
+  minCBalance: number;
+  giftVoucher?: number;
 
-  // ---- Existing fields that match DB ----
   bookingDiscount: number;
   graceDays: number;
   regMemberIncluded: number;
 
-  // ---- Renamed (your field was spelled wrong) ----
-  guardianEntry: boolean; // DB calls "gardianEntry" but correcting spelling in TS
+  guardianEntry: boolean;
 
   guestAllowed: boolean;
   rfid: string;
   clubAccess: boolean;
 
-  // ---- Updated to match DB (changed type to number) ----
-  birthdayVenueUsage: number; // DB uses INT
-  anniversaryVenueUsage: number; // DB uses INT
+  birthdayVenueUsage: number;
+  anniversaryVenueUsage: number;
 
-  // ---- Renamed (your field had wrong spelling) ----
-  cancellationCharges: number; // corrected
+  cancellationCharges: number;
 
-  // ---- Add timestamps for consistency ----
   createdAt?: Date;
   updatedAt?: Date;
 }

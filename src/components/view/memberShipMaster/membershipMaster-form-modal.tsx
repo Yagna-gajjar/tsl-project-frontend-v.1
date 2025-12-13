@@ -165,6 +165,7 @@ export default function MembershipMasterFormModal({
         membershipDetails: values.membershipDetails,
         durationDays: Number(values.durationDays),
         minIssueCharge: Number(values.minIssueCharge),
+        perMemberRegCharge: Number(values.perMemberRegCharge),
         minDeposite: Number(values.minDeposite),
         minCBalance: Number(values.minCBalance),
         giftVoucher: Number(values.giftVoucher),
