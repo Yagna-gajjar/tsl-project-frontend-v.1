@@ -65,7 +65,6 @@ export default function AccountFormModal({
 
   useEffect(() => {
   
-    const addressData = initialData?.address || {};
     if (initialData) {
       setValues({
         ...initialData,
@@ -74,12 +73,12 @@ export default function AccountFormModal({
           ? formatDateForInput(initialData.suspensionDate)
           : undefined,
 
-        line1: addressData.line1 || "",
-        line2: addressData.line2 || "",
-        city: addressData.city || "",
-        state: addressData.state || "",
-        country: addressData.country || "India",
-        pinCode: addressData.pinCode || "",
+        line1: initialData.line1 || "",
+        line2: initialData.line2 || "",
+        city: initialData.city || "",
+        state: initialData.state || "",
+        country: initialData.country || "India",
+        pinCode: initialData.pinCode || "",
       });
     } else {
       setValues(empty);

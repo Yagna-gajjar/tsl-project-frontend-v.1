@@ -2,7 +2,7 @@ import { useState } from "react";
 import MembershipMasterTable from "@/components/view/memberShipMaster/memberShipMaster-table";
 import MembershipMasterFormModal from "@/components/view/memberShipMaster/membershipMaster-form-modal";
 import MembershipMasterViewModal from "@/components/view/memberShipMaster/membershipMaster-view-modal";
-import type { membershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/memberShipMaster";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -11,17 +11,17 @@ export default function MembershipMasterPage() {
   const [viewId, setViewId] = useState<number | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editRow, setEditRow] = useState<membershipMaster | null>(null);
+  const [editRow, setEditRow] = useState<MembershipMaster | null>(null);
 
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
-  const openView = (row: membershipMaster) => {
+  const openView = (row: MembershipMaster) => {
     setViewId(row.membershipMasterId ?? null);
     setViewOpen(true);
   };
 
-  const openForm = (row?: membershipMaster | null) => {
+  const openForm = (row?: MembershipMaster | null) => {
     setEditRow(row ?? null);
     setFormOpen(true);
   };
@@ -48,6 +48,7 @@ export default function MembershipMasterPage() {
 
       <MembershipMasterTable
         onView={openView}
+        onEdit={openForm}
         refreshKey={refreshKey}
       />
 
