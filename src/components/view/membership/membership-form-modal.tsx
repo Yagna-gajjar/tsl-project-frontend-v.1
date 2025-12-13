@@ -69,7 +69,10 @@ export default function MembershipFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-
+  const [selectedMembership, setSelectedMembership] = useState<MembershipMaster>();
+  const [debouncedMembers, setDebouncedMembers] = useState<number>(
+    initialData?.members || 1
+  );
   const [membershipMasterOptions, setMembershipMasterOptions] = useState<
     MembershipMaster[]
   >([]);
@@ -137,6 +140,99 @@ export default function MembershipFormModal({
     load();
   }, [isOpen]);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedMembers(Number(values.members));
+    }, 600);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [values.members]);
+
+  useEffect(() => {
+    if (!debouncedMembers || !selectedMembership) return;
+
+    const members = Number(debouncedMembers);
+
+    /* 1. Total Issue Charge */
+    const perMemberRegCharge = Number(selectedMembership.perMemberRegCharge ?? 0);
+    const totalIssueCharges = perMemberRegCharge * members;
+
+    /* 2. Applicable Discount */
+    const memberLimit = Number(selectedMembership.commDiscountPerMember);
+    console.log(selectedMembership," limirs")
+    const discountPerMember =
+      Number(selectedMembership.decreaseCommByPR ?? 0) / 100;
+    let applicableMembers;
+    Math.min(members, memberLimit);
+
+    if (members == 1) {
+      applicableMembers = 1;
+    }
+    else {
+      applicableMembers = Math.min(members, memberLimit);
+    }
+
+    const appDisc =
+      1 - (applicableMembers - 1) * discountPerMember;
+    console.log(applicableMembers, " opadbc");
+
+    /* 3. Total Spent (Intermediate) */
+    const durationMultiplier = Math.floor(
+      Number(selectedMembership.durationDays ?? 0) / 12
+    );
+
+    const intermediate = Number(
+      (
+        appDisc *
+        perMemberRegCharge *
+        durationMultiplier *
+        members
+      ).toFixed(2)
+    );
+
+    /* 4. Total F Balance */
+    const feePaymentComm = Number(selectedMembership.feePaymentComm ?? 0);
+    const tfBal = Math.floor(intermediate * feePaymentComm);
+
+    /* 5. Total C Balance */
+    const minCBalance = Number(selectedMembership.minCBalance ?? 0);
+    const tcBal = Math.floor(intermediate * minCBalance);
+
+    /* 6. Total Spent */
+    const totalSpent = tfBal + tcBal;
+
+    /* 7. Min Deposit F Balance Required */
+    const minDepositRate = Number(selectedMembership.minDeposite ?? 0) / 100;
+
+    const minDepositFBalanceReq = Math.floor(tfBal * minDepositRate);
+
+    /* 8. Min Deposit C Balance Required */
+    const minDepositCBalanceReq = Math.floor(tcBal * minDepositRate);
+
+    /* 9. Total Deposit Required */
+    const depositReq = totalSpent + totalIssueCharges;
+
+    /* 10. Gift Vouchers */
+    const giftVoucherRate = Number(selectedMembership.giftVoucher ?? 0) / 100;
+    const giftVouchers = Math.ceil(totalSpent * giftVoucherRate);
+
+    setValues({
+      ...values,
+      totalIssueCharges: totalIssueCharges,
+      appDiscount: appDisc,
+      totalSpendComm: totalSpent,
+      totalFBalance: tfBal,
+      totalCBalance: tcBal,
+      minDepositeRequiredFBalance: minDepositFBalanceReq,
+      minDepositeRequiredCBalance: minDepositCBalanceReq,
+      depositeReq: depositReq,
+      giftVouchers: giftVouchers
+    })
+
+  }, [debouncedMembers, selectedMembership]);
+
   const onChange = (
     field: keyof membership,
     value: string | number | boolean | Date
@@ -145,6 +241,7 @@ export default function MembershipFormModal({
       const selectedMembership = membershipMasterOptions.find((m) => {
         if (m.membershipMasterId == Number(value)) return m;
       });
+      setSelectedMembership(selectedMembership);
       setValues((prev) => ({
         ...prev,
         endDate: format(
@@ -155,7 +252,7 @@ export default function MembershipFormModal({
           addDays(
             prev.startDate,
             Number(selectedMembership?.durationDays) +
-              Number(selectedMembership?.graceDays)
+            Number(selectedMembership?.graceDays)
           ),
           "yyyy-MM-dd"
         ),
@@ -338,6 +435,7 @@ export default function MembershipFormModal({
           <FormContent
             fields={fields}
             values={values}
+            error={""}
             errors={fieldErrors}
             onChange={onChange as any}
             layout="grid"
