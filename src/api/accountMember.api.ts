@@ -48,3 +48,12 @@ export function updateAccountMember(
 export function deleteAccountMember(id: number): Promise<Response<void>> {
   return request(`${BASE_URL}/${id}`, { method: "DELETE" });
 }
+
+export function bulkAccountMember(
+  payload: Omit<AccountMember, "accountMemberId" | "createdAt" | "updatedAt">
+): Promise<Response<AccountMember>> {
+  return request(`${BASE_URL}/bulk`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};

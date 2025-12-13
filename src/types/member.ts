@@ -12,18 +12,19 @@ export interface Member {
   schoolName?: string;
   qualification?: string;
   idProofType?:
-    | "aadhar card"
-    | "pan card"
-    | "voter id"
-    | "passport"
-    | "driving license"
-    | "other";
+  | "aadhar card"
+  | "pan card"
+  | "voter id"
+  | "passport"
+  | "driving license"
+  | "other";
   idProofNumber?: string;
   contactNumber?: string;
   transportMode: "self drive" | "parents" | "van" | "walking" | "other";
   addressId: number;
   avatar?: string | null;
   remarks?: string;
+  personalStatus?: string;
   createdAt?: Date;
   updatedAt?: Date;
 

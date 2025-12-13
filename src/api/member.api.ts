@@ -25,25 +25,29 @@ export interface MembersQuery {
 
 	createdFrom?: string
 	createdTo?: string
+	personalStatus?: string
+	contactNumber?: string
 }
 
 const MEMBER_BASE = import.meta.env.VITE_APP_API_URL + '/member'
 
 export function getMembers(params: MembersQuery = {}): Promise<Response<Member[]>> {
 	const qs = toQueryString({
-    page: params.page ?? 1,
-    limit: params.limit ?? 10,
-    sortBy: params.sortBy ?? "memberId",
-    sortOrder: params.sortOrder ?? "ASC",
-    search: params.search,
+		page: params.page ?? 1,
+		limit: params.limit ?? 10,
+		sortBy: params.sortBy ?? "memberId",
+		sortOrder: params.sortOrder ?? "ASC",
+		search: params.search,
 
-    memberFirstName: params.memberFirstName,
-    memberLastName: params.memberLastName,
-    gender: params.gender,
-    mobile: params.mobile,
-    status: params.status,
-    city: params.city,
-  });
+		memberFirstName: params.memberFirstName,
+		memberLastName: params.memberLastName,
+		gender: params.gender,
+		mobile: params.mobile,
+		status: params.status,
+		city: params.city,
+		personalStatus: params.personalStatus,
+		contactNumber: params.contactNumber
+	});
 
 	return request<Response<Member[]>>(`${MEMBER_BASE}${qs}`)
 }
