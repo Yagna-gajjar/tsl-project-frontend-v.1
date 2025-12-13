@@ -46,13 +46,13 @@ const fields: FieldConfig<MembershipMaster>[] = [
     key: "introductionDate",
     label: "Introduce Date",
     icon: Calendar,
-    render: dateRender,
+    render: dateRender as any,
   },
   {
     key: "suspensionDate",
     label: "Suspend Date",
     icon: Calendar,
-    render: dateRender,
+    render: dateRender as any,
   },
   {
     key: "durationDays",
@@ -97,28 +97,10 @@ const fields: FieldConfig<MembershipMaster>[] = [
     render: (v) => (v !== undefined ? String(v) : "-"),
   },
   {
-    key: "regMemberIncluded",
-    label: "Reg Members Included",
-    icon: Users,
-    render: (v) => (v !== undefined ? String(v) : "-"),
-  },
-  {
-    key: "guardianEntry",
-    label: "Guardian Entry",
-    icon: CheckCircle,
-    render: (v) => boolBadge(v as boolean),
-  },
-  {
     key: "guestAllowed",
     label: "Guest Allowed",
     icon: CheckCircle,
     render: (v) => boolBadge(v as boolean),
-  },
-  {
-    key: "rfid",
-    label: "RFID",
-    icon: Hash,
-    render: (v) => (v ? String(v) : "-"),
   },
   {
     key: "clubAccess",
@@ -154,13 +136,13 @@ const fields: FieldConfig<MembershipMaster>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: dateRender,
+    render: dateRender as any,
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Calendar,
-    render: dateRender,
+    render: dateRender as any,
   },
 ];
 

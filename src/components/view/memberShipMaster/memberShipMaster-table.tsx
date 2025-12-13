@@ -44,12 +44,6 @@ export default function MembershipMasterTable({
         sortOrder,
         search: search || undefined,
         membershipType: filters.membershipType as string | undefined,
-        guardianEntry:
-          filters.guardianEntry === "true"
-            ? true
-            : filters.guardianEntry === "false"
-            ? false
-            : undefined,
         guestAllowed:
           filters.guestAllowed === "true"
             ? true
@@ -207,24 +201,6 @@ export default function MembershipMasterTable({
       filterType: "number",
     },
     {
-      header: "Reg Member Included",
-      key: "regMemberIncluded",
-      render: (row) => row.regMemberIncluded ?? 0,
-      sortable: true,
-      filterType: "number",
-    },
-    {
-      header: "Guardian Entry",
-      key: "guardianEntry",
-      render: (row) => (row.guardianEntry ? "Yes" : "No"),
-      sortable: true,
-      filterType: "select",
-      filterOptions: [
-        { value: "true", label: "Yes" },
-        { value: "false", label: "No" },
-      ],
-    },
-    {
       header: "Guest Allowed",
       key: "guestAllowed",
       render: (row) => (row.guestAllowed ? "Yes" : "No"),
@@ -234,13 +210,6 @@ export default function MembershipMasterTable({
         { value: "true", label: "Yes" },
         { value: "false", label: "No" },
       ],
-    },
-    {
-      header: "RFID",
-      key: "rfid",
-      render: (row) => row.rfid || "-",
-      sortable: true,
-      filterType: "text",
     },
     {
       header: "Club Access",

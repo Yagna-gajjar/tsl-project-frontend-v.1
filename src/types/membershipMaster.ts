@@ -25,12 +25,8 @@ export interface MembershipMaster {
 
   bookingDiscount: number;
   graceDays: number;
-  regMemberIncluded: number;
-
-  guardianEntry: boolean;
 
   guestAllowed: boolean;
-  rfid: string;
   clubAccess: boolean;
 
   birthdayVenueUsage: number;
