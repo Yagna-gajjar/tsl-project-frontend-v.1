@@ -28,10 +28,11 @@ export function getAuthorities(
   return request(`${AUTHORITY_BASE}${qs}`);
 }
 
-interface changeauthority  {
-    oldMemberId: number;
-    newMemberId: number;
-    accountId: number;
+interface changeauthority {
+  oldMemberId: number;
+  newMemberId: number;
+  accountId: number;
+  linkDate: Date | string;
 }
 
 export function changeAuthority(
