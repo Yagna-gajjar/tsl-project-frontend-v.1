@@ -131,7 +131,11 @@ export default function MembershipFormModal({
         const accRows = accRes?.data as Account[];
         setAccountOptions(accRows);
       } catch (err) {
-        console.error("Failed to load dropdown data", err);
+        toast({
+          title: "Erro",
+          description: "Failed to make memebrship",
+          variant: "destructive"
+        })
         setMembershipMasterOptions([]);
         setAccountOptions([]);
       }
@@ -157,11 +161,11 @@ export default function MembershipFormModal({
 
     /* 1. Total Issue Charge */
     const perMemberRegCharge = Number(selectedMembership.perMemberRegCharge ?? 0);
+    const perMemberPerMonthCharge = Number(selectedMembership.commPerMonthPerMember ?? 0);
     const totalIssueCharges = perMemberRegCharge * members;
 
     /* 2. Applicable Discount */
     const memberLimit = Number(selectedMembership.commDiscountPerMember);
-    console.log(selectedMembership," limirs")
     const discountPerMember =
       Number(selectedMembership.decreaseCommByPR ?? 0) / 100;
     let applicableMembers;
@@ -176,29 +180,26 @@ export default function MembershipFormModal({
 
     const appDisc =
       1 - (applicableMembers - 1) * discountPerMember;
-    console.log(applicableMembers, " opadbc");
 
     /* 3. Total Spent (Intermediate) */
     const durationMultiplier = Math.floor(
-      Number(selectedMembership.durationDays ?? 0) / 12
+      Number(selectedMembership.durationDays ?? 0) / 30
     );
-
     const intermediate = Number(
       (
         appDisc *
-        perMemberRegCharge *
+        perMemberPerMonthCharge *
         durationMultiplier *
         members
       ).toFixed(2)
     );
-
     /* 4. Total F Balance */
-    const feePaymentComm = Number(selectedMembership.feePaymentComm ?? 0);
-    const tfBal = Math.floor(intermediate * feePaymentComm);
+    const feePaymentComm = selectedMembership?.feePaymentComm as number / 100;
+    const tfBal = Math.floor(intermediate * feePaymentComm / 100) * 100;
 
     /* 5. Total C Balance */
-    const minCBalance = Number(selectedMembership.minCBalance ?? 0);
-    const tcBal = Math.floor(intermediate * minCBalance);
+    const minCBalance = selectedMembership.minCBalance / 100;
+    const tcBal = Math.floor(intermediate * minCBalance / 100) * 100;
 
     /* 6. Total Spent */
     const totalSpent = tfBal + tcBal;
@@ -215,8 +216,7 @@ export default function MembershipFormModal({
     const depositReq = totalSpent + totalIssueCharges;
 
     /* 10. Gift Vouchers */
-    const giftVoucherRate = Number(selectedMembership.giftVoucher ?? 0) / 100;
-    const giftVouchers = Math.ceil(totalSpent * giftVoucherRate);
+    const giftVouchers = Math.ceil(((totalSpent / 100) * selectedMembership?.giftVoucher) / 100) * 100;
 
     setValues({
       ...values,
@@ -375,7 +375,7 @@ export default function MembershipFormModal({
     { name: "totalIssueCharges", label: "Issue Charges", type: "number" },
     { name: "appDiscount", label: "App Discount", type: "number" },
 
-    { name: "totalFBalance", label: "Total Food Balance", type: "number" },
+    { name: "totalFBalance", label: "Total F Balance", type: "number" },
     { name: "totalCBalance", label: "Total Credit Balance", type: "number" },
     {
       name: "totalSpendComm",
@@ -386,7 +386,7 @@ export default function MembershipFormModal({
 
     {
       name: "minDepositeRequiredFBalance",
-      label: "Min Deposit (Food)",
+      label: "Min Deposit (F)",
       type: "number",
     },
     {
