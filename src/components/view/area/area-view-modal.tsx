@@ -60,11 +60,8 @@ export default function AreaViewModal({ isOpen, areaId, onClose }: Props) {
       const useId = id ?? areaId;
       if (!useId) throw new Error("Area ID missing");
 
-      const res: Response = await getAreaById(Number(useId));
-
-      if (res && res.data) return res.data as Area;
-
-      return res;
+      const res: Response<Area> = await getAreaById(Number(useId));
+      return res?.data;
     },
     [areaId]
   );
@@ -74,7 +71,7 @@ export default function AreaViewModal({ isOpen, areaId, onClose }: Props) {
       isOpen={isOpen}
       onClose={onClose}
       itemId={Number(areaId)}
-      fetchFn={fetchFn as any}
+      fetchFn={fetchFn}
       fields={fields}
       title="View Area"
       layout="grid"

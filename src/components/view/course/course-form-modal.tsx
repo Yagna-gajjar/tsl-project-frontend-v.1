@@ -391,7 +391,7 @@ export default function CourseFormModal({
     {
       name: "introductionDate",
       label: "Introduction Date",
-      type: "Date",
+      type: "date",
       required: true,
     },
     {

@@ -67,6 +67,8 @@ export default function AppointmentModal({
   selectedEnrollment,
   onAction,
 }: Props) {
+  console.log(selectedEnrollment);
+
   const [batchMembers, setBatchMembers] = useState<BatchMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +91,7 @@ export default function AppointmentModal({
     setLoading(true);
     try {
       const res = await getBatchMember({
-        enrollmentId: enrollmentId
+        enrollmentId: enrollmentId,
       });
       let members: any = [];
       if (Array.isArray(res)) members = res;
@@ -112,11 +114,11 @@ export default function AppointmentModal({
     }
   }, [selectedEnrollment]);
 
-  const loadBatches = useCallback(async (courseName?: string | null) => {
+  const loadBatches = useCallback(async (academyId?: number) => {
     setLoadingBatches(true);
     try {
       const opts: Response<Batch[]> = await getBatch({
-        courseName: courseName,
+        academyId: academyId,
       });
       setBatchOptions(opts?.data);
     } catch (e) {
@@ -152,7 +154,7 @@ export default function AppointmentModal({
   useEffect(() => {
     if (open && selectedEnrollment?.enrollmentId) {
       void fetchBatchMembers();
-      void loadBatches(selectedEnrollment?.courseName);
+      void loadBatches(selectedEnrollment?.academyId);
     } else {
       setBatchMembers([]);
       setRows([]);
@@ -424,8 +426,9 @@ export default function AppointmentModal({
                                     )} - ${format(
                                       new Date(`2023-01-01T${b.endTime}`),
                                       "hh:mm a"
-                                    )} | Seats: ${b.activeMemberCount} / ${b.batchCapacity
-                                      }`}
+                                    )} | Seats: ${b.activeMemberCount} / ${
+                                      b.maxCapacity
+                                    }`}
                                   </option>
                                 ))}
                               </motion.select>

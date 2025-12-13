@@ -49,7 +49,7 @@ export default function AreaFormModal({
           value: Number(f.facilityId ?? 0),
         }));
         setFacilityFields(options as unknown as [string, number][]);
-      } catch (err) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load facilities.",

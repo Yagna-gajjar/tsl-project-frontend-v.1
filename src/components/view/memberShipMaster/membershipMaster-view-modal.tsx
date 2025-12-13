@@ -1,7 +1,16 @@
+// UPDATED: membershipMaster -> MembershipMaster
 import { useCallback } from "react";
-import { Hash, Calendar, BookOpen, CheckCircle, Users, CreditCard, Building2 } from "lucide-react";
+import {
+  Hash,
+  Calendar,
+  BookOpen,
+  CheckCircle,
+  Users,
+  CreditCard,
+  Building2,
+} from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
-import type { membershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/memberShipMaster";
 import { getMembershipMasterById } from "@/api/membershipMaster.api";
 import type { FieldConfig } from "@/components/view-modal/types";
 import type { Response } from "@/types/response";
@@ -16,41 +25,49 @@ const toRs = (v?: number) => `Rs. ${Number(v ?? 0).toFixed(2)}`;
 
 const boolBadge = (v?: boolean) => {
   const yes = !!v;
-  const color = yes ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700";
-  return <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{yes ? "Yes" : "No"}</span>;
+  const color = yes
+    ? "bg-green-100 text-green-800"
+    : "bg-gray-100 text-gray-700";
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>
+      {yes ? "Yes" : "No"}
+    </span>
+  );
 };
 
-const dateRender = (v?: Date | string | null) => (v ? new Date(v as Date).toLocaleString() : "-");
+const dateRender = (v?: Date | string | null) =>
+  v ? new Date(v as Date).toLocaleString() : "-";
 
-const fields: FieldConfig<membershipMaster>[] = [
+// UPDATED FIELD KEYS TO MATCH NEW TYPE
+const fields: FieldConfig<MembershipMaster>[] = [
   { key: "membershipMasterId", label: "ID", icon: Hash },
   { key: "membershipType", label: "Membership Type", icon: Users },
   {
-    key: "introduceDate",
+    key: "introductionDate",
     label: "Introduce Date",
     icon: Calendar,
-    render: (v) => dateRender(v as Date | string),
+    render: dateRender,
   },
   {
-    key: "suspendDate",
+    key: "suspensionDate",
     label: "Suspend Date",
     icon: Calendar,
-    render: (v) => dateRender(v as Date | string),
+    render: dateRender,
   },
   {
-    key: "membershipDurationInDays",
+    key: "durationDays",
     label: "Duration (days)",
     icon: Hash,
     render: (v) => (typeof v === "number" ? String(v) : "-"),
   },
   {
-    key: "issueCharge",
+    key: "minIssueCharge",
     label: "Issue Charge",
     icon: CreditCard,
     render: (v) => toRs(v as number),
   },
   {
-    key: "minFBalance",
+    key: "minDeposite",
     label: "Min F Balance",
     icon: CreditCard,
     render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
@@ -62,8 +79,8 @@ const fields: FieldConfig<membershipMaster>[] = [
     render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
   },
   {
-    key: "minVBalance",
-    label: "Min V Balance",
+    key: "giftVoucher",
+    label: "Min V Balance (Gift Voucher)",
     icon: CreditCard,
     render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
   },
@@ -113,16 +130,16 @@ const fields: FieldConfig<membershipMaster>[] = [
     key: "birthdayVenueUsage",
     label: "Birthday Venue Usage",
     icon: BookOpen,
-    render: (v) => boolBadge(v as boolean),
+    render: (v) => String(v ?? 0),
   },
   {
     key: "anniversaryVenueUsage",
     label: "Anniversary Venue Usage",
     icon: BookOpen,
-    render: (v) => boolBadge(v as boolean),
+    render: (v) => String(v ?? 0),
   },
   {
-    key: "cancallationCharges",
+    key: "cancellationCharges",
     label: "Cancellation Charges",
     icon: CreditCard,
     render: (v) => toRs(v as number),
@@ -137,13 +154,13 @@ const fields: FieldConfig<membershipMaster>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v) => dateRender(v as Date | string),
+    render: dateRender,
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Calendar,
-    render: (v) => dateRender(v as Date | string),
+    render: dateRender,
   },
 ];
 
@@ -153,20 +170,22 @@ export default function MembershipMasterViewModal({
   onClose,
 }: Props) {
   const fetchFn = useCallback(
-    async (id?: number | string): Promise<membershipMaster> => {
+    async (id?: number | string): Promise<MembershipMaster> => {
       const useId = id ?? membershipMasterId;
       if (!useId) throw new Error("MembershipMaster ID missing");
 
-      const res: Response<membershipMaster> = await getMembershipMasterById(Number(useId));
+      const res: Response<MembershipMaster> = await getMembershipMasterById(
+        Number(useId)
+      );
 
-      if (res && res.data) return res.data as membershipMaster;
-      return {} as membershipMaster;
+      if (res && res.data) return res.data as MembershipMaster;
+      return {} as MembershipMaster;
     },
     [membershipMasterId]
   );
 
   return (
-    <ViewModal<membershipMaster>
+    <ViewModal<MembershipMaster>
       isOpen={isOpen}
       onClose={onClose}
       itemId={Number(membershipMasterId)}

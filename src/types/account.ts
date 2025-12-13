@@ -1,0 +1,19 @@
+export interface Account {
+  accountId?: number;
+  regDate: Date | string;
+  suspensionDate?: Date | string;
+  entityId: number;
+  defineEntity?: string;
+  name: string;
+  addressId?: number;
+  contact: string;
+  proffesionalSector: string;
+  adminInstruction: string;
+
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  pinCode?: string;
+}

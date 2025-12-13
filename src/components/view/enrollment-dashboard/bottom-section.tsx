@@ -43,6 +43,7 @@ export interface EnrollmentHistoryItem {
   adjustment?: string | number | null;
   sessionUnits?: number | null;
   memberId?: number | null;
+  academyId?: number;
 }
 
 interface EnrollmentHistoryProps {
@@ -301,13 +302,13 @@ export default function EnrollmentHistory({
   };
 
   const openAppointmentDialog = (item: EnrollmentHistoryItem) => {
-
     setSelectedEnrollment({
       enrollmentId: item.enrollmentId,
       memberId: selectedMemberId,
       courseName: item.courseName,
       academyName: item.academyName,
       sessionUnits: item.sessionUnits,
+      academyId: item.academyId,
     });
     setAppointmentDialogOpen(true);
   };

@@ -146,7 +146,7 @@ export function BatchFormModal({
     batchName: initialData?.batchName ?? "",
     academyId: initialData?.academyId ?? undefined,
     courseId: initialData?.courseId ?? undefined,
-    maxCapacity: initialData?.batchCapacity ?? undefined,
+    maxCapacity: initialData?.maxCapacity ?? undefined,
     activityName: initialData?.activityName ?? undefined,
     introduceDate: formatDateInput(initialData?.introduceDate) ?? undefined,
     suspendedDate: formatDateInput(initialData?.suspendedDate) ?? undefined,
@@ -518,7 +518,7 @@ export function BatchFormModal({
       if (startMin !== null && endMin !== null && endMin < startMin) {
         errs.endTime = "End time cannot be before start time";
       }
-    } catch { }
+    } catch {}
 
     try {
       const intro = values.introduceDate
@@ -530,7 +530,7 @@ export function BatchFormModal({
       if (intro && susp && susp < intro) {
         errs.suspendedDate = "Suspended date cannot be before introduce date";
       }
-    } catch { }
+    } catch {}
 
     return errs;
   }, [values]);
@@ -555,6 +555,8 @@ export function BatchFormModal({
         batchName: String(values.batchName ?? "").trim(),
         batchType: values.batchType,
         academyId: Number(values.academyId),
+        maxCapacity: Number(values.maxCapacity),
+        admisionCriteria: values.admisionCriteria,
         courseId: values.courseId ? Number(values.courseId) : undefined,
         activityName: values.activityName
           ? String(values.activityName)
