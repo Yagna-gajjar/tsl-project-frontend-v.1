@@ -34,4 +34,5 @@ export interface Member {
   state?: string;
   country?: string;
   pinCode?: string;
+  address?: string;
 }	

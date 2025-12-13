@@ -27,6 +27,9 @@ export interface MembersQuery {
 	createdTo?: string
 	personalStatus?: string
 	contactNumber?: string
+	address?: string
+	idProofNumber?: string
+	includeCasual?: boolean
 }
 
 const MEMBER_BASE = import.meta.env.VITE_APP_API_URL + '/member'
@@ -46,7 +49,10 @@ export function getMembers(params: MembersQuery = {}): Promise<Response<Member[]
 		status: params.status,
 		city: params.city,
 		personalStatus: params.personalStatus,
-		contactNumber: params.contactNumber
+		contactNumber: params.contactNumber,
+		address: params.address,
+		idProofNumber: params.idProofNumber,
+		includeCasual: params.includeCasual
 	});
 
 	return request<Response<Member[]>>(`${MEMBER_BASE}${qs}`)
