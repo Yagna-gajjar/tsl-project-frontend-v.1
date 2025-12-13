@@ -45,14 +45,14 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
       setTotal(res.pagination.total);
 
       const rows = Array.isArray(res?.data) ? res.data : [];
-
+      
       setData(
-        rows.map((r) => ({
+        rows?.map((r) => ({
           ...r,
           regDate: new Date(r.regDate),
           suspensionDate: r.suspensionDate
             ? new Date(r.suspensionDate)
-            : undefined
+            : undefined,
         }))
       );
     } catch {

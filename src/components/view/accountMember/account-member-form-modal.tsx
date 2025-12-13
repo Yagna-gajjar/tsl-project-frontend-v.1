@@ -32,7 +32,6 @@ export default function AccountMemberFormModal({
   onClose,
   onSaved,
 }: Props) {
-  /* -------------------- STATE -------------------- */
   const [values, setValues] = useState<AccountMember>({
     accountMemberId: 0,
     memberId: 0,
@@ -52,7 +51,6 @@ export default function AccountMemberFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  /* -------------------- INIT + LOAD DROPDOWNS -------------------- */
   useEffect(() => {
     if (!isOpen) return;
 
@@ -90,7 +88,7 @@ export default function AccountMemberFormModal({
           limit: 1000,
         });
         console.log(resMember);
-        
+
         setMemberOptions(Array.isArray(resMember?.data) ? resMember.data : []);
 
         const resAccount: Response<Account[]> = await getAccounts({
@@ -110,7 +108,6 @@ export default function AccountMemberFormModal({
     fetchMemberAccount();
   }, [isOpen, initialData]);
 
-  /* -------------------- VALIDATION -------------------- */
   const validate = () => {
     const errs: Record<string, string> = {};
 
@@ -122,7 +119,6 @@ export default function AccountMemberFormModal({
     return errs;
   };
 
-  /* -------------------- SUBMIT -------------------- */
   const submit = async () => {
     setIsSubmitting(true);
     setError(null);
@@ -157,13 +153,12 @@ export default function AccountMemberFormModal({
     }
   };
 
-  /* -------------------- FIELDS -------------------- */
   const fields: FormFieldConfig<AccountMember>[] = [
     {
       name: "memberId",
       label: "Member",
       type: "select",
-      options: memberOptions.map((m) => ({
+      options: memberOptions?.map((m) => ({
         value: m.memberId,
         label: `${m.memberFirstName ?? ""} ${m.memberLastName ?? ""}`.trim(),
       })),
@@ -173,7 +168,7 @@ export default function AccountMemberFormModal({
       name: "accountId",
       label: "Account",
       type: "select",
-      options: accountOptions.map((a) => ({
+      options: accountOptions?.map((a) => ({
         value: a.accountId,
         label: a.name ?? `Account ${a.accountId}`,
       })),

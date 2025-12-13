@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Account } from "@/types/account";
 import { getAccountById } from "@/api/account.api";
@@ -12,9 +12,168 @@ import {
   FileText,
   Plus,
   Users,
+  X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import MemberFormModal from "../members/member-form-modal";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AnimatePresence, motion } from "framer-motion";
+import type { Response } from "@/types/response";
+import { getAccountMembers } from "@/api/accountMember.api";
+import type { AccountMember } from "@/types/accountMember";
+import { changeAuthority, getAuthorities } from "@/api/authority.api";
+import { toast } from "@/hooks/use-toast";
+
+type PropsMemberList = {
+  open: boolean;
+  onClose: () => void;
+  members: AccountMember[];
+  accountId?: number;
+};
+
+export function MemberListModal({
+  open,
+  onClose,
+  members,
+  accountId,
+}: PropsMemberList) {
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  /* ---------------- Fetch Current Authority ---------------- */
+
+  const fetchAuthority = useCallback(async () => {
+    if (!accountId) return;
+
+    try {
+      const res: Response<{ memberId: number }> = await getAuthorities({
+        accountId: accountId,
+        active: true,
+      });
+
+      if (res?.success && res?.data[0].memberId) {
+        setSelectedMemberId(res.data[0].memberId);
+      }
+      console.log(res?.data[0].memberId);
+    } catch (err) {
+      console.error("Failed to fetch authority", err);
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    if (open) {
+      fetchAuthority();
+    }
+  }, [open, fetchAuthority]);
+
+  /* ---------------- Change Authority ---------------- */
+
+  const handleSelect = async (newMemberId: number) => {
+    if (!accountId || selectedMemberId === newMemberId) return;
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        oldMemberId: selectedMemberId!,
+        newMemberId,
+        accountId,
+      };
+
+      const res: Response<any> = await changeAuthority(payload);
+
+      if (res?.success) {
+        setSelectedMemberId(newMemberId);
+        toast({
+          title: "Success",
+          description: "Authority updated successfully",
+          variant: "success",
+        });
+      } else {
+        throw new Error("Failed");
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to change authority",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---------------- Render ---------------- */
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <AnimatePresence>
+        {open && (
+          <DialogContent
+            forceMount
+            className="p-0 border-none bg-transparent shadow-none"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Family Members</h2>
+                <button
+                  onClick={onClose}
+                  className="text-gray-500 hover:text-black"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="space-y-3 overflow-y-auto">
+                {members.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center">
+                    No members found
+                  </p>
+                ) : (
+                  members.map((m) => (
+                    <label
+                      key={m.memberId}
+                      className="border rounded-lg p-3 flex justify-between items-center cursor-pointer"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {m.memberFirstName} {m.memberLastName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {m.relationship}
+                        </p>
+                      </div>
+
+                      <input
+                        type="radio"
+                        name="authorityMember"
+                        disabled={loading}
+                        checked={selectedMemberId === m.memberId}
+                        onChange={() => handleSelect(m.memberId)}
+                        className="h-4 w-4 accent-black"
+                      />
+                    </label>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </DialogContent>
+        )}
+      </AnimatePresence>
+    </Dialog>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* ------------------------ ACCOUNT VIEW MODAL ----------------------- */
+/* ------------------------------------------------------------------ */
 
 type Props = {
   isOpen: boolean;
@@ -22,7 +181,7 @@ type Props = {
   onClose: () => void;
 };
 
-const baseViewFields: FieldConfig<Account | any>[] = [
+const baseViewFields: FieldConfig<Account>[] = [
   {
     key: "addMember",
     label: "Expand Family",
@@ -74,24 +233,45 @@ export default function AccountViewModal({
   accountId,
   onClose,
 }: Props) {
+  /* ---------------- Fetch Account ---------------- */
+
   const fetchFn = useCallback(async (id?: number) => {
     if (!id) throw new Error("Missing account ID");
     const res = await getAccountById(id);
     return res.data as Account;
   }, []);
 
-  const [memberFormOpen, setMemberFormOpen] = useState(false);
-  const [memberInitialData, setMemberInitialData] =
-    useState<Partial<any> | null>(null);
+  /* ---------------- State ---------------- */
 
-  const openAddMemberForAccount = (account: Account | undefined | null) => {
+  const [memberFormOpen, setMemberFormOpen] = useState(false);
+  const [memberListOpen, setMemberListOpen] = useState(false);
+  const [memberList, setMemberList] = useState<AccountMember[]>([]);
+  const [memberInitialData, setMemberInitialData] =
+    useState<Partial<AccountMember> | null>(null);
+
+  /* ---------------- Helpers ---------------- */
+
+  const openAddMemberForAccount = (account: Account | null) => {
     if (!account) return;
-    setMemberInitialData({
-      accountId: account.accountId,
-    });
+    setMemberInitialData({ accountId: account.accountId });
     setMemberFormOpen(true);
   };
-  const navigate = useNavigate();
+
+  const fetchMembers = useCallback(async () => {
+    if (!accountId) return;
+
+    try {
+      const res: Response<AccountMember[]> = await getAccountMembers({
+        accountId,
+      });
+      setMemberList(res?.data ?? []);
+    } catch (err) {
+      console.error("Failed to fetch members", err);
+      setMemberList([]);
+    }
+  }, [accountId]);
+
+  /* ---------------- View Fields ---------------- */
 
   const fields = baseViewFields.map((f) => {
     if (f.key === "addMember") {
@@ -103,24 +283,26 @@ export default function AccountViewModal({
             openAddMemberForAccount(row ?? null);
           },
         },
-      } as FieldConfig<Account>;
-    } else if (f.key === "viewMember") {
+      };
+    }
+
+    if (f.key === "viewMember") {
       return {
         ...f,
         button: {
           ...f.button,
-          onClick: (row: Account) => {
-            const accountId = row?.accountId;
-            if (!accountId) return;
-
-            navigate(`/member?accountId=${accountId}`);
+          onClick: async () => {
+            await fetchMembers();
+            setMemberListOpen(true);
           },
         },
-      } as FieldConfig<Account>;
+      };
     }
 
     return f;
   });
+
+  /* ---------------- Render ---------------- */
 
   return (
     <>
@@ -133,16 +315,25 @@ export default function AccountViewModal({
         title="View Account"
         layout="grid"
       />
+
       <MemberFormModal
         isOpen={memberFormOpen}
+        initialData={memberInitialData}
         onClose={() => {
           setMemberFormOpen(false);
           setMemberInitialData(null);
         }}
-        initialData={memberInitialData}
-        onSaved={() => {
+        onSaved={async () => {
           setMemberFormOpen(false);
+          await fetchMembers(); // refresh list after add
         }}
+      />
+
+      <MemberListModal
+        open={memberListOpen}
+        onClose={() => setMemberListOpen(false)}
+        members={memberList}
+        accountId={accountId}
       />
     </>
   );

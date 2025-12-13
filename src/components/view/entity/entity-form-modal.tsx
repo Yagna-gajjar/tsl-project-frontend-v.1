@@ -120,9 +120,9 @@ export default function EntityFormModal({
       name: "entityType",
       label: "Entity Type",
       type: "select",
-      options: entityTypeOpt.map((e) => ({
+      options: entityTypeOpt?.map((e) => ({
         value: e.value,
-        label: e.value
+        label: e.value,
       })),
       required: true,
     },
