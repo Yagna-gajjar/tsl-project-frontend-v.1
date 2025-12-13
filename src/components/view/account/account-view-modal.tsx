@@ -36,7 +36,9 @@ export function MemberListModal({
   members,
   accountId,
 }: PropsMemberList) {
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [currentMemberId, setCurrentMemberId] = useState<number | null>(null);
+  const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
+  const [linkDate, setLinkDate] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   /* ---------------- Fetch Current Authority ---------------- */
@@ -45,15 +47,14 @@ export function MemberListModal({
     if (!accountId) return;
 
     try {
-      const res: Response<{ memberId: number }> = await getAuthorities({
-        accountId: accountId,
+      const res: Response<any[]> = await getAuthorities({
+        accountId,
         active: true,
       });
 
-      if (res?.success && res?.data[0].memberId) {
-        setSelectedMemberId(res.data[0].memberId);
+      if (res?.success && res.data?.length > 0) {
+        setCurrentMemberId(res.data[0].memberId);
       }
-      console.log(res?.data[0].memberId);
     } catch (err) {
       console.error("Failed to fetch authority", err);
     }
@@ -62,27 +63,42 @@ export function MemberListModal({
   useEffect(() => {
     if (open) {
       fetchAuthority();
+      setPendingMemberId(null);
+      setLinkDate("");
     }
   }, [open, fetchAuthority]);
 
-  /* ---------------- Change Authority ---------------- */
+  /* ---------------- Save Authority ---------------- */
 
-  const handleSelect = async (newMemberId: number) => {
-    if (!accountId || selectedMemberId === newMemberId) return;
+  const handleSave = async () => {
+    if (!accountId || !currentMemberId || !pendingMemberId || !linkDate) {
+      toast({
+        title: "Missing data",
+        description: "Please select member and date",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       setLoading(true);
 
       const payload = {
-        oldMemberId: selectedMemberId!,
-        newMemberId,
+        oldMemberId: currentMemberId,
+        newMemberId: pendingMemberId,
         accountId,
+        linkDate,
       };
+
+      console.log(payload);
 
       const res: Response<any> = await changeAuthority(payload);
 
       if (res?.success) {
-        setSelectedMemberId(newMemberId);
+        setCurrentMemberId(pendingMemberId);
+        setPendingMemberId(null);
+        setLinkDate("");
+
         toast({
           title: "Success",
           description: "Authority updated successfully",
@@ -91,7 +107,7 @@ export function MemberListModal({
       } else {
         throw new Error("Failed");
       }
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to change authority",
@@ -100,6 +116,11 @@ export function MemberListModal({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    setPendingMemberId(null);
+    setLinkDate("");
   };
 
   /* ---------------- Render ---------------- */
@@ -130,14 +151,15 @@ export function MemberListModal({
                 </button>
               </div>
 
-              {/* Body */}
+              {/* Members */}
               <div className="space-y-3 overflow-y-auto">
-                {members.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center">
-                    No members found
-                  </p>
-                ) : (
-                  members.map((m) => (
+                {members?.map((m) => {
+                  const checked =
+                    pendingMemberId !== null
+                      ? pendingMemberId === m.memberId
+                      : currentMemberId === m.memberId;
+
+                  return (
                     <label
                       key={m.memberId}
                       className="border rounded-lg p-3 flex justify-between items-center cursor-pointer"
@@ -154,15 +176,45 @@ export function MemberListModal({
                       <input
                         type="radio"
                         name="authorityMember"
+                        checked={checked}
                         disabled={loading}
-                        checked={selectedMemberId === m.memberId}
-                        onChange={() => handleSelect(m.memberId)}
+                        onChange={() => setPendingMemberId(m.memberId)}
                         className="h-4 w-4 accent-black"
                       />
                     </label>
-                  ))
-                )}
+                  );
+                })}
               </div>
+
+              {/* Date + Actions */}
+              {pendingMemberId !== null &&
+                pendingMemberId !== currentMemberId && (
+                  <div className="mt-4 space-y-3">
+                    <input
+                      type="date"
+                      value={linkDate}
+                      onChange={(e) => setLinkDate(e.target.value)}
+                      className="w-full border rounded-md px-3 py-2 text-sm"
+                    />
+
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={handleCancel}
+                        className="px-4 py-2 text-sm border rounded-md"
+                        disabled={loading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={loading || !linkDate}
+                        className="px-4 py-2 text-sm bg-black text-white rounded-md"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                )}
             </motion.div>
           </DialogContent>
         )}
@@ -170,6 +222,7 @@ export function MemberListModal({
     </Dialog>
   );
 }
+
 
 /* ------------------------------------------------------------------ */
 /* ------------------------ ACCOUNT VIEW MODAL ----------------------- */
