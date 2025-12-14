@@ -17,7 +17,7 @@ export interface AccountMemberQuery {
 export function getAccountMembers(
   params: AccountMemberQuery = {}
 ): Promise<Response<AccountMember[]>> {
-  return request(`${BASE_URL}?${toQueryString(params)}`, { method: "GET" });
+  return request(`${BASE_URL}${toQueryString(params)}`, { method: "GET" });
 }
 
 export function getAccountMemberById(
