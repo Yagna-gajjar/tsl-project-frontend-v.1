@@ -288,7 +288,7 @@ export default function MemberTable({
       formData.append("file", selectedFile);
       formData.append("memberId", String(selectedMember?.memberId));
 
-      const uploadRes: any = await saveUrlToMember(formData);
+      await saveUrlToMember(formData);
 
       await fetchMembers();
       closeUploadModal();

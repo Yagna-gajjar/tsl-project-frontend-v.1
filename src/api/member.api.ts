@@ -72,8 +72,8 @@ export function createMember(payload: Member): Promise<Response<Member>> {
 export function updateMember(
 	id: number,
 	payload: Partial<Member>
-): Promise<Response> {
-	return request<Response>(`${MEMBER_BASE}/${id}`, {
+): Promise<Response<Member>> {
+	return request<Response<Member>>(`${MEMBER_BASE}/${id}`, {
 		method: 'PUT',
 		body: JSON.stringify(payload)
 	})

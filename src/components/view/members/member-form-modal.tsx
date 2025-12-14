@@ -8,11 +8,16 @@ import { createMember, updateMember } from "@/api/member.api";
 import type { Member } from "@/types/member";
 import { toast } from "@/hooks/use-toast";
 import type { FormFieldConfig } from "../../form-modal/types";
+import type { Address } from "@/types/address";
+import { createAccountMember } from "@/api/accountMember.api";
+import { getEnumsByCategory } from "@/api/enums.api";
+import type { Response } from "@/types/response";
+import type { Enums } from "@/types/enums";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  initialData?: Partial<Member> | null;
+  initialData?: (Partial<Member> & Partial<Address>) | null;
   onSaved?: (row: Member) => void;
   layout?: "grid" | "list";
 };
@@ -49,7 +54,6 @@ export function MemberFormModal({
   layout = "grid",
 }: Props) {
   const isEdit = Boolean(initialData && initialData.memberId);
-
   // Initialize empty state including address fields
   const empty: MemberFormState = {
     memberFirstName: initialData?.memberFirstName ?? "",
@@ -68,12 +72,12 @@ export function MemberFormModal({
     contactNumber: initialData?.contactNumber ?? "",
     transportMode: initialData?.transportMode ?? "self drive",
     remarks: initialData?.remarks ?? "",
-    line1: "",
-    line2: "",
-    city: "",
-    state: "",
-    country: "India",
-    pinCode: "",
+    line1: initialData?.line1 ?? "",
+    line2: initialData?.line2 ?? "",
+    city: initialData?.city ?? "",
+    state: initialData?.state ?? "",
+    country: initialData?.country ?? "India",
+    pinCode: initialData?.pinCode ?? "",
   };
 
   const [values, setValues] = useState<MemberFormState>(empty);
@@ -81,24 +85,49 @@ export function MemberFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
+  const [defaultAccount, setDefaultAccount] = useState<number>(0);
   useEffect(() => {
-    const addressData = initialData?.address || {};
-
     setValues({
       ...empty,
       ...(initialData ?? {}),
-      line1: addressData.line1 || "",
-      line2: addressData.line2 || "",
-      city: addressData.city || "",
-      state: addressData.state || "",
-      country: addressData.country || "India",
-      pinCode: addressData.pinCode || "",
+      line1: initialData?.line1 || "",
+      line2: initialData?.line2 || "",
+      city: initialData?.city || "",
+      state: initialData?.state || "",
+      country: initialData?.country || "India",
+      pinCode: initialData?.pinCode || "",
     });
 
     setError(null);
     setFieldErrors({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const fetchDefaultAccount = async () => {
+      try {
+        const res: Response<Enums[]> = await getEnumsByCategory("casual_account");
+
+        const defaultAccount = res?.data?.[0]?.value;
+        console.log(defaultAccount," dfx")
+        if (!defaultAccount) {
+          toast({
+            title: "Error",
+            description: "Can't find default casual account",
+            variant: "destructive"
+          }); return;
+        }
+
+        setDefaultAccount(Number(defaultAccount));
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch default account",
+          variant: "destructive"
+        });
+      }
+    };
+
+
+    fetchDefaultAccount();
+
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof MemberFormState, val: any) => {
@@ -266,10 +295,17 @@ export function MemberFormModal({
         country: values.country,
         pinCode: values.pinCode,
       };
-      let res: any;
+      let res: Response<Member>;
       if (isEdit && initialData?.memberId) {
         res = await updateMember(Number(initialData.memberId), payload);
       } else {
+        if (defaultAccount === 0) {
+          toast({
+            title: "Error",
+            description: "Can't Add Member, please define",
+            variant: "destructive"
+          });
+        }
         res = await createMember(payload as Member);
       }
 
@@ -293,11 +329,18 @@ export function MemberFormModal({
 
         return;
       }
+      const linkPayload: any = {
+        accountId: Number(defaultAccount),
+        linkBilling: false,
+        memberId: Number(res?.data?.memberId)
+      }
+
+      await createAccountMember(linkPayload);
 
       toast({
         title: isEdit ? "Member updated" : "Member created",
         description: `${String(
-          row?.memberFirstName ?? payload.memberFirstName
+          payload.memberFirstName
         )} saved successfully.`,
         variant: "success",
       });
