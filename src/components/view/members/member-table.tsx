@@ -387,7 +387,6 @@ export default function MemberTable({
       render: (row) => (row.dob ? format(row?.dob, "dd MMM yyyy") : "-"),
     },
     { key: "contactNumber", header: "Contact", sortable: false },
-    { key: "relationship", header: "Relationship", sortable: false },
     {
       key: "createdAt",
       header: "Created",

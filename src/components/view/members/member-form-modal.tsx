@@ -59,7 +59,6 @@ export function MemberFormModal({
     memberLastName: initialData?.memberLastName ?? "",
     dob: initialData?.dob ? new Date(initialData.dob) : undefined,
     email: initialData?.email ?? "",
-    relationship: initialData?.relationship ?? "",
     bloodGroup: initialData?.bloodGroup,
     gender: initialData?.gender ?? "male",
     status: initialData?.status ?? "active",
@@ -150,7 +149,6 @@ export function MemberFormModal({
     { name: "dob", label: "DOB", type: "Date", required: true },
     { name: "email", label: "Email", type: "text" },
     { name: "contactNumber", label: "Contact Number", type: "text" },
-    { name: "relationship", label: "Relationship", type: "text" },
     {
       name: "bloodGroup",
       label: "Blood Group",
@@ -273,7 +271,6 @@ export function MemberFormModal({
         memberLastName: values.memberLastName ?? "",
         dob: values.dob ? new Date(values.dob) : undefined,
         email: emailVal || undefined,
-        relationship: values.relationship ?? "",
         bloodGroup: values.bloodGroup,
         gender: values.gender,
         status: values.status,
