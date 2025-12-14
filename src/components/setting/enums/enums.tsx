@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Layers, RefreshCcw, Search } from "lucide-react";
@@ -17,11 +15,9 @@ export default function EnumsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // State for the Edit Sheet
   const [editingItem, setEditingItem] = useState<EnumItem | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // Defaults for creating a new item
   const [newItemCategory, setNewItemCategory] = useState<string>("");
 
   const fetchData = async () => {
@@ -40,7 +36,6 @@ export default function EnumsPage() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // Filter Logic
   const filteredData = useMemo(() => {
     if (!search.trim()) return data;
     const lower = search.toLowerCase();
@@ -50,15 +45,14 @@ export default function EnumsPage() {
     );
   }, [data, search]);
 
-  // Handlers
   const handleEdit = (item: EnumItem) => {
     setEditingItem(item);
-    setNewItemCategory(""); // Clear create mode
+    setNewItemCategory("");
     setIsSheetOpen(true);
   };
 
   const handleCreate = (category?: string) => {
-    setEditingItem(null); // Clear edit mode
+    setEditingItem(null);
     setNewItemCategory(category || "");
     setIsSheetOpen(true);
   };

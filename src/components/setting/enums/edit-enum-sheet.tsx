@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -13,7 +11,7 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@/components/ui/select"; // 1. Added Select imports
+} from "@/components/ui/select";
 import { createEnum, updateEnum, deleteEnum } from "@/api/enums.api";
 import { toast } from "@/hooks/use-toast";
 import { Trash2, Loader2 } from "lucide-react";
@@ -33,7 +31,9 @@ interface Props {
 export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, onSaved }: Props) {
 	const isEdit = !!initialData;
 	const [loading, setLoading] = useState(false);
-	const [casualAcc, setCasualAcc] = useState<Account[]>([]);
+
+	const [fetchedAccounts, setFetchedAccounts] = useState<Account[]>([]);
+
 	const [formData, setFormData] = useState<Partial<EnumItem>>({
 		category: "",
 		value: "",
@@ -41,22 +41,25 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 		status: true
 	});
 
+	const isAccountCategory = (cat: string | undefined) =>
+		cat === "casual_account" || cat === "walking_account";
+
 	useEffect(() => {
-		async function fetchCasualAccounts() {
+		async function fetchAccounts(searchTerm: string) {
 			try {
 				const res: Response<Account[]> = await getAccounts({
-					name: "casual"
+					name: searchTerm
 				});
 
 				if (res.success) {
-					setCasualAcc(res?.data || []);
+					setFetchedAccounts(res?.data || []);
 				} else {
-					setCasualAcc([]);
+					setFetchedAccounts([]);
 				}
 			} catch {
 				toast({
 					title: "Error",
-					description: "Failed to fetch casual accounts.",
+					description: `Failed to fetch ${searchTerm} accounts.`,
 					variant: "destructive"
 				});
 			}
@@ -65,8 +68,13 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 		const currentCategory = initialData?.category || initialCategory || formData.category;
 
 		if (currentCategory === "casual_account") {
-			fetchCasualAccounts();
+			fetchAccounts("casual");
+		} else if (currentCategory === "walking_account") {
+			fetchAccounts("walking");
+		} else {
+			setFetchedAccounts([]);
 		}
+
 	}, [initialData, initialCategory, formData.category]);
 
 	useEffect(() => {
@@ -102,7 +110,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 			}
 
 			if (res?.success) {
-				toast({ title: "Success", description: "Saved successfully", variant: "default" }); // Changed variant to default or success depending on your toast setup
+				toast({ title: "Success", description: "Saved successfully", variant: "default" });
 				onSaved();
 				onClose();
 			}
@@ -148,20 +156,16 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 							value={formData.category}
 							onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
 							placeholder="e.g. UserRole"
-						// Optional: Disable category edit if it's casual_account to prevent breaking the dropdown logic
-						// disabled={formData.category === "casual_account"} 
 						/>
 						<p className="text-[11px] text-muted-foreground">
 							Changing this will move the item to a different group.
 						</p>
 					</div>
 
-					{/* 3. Conditional Value Input */}
 					<div className="space-y-2">
 						<Label htmlFor="value">Value</Label>
 
-						{formData.category === "casual_account" ? (
-							// Dropdown for casual_account
+						{isAccountCategory(formData.category) ? (
 							<Select
 								value={formData.value}
 								onValueChange={(val) => setFormData(prev => ({ ...prev, value: val }))}
@@ -170,22 +174,20 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 									<SelectValue placeholder="Select Account" />
 								</SelectTrigger>
 								<SelectContent>
-									{casualAcc.length > 0 ? (
-										casualAcc.map((acc) => (
+									{fetchedAccounts.length > 0 ? (
+										fetchedAccounts.map((acc) => (
 											<SelectItem key={acc.accountId} value={String(acc.accountId)}>
-												{/* Display Name but value is ID */}
 												{acc.name || `Account ${acc.accountId}`}
 											</SelectItem>
 										))
 									) : (
 										<div className="p-2 text-sm text-muted-foreground text-center">
-											No casual accounts found
+											No accounts found
 										</div>
 									)}
 								</SelectContent>
 							</Select>
 						) : (
-							// Standard Input for everything else
 							<Input
 								id="value"
 								value={formData.value}
@@ -194,14 +196,13 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 							/>
 						)}
 
-						{formData.category === "casual_account" && (
+						{isAccountCategory(formData.category) && (
 							<p className="text-[11px] text-muted-foreground">
 								Selected Account ID will be saved as the Enum Value.
 							</p>
 						)}
 					</div>
 
-					{/* Description Input */}
 					<div className="space-y-2">
 						<Label htmlFor="desc">Description</Label>
 						<Textarea
@@ -213,7 +214,6 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 						/>
 					</div>
 
-					{/* Status Toggle */}
 					<div className="flex items-center justify-between border p-3 rounded-lg bg-slate-50 dark:bg-zinc-900">
 						<div className="space-y-0.5">
 							<Label>Status</Label>
