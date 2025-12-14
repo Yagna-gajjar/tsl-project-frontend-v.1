@@ -39,24 +39,18 @@ export default function EnumsGroupedTable() {
     loadData();
   }, []);
 
-  /* ---------- SEARCH LOGIC ---------- */
   const filteredGroups = groups.filter((group) => {
-    // ❌ hide empty groups always
     if (group.values.length === 0) return false;
 
-    // no search → show group
     if (!search.trim()) return true;
 
     const q = search.toLowerCase();
 
-    // match category
     if (group.category.toLowerCase().includes(q)) return true;
 
-    // match any value
     return group.values.some((v) => v.toLowerCase().includes(q));
   });
 
-  /* ---------- ADD VALUE ---------- */
   const handleAddValue = async (group: EnumGroup) => {
     const value = newValues[group.category]?.trim();
     if (!value) return;
@@ -87,7 +81,6 @@ export default function EnumsGroupedTable() {
     }
   };
 
-  /* ---------- DELETE VALUE ---------- */
   const handleDeleteValue = async (groupIndex: number, valueIndex: number) => {
     const enumId = groups[groupIndex].ids[valueIndex];
 
@@ -124,7 +117,6 @@ export default function EnumsGroupedTable() {
 
   return (
     <div className="space-y-6">
-      {/* SEARCH */}
       <div className="flex items-center gap-2 max-w-sm">
         <Search size={18} className="text-slate-400" />
         <Input
