@@ -27,7 +27,7 @@ type Props = {
 const empty: membership = {
   membershipId: 0,
   membershipMasterId: 0,
-  accountId: 0,
+  accountId: null,
 
   startDate: format(new Date(), "yyyy-MM-dd"),
   endDate: undefined,
@@ -340,7 +340,6 @@ export default function MembershipFormModal({
     const errs: Record<string, string> = {};
     if (!values.membershipMasterId)
       errs.membershipMasterId = "Membership Master is required";
-    if (!values.accountId) errs.accountId = "Account is required";
     if (!values.startDate) errs.startDate = "Start date is required";
     if (!values.status) errs.status = "Status is required";
     return errs;
@@ -360,7 +359,7 @@ export default function MembershipFormModal({
     try {
       const payload: Partial<membership> = {
         membershipMasterId: values.membershipMasterId,
-        accountId: values.accountId,
+        accountId: values.accountId ?? null,
         startDate: values.startDate,
         endDate: values.endDate,
         graceDate: values.graceDate,
