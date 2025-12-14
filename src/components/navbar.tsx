@@ -34,7 +34,7 @@ import { getBatchMemberRequests } from "@/api/enrollmentActions.api";
 import { toast } from "@/hooks/use-toast";
 import AcceptBatchRequest from "./view/enrollment-actions/AcceptBatchRequest";
 import type { Response } from "@/types/response";
-import type { BatchMember } from "@/api/batchMember.api";
+import type { BatchMember } from "@/types/batchMember";
 
 interface NavbarProps {
   onMenuClick: () => void;
