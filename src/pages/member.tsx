@@ -3,6 +3,8 @@ import MemberTable from "@/components/view/members/member-table";
 import MemberFormModal from "@/components/view/members/member-form-modal";
 import MemberViewModal from "@/components/view/members/member-view-modal";
 import type { Member } from "@/types/member";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function MemberPage() {
   const queryParams =
@@ -38,6 +40,14 @@ export default function MemberPage() {
           <h1 className="text-2xl font-bold">Members</h1>
           <p className="text-muted-foreground">Manage all members.</p>
         </div>
+        <Button
+          size="lg"
+          onClick={() => openForm()}
+          className="flex items-center gap-2 px-4 py-2"
+        >
+          <Plus className="w-5 h-5" />
+          Add Member
+        </Button>
       </div>
 
       {/* Pass initialFamilyId and handlers to table (table no longer renders the view modal) */}
@@ -51,7 +61,7 @@ export default function MemberPage() {
       <MemberFormModal
         isOpen={formOpen}
         onClose={() => setFormOpen(false)}
-        initialData={editRow}
+        initialData={editRow ? editRow : {}}
         onSaved={() => {
           bumpRefresh();
         }}

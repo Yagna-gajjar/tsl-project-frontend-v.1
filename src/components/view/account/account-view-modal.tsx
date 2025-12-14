@@ -324,11 +324,14 @@ export default function AccountViewModal({
 
   const fetchMembers = useCallback(async () => {
     if (!accountId) return;
+    console.log(accountId);
 
     try {
       const res: Response<AccountMember[]> = await getAccountMembers({
-        accountId,
+        accountId: accountId,
       });
+      console.log(res.data, " = member data");
+
       setMemberList(res?.data ?? []);
     } catch (err) {
       console.error("Failed to fetch members", err);
