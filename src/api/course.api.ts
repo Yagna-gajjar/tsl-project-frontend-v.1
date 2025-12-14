@@ -16,7 +16,9 @@ export interface CourseQuery {
 
 const COURSE_BASE = import.meta.env.VITE_APP_API_URL + "/course";
 
-export function getCourses(params: CourseQuery = {}): Promise<Response<Course[]>> {
+export function getCourses(
+  params: CourseQuery = {}
+): Promise<Response<Course[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -32,8 +34,10 @@ export function getCourses(params: CourseQuery = {}): Promise<Response<Course[]>
   return request<Response<Course[]>>(`${COURSE_BASE}${qs}`);
 }
 
-export function getCourseByAcademy(academyId: number): Promise<Course[]> {
-  return request<Course[]>(`${COURSE_BASE}?academyId=${academyId}`);
+export function getCourseByAcademy(
+  academyId: number
+): Promise<Response<Course[]>> {
+  return request<Response<Course[]>>(`${COURSE_BASE}?academyId=${academyId}`);
 }
 
 export function getCourseById(id: number): Promise<Response<Course>> {
@@ -42,8 +46,8 @@ export function getCourseById(id: number): Promise<Response<Course>> {
 
 export function createCourse(
   payload: Omit<Course, "courseId" | "createdAt" | "updatedAt">
-): Promise<Course> {
-  return request<Course>(COURSE_BASE, {
+): Promise<Response<Course>> {
+  return request<Response<Course>>(COURSE_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -52,15 +56,19 @@ export function createCourse(
 export function updateCourse(
   id: number,
   payload: Partial<Omit<Course, "courseId" | "createdAt" | "updatedAt">>
-): Promise<Course> {
-  return request<Course>(`${COURSE_BASE}/${id}`, {
+): Promise<
+  Response<Partial<Omit<Course, "courseId" | "createdAt" | "updatedAt">>>
+> {
+  return request<
+    Response<Partial<Omit<Course, "courseId" | "createdAt" | "updatedAt">>>
+  >(`${COURSE_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteCourse(id: number): Promise<Course> {
-  return request<Course>(`${COURSE_BASE}/${id}`, {
+export function deleteCourse(id: number): Promise<Response<Course>> {
+  return request<Response<Course>>(`${COURSE_BASE}/${id}`, {
     method: "DELETE",
   });
 }

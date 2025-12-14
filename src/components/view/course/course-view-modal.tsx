@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Hash, BookOpen, Clock, CheckCircle, Info } from "lucide-react";
+import { Hash, BookOpen, Clock, Info, CheckCircle } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Course } from "@/types/course";
 import { getCourseById } from "@/api/course.api";
@@ -12,154 +12,69 @@ type Props = {
   onClose: () => void;
 };
 
-const WEEKDAY_NAMES = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-function renderWeekdays(value: any) {
-  if (value == null || value === "") return "-";
-
-  let nums: number[] = [];
-
-  if (Array.isArray(value)) {
-    nums = value.map((v) => Number(v)).filter((n) => Number.isFinite(n));
-  } else if (typeof value === "number") {
-    nums = String(value)
-      .split("")
-      .map((s) => Number(s))
-      .filter((n) => Number.isFinite(n));
-  } else if (typeof value === "string") {
-    const compact = value.trim();
-    if (compact.includes(",")) {
-      nums = compact
-        .split(",")
-        .map((s) => Number(s.trim()))
-        .filter((n) => Number.isFinite(n));
-    } else {
-      nums = compact
-        .split("")
-        .map((s) => Number(s))
-        .filter((n) => Number.isFinite(n));
-    }
-  }
-
-  const labels = nums
-    .map((n) => {
-      if (n >= 1 && n <= 7) return WEEKDAY_NAMES[n - 1];
-      return null;
-    })
-    .filter(Boolean) as string[];
-
-  return labels.length > 0 ? labels.join(", ") : "-";
-}
-
 const fields: FieldConfig<Course>[] = [
   { key: "courseId", label: "Course ID", icon: Hash },
   { key: "courseName", label: "Course Name", icon: BookOpen },
-  { key: "academyName", label: "Academy Name", icon: BookOpen },
-  { key: "activityName", label: "Activity Name", icon: BookOpen },
+  { key: "activityName", label: "Activity", icon: BookOpen },
+  { key: "courseType", label: "Course Type", icon: Info },
+  { key: "classification", label: "Classification", icon: Info },
 
   {
-    key: "introductionDate",
-    label: "Introduction Date",
+    key: "introduceDate",
+    label: "Introduce Date",
     icon: Clock,
-    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => new Date(v as any).toLocaleDateString(),
   },
   {
-    key: "suspendDate",
-    label: "Suspend Date",
+    key: "suspensionDate",
+    label: "Suspension Date",
     icon: Clock,
-    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as any).toLocaleDateString() : "-"),
   },
 
-  { key: "typeOfCourse", label: "Type Of Course", icon: Info },
-  { key: "minEnrollmentUnit", label: "Min Enrollment Unit", icon: Hash },
-  { key: "totalParallelBatches", label: "Total Parallel Batches", icon: Hash },
-
-  {
-    key: "classificationType",
-    label: "Classification Type",
-    icon: Info,
-  },
-  {
-    key: "chargingPattern",
-    label: "Charging Pattern",
-    icon: Info,
-  },
   { key: "sessionMinutes", label: "Session Minutes", icon: Clock },
-  { key: "noOfDaysInWeek", label: "No Of Days In Week", icon: Hash },
-
-  {
-    key: "weekDays",
-    label: "Week Days",
-    icon: BookOpen,
-    render: (v) => renderWeekdays(v),
-  },
-
-  { key: "unitRate", label: "Unit Rate", icon: Hash },
+  { key: "noOfDaysInWeek", label: "Days / Week", icon: Hash },
   { key: "batchCapacity", label: "Batch Capacity", icon: Hash },
+  { key: "minEnrollmentUnits", label: "Min Enrollment Units", icon: Hash },
 
-  { key: "minAge", label: "Minimum Age", icon: Hash },
-  { key: "maxAge", label: "Maximum Age", icon: Hash },
-
-  {
-    key: "gender",
-    label: "Gender",
-    icon: Info,
-  },
+  { key: "minAge", label: "Min Age", icon: Hash },
+  { key: "maxAge", label: "Max Age", icon: Hash },
+  { key: "gender", label: "Gender", icon: Info },
 
   {
-    key: "status",
-    label: "Status",
+    key: "changable",
+    label: "Changable",
     icon: CheckCircle,
-    render: (v) => {
-      const statusColor =
-        v === "active"
-          ? "text-green-600"
-          : v === "suspended"
-          ? "text-yellow-600"
-          : "text-red-600";
-      return <span className={statusColor}>{v || "-"}</span>;
-    },
+    render: (v) => (v ? "Yes" : "No"),
   },
+
+  { key: "freezingAllowed", label: "Freezing Allowed", icon: Hash },
 
   {
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => new Date(v as any).toLocaleString(),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => new Date(v as any).toLocaleString(),
   },
 ];
 
 export default function CourseViewModal({ isOpen, courseId, onClose }: Props) {
-  const fetchFn = useCallback(
-    async (id?: number | string): Promise<Course> => {
-      const useId = id ?? courseId;
-      if (!useId) throw new Error("Course ID missing");
-
-      const res: Response<Course> = await getCourseById(Number(useId));
-      return res.data as Course;
-    },
-    [courseId]
-  );
+  const fetchFn = useCallback(async (): Promise<Course> => {
+    const res: Response<Course> = await getCourseById(Number(courseId));
+    return res.data as Course;
+  }, [courseId]);
 
   return (
     <ViewModal<Course>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={Number(courseId)}
+      itemId={courseId}
       fetchFn={fetchFn}
       fields={fields}
       title="Course Details"

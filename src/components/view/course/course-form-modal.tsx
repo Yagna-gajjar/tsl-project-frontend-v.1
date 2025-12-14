@@ -1,16 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
-import { createCourse, updateCourse } from "@/api/course.api";
+
 import type { Course } from "@/types/course";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { getAcademies } from "@/api/academy.api";
-import { getActivities } from "@/api/activity.api";
-import type { Response } from "@/types/response";
-import { format } from "date-fns";
-import type { FormFieldConfig } from "@/components/form-modal/types";
 import type { Activity } from "@/types/activity";
+import type { Enums } from "@/types/enums";
+
+import { createCourse, updateCourse } from "@/api/course.api";
+import { getActivities } from "@/api/activity.api";
+import { getEnumsByCategory } from "@/api/enums.api";
+
+import type { FormFieldConfig } from "@/components/form-modal/types";
+import { format } from "date-fns";
+import type { Response } from "@/types/response";
+import { getAcademies } from "@/api/academy.api";
 import type { Academy } from "@/types/academy";
 
 type Props = {
@@ -20,28 +25,31 @@ type Props = {
   onSave: () => void;
 };
 
-const empty = {
+const empty: Course = {
   courseId: 0,
   academyId: 0,
-  activityId: 0,
-  introductionDate: new Date(),
-  suspendDate: undefined,
   courseName: "",
-  typeOfCourse: "",
-  minEnrollmentUnit: 1,
-  totalParallelBatches: 1,
-  classificationType: "Member Credits",
-  chargingPattern: "Unit",
+  courseType: null,
+  classification: null,
+  activityName: null,
+  introduceDate: "",
+  suspensionDate: null,
+  chargingPattern: null,
   sessionMinutes: 30,
-  noOfDaysInWeek: 0,
-  weekDays: [],
-  unitRate: 0,
+  noOfDaysInWeek: 1,
+  availabilityPattern: "",
+  minEnrollmentUnits: 1,
   batchCapacity: 1,
+  totalParallelBatches: 1,
   minAge: 1,
   maxAge: 100,
-  gender: "Male",
-  status: "active",
-} as unknown as Course;
+  gender: "Any",
+  feeClassification: null,
+  changable: false,
+  freezingAllowed: 0,
+  createdAt: "",
+  updatedAt: "",
+};
 
 export default function CourseFormModal({
   isOpen,
@@ -49,371 +57,331 @@ export default function CourseFormModal({
   onClose,
   onSave,
 }: Props) {
-  const [values, setValues] = useState<Course>(initialData ?? empty);
+  const [values, setValues] = useState<Course>(empty);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [activityOptions, setActivityOptions] = useState<{
-    value: string | number,
-    label: string
-  }[]>([]);
-  const [academyOptions, setAcademyOptions] = useState<{
-    value: string | number,
-    label: string
-  }[]>([]);
-  useEffect(() => {
-    const loadData = async () => {
-      if (initialData) {
-        const init = {
-          ...initialData,
-          introductionDate: format(initialData?.introductionDate, "yyyy-MM-dd"),
-          suspendDate: format(initialData?.suspendDate, "yyyy-MM-dd"),
-        };
-        if (typeof init.weekDays === "string" && init.weekDays.length > 0) {
-          init.weekDays = init.weekDays
-            .split("")
-            .map((s: string) => Number(s))
-            .filter((n: number) => Number.isFinite(n));
-        }
-        setValues(init);
-      } else {
-        setValues({ ...empty, status: "active" } as Course);
-      }
-      setFieldErrors({});
-      setError(null);
 
-      const resActivity = await getActivities({ limit: 300 });
-      const activityopts = Array.isArray(resActivity.data)
-        ? resActivity.data.map((activity: Activity) => ({
-            value: activity.activityId,
-            label: activity.activityName,
-          }))
-        : [];
-      setActivityOptions(activityopts);
+  const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
+
+  const [courseTypeOptions, setCourseTypeOptions] = useState<Enums[]>([]);
+  const [academyOptions, setAcademyOptions] = useState<Academy[]>([]);
+  const [loadingAcademies, setLoadingAcademies] = useState(false);
+
+  const numberToWeekArray = (code?: number | string | null): string[] => {
+    if (code === undefined || code === null) return [];
+    const s = String(code);
+    const map: Record<string, string> = {
+      "1": "monday",
+      "2": "tuesday",
+      "3": "wednesday",
+      "4": "thursday",
+      "5": "friday",
+      "6": "saturday",
+      "7": "sunday",
+    };
+    const arr: string[] = [];
+    for (const ch of s) {
+      if (map[ch]) arr.push(map[ch]);
+    }
+    return arr;
+  };
+
+  const weekArrayToNumber = (arr?: any[]): number | undefined => {
+    if (!Array.isArray(arr) || arr.length === 0) return undefined;
+    const map: Record<string, number> = {
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6,
+      sunday: 7,
+    };
+    const nums = arr
+      .map((v) => (typeof v === "string" ? v.toLowerCase() : ""))
+      .map((k) => map[k])
+      .filter((n) => Number.isFinite(n)) as number[];
+
+    if (nums.length === 0) return undefined;
+    nums.sort((a, b) => a - b);
+    return Number(nums.join(""));
+  };
+
+  const WEEKDAY_OPTIONS = useMemo(
+    () => [
+      { label: "Monday", value: "monday" },
+      { label: "Tuesday", value: "tuesday" },
+      { label: "Wednesday", value: "wednesday" },
+      { label: "Thursday", value: "thursday" },
+      { label: "Friday", value: "friday" },
+      { label: "Saturday", value: "saturday" },
+      { label: "Sunday", value: "sunday" },
+    ],
+    []
+  );
+
+  const loadAcademiesByActivity = useCallback(
+    async (activityName?: string | null) => {
+      if (!activityName) {
+        setAcademyOptions([]);
+        return;
+      }
+
+      try {
+        setLoadingAcademies(true);
+        const res = await getAcademies({
+          academyType: activityName,
+          limit: 200,
+        });
+
+        const items = Array.isArray((res as any)?.data ?? res)
+          ? (res as any).data ?? res
+          : [];
+
+        setAcademyOptions(items);
+      } catch {
+        setAcademyOptions([]);
+      } finally {
+        setLoadingAcademies(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    const init = async () => {
+      const resActivity: Response<Activity[]> = await getActivities({
+        limit: 500,
+      });
+      const actOpts = resActivity?.data as Activity[];
+
+      setActivityOptions(actOpts);
+
+      const resEnums: Response<Enums[]> = await getEnumsByCategory(
+        "courseType"
+      );
+      const enumOpts = resEnums?.data as Enums[];
+      setCourseTypeOptions(enumOpts);
     };
 
-    loadData();
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (initialData) {
+      setValues({
+        ...initialData,
+        introduceDate: initialData.introduceDate
+          ? format(new Date(initialData.introduceDate), "yyyy-MM-dd")
+          : "",
+        suspensionDate: initialData.suspensionDate
+          ? format(new Date(initialData.suspensionDate), "yyyy-MM-dd")
+          : null,
+      });
+    } else {
+      setValues(empty);
+    }
+    setErrors({});
+    setError(null);
   }, [initialData, isOpen]);
 
   const onChange = (
     field: keyof Course,
-    val: string | number | boolean | Date | undefined
+    value: string | number | boolean | null
   ) => {
-    setValues((p) => ({ ...p, [field]: val }));
+    // ACTIVITY CHANGED
+    if (field === "activityName") {
+      const activityName = value ? String(value) : null;
 
-    setFieldErrors((prev) => {
-      if (!prev[field as string]) return prev;
-      const copy = { ...prev };
-      delete copy[field as string];
-      return copy;
-    });
-
-    const fetchAcademy = async (val: string | undefined) => {
-      const resAcademy = await getAcademies({ academyType: val });
-      const academyopts = Array.isArray(resAcademy.data)
-        ? resAcademy.data.map((academy: Academy) => ({
-            value: academy.academyId,
-            label: academy.academyName,
-          }))
-        : [];
-      setAcademyOptions(academyopts);
-    };
-
-    if (field === "activityId") {
-      const selected = activityOptions.find(
-        (a) => Number(a.value) === Number(val)
+      const selectedActivity = activityOptions.find(
+        (a) => a.activityName === activityName
       );
 
       setValues((p) => ({
         ...p,
-        activityId: val,
-        activityName: selected?.label,
+        activityName,
+        academyId: 0, // reset
+        classification: selectedActivity?.activityType ?? null, // 🔥 AUTO SET
       }));
 
-      fetchAcademy(selected?.label);
+      setAcademyOptions([]);
+      loadAcademiesByActivity(activityName);
+
+      setErrors((e) => {
+        const copy = { ...e };
+        delete copy.activityName;
+        delete copy.academyId;
+        return copy;
+      });
       return;
+    }
+
+    // ACADEMY CHANGED
+    if (field === "academyId") {
+      setValues((p) => ({
+        ...p,
+        academyId: value ? Number(value) : 0,
+      }));
+      setErrors((e) => {
+        const copy = { ...e };
+        delete copy.academyId;
+        return copy;
+      });
+      return;
+    }
+
+    // DEFAULT
+    setValues((p) => ({ ...p, [field]: value }));
+    if (errors[field]) {
+      setErrors((e) => {
+        const copy = { ...e };
+        delete copy[field];
+        return copy;
+      });
     }
   };
 
   const validate = useCallback(() => {
-    const errs: Record<string, string> = {};
+    const e: Record<string, string> = {};
 
-    if (!values.courseName || String(values.courseName).trim() === "") {
-      errs.courseName = "Course name is required";
-    }
-    if (!values.typeOfCourse || String(values.typeOfCourse).trim() === "") {
-      errs.typeOfCourse = "Type of course is required";
-    }
+    if (!values.courseName?.trim()) e.courseName = "Course name is required";
 
-    const numericFields: Array<{ key: keyof Course; label: string }> = [
-      { key: "minEnrollmentUnit", label: "Minimum enrollment unit" },
-      { key: "totalParallelBatches", label: "Total parallel batches" },
-      { key: "sessionMinutes", label: "Session minutes" },
-      { key: "noOfDaysInWeek", label: "No. of days in week" },
-      { key: "unitRate", label: "Unit rate" },
-      { key: "batchCapacity", label: "Batch capacity" },
-    ];
+    if (!values.activityName) e.activityName = "Activity is required";
 
-    numericFields.forEach((f) => {
-      const val = Number(values[f.key]);
-      if (Number.isNaN(val) || val === undefined || val === null) {
-        errs[f.key as string] = `${f.label} is required`;
-      } else if (val < 0) {
-        errs[f.key as string] = `${f.label} must be 0 or greater`;
-      }
-    });
+    if (!values.courseType) e.courseType = "Course type is required";
 
-    const minAge = Number(values.minAge);
-    const maxAge = Number(values.maxAge);
-    if (!Number.isFinite(minAge) || minAge < 1) {
-      errs.minAge = "Minimum age is required and must be at least 1";
-    }
-    if (!Number.isFinite(maxAge) || maxAge > 100) {
-      errs.maxAge = "Maximum age is required and must be at most 100";
-    }
-    if (Number.isFinite(minAge) && Number.isFinite(maxAge) && minAge > maxAge) {
-      errs.minAge = "Minimum age cannot be greater than maximum age";
-      errs.maxAge = "Maximum age cannot be less than minimum age";
-    }
-    if (!values.introductionDate) {
-      errs.introductionDate = "Introduction date is required";
-    }
+    if (!values.introduceDate) e.introduceDate = "Introduce date is required";
+
+    if (values.sessionMinutes <= 0)
+      e.sessionMinutes = "Session minutes must be > 0";
+
+    if (values.noOfDaysInWeek <= 0)
+      e.noOfDaysInWeek = "Days per week must be > 0";
+
+    if (values.minEnrollmentUnits <= 0)
+      e.minEnrollmentUnits = "Min enrollment units must be > 0";
+
+    if (values.batchCapacity <= 0)
+      e.batchCapacity = "Batch capacity must be > 0";
+
+    if (values.totalParallelBatches <= 0)
+      e.totalParallelBatches = "Parallel batches must be > 0";
+
+    if (values.minAge <= 0) e.minAge = "Min age must be > 0";
+
+    if (values.maxAge <= 0) e.maxAge = "Max age must be > 0";
+
+    if (values.minAge > values.maxAge)
+      e.maxAge = "Max age must be greater than min age";
     if (
-      !values.classificationType ||
-      values.classificationType === undefined ||
-      values.classificationType === null
+      !values.availabilityPattern ||
+      !Array.isArray(values.availabilityPattern) ||
+      values.availabilityPattern.length === 0
     ) {
-      errs.classificationType = "Classification type is required";
-    }
-    if (
-      !values.chargingPattern ||
-      values.chargingPattern === undefined ||
-      values.chargingPattern === null
-    ) {
-      errs.chargingPattern = "Charging pattern is required";
-    }
-    if (
-      !values.gender ||
-      values.gender === undefined ||
-      values.gender === null
-    ) {
-      errs.gender = "Gender is required";
-    }
-    if (
-      !values.status ||
-      values.status === undefined ||
-      values.status === null
-    ) {
-      errs.status = "Status is required";
+      e.availabilityPattern = "Select at least one weekday";
     }
 
-    if (
-      values.academyId === undefined ||
-      values.academyId === null ||
-      values.academyId === 0
-    ) {
-      errs.academyId = "Academy is required";
-    }
-    if (
-      values.activityId === undefined ||
-      values.activityId === null ||
-      values.activityId === 0
-    ) {
-      errs.activityId = "Activity is required";
+    if (!values.academyId || values.academyId <= 0) {
+      e.academyId = "Academy is required";
     }
 
-    if (
-      !values.totalParallelBatches ||
-      values.totalParallelBatches === undefined ||
-      values.totalParallelBatches === null ||
-      values.totalParallelBatches === 0
-    ) {
-      errs.totalParallelBatches = "total parallel baches is required";
+    if (!values.classification) {
+      e.classification = "Classification is required";
     }
 
-    if (
-      !values.minEnrollmentUnit ||
-      values.minEnrollmentUnit === undefined ||
-      values.minEnrollmentUnit === null ||
-      values.minEnrollmentUnit === 0
-    ) {
-      errs.minEnrollmentUnit = "in Enrollment Unit is required";
-    }
-    if (
-      !values.sessionMinutes ||
-      values.sessionMinutes === undefined ||
-      values.sessionMinutes === null ||
-      values.sessionMinutes <= 0
-    ) {
-      errs.sessionMinutes = "Session Minutes is required";
-    }
-    if (
-      !values.noOfDaysInWeek ||
-      values.noOfDaysInWeek === undefined ||
-      values.noOfDaysInWeek === null ||
-      values.noOfDaysInWeek <= 0
-    ) {
-      errs.noOfDaysInWeek = "No. Of Days In Week is required";
-    }
-    if (
-      !values.weekDays ||
-      values.weekDays === undefined ||
-      values.weekDays === null ||
-      values.weekDays <= 0
-    ) {
-      errs.weekDays = "Week Days is required";
-    }
-    if (
-      !values.unitRate ||
-      values.unitRate === undefined ||
-      values.unitRate === null ||
-      values.unitRate < 0
-    ) {
-      errs.unitRate = "Unit Rate is required";
-    }
-    if (
-      !values.batchCapacity ||
-      values.batchCapacity === undefined ||
-      values.batchCapacity === null ||
-      values.batchCapacity <= 0
-    ) {
-      errs.batchCapacity = "Batch Capacity is required";
-    }
-
-    return errs;
+    return e;
   }, [values]);
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     setError(null);
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setFieldErrors(errs);
+
+    const vErrors = validate();
+    if (Object.keys(vErrors).length) {
+      setErrors(vErrors);
       setIsSubmitting(false);
       return;
     }
 
     try {
-      let weekDaysValue: string | undefined;
-      if (Array.isArray(values.weekDays)) {
-        const arr = values.weekDays
-          .map((v: number) => Number(v))
-          .filter((n: number) => Number.isFinite(n))
-          .sort((a: number, b: number) => a - b);
-        weekDaysValue = arr.join("");
-      } else if (values.weekDays !== undefined && values.weekDays !== null) {
-        weekDaysValue = String(values.weekDays);
-      }
+      const availabilityCode = weekArrayToNumber(
+        values.availabilityPattern as any[]
+      );
 
       const payload: Partial<Course> = {
-        academyId: values.academyId || undefined,
-        activityId: values.activityId || undefined,
-        courseName: values.courseName,
-        introductionDate: values.introductionDate,
-        suspendDate: values.suspendDate,
-        typeOfCourse: values.typeOfCourse,
-        minEnrollmentUnit: values.minEnrollmentUnit,
-        totalParallelBatches: values.totalParallelBatches,
-        classificationType: values.classificationType,
-        chargingPattern: values.chargingPattern,
-        sessionMinutes: values.sessionMinutes,
-        noOfDaysInWeek: values.noOfDaysInWeek,
-        weekDays: weekDaysValue,
-        unitRate: values.unitRate,
-        batchCapacity: values.batchCapacity,
-        minAge: values.minAge,
-        maxAge: values.maxAge,
-        gender: values.gender,
-        status: values.status,
-      } as Partial<Course>;
+        ...values,
+        availabilityPattern: availabilityCode as any,
+        suspensionDate: values.suspensionDate || null,
+      };
+      console.log(payload);
 
       if (initialData?.courseId) {
-        await updateCourse(
-          initialData.courseId,
-          payload as Omit<Course, "courseId" | "createdAt" | "updatedAt">
-        );
+        await updateCourse(initialData.courseId, payload);
       } else {
-        const res: Response = await createCourse(
-          payload as Omit<Course, "courseId" | "createdAt" | "updatedAt">
-        );
+        await createCourse(payload as Course);
       }
+
       onSave();
       onClose();
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
-  }, [validate, values, initialData, onSave, onClose]);
+  }, [values, validate, initialData, onSave, onClose]);
 
-  const weekdayOptions = [
-    { label: "Monday", value: 1 },
-    { label: "Tuesday", value: 2 },
-    { label: "Wednesday", value: 3 },
-    { label: "Thursday", value: 4 },
-    { label: "Friday", value: 5 },
-    { label: "Saturday", value: 6 },
-    { label: "Sunday", value: 7 },
-  ];
-
-  const fieldsBase: FormFieldConfig<Course>[] = [
+  const fields: FormFieldConfig<Course>[] = [
     { name: "courseName", label: "Course Name", type: "text", required: true },
+
     {
-      name: "activityId",
-      label: "Activity Name",
+      name: "activityName",
+      label: "Activity",
       type: "select",
-      options: activityOptions,
       required: true,
+      options: activityOptions.map((a) => ({
+        label: a.activityName,
+        value: a.activityName,
+      })),
     },
+
     {
       name: "academyId",
-      label: "Academy Name",
+      label: "Academy",
       type: "select",
-      options: academyOptions,
       required: true,
+      disabled: loadingAcademies || !values.activityName,
+      options: academyOptions.map((a) => ({
+        label: a.academyName,
+        value: String(a.academyId),
+      })),
     },
+
     {
-      name: "introductionDate",
-      label: "Introduction Date",
-      type: "date",
-      required: true,
-    },
-    {
-      name: "suspendDate",
-      label: "Suspend Date",
-      type: "Date",
-      required: false,
-    },
-    {
-      name: "typeOfCourse",
-      label: "Type Of Course",
+      name: "classification",
+      label: "Classification (Activity Type)",
       type: "text",
-      required: true,
+      disabled: true,
     },
+
     {
-      name: "minEnrollmentUnit",
-      label: "Minimum Enrollment Unit",
-      type: "number",
-      required: true,
-    },
-    {
-      name: "totalParallelBatches",
-      label: "Total Parallel Batches",
-      type: "number",
-      required: true,
-    },
-    {
-      name: "classificationType",
-      label: "Classification Type",
+      name: "courseType",
+      label: "Course Type",
       type: "select",
-      options: [
-        { label: "Member Credits", value: "Member Credits" },
-        { label: "Fees Only", value: "Fees Only" },
-      ],
+      required: true,
+      options: courseTypeOptions.map((c) => ({
+        label: c.value,
+        value: c.value,
+      })),
+    },
+    {
+      name: "introduceDate",
+      label: "Introduce Date",
+      type: "Date",
       required: true,
     },
+    { name: "suspensionDate", label: "Suspension Date", type: "Date" },
+
     {
       name: "chargingPattern",
       label: "Charging Pattern",
@@ -423,50 +391,34 @@ export default function CourseFormModal({
         { label: "Day", value: "Day" },
         { label: "Session", value: "Session" },
       ],
-      required: true,
     },
-    {
-      name: "sessionMinutes",
-      label: "Session Minutes",
-      type: "number",
-      required: true,
-    },
-    {
-      name: "noOfDaysInWeek",
-      label: "No Of Days In Week",
-      type: "number",
-      required: true,
-    },
-  ];
 
-  const weekDaysField =
-    Number(values.noOfDaysInWeek) > 0
-      ? {
-          name: "weekDays",
-          label: "Week Days",
-          type: "multiselect",
-          options: weekdayOptions,
-          required: true,
-        }
-      : {
-          name: "weekDays",
-          label: "Week Days",
-          type: "text",
-          disabled: true,
-          required: true,
-        };
+    { name: "sessionMinutes", label: "Session Minutes", type: "number" },
+    { name: "noOfDaysInWeek", label: "Days Per Week", type: "number" },
 
-  const remainingFields: FormFieldConfig<Course>[] = [
-    weekDaysField as any,
-    { name: "unitRate", label: "Unit Rate", type: "number", required: true },
     {
-      name: "batchCapacity",
-      label: "Batch Capacity",
-      type: "number",
+      name: "availabilityPattern",
+      label: "Available On",
+      type: "multiselect",
+      options: WEEKDAY_OPTIONS,
       required: true,
     },
-    { name: "minAge", label: "Minimum Age", type: "number", required: true },
-    { name: "maxAge", label: "Maximum Age", type: "number", required: true },
+
+    {
+      name: "minEnrollmentUnits",
+      label: "Min Enrollment Units",
+      type: "number",
+    },
+    { name: "batchCapacity", label: "Batch Capacity", type: "number" },
+    {
+      name: "totalParallelBatches",
+      label: "Parallel Batches",
+      type: "number",
+    },
+
+    { name: "minAge", label: "Min Age", type: "number" },
+    { name: "maxAge", label: "Max Age", type: "number" },
+
     {
       name: "gender",
       label: "Gender",
@@ -474,73 +426,54 @@ export default function CourseFormModal({
       options: [
         { label: "Male", value: "Male" },
         { label: "Female", value: "Female" },
-        { label: "Couple", value: "Couple" },
-        { label: "Open", value: "Open" },
+        { label: "Any", value: "Any" },
       ],
-      required: true,
     },
+
+    { name: "changable", label: "Changable", type: "checkbox" },
     {
-      name: "status",
-      label: "Status",
-      type: "select",
-      options: [
-        { label: "active", value: "active" },
-        { label: "suspended", value: "suspended" },
-      ],
-      required: true,
-      disabled: !initialData,
+      name: "freezingAllowed",
+      label: "Freezing Allowed (days)",
+      type: "number",
     },
   ];
-
-  const fields = [...fieldsBase, ...remainingFields];
 
   if (!isOpen) return null;
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
-      <div>
-        <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-          <div className="flex flex-col max-h-[90vh] overflow-hidden">
-            <FormHeader
-              title={initialData?.courseId ? "Edit Course" : "Add New Course"}
-              onClose={onClose}
-            />
-            <div className="overflow-auto">
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
-                  {error}
-                </div>
-              )}
-              <FormContent
-                fields={fields}
-                values={values}
-                errors={fieldErrors}
-                loading={false}
-                error={error}
-                isSubmitting={isSubmitting}
-                onChange={
-                  onChange as (
-                    field: keyof Course,
-                    value: string | number | boolean | Date | undefined
-                  ) => void
-                }
-                layout="grid"
-              />
+    <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
+        <FormHeader
+          title={initialData ? "Edit Course" : "Add Course"}
+          onClose={onClose}
+        />
+
+        <div className="overflow-auto max-h-[50vh]">
+          {error && (
+            <div className="m-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+              {error}
             </div>
-            <FormFooter
-              onClose={onClose}
-              onSubmit={handleSubmit}
-              submitLabel={initialData?.courseId ? "Update" : "Create"}
-              isSubmitting={isSubmitting}
-            />
-          </div>
-        </DialogContent>
-      </div>
+          )}
+
+          <FormContent
+            fields={fields}
+            values={values}
+            errors={errors}
+            loading={false}
+            error={error}
+            isSubmitting={isSubmitting}
+            onChange={onChange}
+            layout="grid"
+          />
+        </div>
+
+        <FormFooter
+          onClose={onClose}
+          onSubmit={handleSubmit}
+          submitLabel={initialData ? "Update" : "Create"}
+          isSubmitting={isSubmitting}
+        />
+      </DialogContent>
     </Dialog>
   );
 }

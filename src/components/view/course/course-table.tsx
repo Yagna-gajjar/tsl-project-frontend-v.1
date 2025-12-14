@@ -6,6 +6,7 @@ import type { Course } from "@/types/course";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
+
 type Props = {
   onView?: (row: Course) => void;
   onEdit?: (row: Course) => void;
@@ -14,243 +15,110 @@ type Props = {
 
 export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Course[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(10);
-  const [total, setTotal] = useState<number>(0);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
 
-  const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<
-    Record<string, string | number | undefined>
-  >({});
-  const [sortBy, setSortBy] = useState<string>("courseId");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<keyof Course>("courseId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      setIsLoading(true);
-      const res:Response<Course[]> = await getCourses({
+      const res: Response<Course[]> = await getCourses({
         page,
         limit,
-        sortBy,
-        sortOrder: sortOrder,
         search: search || undefined,
-        academyId: filters.academyId as number | undefined,
-        activityId: filters.activityId as number | undefined,
-        courseName: filters.courseName as string | undefined,
-        status: filters.status as string | undefined,
+        sortBy,
+        sortOrder,
       });
 
-      const rowsRaw = Array.isArray(res)
-        ? res
-        : Array.isArray(res?.data)
-        ? (res.data as Course[])
-        : [];
-      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
-        ...r,
-        createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
-        updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-      })) as Course[];
-      setTotal(res.pagination.total as number)
-      setData(rows);
+      setData(res.data ?? []);
+      setTotal(res.pagination?.total ?? 0);
     } catch {
-      console.error("Failed to fetch courses");
+      toast({ title: "Failed to load courses", variant: "destructive" });
       setData([]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [page, limit, sortBy, sortOrder, search, filters]);
+  }, [page, limit, search, sortBy, sortOrder]);
 
   useEffect(() => {
     loadData();
   }, [loadData, refreshKey]);
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleSearchChange = (q: string) => {
-    setSearch(q);
-    setPage(1);
-  };
-
-  const handleFilterChange = (
-    filterKey: string,
-    value: string | number | undefined
-  ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterKey]: value || undefined,
-    }));
-    setPage(1);
-  };
-
-  const handleSortChange = (column: string, direction: "ASC" | "DESC") => {
-    setSortBy(column);
-    setSortOrder(direction);
-    setPage(1);
-  };
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    try {
-      await deleteCourse(deleteId);
-      setData((prev) => prev.filter((c) => c.courseId !== deleteId));
-      toast({
-        title: "Success",
-        description: "Course deleted successfully",
-      });
-      setDeleteOpen(false);
-      setDeleteId(null);
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to delete course",
-        variant: "destructive",
-      });
-    }
-  };
-
   const columns: Column<Course>[] = [
+    { header: "Course Name", key: "courseName", sortable: true },
+    { header: "Activity", key: "activityName" },
+    { header: "Course Type", key: "courseType" },
     {
-      header: "Course Name",
-      key: "courseName",
-      render: (row: Course) => row.courseName || "-",
+      header: "Introduce Date",
+      key: "introduceDate",
+      render: (r) => new Date(r.introduceDate).toLocaleDateString(),
       sortable: true,
-      filterType: "text",
     },
-    {
-      header: "Academy Name",
-      key: "academyName",
-      render: (row: Course) => row.academyName || "-",
-      sortable: true,
-      filterType: "text",
-    },
-    {
-      header: "Activity Name",
-      key: "activityName",
-      render: (row: Course) => row.activityName || "-",
-      sortable: true,
-      filterType: "text",
-    },
-    {
-      header: "Introduction Date",
-      key: "introductionDate",
-      render: (row: Course) =>
-        row.introductionDate ? row.introductionDate.toDateString() : "-",
-      sortable: true,
-      hidden: true,
-    },
-    {
-      header: "Course Type",
-      key: "typeOfCourse",
-      render: (row: Course) => row.typeOfCourse || "-",
-      filterType: "text",
-    },
-    {
-      header: "Min Enrollment Unit",
-      key: "minEnrollmentUnit",
-      render: (row: Course) => row.minEnrollmentUnit || "-",
-      hidden: true,
-    },
-    {
-      header: "Total Parallel Batches",
-      key: "totalParallelBatches",
-      render: (row: Course) => row.totalParallelBatches || "-",
-      hidden: true,
-    },
-    {
-      header: "Classification Type",
-      key: "classificationType",
-      render: (row: Course) => row.classificationType || "-",
-    },
-    {
-      header: "Charging Pattern",
-      key: "chargingPattern",
-      render: (row: Course) => row.chargingPattern || "-",
-    },
-    {
-      header: "Session Minutes",
-      key: "sessionMinutes",
-      render: (row: Course) => row.sessionMinutes || "-",
-    },
-    {
-      header: "No. Of Days In Week",
-      key: "noOfDaysInWeek",
-      render: (row: Course) => row.noOfDaysInWeek || "-",
-    },
-    {
-      header: "Week Days",
-      key: "weekDays",
-      render: (row: Course) => row.weekDays || "-",
-    },
-    {
-      header: "Unit Rate",
-      key: "unitRate",
-      render: (row: Course) => row.unitRate || "-",
-    },
-    {
-      header: "Batch Capacity",
-      key: "batchCapacity",
-      render: (row: Course) => row.batchCapacity || "-",
-    },
+    { header: "Session (min)", key: "sessionMinutes" },
+    { header: "Days / Week", key: "noOfDaysInWeek" },
+    { header: "Batch Capacity", key: "batchCapacity" },
     {
       header: "Age Range",
       key: "minAge",
-      render: (row: Course) => row.minAge + " - " + row.maxAge || "-",
+      render: (r) => `${r.minAge} - ${r.maxAge}`,
     },
-    {
-      header: "Gender",
-      key: "gender",
-      render: (row: Course) => row.gender || "-",
-    },
-    {
-      header: "Status",
-      key: "status",
-      render: (row: Course) => row.status || "-",
-    },
+    { header: "Gender", key: "gender" },
+    { header: "Freezing Allowed", key: "freezingAllowed" },
   ];
 
   return (
-    <div>
+    <>
       <DataTable<Course>
         data={data}
         columns={columns}
-        isLoading={isLoading}
+        isLoading={loading}
         pagination={{
           page,
           limit,
-          total: total,
-          onPageChange: handlePageChange,
+          total,
+          onPageChange: setPage,
         }}
-        onSearchChange={handleSearchChange}
-        onFilterChange={handleFilterChange}
-        onSortChange={handleSortChange}
-        onView={(row) => onView?.(row)}
-        onEdit={(row) => onEdit?.(row)}
-        onDelete={(courseId: number | undefined) => {
-          setDeleteId(courseId ?? null);
+        onSearchChange={(q) => {
+          setSearch(q);
+          setPage(1);
+        }}
+        onSortChange={(c, d) => {
+          setSortBy(c as keyof Course);
+          setSortOrder(d);
+        }}
+        onView={onView}
+        onEdit={onEdit}
+        onDelete={(id) => {
+          setDeleteId(id ?? null);
           setDeleteOpen(true);
         }}
-        idKey={"courseId"}
+        idKey="courseId"
       />
+
       <ConfirmDialog
         isOpen={deleteOpen}
-        onClose={() => {
-          setDeleteOpen(false);
-          setDeleteId(null);
-        }}
-        onConfirm={handleDelete}
+        onClose={() => setDeleteOpen(false)}
         title="Delete Course?"
-        description="Are you sure you want to delete this course? This action cannot be undone."
+        description="This action cannot be undone."
         confirmText="Delete"
-        cancelText="Cancel"
         variant="destructive"
+        onConfirm={async () => {
+          if (!deleteId) return;
+          await deleteCourse(deleteId);
+          toast({ title: "Course deleted" });
+          setDeleteOpen(false);
+          loadData();
+        }}
       />
-    </div>
+    </>
   );
 }
