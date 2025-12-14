@@ -22,6 +22,7 @@ import { getAccountMembers } from "@/api/accountMember.api";
 import type { AccountMember } from "@/types/accountMember";
 import { changeAuthority, getAuthorities } from "@/api/authority.api";
 import { toast } from "@/hooks/use-toast";
+import type { Authority } from "@/types/authority";
 
 type PropsMemberList = {
   open: boolean;
@@ -40,8 +41,6 @@ export function MemberListModal({
   const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
   const [linkDate, setLinkDate] = useState<string>("");
   const [loading, setLoading] = useState(false);
-
-  /* ---------------- Fetch Current Authority ---------------- */
 
   const fetchAuthority = useCallback(async () => {
     if (!accountId) return;
@@ -68,8 +67,6 @@ export function MemberListModal({
     }
   }, [open, fetchAuthority]);
 
-  /* ---------------- Save Authority ---------------- */
-
   const handleSave = async () => {
     if (!accountId || !currentMemberId || !pendingMemberId || !linkDate) {
       toast({
@@ -90,9 +87,7 @@ export function MemberListModal({
         linkDate,
       };
 
-      console.log(payload);
-
-      const res: Response<any> = await changeAuthority(payload);
+      const res: Response<Authority[]> = await changeAuthority(payload);
 
       if (res?.success) {
         setCurrentMemberId(pendingMemberId);
@@ -123,8 +118,6 @@ export function MemberListModal({
     setLinkDate("");
   };
 
-  /* ---------------- Render ---------------- */
-
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <AnimatePresence>
@@ -138,21 +131,46 @@ export function MemberListModal({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[90vh]"
+              // Enhanced background and shadow for the modal
+              className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Family Members</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-800">
+                  Select Family Member
+                </h2>
                 <button
                   onClick={onClose}
-                  className="text-gray-500 hover:text-black"
+                  // Primary color on hover
+                  className="text-gray-500 p-1 rounded-full hover:bg-gray-100 transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Members */}
-              <div className="space-y-3 overflow-y-auto">
+              {/* Date Input Section */}
+              {pendingMemberId !== null &&
+                pendingMemberId !== currentMemberId && (
+                  <div className="pb-4 border-b border-gray-200 mb-4">
+                    <label
+                      htmlFor="link-date"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Effective Date:
+                    </label>
+                    <input
+                      id="link-date"
+                      type="date"
+                      value={linkDate}
+                      onChange={(e) => setLinkDate(e.target.value)}
+                      // Styling the date input
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-600 focus:border-blue-600 transition"
+                    />
+                  </div>
+                )}
+
+              {/* Members List */}
+              <div className="space-y-4 overflow-y-auto pr-1 -mr-1">
                 {members?.map((m) => {
                   const checked =
                     pendingMemberId !== null
@@ -162,45 +180,49 @@ export function MemberListModal({
                   return (
                     <label
                       key={m.memberId}
-                      className="border rounded-lg p-3 flex justify-between items-center cursor-pointer"
+                      // Enhanced card styling with border, shadow, and hover effect
+                      className={`
+                    border rounded-xl p-4 flex justify-between items-center cursor-pointer transition duration-150 ease-in-out
+                    ${
+                      checked
+                        ? "border-blue-600 bg-blue-50 shadow-md"
+                        : "border-gray-200 hover:border-blue-300"
+                    }
+                  `}
                     >
+                      {/* Member Info */}
                       <div>
-                        <p className="font-medium">
+                        <p className="font-semibold text-gray-800">
                           {m.memberFirstName} {m.memberLastName}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 mt-0.5">
                           {m.relationship}
                         </p>
                       </div>
 
+                      {/* Radio Button */}
                       <input
                         type="radio"
                         name="authorityMember"
                         checked={checked}
                         disabled={loading}
                         onChange={() => setPendingMemberId(m.memberId)}
-                        className="h-4 w-4 accent-black"
+                        // Using primary color for the radio button
+                        className="h-5 w-5 accent-blue-600 disabled:opacity-50"
                       />
                     </label>
                   );
                 })}
               </div>
 
-              {/* Date + Actions */}
+              {/* Actions */}
               {pendingMemberId !== null &&
                 pendingMemberId !== currentMemberId && (
-                  <div className="mt-4 space-y-3">
-                    <input
-                      type="date"
-                      value={linkDate}
-                      onChange={(e) => setLinkDate(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 text-sm"
-                    />
-
-                    <div className="flex justify-end gap-2">
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="flex justify-end gap-3">
                       <button
                         onClick={handleCancel}
-                        className="px-4 py-2 text-sm border rounded-md"
+                        className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
                         disabled={loading}
                       >
                         Cancel
@@ -208,9 +230,10 @@ export function MemberListModal({
                       <button
                         onClick={handleSave}
                         disabled={loading || !linkDate}
-                        className="px-4 py-2 text-sm bg-black text-white rounded-md"
+                        // Primary color for the main action button
+                        className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:bg-blue-400"
                       >
-                        Save
+                        {loading ? "Saving..." : "Confirm Selection"}
                       </button>
                     </div>
                   </div>
@@ -222,11 +245,6 @@ export function MemberListModal({
     </Dialog>
   );
 }
-
-
-/* ------------------------------------------------------------------ */
-/* ------------------------ ACCOUNT VIEW MODAL ----------------------- */
-/* ------------------------------------------------------------------ */
 
 type Props = {
   isOpen: boolean;
@@ -286,23 +304,17 @@ export default function AccountViewModal({
   accountId,
   onClose,
 }: Props) {
-  /* ---------------- Fetch Account ---------------- */
-
   const fetchFn = useCallback(async (id?: number) => {
     if (!id) throw new Error("Missing account ID");
     const res = await getAccountById(id);
     return res.data as Account;
   }, []);
 
-  /* ---------------- State ---------------- */
-
   const [memberFormOpen, setMemberFormOpen] = useState(false);
   const [memberListOpen, setMemberListOpen] = useState(false);
   const [memberList, setMemberList] = useState<AccountMember[]>([]);
   const [memberInitialData, setMemberInitialData] =
     useState<Partial<AccountMember> | null>(null);
-
-  /* ---------------- Helpers ---------------- */
 
   const openAddMemberForAccount = (account: Account | null) => {
     if (!account) return;
@@ -323,8 +335,6 @@ export default function AccountViewModal({
       setMemberList([]);
     }
   }, [accountId]);
-
-  /* ---------------- View Fields ---------------- */
 
   const fields = baseViewFields.map((f) => {
     if (f.key === "addMember") {
@@ -355,8 +365,6 @@ export default function AccountViewModal({
     return f;
   });
 
-  /* ---------------- Render ---------------- */
-
   return (
     <>
       <ViewModal<Account>
@@ -378,7 +386,7 @@ export default function AccountViewModal({
         }}
         onSaved={async () => {
           setMemberFormOpen(false);
-          await fetchMembers(); // refresh list after add
+          await fetchMembers();
         }}
       />
 

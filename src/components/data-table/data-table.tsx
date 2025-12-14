@@ -114,7 +114,7 @@ export function DataTable<T>({
     if (!resizingColumn.current) return;
 
     const diff = e.clientX - startX.current;
-    const newWidth = Math.max(80, startWidth.current + diff);
+    const newWidth = Math.max(40, startWidth.current + diff);
 
     setColumnWidths((prev) => ({
       ...prev,
@@ -193,25 +193,26 @@ export function DataTable<T>({
                     <TableHead
                       key={String(col.key)}
                       className={cn(
-                        "p-4 font-semibold text-blue-900 dark:text-blue-100 relative",
+                        "p-4 font-semibold text-blue-900 dark:text-blue-100 relative border-r border-border",
                         col.align === "center" && "text-center",
                         col.align === "right" && "text-right"
                       )}
                       style={{
                         width:
                           columnWidths[String(col.key)] || col.width || 150,
-                        minWidth: 80,
+                        maxWidth:
+                          columnWidths[String(col.key)] || col.width || 150,
                       }}
                     >
-                      <div className="flex items-center gap-2 truncate">
-                        {col.header}
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <span className="truncate">{col.header}</span>
                       </div>
                       {idx < displayColumns.length - 1 && (
                         <div
                           onMouseDown={(e) =>
                             handleMouseDown(e, String(col.key))
                           }
-                          className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-400 dark:hover:bg-blue-600 opacity-0 hover:opacity-100 transition-opacity"
+                          className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-400 dark:hover:bg-blue-600 bg-border/30 hover:opacity-100 transition-opacity z-10"
                           style={{ userSelect: "none" }}
                         />
                       )}
@@ -234,9 +235,9 @@ export function DataTable<T>({
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2, delay: index * 0.03 }}
                       className={cn(
-                        "group hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors",
+                        "group hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors border-b border-border",
                         index % 2 === 0
-                          ? "bg-white dark:bg-background"
+                          ? "bg-background"
                           : "bg-slate-50/50 dark:bg-muted/5"
                       )}
                     >
@@ -249,7 +250,7 @@ export function DataTable<T>({
                           <TableCell
                             key={String(col.key)}
                             className={cn(
-                              "p-4 truncate",
+                              "border-r border-border px-2 py-2 overflow-hidden",
                               col.align === "center" && "text-center",
                               col.align === "right" && "text-right"
                             )}
@@ -258,7 +259,10 @@ export function DataTable<T>({
                                 columnWidths[String(col.key)] ||
                                 col.width ||
                                 150,
-                              minWidth: 80,
+                              maxWidth:
+                                columnWidths[String(col.key)] ||
+                                col.width ||
+                                150,
                             }}
                             title={
                               typeof cellContent === "string"
@@ -266,7 +270,7 @@ export function DataTable<T>({
                                 : undefined
                             }
                           >
-                            {cellContent}
+                            <div className="truncate">{cellContent}</div>
                           </TableCell>
                         );
                       })}

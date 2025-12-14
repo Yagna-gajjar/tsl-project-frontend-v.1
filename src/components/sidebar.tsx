@@ -147,7 +147,8 @@ const navigationItems: NavigationItem[] = [
     icon: Crown,
     submenu: [
       { label: "Membership Master", href: "/membership-master" },
-      { label: "Membership Reg", href: "/membership-Registration" },
+      { label: "Membership Reg", href: "/membership-registration" },
+      { label: "Membership Link", href: "/membership-link" },
     ],
   },
 ];
@@ -209,10 +210,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="text-lg font-semibold text-foreground mb-6"
-            >
-              Navigation
-            </motion.h2>
+              className="text-lg font-semibold text-foreground mt-12 mb-6"
+            ></motion.h2>
           ) : (
             <motion.div
               key="collapsed"
@@ -311,10 +310,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
                         className="ml-auto"
                       >
                         <ChevronDown
-                          className={`h-4 w-4 ${location.pathname.startsWith(item.href + "/")
+                          className={`h-4 w-4 ${
+                            location.pathname.startsWith(item.href + "/")
                               ? "text-background"
                               : "text-muted-foreground"
-                            }`}
+                          }`}
                         />
                       </motion.div>
                     )}

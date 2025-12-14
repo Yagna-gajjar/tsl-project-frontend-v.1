@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface FormFooterProps {
-  onClose: () => void
-  onSubmit: () => void
-  isSubmitting: boolean
-  submitLabel?: string
+  onClose: () => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  submitLabel?: string;
+  disabled?: boolean;
 }
 
-export function FormFooter({ onClose, onSubmit, isSubmitting, submitLabel = "Submit" }: FormFooterProps) {
+export function FormFooter({
+  onClose,
+  onSubmit,
+  isSubmitting,
+  submitLabel = "Submit",
+}: FormFooterProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -26,10 +32,14 @@ export function FormFooter({ onClose, onSubmit, isSubmitting, submitLabel = "Sub
       >
         Cancel
       </Button>
-      <Button onClick={onSubmit} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+      <Button
+        onClick={onSubmit}
+        disabled={isSubmitting}
+        className="bg-blue-600 hover:bg-blue-700 text-white"
+      >
         {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
         {submitLabel}
       </Button>
     </motion.div>
-  )
+  );
 }

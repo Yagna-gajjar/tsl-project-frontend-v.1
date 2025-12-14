@@ -15,6 +15,10 @@ export interface EnumsQuery {
 
 const ENUMS_BASE = import.meta.env.VITE_APP_API_URL + '/enum';
 
+export function getAllEnumByGroup() {
+  return request(`${ENUMS_BASE}/group`);
+}
+
 export function getAllEnums(params: EnumsQuery = {}): Promise<Response<Enums[]>> {
     const qs = toQueryString({
         page: params.page ?? 1,

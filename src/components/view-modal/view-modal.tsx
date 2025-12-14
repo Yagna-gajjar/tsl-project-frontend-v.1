@@ -21,39 +21,40 @@ export function ViewModal<T extends Record<string, any>>({
     data: null,
     loading: false,
     error: null,
-  })
+  });
 
   // Memoized fetch function to prevent unnecessary re-renders
   const fetchData = useCallback(async () => {
-    if (!isOpen || !itemId) return
+    if (!isOpen || !itemId) return;
 
-    setState((prev) => ({ ...prev, loading: true, error: null }))
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const result = await fetchFn(itemId)
-      setState({ data: result, loading: false, error: null })
+      const result = await fetchFn(itemId);
+      setState({ data: result, loading: false, error: null });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load data"
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load data";
       setState({
         data: null,
         loading: false,
         error: errorMessage,
-      })
+      });
     }
-  }, [isOpen, itemId, fetchFn])
+  }, [isOpen, itemId, fetchFn]);
 
   // Auto-fetch on modal open
   useEffect(() => {
     if (isOpen) {
-      fetchData()
+      fetchData();
     }
-  }, [isOpen, fetchData])
+  }, [isOpen, fetchData]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      onClose()
+      onClose();
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -83,7 +84,7 @@ export function ViewModal<T extends Record<string, any>>({
         )}
       </AnimatePresence>
     </Dialog>
-  )
+  );
 }
 
 export type { ViewModalProps, FieldConfig }

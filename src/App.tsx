@@ -52,6 +52,7 @@ import FacilityAllotmentsPage from "./pages/facilityAllotment";
 import EntityPage from "./pages/entity";
 import AccountPage from "./pages/account";
 import AccountMemberPage from "./pages/accountMember";
+import MembershipLinkPage from "./pages/membership-link";
 
 export default function App() {
   return (
@@ -155,8 +156,12 @@ export default function App() {
                   element={<MembershipMasterPage />}
                 />
                 <Route
-                  path="/membership-Registration"
+                  path="/membership-registration"
                   element={<MembershipPage />}
+                />
+                <Route
+                  path="/membership-link"
+                  element={<MembershipLinkPage />}
                 />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/billing" element={<Billing />} />

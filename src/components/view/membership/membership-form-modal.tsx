@@ -71,7 +71,8 @@ export default function MembershipFormModal({
   const [error, setError] = useState<string | null>(null);
 
   // State to track the currently selected master object (needed for date calcs)
-  const [selectedMembership, setSelectedMembership] = useState<MembershipMaster>();
+  const [selectedMembership, setSelectedMembership] =
+    useState<MembershipMaster>();
 
   // Debounce state
   const [debouncedMembers, setDebouncedMembers] = useState<number>(
@@ -116,7 +117,7 @@ export default function MembershipFormModal({
 
     setFieldErrors({});
     setError(null);
-    // Note: We don't set selectedMembership here; we do it in the API load 
+    // Note: We don't set selectedMembership here; we do it in the API load
     // to ensure we have the full object list first.
   }, [isOpen, initialData]);
 
@@ -148,7 +149,7 @@ export default function MembershipFormModal({
         });
         const accRows = accRes?.data as Account[];
         setAccountOptions(accRows);
-      } catch (err) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load dropdown data",
@@ -180,11 +181,16 @@ export default function MembershipFormModal({
     const members = Number(debouncedMembers);
 
     /* 1. Total Issue Charge */
-    const perMemberRegCharge = Number(selectedMembership.perMemberRegCharge ?? 0);
+    const perMemberRegCharge = Number(
+      selectedMembership.perMemberRegCharge ?? 0
+    );
     const perMemberPerMonthCharge = Number(
       selectedMembership.commPerMonthPerMember ?? 0
-    );  
-    const totalIssueCharges = Math.max(perMemberRegCharge * members, selectedMembership.minIssueCharge);
+    );
+    const totalIssueCharges = Math.max(
+      perMemberRegCharge * members,
+      selectedMembership.minIssueCharge
+    );
 
     /* 2. Applicable Discount */
     const memberLimit = Number(selectedMembership.commDiscountPerMember);
@@ -240,8 +246,9 @@ export default function MembershipFormModal({
 
     /* 10. Gift Vouchers */
     const giftVouchers =
-      Math.ceil(((totalSpent / 100) * selectedMembership?.giftVoucher) / 100) *
-      100;
+      Math.ceil(
+        ((totalSpent / 100) * Number(selectedMembership?.giftVoucher)) / 100
+      ) * 100;
 
     setValues((prev) => ({
       ...prev,
@@ -278,7 +285,7 @@ export default function MembershipFormModal({
           addDays(
             prev.startDate,
             Number(selected?.durationDays || 0) +
-            Number(selected?.graceDays || 0)
+              Number(selected?.graceDays || 0)
           ),
           "yyyy-MM-dd"
         ),
@@ -307,7 +314,7 @@ export default function MembershipFormModal({
             addDays(
               newStartDate,
               Number(selectedMembership.durationDays || 0) +
-              Number(selectedMembership.graceDays || 0)
+                Number(selectedMembership.graceDays || 0)
             ),
             "yyyy-MM-dd"
           );
@@ -492,7 +499,7 @@ export default function MembershipFormModal({
             values={values}
             error={""}
             errors={fieldErrors}
-            onChange={onChange as any}
+            onChange={onChange}
             layout="grid"
             loading={false}
             isSubmitting={isSubmitting}
