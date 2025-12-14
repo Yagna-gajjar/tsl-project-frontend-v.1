@@ -1,14 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
+import { Users } from "lucide-react";
+import { motion } from "framer-motion";
+
+import AccountSearchPanel from "./AccountSearchPanel";
+import SelectedAccountsPanel from "./SelectedAccountsPanel";
 
 import { createMembershipLink } from "@/api/membershipLink.api";
 import { getAccounts } from "@/api/account.api";
 import type { MembershipLink } from "@/types/membershipLink";
-import { toast } from "@/hooks/use-toast";
+import type { Response } from "@/types/response";
+
+export type Account = {
+  accountId: number;
+  name: string;
+  phone?: string;
+};
 
 type Props = {
   isOpen: boolean;
@@ -16,6 +26,11 @@ type Props = {
   membershipMasterId: number;
   onClose: () => void;
   onSave: () => void;
+};
+
+const dialogContentVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
 export default function MembershipLinkFormModal({
@@ -26,15 +41,20 @@ export default function MembershipLinkFormModal({
   onSave,
 }: Props) {
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<any[]>([]);
-  const [selectedAccounts, setSelectedAccounts] = useState<any[]>([]);
+  const [results, setResults] = useState<Account[]>([]);
+  const [selectedAccounts, setSelectedAccounts] = useState<Account[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const searchAccount = useCallback(async () => {
-    if (!search.trim()) return;
+    if (!search.trim()) {
+      setResults([]);
+      return;
+    }
 
     try {
-      const res = await getAccounts({ name: search });
+      setIsSearching(true);
+      const res: Response<Account[]> = await getAccounts({ name: search });
       setResults(res.data || []);
     } catch {
       toast({
@@ -42,10 +62,12 @@ export default function MembershipLinkFormModal({
         description: "Failed to search accounts",
         variant: "destructive",
       });
+    } finally {
+      setIsSearching(false);
     }
   }, [search]);
 
-  const addAccount = (acc: any) => {
+  const addAccount = (acc: Account) => {
     if (selectedAccounts.some((a) => a.accountId === acc.accountId)) return;
     setSelectedAccounts((p) => [...p, acc]);
   };
@@ -57,8 +79,8 @@ export default function MembershipLinkFormModal({
   const handleSubmit = async () => {
     if (selectedAccounts.length === 0) {
       toast({
-        title: "Validation",
-        description: "Select at least one account",
+        title: "Validation Error",
+        description: "Select at least one account to link.",
         variant: "destructive",
       });
       return;
@@ -78,7 +100,7 @@ export default function MembershipLinkFormModal({
 
       toast({
         title: "Success",
-        description: "Accounts linked successfully",
+        description: `Successfully linked ${selectedAccounts.length} account(s).`,
         variant: "success",
       });
 
@@ -87,7 +109,7 @@ export default function MembershipLinkFormModal({
     } catch {
       toast({
         title: "Error",
-        description: "Failed to link accounts",
+        description: "Failed to link one or more accounts. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -99,81 +121,56 @@ export default function MembershipLinkFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-      <div className="flex flex-col max-h-[90vh] overflow-hidden">
-        
-              <FormHeader title="Add Accounts to Membership" onClose={onClose} />
+      <DialogContent
+        className="max-w-4xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden"
+        onPointerDownOutside={(e) => isSubmitting && e.preventDefault()}
+        onInteractOutside={(e) => isSubmitting && e.preventDefault()}
+      >
+        <motion.div
+          variants={dialogContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          className="flex flex-col max-h-[90vh] overflow-hidden"
+        >
+          {/* Header */}
+          <FormHeader
+            title="Link Family / Accounts"
+            icon={<Users className="w-5 h-5 text-primary" />}
+            onClose={onClose}
+          />
 
-        <div className="grid grid-cols-2 gap-6 mt-4">
-          {/* SEARCH SIDE */}
-          <div>
-            <h3 className="font-semibold mb-2">Search Accounts</h3>
-
-            <div className="flex gap-2 mb-3">
-              <Input
-                placeholder="Search by name / phone"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+          {/* Main Content Area (Two Columns) */}
+          <div className="flex-grow p-6 overflow-y-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Search Panel */}
+              <AccountSearchPanel
+                search={search}
+                setSearch={setSearch}
+                results={results}
+                isSearching={isSearching}
+                searchAccount={searchAccount}
+                addAccount={addAccount}
+                selectedAccounts={selectedAccounts}
               />
-              <Button onClick={searchAccount}>Search</Button>
-            </div>
 
-            <div className="border rounded-md max-h-64 overflow-auto">
-              {results.map((acc) => (
-                <div
-                  key={acc.accountId}
-                  className="flex justify-between items-center p-2 border-b"
-                >
-                  <span>{acc.name}</span>
-                  <Button size="sm" onClick={() => addAccount(acc)}>
-                    Add
-                  </Button>
-                </div>
-              ))}
-
-              {results.length === 0 && (
-                <p className="p-3 text-sm text-muted-foreground">No results</p>
-              )}
+              {/* Selected Accounts Panel */}
+              <SelectedAccountsPanel
+                selectedAccounts={selectedAccounts}
+                removeAccount={removeAccount}
+              />
             </div>
           </div>
 
-          {/* SELECTED SIDE */}
-          <div>
-            <h3 className="font-semibold mb-2">Selected Accounts</h3>
-
-            <div className="border rounded-md max-h-64 overflow-auto">
-              {selectedAccounts.map((acc) => (
-                <div
-                  key={acc.accountId}
-                  className="flex justify-between items-center p-2 border-b"
-                >
-                  <span>{acc.name}</span>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => removeAccount(acc.accountId)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-
-              {selectedAccounts.length === 0 && (
-                <p className="p-3 text-sm text-muted-foreground">
-                  No accounts selected
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <FormFooter
-          onClose={onClose}
-          onSubmit={handleSubmit}
-          submitLabel="Link Accounts"
-          isSubmitting={isSubmitting}
-                  />
-                  </div>
+          {/* Footer */}
+          <FormFooter
+            onClose={onClose}
+            onSubmit={handleSubmit}
+            submitLabel="Link Accounts"
+            isSubmitting={isSubmitting}
+            disabled={selectedAccounts.length === 0}
+          />
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
