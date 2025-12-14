@@ -2,7 +2,7 @@ export interface membership {
   membershipId: number;
 
   membershipMasterId: number;
-  accountId: number;
+  accountId: number | null;
 
   startDate: Date | string;
   endDate?: Date | string;
