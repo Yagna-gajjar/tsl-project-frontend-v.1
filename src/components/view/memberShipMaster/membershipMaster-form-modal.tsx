@@ -152,7 +152,6 @@ export default function MembershipMasterFormModal({
     }
 
     try {
-      console.log(values.identityTypeId);
       const payload: Partial<MembershipMaster> = {
         membershipType: String(values.membershipType),
         identityTypeId: Number(values.identityTypeId),

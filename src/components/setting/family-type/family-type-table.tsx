@@ -129,7 +129,7 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
   const handleDelete = (id?: number) => {
     if (id === undefined || id === null) return;
     setDeleteId(id);
-    setDeleteOpen(true); // open your AlertDialog
+    setDeleteOpen(true);
   };
 
   const handleDeleteConfirmed = async () => {
@@ -146,11 +146,11 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
       if (!ok) {
         throw new Error(
           (res as Record<string, any>)?.message ||
-          "Failed to delete family type"
+            "Failed to delete family type"
         );
       }
 
-      await loadData(); // refresh table
+      await loadData();
     } catch (err) {
       toast({
         title: "Error",

@@ -1,4 +1,3 @@
-// membership.api.ts
 import type { membership } from "@/types/membership";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";

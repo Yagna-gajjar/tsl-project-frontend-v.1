@@ -15,24 +15,23 @@ export interface Column<T> {
 }
 
 export interface PaginationState {
-	page: number
-	limit: number
-	total: number
-	onPageChange?: (page: number) => void
-	onPageSizeChange?: (pageSize: number) => void // Added onPageSizeChange for page size dropdown
+  page: number;
+  limit: number;
+  total: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export interface DynamicTableProps<T> {
-	data: T[]
-	columns: Column<T>[]
-	pagination?: PaginationState
-	isLoading?: boolean
-	onSearchChange?: (value: string) => void
-	onFilterChange?: (key: string, value: any) => void
-	onSortChange?: (key: string, direction: "ASC" | "DESC") => void
-	onView?: (row: T) => void
-	onEdit?: (row: T) => void
-	onDelete?: (id: number | undefined) => void
-	// Helper to extract ID for delete action if not provided in a specific way
-	idKey?: keyof T
+  data: T[];
+  columns: Column<T>[];
+  pagination?: PaginationState;
+  isLoading?: boolean;
+  onSearchChange?: (value: string) => void;
+  onFilterChange?: (key: string, value: any) => void;
+  onSortChange?: (key: string, direction: "ASC" | "DESC") => void;
+  onView?: (row: T) => void;
+  onEdit?: (row: T) => void;
+  onDelete?: (id: number | undefined) => void;
+  idKey?: keyof T;
 }

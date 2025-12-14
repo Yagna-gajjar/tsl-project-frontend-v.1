@@ -107,7 +107,6 @@ export default function AccountFormModal({
       errs.name = "Account name is required";
     }
 
-    // Address Checks
     if (!values.line1 || String(values.line1).trim() === "")
       errs.line1 = "Address Line 1 is required";
     if (!values.city || String(values.city).trim() === "")
@@ -151,7 +150,6 @@ export default function AccountFormModal({
         country: values.country,
         pinCode: values.pinCode,
       };
-      console.log(payload);
       
       if (initialData?.accountId) {
         const res: Response<Account> = await updateAccount(initialData.accountId, payload);

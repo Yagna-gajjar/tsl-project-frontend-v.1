@@ -62,8 +62,12 @@ export default function AcademyCoachTable({
       })) as AcademyCoach[];
 
       setData(rows);
-    } catch (err) {
-      console.error("Failed to fetch academy coaches", err);
+    } catch {
+      toast({
+        title: "Error",
+        description: "failed to fetch academyCoaches",
+        variant: "destructive",
+      });
       setData([]);
     } finally {
       setIsLoading(false);
@@ -92,7 +96,7 @@ export default function AcademyCoachTable({
 
   const handleSortChange = (column: string, direction: "ASC" | "DESC") => {
     if (column === "coachName") {
-      column = "coachFirstName"; // Default sort by first name if coachName is selected
+      column = "coachFirstName";
     }
     setSortBy(column);
     setSortOrder(direction);

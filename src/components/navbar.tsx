@@ -87,28 +87,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Toggle State for In/Out
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
-
-  // const fetchUserImage = async () => {
-  //   if (!user?.avatar || !token) return;
-
-  //   const response = await fetch(
-  //     `${import.meta.env.VITE_APP_API_URL}/${user.avatar}`,
-  //     {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     }
-  //   );
-
-  //   if (response.ok) {
-  //     const blob = await response.blob();
-  //     const imageUrl = URL.createObjectURL(blob);
-  //     setUserImage(imageUrl);
-  //   }
-  // };
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -119,36 +99,38 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch requests";
       toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
     }
   }, []);
 
   useEffect(() => {
-    // fetchUserImage();
     fetchRequests();
 
-    // Fetch User Active Status logic added here
     const fetchStatus = async () => {
       if (user?.userId) {
         try {
           const response: Response = await isUserActive(user.userId);
-          // Set state based on response.data (true/false)
-          if (response && typeof response.data === 'boolean') {
+          if (response && typeof response.data === "boolean") {
             setIsCheckedIn(response.data);
           }
-        } catch (error) {
-          console.error("Failed to fetch user status", error);
+        } catch {
+          toast({
+            title: "Error",
+            description: "failed to fetch user",
+            variant: "destructive",
+          });
         }
       }
     };
 
     fetchStatus();
   }, [user, token, fetchRequests]);
-
-  // Handle Check In/Out Toggle
   const handleStatusToggle = async () => {
     if (!user?.userId) {
-      toast({ title: "Error", description: "User ID not found", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "User ID not found",
+        variant: "destructive",
+      });
       return;
     }
     if (isLoadingStatus) return;
@@ -156,18 +138,21 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     setIsLoadingStatus(true);
     try {
       if (isCheckedIn) {
-        // Currently In, so call Check Out
         await checkOut(user.userId);
         setIsCheckedIn(false);
         toast({ title: "Success", description: "You have checked out." });
       } else {
-        // Currently Out, so call Check In
         await checkIn(user.userId);
         setIsCheckedIn(true);
-        toast({ title: "Success", description: "You have checked in.", className: "bg-green-600 text-white border-none" });
+        toast({
+          title: "Success",
+          description: "You have checked in.",
+          className: "bg-green-600 text-white border-none",
+        });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update status";
+      const message =
+        error instanceof Error ? error.message : "Failed to update status";
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoadingStatus(false);
@@ -204,23 +189,29 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-background font-bold text-sm">TSL</span>
               </div>
-              <span className="font-bold text-xl hidden sm:block">Tanna Sports</span>
+              <span className="font-bold text-xl hidden sm:block">
+                Tanna Sports
+              </span>
             </motion.div>
           </div>
 
           {/* Right Section */}
           <div className="flex items-center space-x-2">
-
             {/* Check In/Out Toggle - Visible only when logged in */}
             {user && (
               <div className="flex items-center gap-2 mr-2 border-r pr-4 border-border/50">
-                <span className={`text-xs font-bold ${isCheckedIn ? "text-green-600" : "text-muted-foreground"}`}>
+                <span
+                  className={`text-xs font-bold ${
+                    isCheckedIn ? "text-green-600" : "text-muted-foreground"
+                  }`}
+                >
                   {isCheckedIn ? "IN" : "OUT"}
                 </span>
                 <div
                   onClick={handleStatusToggle}
-                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-300 flex items-center px-1 ${isCheckedIn ? "bg-green-500" : "bg-input"
-                    } ${isLoadingStatus ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-300 flex items-center px-1 ${
+                    isCheckedIn ? "bg-green-500" : "bg-input"
+                  } ${isLoadingStatus ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <motion.div
                     className="w-4 h-4 bg-background rounded-full shadow-sm"
@@ -232,12 +223,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               </div>
             )}
 
-            {/* Notifications -> open sidebar */}
             <Button
               variant="ghost"
               size="icon"
               className="relative"
-              onClick={() => setSidebarOpen(true)} // OPEN SIDEBAR
+              onClick={() => setSidebarOpen(true)}
             >
               <SquareMenu className="h-5 w-5" />
               {requestLen != 0 && (
@@ -247,7 +237,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               )}
             </Button>
 
-            {/* Settings (unchanged) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -388,8 +377,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           onClose={() => setSidebarOpen(false)}
           setRequestLen={setRequestLen}
           requestData={requests}
-          onAccepted={() => {
-          }}
+          onAccepted={() => {}}
         />
       )}
     </>

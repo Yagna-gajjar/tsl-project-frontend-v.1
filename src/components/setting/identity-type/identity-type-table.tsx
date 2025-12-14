@@ -203,19 +203,16 @@ export default function IdentityTypeTable({
   };
   const handlePageChange = (p: number) => setPage(p);
 
-  // Delete dialog state
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
-  // When user clicks "Delete" in the table
   const handleDelete = (id?: number) => {
     if (id === undefined || id === null) return;
     setDeleteId(id);
-    setDeleteOpen(true); // open your AlertDialog
+    setDeleteOpen(true);
   };
 
-  // When user confirms delete in the dialog
   const handleDeleteConfirmed = async () => {
     if (!deleteId) return;
     try {
@@ -228,13 +225,10 @@ export default function IdentityTypeTable({
           : true;
 
       if (!ok) {
-        throw new Error(
-          res?.message ||
-          "Failed to delete identity type"
-        );
+        throw new Error(res?.message || "Failed to delete identity type");
       }
 
-      await loadData(); // refresh table
+      await loadData();
     } catch (err) {
       console.error("Delete failed:", err);
     } finally {

@@ -111,7 +111,6 @@ export function TableToolbar<T>({
               const v = e.target.value;
               setTempFilters((p) => ({ ...p, [key]: v }));
               if (v === "" || v === null || v === undefined) {
-                // clear immediately (so user can clear without Apply if they want)
                 setTempFilters((p) => {
                   const np = { ...p };
                   delete np[key];
@@ -135,9 +134,7 @@ export function TableToolbar<T>({
           <Select
             value={controlValue}
             onValueChange={(val) => {
-              // val is string from Select control. "all" means cleared.
               if (val === "all") {
-                // remove from staged filters and clear parent
                 setTempFilters((p) => {
                   const np = { ...p };
                   delete np[key];
@@ -198,7 +195,6 @@ export function TableToolbar<T>({
                 mode="single"
                 selected={value}
                 onSelect={(date) => {
-                  // set temp and show apply (dates usually require explicit apply)
                   setTempFilters((p) => ({ ...p, [key]: date }));
                   debounceShowApply();
                 }}
@@ -216,7 +212,6 @@ export function TableToolbar<T>({
               const v = e.target.value;
               setTempFilters((p) => ({ ...p, [key]: v }));
               if (v === "" || v === null || v === undefined) {
-                // clear immediately
                 setTempFilters((p) => {
                   const np = { ...p };
                   delete np[key];

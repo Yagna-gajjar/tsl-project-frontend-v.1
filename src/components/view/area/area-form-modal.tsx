@@ -16,6 +16,7 @@ type Props = {
 };
 import { toast } from "@/hooks/use-toast";
 import type { Facility } from "@/types/facility";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 const empty: Area = {
   areaId: 0,
@@ -37,18 +38,14 @@ export default function AreaFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [facilityFields, setFacilityFields] = useState<[string, number][]>([]);
+  const [facilityFields, setFacilityFields] = useState<Facility[]>([]);
 
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
         const res: Response<Facility[]> = await getFacilities({ limit: 1000 });
         const data = Array.isArray(res?.data) ? (res.data as Facility[]) : [];
-        const options = data.map((f) => ({
-          label: String(f.facilityName ?? ""),
-          value: Number(f.facilityId ?? 0),
-        }));
-        setFacilityFields(options as unknown as [string, number][]);
+        setFacilityFields(data);
       } catch {
         toast({
           title: "Error",
@@ -145,13 +142,16 @@ export default function AreaFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields = [
+  const fields: FormFieldConfig<Area>[] = [
     { name: "areaName", label: "Area Name", type: "text", required: true },
     {
       name: "facilityId",
       label: "Facility",
       type: "select",
-      options: facilityFields,
+      options: facilityFields?.map((f) => ({
+        value: f.facilityId,
+        label: f.facilityName,
+      })),
       required: true,
     },
     {
@@ -168,8 +168,7 @@ export default function AreaFormModal({
       type: "text",
       required: false,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 
@@ -200,8 +199,7 @@ export default function AreaFormModal({
                 loading={false}
                 error={error}
                 isSubmitting={isSubmitting}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                onChange={onChange as any}
+                onChange={onChange}
                 layout="grid"
               />
             </div>

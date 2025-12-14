@@ -182,12 +182,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
       animate={{ x: 0 }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
       className={cn(
-        // Main container must stay relative to hold the toggle button
         "bg-card border-r mt-1 border-border h-screen transition-all duration-300 ease-in-out relative flex flex-col",
         isExpanded ? "w-64" : "w-16"
       )}
     >
-      {/* Toggle Button - Kept outside the scrollable area so it doesn't move or get clipped */}
       <Button
         variant="ghost"
         size="icon"

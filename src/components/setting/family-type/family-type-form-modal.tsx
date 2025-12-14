@@ -46,10 +46,12 @@ export function FamilyTypeFormModal({
     setValues({ ...empty, ...(initialData ?? {}) });
     setFieldErrors({});
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isOpen]);
 
-  const onChange = (field: keyof FamilyType, val: string | number | Date | Object) => {
+  const onChange = (
+    field: keyof FamilyType,
+    val: string | number | Date | Object
+  ) => {
     if (field === "prefix") {
       val = String(val).toUpperCase();
     }
@@ -63,7 +65,6 @@ export function FamilyTypeFormModal({
       return copy;
     });
   };
-
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -106,20 +107,16 @@ export function FamilyTypeFormModal({
       const row: FamilyType = res && (res.data ?? res) ? res.data ?? res : res;
 
       if (!ok) {
-        // API responded but signalled failure
         const msg = res?.message ?? "failed to submit";
-        // show error toast and surface error to form
         setError(msg);
         toast({
           title: "Save failed",
           description: msg,
           variant: "destructive",
         });
-        // stop further processing
         return;
       }
 
-      // success path
       toast({
         title: isEdit ? "Family type updated" : "Family type created",
         description: `${String(
@@ -140,7 +137,6 @@ export function FamilyTypeFormModal({
     } finally {
       setIsSubmitting(false);
     }
-
   }, [values, isEdit, initialData, onClose, onSaved]);
 
   const fields: FormFieldConfig<FamilyType>[] = [

@@ -103,16 +103,18 @@ export function MemberFormModal({
 
     const fetchDefaultAccount = async () => {
       try {
-        const res: Response<Enums[]> = await getEnumsByCategory("casual_account");
+        const res: Response<Enums[]> = await getEnumsByCategory(
+          "casual_account"
+        );
 
         const defaultAccount = res?.data?.[0]?.value;
-        console.log(defaultAccount," dfx")
         if (!defaultAccount) {
           toast({
             title: "Error",
             description: "Can't find default casual account",
-            variant: "destructive"
-          }); return;
+            variant: "destructive",
+          });
+          return;
         }
 
         setDefaultAccount(Number(defaultAccount));
@@ -120,14 +122,12 @@ export function MemberFormModal({
         toast({
           title: "Error",
           description: "Failed to fetch default account",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     };
 
-
     fetchDefaultAccount();
-
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof MemberFormState, val: any) => {
@@ -303,9 +303,10 @@ export function MemberFormModal({
           toast({
             title: "Error",
             description: "Can't Add Member, please define",
-            variant: "destructive"
+            variant: "destructive",
           });
         }
+
         res = await createMember(payload as Member);
       }
 
@@ -332,16 +333,15 @@ export function MemberFormModal({
       const linkPayload: any = {
         accountId: Number(defaultAccount),
         linkBilling: false,
-        memberId: Number(res?.data?.memberId)
-      }
+        memberId: Number(res?.data?.memberId),
+        relationship: "casual member",
+      };
 
       await createAccountMember(linkPayload);
 
       toast({
         title: isEdit ? "Member updated" : "Member created",
-        description: `${String(
-          payload.memberFirstName
-        )} saved successfully.`,
+        description: `${String(payload.memberFirstName)} saved successfully.`,
         variant: "success",
       });
 

@@ -47,7 +47,6 @@ const ConstructionError = ({
 		transition: { duration: 0.6, ease: "easeOut" }
 	};
 
-	// Theme classes
 	const themeClasses = {
 		background: theme === 'dark'
 			? 'bg-[#020817]'

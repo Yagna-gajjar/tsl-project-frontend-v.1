@@ -103,7 +103,6 @@ export function GlobalLoader({ message = "Loading...", size = "md" }: GlobalLoad
   );
 }
 
-// Full page loader
 export function FullPageLoader({ message }: { message?: string }) {
 	return (
 		<div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">

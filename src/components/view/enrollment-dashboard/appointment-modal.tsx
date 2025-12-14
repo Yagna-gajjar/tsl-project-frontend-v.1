@@ -67,8 +67,6 @@ export default function AppointmentModal({
   selectedEnrollment,
   onAction,
 }: Props) {
-  console.log(selectedEnrollment);
-
   const [batchMembers, setBatchMembers] = useState<BatchMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

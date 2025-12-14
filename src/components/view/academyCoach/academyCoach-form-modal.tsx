@@ -107,14 +107,12 @@ export default function AcademyCoachFormModal({
       } catch (err) {
         console.error("Failed to load academy data:", err);
 
-        // Show toast
         toast({
           variant: "destructive",
           title: "Failed to load academies",
           description: "Something went wrong.",
         });
 
-        // Keep form clean instead of partial state
         setAcademyOptions([]);
         setError("Failed to load data");
       }

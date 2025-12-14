@@ -309,8 +309,6 @@ const EnrollmentFormNew = ({
         const res: Response<Batch[]> | any = await getBatch({
           academyId: values.academyId,
         });
-        console.log(res, " = batch by academy");
-
         const allBatches = res?.data || [];
 
         setBatches(allBatches);

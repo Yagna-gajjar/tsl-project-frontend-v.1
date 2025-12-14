@@ -217,25 +217,22 @@ export function BatchFormModal({
     loadTopOptions();
   }, [isOpen]);
 
-  // safer loadBatchType
   const loadBatchType = useCallback(async () => {
     try {
       const res: Response<Enums[]> = await getEnumsByCategory("batchType");
 
-      // Defensive: ensure we got an array
-      const items = Array.isArray((res as any)?.data) ? (res as any).data : [];
+      const items = Array.isArray(res?.data) ? res.data : [];
 
       setBatchType(items);
 
       if (!res?.success) {
-        // still show a toast but don't crash the UI
         toast({
           title: "Warning",
           description: "Failed to fetch enum (server returned error)",
           variant: "destructive",
         });
       }
-    } catch (err) {
+    } catch {
       toast({
         title: "Failed",
         description: "failed to fetch enum",

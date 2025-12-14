@@ -1,4 +1,3 @@
-// src/api/batchConnection.api.ts
 import type { BatchConnection } from "@/types/batchConnection";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";

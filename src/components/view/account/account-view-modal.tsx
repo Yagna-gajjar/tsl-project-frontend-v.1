@@ -131,24 +131,20 @@ export function MemberListModal({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              // Enhanced background and shadow for the modal
               className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[90vh]"
             >
-              {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
                   Select Family Member
                 </h2>
                 <button
                   onClick={onClose}
-                  // Primary color on hover
                   className="text-gray-500 p-1 rounded-full hover:bg-gray-100 transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Date Input Section */}
               {pendingMemberId !== null &&
                 pendingMemberId !== currentMemberId && (
                   <div className="pb-4 border-b border-gray-200 mb-4">
@@ -163,13 +159,11 @@ export function MemberListModal({
                       type="date"
                       value={linkDate}
                       onChange={(e) => setLinkDate(e.target.value)}
-                      // Styling the date input
                       className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-600 focus:border-blue-600 transition"
                     />
                   </div>
                 )}
 
-              {/* Members List */}
               <div className="space-y-4 overflow-y-auto pr-1 -mr-1">
                 {members?.map((m) => {
                   const checked =
@@ -180,7 +174,6 @@ export function MemberListModal({
                   return (
                     <label
                       key={m.memberId}
-                      // Enhanced card styling with border, shadow, and hover effect
                       className={`
                     border rounded-xl p-4 flex justify-between items-center cursor-pointer transition duration-150 ease-in-out
                     ${
@@ -190,7 +183,6 @@ export function MemberListModal({
                     }
                   `}
                     >
-                      {/* Member Info */}
                       <div>
                         <p className="font-semibold text-gray-800">
                           {m.memberFirstName} {m.memberLastName}
@@ -200,14 +192,12 @@ export function MemberListModal({
                         </p>
                       </div>
 
-                      {/* Radio Button */}
                       <input
                         type="radio"
                         name="authorityMember"
                         checked={checked}
                         disabled={loading}
                         onChange={() => setPendingMemberId(m.memberId)}
-                        // Using primary color for the radio button
                         className="h-5 w-5 accent-blue-600 disabled:opacity-50"
                       />
                     </label>
@@ -215,7 +205,6 @@ export function MemberListModal({
                 })}
               </div>
 
-              {/* Actions */}
               {pendingMemberId !== null &&
                 pendingMemberId !== currentMemberId && (
                   <div className="mt-6 pt-4 border-t border-gray-200">
@@ -230,7 +219,6 @@ export function MemberListModal({
                       <button
                         onClick={handleSave}
                         disabled={loading || !linkDate}
-                        // Primary color for the main action button
                         className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:bg-blue-400"
                       >
                         {loading ? "Saving..." : "Confirm Selection"}
@@ -324,17 +312,19 @@ export default function AccountViewModal({
 
   const fetchMembers = useCallback(async () => {
     if (!accountId) return;
-    console.log(accountId);
 
     try {
       const res: Response<AccountMember[]> = await getAccountMembers({
         accountId: accountId,
       });
-      console.log(res.data, " = member data");
 
       setMemberList(res?.data ?? []);
-    } catch (err) {
-      console.error("Failed to fetch members", err);
+    } catch {
+      toast({
+        title: "Failed",
+        description: "failed to fetch member",
+        variant: "destructive",
+      });
       setMemberList([]);
     }
   }, [accountId]);

@@ -13,12 +13,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { login as userLogin, type LoginResponseData } from "@/api/user.api";
-import type { Response } from '@/types/response';
-// Ensure you have this type defined or import it correctly
-// import type { Response } from '@/types/response'; 
-
-// --- TYPES ---
-type UserRole = 'staff' | 'admin' | 'superadmin';
+type UserRole = "staff" | "admin" | "superadmin";
 
 interface LoginFormData {
   username: string;
@@ -36,7 +31,6 @@ interface InputFieldProps {
   placeholder?: string;
 }
 
-// --- SUB-COMPONENT: INPUT FIELD ---
 const InputField: React.FC<InputFieldProps> = ({
   label,
   name,
@@ -44,14 +38,18 @@ const InputField: React.FC<InputFieldProps> = ({
   icon: Icon,
   value,
   onChange,
-  placeholder
+  placeholder,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const inputType = type === 'password' ? (showPassword ? 'text' : 'password') : type;
+  const inputType =
+    type === "password" ? (showPassword ? "text" : "password") : type;
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={name} className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+      <label
+        htmlFor={name}
+        className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide"
+      >
         {label}
       </label>
       <div className="relative group">
@@ -74,7 +72,7 @@ const InputField: React.FC<InputFieldProps> = ({
             hover:border-slate-400 transition-all duration-200 shadow-sm
           "
         />
-        {type === 'password' && (
+        {type === "password" && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
@@ -89,7 +87,6 @@ const InputField: React.FC<InputFieldProps> = ({
   );
 };
 
-// --- MAIN COMPONENT ---
 export default function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
