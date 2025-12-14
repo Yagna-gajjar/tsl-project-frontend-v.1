@@ -5,7 +5,6 @@ export interface Member {
   memberLastName: string;
   dob: Date;
   email: string;
-  relationship?: string;
   bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
   gender: "male" | "female" | "other";
   status: "active" | "inactive" | "block";
