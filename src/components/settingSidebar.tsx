@@ -101,7 +101,6 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
         isExpanded ? "w-72" : "w-16"
       )}
     >
-      {/* Toggle Button */}
       <Button
         variant="ghost"
         size="icon"
@@ -116,7 +115,6 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
       </Button>
       <div className="p-5">
         <div className="mb-8">
-          {/* Back Button */}
           <Link to="/dashboard">
             <AnimatePresence mode="wait">
               {isExpanded ? (
@@ -243,7 +241,6 @@ export default function SettingSidebar({ onClose }: { onClose?: () => void }) {
                   </AnimatePresence>
                 </motion.button>
 
-                {/* Submenu */}
                 <AnimatePresence>
                   {isSectionExpanded && hasSubmenu && (
                     <motion.div

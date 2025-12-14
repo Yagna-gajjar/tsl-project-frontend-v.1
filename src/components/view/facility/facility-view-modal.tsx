@@ -1,5 +1,8 @@
 import { useCallback } from "react";
-import { ViewModal } from "@/components/view-modal/view-modal";
+import {
+  ViewModal,
+  type FieldConfig,
+} from "@/components/view-modal/view-modal";
 import type { Facility } from "@/types/facility";
 import {
   Home,
@@ -20,7 +23,7 @@ type Props = {
   item?: Facility | null;
 };
 
-const fields = [
+const fields: FieldConfig<Facility>[] = [
   { key: "facilityName", label: "Facility Name", icon: Home },
   { key: "facilityType", label: "Facility Type", icon: Tag },
   { key: "facilityDimension", label: "Facility Dimension", icon: Box },
@@ -34,18 +37,15 @@ const fields = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render: (v: any) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-] as any;
+];
 
 export default function FacilityViewModal({ isOpen, onClose, item }: Props) {
   const fetchFn = useCallback(

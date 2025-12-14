@@ -25,12 +25,8 @@ export default function DebitNote() {
         </div>
       </div>
 
-      {/* Table */}
-      <DebitNoteTable
-        onView={openView}
-      />
+      <DebitNoteTable onView={openView} />
 
-      {/* View Modal */}
       <DebitNoteViewModal
         isOpen={viewOpen}
         onClose={() => {

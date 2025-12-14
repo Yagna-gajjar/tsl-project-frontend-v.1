@@ -61,18 +61,14 @@ export default function BatchDetailsPanel({
     }
   }, [selectedBatch]);
 
-  // modal state
   const [showModal, setShowModal] = useState(false);
   const [courseBatches, setCourseBatches] = useState<Batch[]>([]);
   const [loadingCourseBatches, setLoadingCourseBatches] = useState(false);
-
-  // inline request composer state
   const [requestingBatchId, setRequestingBatchId] = useState<number | null>(
     null
   );
   const [requestReason, setRequestReason] = useState("");
 
-  // open modal and fetch all batches for course
   const openModal = useCallback(async () => {
     if (!batch?.courseId) {
       toast({
@@ -135,10 +131,9 @@ export default function BatchDetailsPanel({
     );
   }
 
-  const coachFullName =
-    batch?.coachName
-      ? `${batch.coachName}`
-      : "Unknown Coach";
+  const coachFullName = batch?.coachName
+    ? `${batch.coachName}`
+    : "Unknown Coach";
 
   const fallbackLetter = coachFullName
     ? coachFullName.charAt(0).toUpperCase()
@@ -201,7 +196,6 @@ export default function BatchDetailsPanel({
           </div>
         </motion.div>
 
-        {/* Details Render */}
         {details.map((detail, idx) => {
           const Icon = detail.icon;
 
@@ -212,7 +206,6 @@ export default function BatchDetailsPanel({
               className="bg-card rounded-lg border border-border/50 p-3 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3">
-                {/* Show image → else initial avatar → else icon */}
                 {detail.imageUrl ? (
                   <motion.img
                     whileHover={{ scale: 1.1 }}
@@ -250,7 +243,6 @@ export default function BatchDetailsPanel({
         })}
       </div>
 
-      {/* Modal: All batches for the course */}
       <AnimatePresence>
         {showModal && (
           <motion.div
@@ -260,7 +252,6 @@ export default function BatchDetailsPanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* overlay */}
             <motion.div
               className="absolute inset-0 bg-black/50"
               onClick={() => {
@@ -273,7 +264,6 @@ export default function BatchDetailsPanel({
               exit={{ opacity: 0 }}
             />
 
-            {/* modal panel */}
             <motion.div
               className="relative z-10 w-full max-w-4xl bg-card rounded-2xl shadow-2xl overflow-hidden"
               initial={{ scale: 0.92, opacity: 0, y: 20 }}
@@ -285,7 +275,6 @@ export default function BatchDetailsPanel({
               }}
               exit={{ scale: 0.96, opacity: 0, y: 10 }}
             >
-              {/* header */}
               <div className="flex items-center justify-between p-4 border-b border-border/50">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-primary/10 p-2">
@@ -314,7 +303,6 @@ export default function BatchDetailsPanel({
                 </div>
               </div>
 
-              {/* content */}
               <div className="p-4 max-h-[60vh] overflow-auto space-y-3">
                 {loadingCourseBatches ? (
                   <div className="flex items-center justify-center py-12">
@@ -377,7 +365,9 @@ export default function BatchDetailsPanel({
                                 <div className="flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
                                   <span>
-                                    {(b?.startTime as string).slice(0, 5) ?? "-"} -{" "}
+                                    {(b?.startTime as string).slice(0, 5) ??
+                                      "-"}{" "}
+                                    -{" "}
                                     {(b?.endTime as string).slice(0, 5) ?? "-"}
                                   </span>
                                 </div>
@@ -386,9 +376,7 @@ export default function BatchDetailsPanel({
                                   <Users className="h-3.5 w-3.5" />
                                   <span>
                                     Coach:{" "}
-                                    {b.coachName
-                                      ? `${b.coachName}`
-                                      : "N/A"}
+                                    {b.coachName ? `${b.coachName}` : "N/A"}
                                   </span>
                                 </div>
                               </div>
@@ -401,8 +389,9 @@ export default function BatchDetailsPanel({
                                 Seats
                               </div>
                               <div
-                                className={`text-sm font-medium ${isFull ? "text-red-600" : "text-foreground"
-                                  }`}
+                                className={`text-sm font-medium ${
+                                  isFull ? "text-red-600" : "text-foreground"
+                                }`}
                               >
                                 {b.activeMemberCount} / {b.batchCapacity}
                               </div>
@@ -414,7 +403,6 @@ export default function BatchDetailsPanel({
                   </div>
                 )}
 
-                {/* inline request composer */}
                 <AnimatePresence>
                   {requestingBatchId && (
                     <motion.div

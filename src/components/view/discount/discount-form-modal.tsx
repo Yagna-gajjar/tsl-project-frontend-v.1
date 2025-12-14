@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getCourses } from "@/api/course.api";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -54,18 +55,15 @@ export default function DiscountFormModal({
       setError(null);
 
       const resCourse: Response = await getCourses();
-      
-      // Handle Course data
+
       const courseArray = Array.isArray(resCourse.data) ? resCourse.data : [];
-      const courseopts: SelectOption[] = courseArray.map(
-        (course: unknown) => {
-          const c = course as Record<string, unknown>;
-          return {
-            value: c.courseId as number,
-            label: (c.courseName as string) || "",
-          };
-        }
-      );
+      const courseopts: SelectOption[] = courseArray.map((course: unknown) => {
+        const c = course as Record<string, unknown>;
+        return {
+          value: c.courseId as number,
+          label: (c.courseName as string) || "",
+        };
+      });
 
       setCourseOptions(courseopts);
     };
@@ -165,7 +163,7 @@ export default function DiscountFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields = [
+  const fields: FormFieldConfig<Discount>[] = [
     {
       name: "courseId",
       label: "Course",
@@ -207,8 +205,7 @@ export default function DiscountFormModal({
       ],
       required: true,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ] as any;
+  ];
 
   if (!isOpen) return null;
 
@@ -224,9 +221,7 @@ export default function DiscountFormModal({
           <div className="flex flex-col max-h-[90vh] overflow-hidden">
             <FormHeader
               title={
-                initialData?.discountId
-                  ? "Edit Discount"
-                  : "Add New Discount"
+                initialData?.discountId ? "Edit Discount" : "Add New Discount"
               }
               onClose={onClose}
             />

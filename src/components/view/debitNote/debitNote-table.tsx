@@ -2,6 +2,7 @@ import { getDebitNotes } from "@/api/debitNote.api";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import type { DebitNote } from "@/types/debitNote";
+import type { Response } from "@/types/response";
 import { useCallback, useEffect, useState } from "react";
 
 type Props = {
@@ -28,7 +29,7 @@ function DebitNoteTable({ onView, onEdit }: Props) {
     try {
       setIsLoading(true);
 
-      const res = await getDebitNotes({
+      const res: Response<DebitNote[]> = await getDebitNotes({
         page,
         limit,
         sortBy,
@@ -40,7 +41,7 @@ function DebitNoteTable({ onView, onEdit }: Props) {
         debitNoteType: filters.debitNoteType as string | undefined,
         debitNoteRemarks: filters.debitNoteRemarks as string | undefined,
         dateFrom: filters.dateFrom as Date | undefined,
-        dateTo: filters.dateTo as Date | undefined
+        dateTo: filters.dateTo as Date | undefined,
       });
       let rowsRaw: unknown[] = [];
       let serverTotal = 0;
@@ -49,7 +50,7 @@ function DebitNoteTable({ onView, onEdit }: Props) {
         rowsRaw = res;
         serverTotal = rowsRaw.length;
       } else if (res && typeof res === "object") {
-        const maybeData = (res as any).data;
+        const maybeData = res.data;
         if (Array.isArray(maybeData)) {
           rowsRaw = maybeData;
           serverTotal = rowsRaw.length;
@@ -66,13 +67,11 @@ function DebitNoteTable({ onView, onEdit }: Props) {
               ? (res as any).total
               : rowsRaw.length;
         } else {
-          // fallback: maybe res itself is single object -> wrap
           rowsRaw = [];
           serverTotal = 0;
         }
       }
 
-      // Normalize dates and cast to DebitNote[]
       const rows = (rowsRaw ?? []).map((r: any) => {
         return {
           ...r,
@@ -213,7 +212,7 @@ function DebitNoteTable({ onView, onEdit }: Props) {
         pagination={{
           page,
           limit,
-          total, // <-- use server total
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}

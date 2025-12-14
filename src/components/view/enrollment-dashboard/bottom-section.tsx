@@ -51,15 +51,12 @@ interface EnrollmentHistoryProps {
   historyData: EnrollmentHistoryItem[] | null;
 }
 
-// --- Helper Components ---
-
 function BatchTimeline({ batches }: { batches: Batch[] | any }) {
   const activeBatches = batches.filter((b: Batch) => b.status === "active");
   const inactiveBatches = batches.filter((b: Batch) => b.status === "inactive");
 
   return (
     <div className="space-y-4">
-      {/* Active Batches */}
       {activeBatches.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
@@ -102,7 +99,6 @@ function BatchTimeline({ batches }: { batches: Batch[] | any }) {
         </div>
       )}
 
-      {/* Inactive Batches */}
       {inactiveBatches.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
@@ -208,7 +204,6 @@ function PaymentFlow({
               </div>
             </div>
 
-            {/* Payment Status & Action */}
             <div className="flex items-center justify-between text-xs mt-1">
               <span className="text-slate-600 dark:text-slate-400">
                 {payment.paymentMode}
@@ -321,7 +316,6 @@ export default function EnrollmentHistory({
         className="w-full h-full transition-colors duration-300 overflow-y-auto"
       >
         <div className="p-6 space-y-6">
-          {/* Header */}
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
               <History className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -335,8 +329,6 @@ export default function EnrollmentHistory({
               </p>
             </div>
           </div>
-
-          {/* History Items */}
           {historyData && historyData.length > 0 ? (
             <div className="space-y-4">
               {historyData
@@ -363,12 +355,13 @@ export default function EnrollmentHistory({
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                           <div className="space-y-2 flex-1">
                             <span
-                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${item.status === "active"
-                                ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
-                                : item.changeType === "course-change"
+                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
+                                item.status === "active"
+                                  ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
+                                  : item.changeType === "course-change"
                                   ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
                                   : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                                }`}
+                              }`}
                             >
                               {item.changeType
                                 ? item.changeType.replace("-", " ")
@@ -425,7 +418,6 @@ export default function EnrollmentHistory({
                           </div>
                         </div>
 
-                        {/* Footer Info */}
                         <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                           <span className="flex items-center gap-1">
                             {item.source === "EnrollmentChange" ? (
@@ -454,7 +446,6 @@ export default function EnrollmentHistory({
                                   Change
                                 </Button>
                               )}
-                            {/* Expand Button */}
                             {(hasBatches || hasPayments) &&
                               !item.changeType && (
                                 <button
@@ -470,8 +461,9 @@ export default function EnrollmentHistory({
                                     links
                                   </span>
                                   <ChevronDown
-                                    className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
-                                      }`}
+                                    className={`h-4 w-4 transition-transform ${
+                                      isExpanded ? "rotate-180" : ""
+                                    }`}
                                   />
                                 </button>
                               )}
@@ -479,7 +471,6 @@ export default function EnrollmentHistory({
                         </div>
                       </div>
 
-                      {/* Expanded Section */}
                       <AnimatePresence>
                         {isExpanded &&
                           !item.changeType &&
@@ -491,12 +482,10 @@ export default function EnrollmentHistory({
                               transition={{ duration: 0.3 }}
                               className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-6"
                             >
-                              {/* Batches */}
                               {hasBatches && (
                                 <BatchTimeline batches={item.batches} />
                               )}
 
-                              {/* Payments */}
                               {hasPayments && (
                                 <PaymentFlow
                                   payments={item.payments}

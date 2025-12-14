@@ -50,7 +50,6 @@ export default function MemberPage() {
         </Button>
       </div>
 
-      {/* Pass initialFamilyId and handlers to table (table no longer renders the view modal) */}
       <MemberTable
         onOpenForm={openForm}
         onOpenView={openView}
@@ -67,7 +66,6 @@ export default function MemberPage() {
         }}
       />
 
-      {/* Page-level Member view modal */}
       <MemberViewModal
         isOpen={viewOpen}
         onClose={() => {

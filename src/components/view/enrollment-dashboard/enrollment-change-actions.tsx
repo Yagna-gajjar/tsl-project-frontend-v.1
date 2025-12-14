@@ -61,7 +61,6 @@ export default function EnrollmentChangeActions({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Action Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Button
             variant="outline"
@@ -140,7 +139,6 @@ export default function EnrollmentChangeActions({
           </Button>
         </div>
 
-        {/* Divider */}
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-slate-100" />
@@ -150,7 +148,6 @@ export default function EnrollmentChangeActions({
           </div>
         </div>
 
-        {/* Destructive/Final Action */}
         <Button
           className="w-full py-6 bg-slate-900 hover:bg-black text-white rounded-lg flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
           onClick={() => handleClick("cancel")}

@@ -70,11 +70,9 @@ export default function MembershipFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  // State to track the currently selected master object (needed for date calcs)
   const [selectedMembership, setSelectedMembership] =
     useState<MembershipMaster>();
 
-  // Debounce state
   const [debouncedMembers, setDebouncedMembers] = useState<number>(
     initialData?.members || 1
   );
@@ -84,7 +82,6 @@ export default function MembershipFormModal({
   >([]);
   const [accountOptions, setAccountOptions] = useState<Account[]>([]);
 
-  // 1. Initialize Form Data
   useEffect(() => {
     if (!isOpen) return;
 
@@ -117,11 +114,8 @@ export default function MembershipFormModal({
 
     setFieldErrors({});
     setError(null);
-    // Note: We don't set selectedMembership here; we do it in the API load
-    // to ensure we have the full object list first.
   }, [isOpen, initialData]);
 
-  // 2. Load API Data & Set Initial Selected Master
   useEffect(() => {
     if (!isOpen) return;
 
@@ -135,7 +129,6 @@ export default function MembershipFormModal({
         const mmRows = mmRes?.data as MembershipMaster[];
         setMembershipMasterOptions(mmRows);
 
-        // If editing, find the active master object so calculations work immediately
         if (initialData?.membershipMasterId) {
           const activeMaster = mmRows.find(
             (m) => m.membershipMasterId === initialData.membershipMasterId

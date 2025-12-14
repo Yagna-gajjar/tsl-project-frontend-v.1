@@ -18,7 +18,7 @@ import {
   Grid3X3,
   List,
   ArrowDown,
-  type LucideIcon, // Added for visual separation
+  type LucideIcon,
 } from "lucide-react";
 
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -31,8 +31,6 @@ import { createPayment } from "@/api/payment.api";
 import type { Response } from "@/types/response";
 import type { Enrollment } from "@/types/enrollment";
 import type { Course } from "@/types/course";
-
-// --- LOGIC (UNMODIFIED) ---
 
 const RefundEnrollment = () => {
   const { id }: any = useParams();
@@ -83,7 +81,6 @@ const RefundEnrollment = () => {
     return diff >= 0 ? diff + 1 : 0;
   }
 
-  // fetch enrollment
   useEffect(() => {
     const fetchEnrollment = async () => {
       try {
@@ -116,7 +113,6 @@ const RefundEnrollment = () => {
     if (id) fetchEnrollment();
   }, [id]);
 
-  // fetch course (to get full unit rate)
   useEffect(() => {
     const fetchCourse = async () => {
       if (!oldEnrollment?.courseId) return;
@@ -135,7 +131,6 @@ const RefundEnrollment = () => {
     fetchCourse();
   }, [oldEnrollment?.courseId]);
 
-  // compute derived values
   useEffect(() => {
     if (!oldEnrollment || !course) return;
 
@@ -216,7 +211,7 @@ const RefundEnrollment = () => {
         paymentRemarks: values.remarks || null,
         academyName: oldEnrollment?.academyName || null,
         courseName: oldEnrollment?.courseName || null,
-        memberName: (oldEnrollment as any)?.memberName || null,
+        memberName: oldEnrollment?.memberName || null,
       };
 
       await createPayment(paymentPayload);
@@ -229,7 +224,6 @@ const RefundEnrollment = () => {
     }
   };
 
-  // Only the editable fields you requested
   const fields = [
     {
       name: "processingCharge",
@@ -269,9 +263,6 @@ const RefundEnrollment = () => {
     },
   ];
 
-  // --- UI IMPLEMENTATION STARTS HERE ---
-
-  // Framer Motion Variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -282,9 +273,16 @@ const RefundEnrollment = () => {
     visible: { y: 0, opacity: 1 },
   };
 
-  // Helper Component for Detailed List Items
-  const DetailRow = ({ icon: Icon, label, value, valueClass = "" }: {
-    icon: LucideIcon, label: string, value: string | Date | number | boolean, valueClass?: string
+  const DetailRow = ({
+    icon: Icon,
+    label,
+    value,
+    valueClass = "",
+  }: {
+    icon: LucideIcon;
+    label: string;
+    value: string | Date | number | boolean;
+    valueClass?: string;
   }) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
       <span className="flex items-center text-sm text-gray-600 dark:text-gray-400">
@@ -301,7 +299,6 @@ const RefundEnrollment = () => {
 
   return (
     <div className="flex flex-col h-full min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      {/* Header (Always visible) */}
       <header className="sticky top-0 z-10 px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-md">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
           <DollarSign className="w-6 h-6 mr-3 text-blue-600" />
@@ -313,14 +310,12 @@ const RefundEnrollment = () => {
         </h1>
       </header>
 
-      {/* Main Content Area: Single Column */}
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
         className="flex-grow overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6"
       >
-        {/* === SECTION 1: FORM INPUTS (TOP) === */}
         <motion.div
           variants={itemVariants}
           className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
@@ -348,7 +343,6 @@ const RefundEnrollment = () => {
           <ArrowDown className="w-6 h-6 text-blue-400 dark:text-blue-600 animate-bounce" />
         </motion.div>
 
-        {/* === SECTION 2: FINAL REFUND AMOUNT (HIGHLIGHT) === */}
         <motion.div
           variants={itemVariants}
           className="p-6 bg-blue-600 dark:bg-blue-900 rounded-xl shadow-2xl shadow-blue-500/50 dark:shadow-blue-900/50 text-white"
@@ -364,9 +358,7 @@ const RefundEnrollment = () => {
           </div>
         </motion.div>
 
-        {/* === SECTION 3: SUMMARY AND BREAKDOWN (BELOW) === */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Panel: Enrollment Financial Breakdown */}
           <motion.div
             variants={itemVariants}
             className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
@@ -404,7 +396,7 @@ const RefundEnrollment = () => {
                 value={`₹${Number(computed.refundBeforeProcessing).toFixed(2)}`}
                 valueClass="text-blue-600 dark:text-blue-400 font-bold"
               />
-              <div className="h-2"></div> {/* Separator */}
+              <div className="h-2"></div>
               <DetailRow
                 icon={Zap}
                 label="Processing Charge (Deduction)"
@@ -414,9 +406,7 @@ const RefundEnrollment = () => {
             </div>
           </motion.div>
 
-          {/* Right Panel: Day Counts & Payment Info */}
           <div className="space-y-6">
-            {/* Day Counters (Condensed Grid) */}
             <motion.div
               variants={itemVariants}
               className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
@@ -426,7 +416,6 @@ const RefundEnrollment = () => {
                 Duration Usage
               </h3>
               <div className="grid grid-cols-3 gap-3">
-                {/* Day Card 1 */}
                 <div className="p-3 bg-blue-50 dark:bg-gray-700 rounded-lg text-center">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     Total Days
@@ -435,7 +424,6 @@ const RefundEnrollment = () => {
                     {computed.totalDays}
                   </p>
                 </div>
-                {/* Day Card 2 */}
                 <div className="p-3 bg-yellow-50 dark:bg-gray-700 rounded-lg text-center">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     Used Days
@@ -445,7 +433,6 @@ const RefundEnrollment = () => {
                     {computed.usedDays}
                   </p>
                 </div>
-                {/* Day Card 3 */}
                 <div className="p-3 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     Remaining
@@ -457,7 +444,6 @@ const RefundEnrollment = () => {
               </div>
             </motion.div>
 
-            {/* Payment Record Details */}
             <motion.div
               variants={itemVariants}
               className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
@@ -493,7 +479,6 @@ const RefundEnrollment = () => {
         </div>
       </motion.div>
 
-      {/* Form Footer (Sticky Bottom) */}
       <div className="shrink-0 sticky bottom-0 z-10">
         <FormFooter
           onClose={() => navigate("/enrollment")}

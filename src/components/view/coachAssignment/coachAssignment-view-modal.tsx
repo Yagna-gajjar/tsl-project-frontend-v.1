@@ -1,6 +1,3 @@
-// src/components/coach-assignment/CoachAssignmentViewModal.tsx
-"use client";
-
 import { useCallback } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { CoachAssignment } from "@/types/coachAssignment";
@@ -62,7 +59,7 @@ export default function CoachAssignmentViewModal({
       isOpen={isOpen}
       onClose={onClose}
       itemId={Number(coachAssignmentId)}
-      fetchFn={fetchFn as any}
+      fetchFn={fetchFn}
       fields={fields}
       title="View Coach Assignment"
       layout="grid"

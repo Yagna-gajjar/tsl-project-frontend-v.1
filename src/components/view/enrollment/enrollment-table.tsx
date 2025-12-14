@@ -101,34 +101,6 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
   };
 
   const columns: Column<Enrollment>[] = [
-    // --- Replace the "Change Enrollment" column object with this ---
-    // {
-    //   header: "Change Enrollment",
-    //   key: "enrollmentChange",
-    //   render: (row: Enrollment) => {
-    //     // normalize dates: loadData already converts to Date, but safeguard here
-    //     const endDate = row.endDate ? new Date(row.endDate) : undefined;
-    //     const startOfToday = new Date();
-    //     startOfToday.setHours(0, 0, 0, 0); // midnight today
-
-    //     const isExpired =
-    //       (!!endDate && endDate < startOfToday) || row.status !== "active";
-
-    //     return !isExpired ? (
-    //       <Button
-    //         className={`text-sm`}
-    //         onClick={() => {
-    //           setSelectedEnrollment(row);
-    //           setChangeDialogOpen(true);
-    //         }}
-    //       >
-    //         Change
-    //       </Button>
-    //     ) : (
-    //       <></>
-    //     );
-    //   },
-    // },
     {
       header: "Enrollment Date",
       key: "enrollmentDate",
@@ -213,14 +185,12 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
         `Rs. ${Number((row as any).commitedAmount ?? 0).toFixed(2)}`,
       sortable: true,
     },
-    // --- new billing columns (minimal additions) ---
     {
       header: "Billing Amount",
       key: "billingAmount",
       render: (row: Enrollment) =>
         `Rs. ${Number((row as any).billingAmount ?? 0).toFixed(2)}`,
       sortable: true,
-      // optional: simple text filter if DataTable supports it from filterType
       filterType: "number",
     },
     {
@@ -275,7 +245,6 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
-        // If endDate is before today, force 'inactive' (per requirement)
         const status =
           endDate && endDate < startOfToday
             ? "inactive"

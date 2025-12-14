@@ -1,6 +1,3 @@
-// src/app/(admin)/batch-connections/page.tsx
-"use client";
-
 import { useState } from "react";
 import BatchConnectionTable from "@/components/view/batchConnection/batchConnection-table";
 import BatchConnectionFormModal from "@/components/view/batchConnection/batchConnection-form-modal";

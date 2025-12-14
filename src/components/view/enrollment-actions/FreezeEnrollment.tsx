@@ -82,8 +82,7 @@ const FreezeEnrollment = () => {
     }
   };
   function calculateDays(startISO?: any, endISO?: any, inclusive = false) {
-    if (!startISO || !endISO) return 0; // or return null, throw error, etc.
-    // Extract only the date part (yyyy-mm-dd)
+    if (!startISO || !endISO) return 0;
     const startDate = parseISO(startISO.slice(0, 10));
     const endDate = parseISO(endISO.slice(0, 10));
 
@@ -152,14 +151,12 @@ const FreezeEnrollment = () => {
 
     const fetchAcademies = async () => {
       try {
-        // getAcademies returns Academy[], so type it correctly
         const res: Response<Academy[]> | any = await getAcademies({
           limit: 100,
           search: "freezer",
         });
         const data = Array.isArray(res?.data) ? res.data : [];
         if (data.length > 0) {
-          // your form fields use academyId, so set that
           setValues((prev) => ({
             ...prev,
             academyId: Number(data[0].academyId),
@@ -172,14 +169,12 @@ const FreezeEnrollment = () => {
     };
     const fetchCourse = async () => {
       try {
-        // getAcademies returns Academy[], so type it correctly
         const res: Response<Academy[]> | any = await getCourses({
           limit: 100,
           search: "freezer",
         });
         const data = Array.isArray(res?.data) ? res.data : [];
         if (data.length > 0) {
-          // your form fields use academyId, so set that
           setValues((prev) => ({
             ...prev,
             courseId: Number(data[0].courseId),
@@ -349,13 +344,6 @@ const FreezeEnrollment = () => {
       required: false,
       disabled: true,
     },
-    // {
-    // 	name: "discountedAmount",
-    // 	label: "Discounted Amount",
-    // 	type: "number",
-    // 	required: false,
-    // 	disabled: true,
-    // },
     {
       name: "commitedAmount",
       label: "Commited Amount",
@@ -369,19 +357,6 @@ const FreezeEnrollment = () => {
       type: "number",
       disabled: true,
     },
-    // {
-    // 	name: "discountId",
-    // 	label: "Discount ID",
-    // 	type: "number",
-    // 	required: false,
-    // 	disabled: true
-    // },
-    // {
-    // 	name: "isDiscounted",
-    // 	label: "Do you want to remove applied discount?",
-    // 	type: "checkbox",
-    // 	required: false,
-    // },
     {
       name: "remarks",
       label: "Remarks",

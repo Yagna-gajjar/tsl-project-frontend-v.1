@@ -65,32 +65,35 @@ export function ConfirmationProvider({ children }: { children: React.ReactNode }
 	}
 
 	return (
-		<ConfirmationContext.Provider value={{ confirm }}>
-			{children}
-			<AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-				{/* z-[60] ensures this sits on top of your MemberTable modal (z-50) */}
-				<AlertDialogContent className="z-[60]">
-					<AlertDialogHeader>
-						<AlertDialogTitle>{options.title}</AlertDialogTitle>
-						<AlertDialogDescription>{options.description}</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel onClick={handleCancel}>{options.cancelText}</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={handleConfirm}
-							className={
-								options.variant === "destructive"
-									? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-									: ""
-							}
-						>
-							{options.confirmText}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</ConfirmationContext.Provider>
-	)
+    <ConfirmationContext.Provider value={{ confirm }}>
+      {children}
+      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+        <AlertDialogContent className="z-[60]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{options.title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {options.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancel}>
+              {options.cancelText}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirm}
+              className={
+                options.variant === "destructive"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {options.confirmText}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </ConfirmationContext.Provider>
+  );
 }
 
 export function useConfirmation() {

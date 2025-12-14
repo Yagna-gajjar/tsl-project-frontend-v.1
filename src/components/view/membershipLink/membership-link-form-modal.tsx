@@ -133,17 +133,14 @@ export default function MembershipLinkFormModal({
           exit="hidden"
           className="flex flex-col max-h-[90vh] overflow-hidden"
         >
-          {/* Header */}
           <FormHeader
             title="Link Family / Accounts"
             icon={<Users className="w-5 h-5 text-primary" />}
             onClose={onClose}
           />
 
-          {/* Main Content Area (Two Columns) */}
           <div className="flex-grow p-6 overflow-y-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Search Panel */}
               <AccountSearchPanel
                 search={search}
                 setSearch={setSearch}
@@ -154,7 +151,6 @@ export default function MembershipLinkFormModal({
                 selectedAccounts={selectedAccounts}
               />
 
-              {/* Selected Accounts Panel */}
               <SelectedAccountsPanel
                 selectedAccounts={selectedAccounts}
                 removeAccount={removeAccount}
@@ -162,7 +158,6 @@ export default function MembershipLinkFormModal({
             </div>
           </div>
 
-          {/* Footer */}
           <FormFooter
             onClose={onClose}
             onSubmit={handleSubmit}

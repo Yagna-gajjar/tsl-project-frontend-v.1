@@ -1,6 +1,3 @@
-// src/components/facility-allotment/FacilityAllotmentViewModal.tsx
-"use client";
-
 import { useCallback } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { FacilityAllotment } from "@/types/facilityAllotment";

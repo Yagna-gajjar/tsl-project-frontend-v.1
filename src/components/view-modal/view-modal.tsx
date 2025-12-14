@@ -23,7 +23,6 @@ export function ViewModal<T extends Record<string, any>>({
     error: null,
   });
 
-  // Memoized fetch function to prevent unnecessary re-renders
   const fetchData = useCallback(async () => {
     if (!isOpen || !itemId) return;
 
@@ -43,7 +42,6 @@ export function ViewModal<T extends Record<string, any>>({
     }
   }, [isOpen, itemId, fetchFn]);
 
-  // Auto-fetch on modal open
   useEffect(() => {
     if (isOpen) {
       fetchData();

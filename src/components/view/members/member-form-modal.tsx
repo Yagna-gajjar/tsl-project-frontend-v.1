@@ -22,7 +22,6 @@ type Props = {
   layout?: "grid" | "list";
 };
 
-// Extended type to handle form state including flat address fields
 type MemberFormState = Partial<Member> & {
   line1?: string;
   line2?: string;
@@ -54,7 +53,6 @@ export function MemberFormModal({
   layout = "grid",
 }: Props) {
   const isEdit = Boolean(initialData && initialData.memberId);
-  // Initialize empty state including address fields
   const empty: MemberFormState = {
     memberFirstName: initialData?.memberFirstName ?? "",
     memberMiddleName: initialData?.memberMiddleName ?? "",
@@ -243,7 +241,6 @@ export function MemberFormModal({
     if (!values.transportMode)
       newFieldErrors.transportMode = "Transport mode is required";
 
-    // Address Checks
     if (!values.line1 || String(values.line1).trim() === "")
       newFieldErrors.line1 = "Address Line 1 is required";
     if (!values.city || String(values.city).trim() === "")
@@ -255,7 +252,6 @@ export function MemberFormModal({
     if (!values.pinCode || String(values.pinCode).trim() === "")
       newFieldErrors.pinCode = "Pin Code is required";
 
-    // Conditional Validations
     const emailVal = String(values.email ?? "").trim();
     if (emailVal && !validateEmail(emailVal))
       newFieldErrors.email = "Enter a valid email";
@@ -310,7 +306,6 @@ export function MemberFormModal({
         res = await createMember(payload as Member);
       }
 
-      // Unified success handling
       const ok =
         typeof res?.success !== "undefined"
           ? res.success === true || String(res.success) === "true"

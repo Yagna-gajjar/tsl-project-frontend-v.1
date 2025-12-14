@@ -18,12 +18,10 @@ export default function Layout() {
         <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       </div>
       <div className="flex">
-        {/* Desktop Sidebar - Fixed */}
         <div className="hidden lg:block">
           <Sidebar />
         </div>
 
-        {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
           {sidebarOpen && (
             <>
@@ -47,10 +45,8 @@ export default function Layout() {
           )}
         </AnimatePresence>
 
-        {/* Main Content Area */}
         <main className="flex-1 h-screen overflow-auto p-4 w-[80%]">
           <div className="pt-16">
-            {/* Spacer for Navbar */}
             <Outlet />
           </div>
         </main>

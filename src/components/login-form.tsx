@@ -159,8 +159,6 @@ export default function LoginForm() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl shadow-blue-900/10 dark:shadow-black/50 overflow-hidden border border-slate-200 dark:border-slate-800 flex"
       >
-
-        {/* Left Side: Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
           <div className="mb-8 text-center">
             <motion.div
@@ -171,15 +169,15 @@ export default function LoginForm() {
             >
               <User size={24} strokeWidth={2.5} />
             </motion.div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Welcome Back</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Welcome Back
+            </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
               Enter your credentials to access your sports account.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-
-            {/* Role Selector (Segmented Control) */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                 Select Role
@@ -192,12 +190,14 @@ export default function LoginForm() {
                     onClick={() => handleRoleChange(role)}
                     className={`
                       flex-1 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all duration-200
-                      ${formData.role === role
-                        ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}
+                      ${
+                        formData.role === role
+                          ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                      }
                     `}
                   >
-                    {role === 'superadmin' ? 'Super Admin' : role}
+                    {role === "superadmin" ? "Super Admin" : role}
                   </button>
                 ))}
               </div>
@@ -223,7 +223,10 @@ export default function LoginForm() {
                 placeholder="••••••••"
               />
               <div className="flex justify-end mt-2">
-                <a href="#" className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                <a
+                  href="#"
+                  className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -243,9 +246,24 @@ export default function LoginForm() {
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   <span>Verifying...</span>
                 </div>
@@ -257,9 +275,8 @@ export default function LoginForm() {
             </motion.button>
           </form>
 
-          {/* Footer Link */}
           <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <a
               href="/signup"
               className="font-bold text-blue-600 dark:text-blue-400 hover:underline"
@@ -269,7 +286,6 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* Right Side: Image/Branding (Hidden on mobile) */}
         <div className="hidden md:block w-1/2 relative bg-slate-100 dark:bg-slate-800">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 dark:from-blue-500/10 dark:to-purple-900/20 backdrop-blur-sm" />
           <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center z-10">
@@ -285,15 +301,19 @@ export default function LoginForm() {
               Manage Your Sports Academy
             </h3>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-              Experience the power of modern management. Streamline operations, enrollments, and academy seamlessly.
+              Experience the power of modern management. Streamline operations,
+              enrollments, and academy seamlessly.
             </p>
           </div>
-          {/* Decorative Pattern Overlay */}
-          <div className="absolute inset-0 opacity-10 dark:opacity-5 pointer-events-none"
-            style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, gray 1px, transparent 0)', backgroundSize: '24px 24px' }}
+          <div
+            className="absolute inset-0 opacity-10 dark:opacity-5 pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 2px 2px, gray 1px, transparent 0)",
+              backgroundSize: "24px 24px",
+            }}
           />
         </div>
-
       </motion.div>
     </div>
   );

@@ -168,7 +168,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border"
       >
         <div className="flex items-center justify-between px-4 h-16">
-          {/* Left Section */}
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
@@ -195,9 +194,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </motion.div>
           </div>
 
-          {/* Right Section */}
           <div className="flex items-center space-x-2">
-            {/* Check In/Out Toggle - Visible only when logged in */}
             {user && (
               <div className="flex items-center gap-2 mr-2 border-r pr-4 border-border/50">
                 <span
@@ -317,7 +314,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Theme Toggle */}
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
               <motion.div
                 initial={false}
@@ -332,7 +328,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               </motion.div>
             </Button>
 
-            {/* Login/Profile */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

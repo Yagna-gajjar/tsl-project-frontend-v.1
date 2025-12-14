@@ -1,4 +1,3 @@
-// src/types/coachAssignment.ts
 export interface CoachAssignment {
   academyId: number;
   coachAssignmentId: number;

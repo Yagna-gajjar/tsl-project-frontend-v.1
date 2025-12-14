@@ -126,7 +126,6 @@ const CourseChange = () => {
 
   const onClose = () => setValues({} as any);
 
-  // --- Logic Helpers ---
   function calculateDays(startISO?: any, endISO?: any, inclusive = false) {
     endISO = format(new Date(endISO), "yyyy-MM-dd") as any;
 
@@ -179,16 +178,15 @@ const CourseChange = () => {
     values.debitAmount
   );
 
-  // --- API Effects ---
   const handleSubmit = async () => {
     try {
-      const res: Response<Enrollment | any> = await enrollmentChange(values);
+      const res: Response<Enrollment> = await enrollmentChange(values);
       if (res.success) {
         navigate("/enrollment");
       } else {
         throw new Error("Failed to change.");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to submit!");
     }
   };
@@ -431,22 +429,17 @@ const CourseChange = () => {
       setSelectedActivity(data?.activityName || "");
     }
 
-    // --- FIXED: keepDiscount handling ---
     if (field === "keepDiscount") {
       const keep = Boolean(value);
 
-      // If we don't have oldEnrollment or its billingAmount, do nothing special
       if (!oldEnrollment || !oldEnrollment.billingAmount) {
-        // just set the checkbox state; other logic will compute values via effects
         setValues((prev) => ({ ...prev, keepDiscount: keep }));
       } else {
-        // compute numeric discount ratio (guard divide-by-zero)
         const discountRatio =
           Number(oldEnrollment.commitedAmount || 0) /
             Number(oldEnrollment.billingAmount || 1) || 0;
 
         setValues((prev) => {
-          // when user chooses to keep discount, apply ratio to current billingAmount (remaining balance)
           if (keep) {
             const newCommitted = Number(
               (Number(prev.commitedAmount || 0) * discountRatio).toFixed(2)
@@ -457,7 +450,6 @@ const CourseChange = () => {
               keepDiscount: true,
             };
           } else {
-            // when user unchecks, restore commitedAmount based on numberOfDays * billingRate
             const restored = Number(
               ((prev.numberOfDays || 0) * (prev.billingRate || 0)).toFixed(2)
             );
@@ -466,7 +458,6 @@ const CourseChange = () => {
         });
       }
 
-      // we already handled setting keepDiscount + commitedAmount; return to avoid duplicate set
       return;
     }
 
@@ -475,7 +466,6 @@ const CourseChange = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 p-4 gap-6 overflow-hidden">
-      {/* --- TOP: Detailed Transformation View --- */}
       <AnimatePresence>
         {oldEnrollment && (
           <motion.div
@@ -483,7 +473,6 @@ const CourseChange = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white dark:bg-gray-950 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 shrink-0"
           >
-            {/* 1. LEFT: Source (Old) */}
             <div className="lg:col-span-5 space-y-4">
               <SectionHeader
                 icon={History}
@@ -534,7 +523,6 @@ const CourseChange = () => {
               </div>
             </div>
 
-            {/* 2. MIDDLE: Transfer Logic */}
             <div className="lg:col-span-2 flex flex-col items-center justify-center space-y-3 py-4 lg:py-0 relative">
               <div className="absolute inset-y-0 w-px bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent left-1/2 -translate-x-1/2 hidden lg:block"></div>
 
@@ -558,7 +546,6 @@ const CourseChange = () => {
               </div>
             </div>
 
-            {/* 3. RIGHT: Destination (New) */}
             <div className="lg:col-span-5 space-y-4">
               <SectionHeader
                 icon={Layers}
@@ -627,7 +614,6 @@ const CourseChange = () => {
         )}
       </AnimatePresence>
 
-      {/* --- BOTTOM: Form --- */}
       <div className="flex-1 overflow-hidden bg-white dark:bg-gray-950 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col">
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">

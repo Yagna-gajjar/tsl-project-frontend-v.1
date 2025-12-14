@@ -22,7 +22,6 @@ export default function PaymentPage() {
             List of payments — view or delete records.
           </p>
         </div>
-        {/* No Add button since form is removed */}
       </div>
 
       <div className=" rounded-lg">

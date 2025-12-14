@@ -14,7 +14,6 @@ type Props = {
   onSuccess?: () => void;
 };
 
-// Shape we will submit from the dynamic form
 type RequestPayload = {
   status: string;
   batchId: number | string;
@@ -34,7 +33,6 @@ export default function BatchRequestedForm({
   enrollment,
   onSuccess,
 }: Props) {
-  // Build dynamic fields that match the FormModal expectations
   const fields: FormFieldConfig<RequestPayload>[] = [
     {
       name: "status",
@@ -93,7 +91,6 @@ export default function BatchRequestedForm({
       : "",
   };
 
-  // inside BatchRequestForm: improved handleSubmit
   const handleSubmit = useCallback(
     async (values: RequestPayload) => {
       const body = {
@@ -113,7 +110,6 @@ export default function BatchRequestedForm({
         if (!res.success) {
           throw new Error("Request failed");
         }
-        // At this point, we can consider success.
         toast({
           title: "Requested",
           description: "Batch request submitted.",
@@ -127,7 +123,6 @@ export default function BatchRequestedForm({
           description: "Request failed",
           variant: "destructive",
         });
-        // rethrow so FormModal surfaces error too (optional)
         throw err;
       }
     },

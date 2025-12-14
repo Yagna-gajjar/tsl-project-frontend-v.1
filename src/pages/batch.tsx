@@ -13,7 +13,6 @@ export default function BatchPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editRow, setEditRow] = useState<Batch | null>(null);
 
-  // increment this to trigger table refresh
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 

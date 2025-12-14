@@ -280,20 +280,6 @@ export default function CourseFormModal({
       errs.batchCapacity = "Batch Capacity is required";
     }
 
-    // if (Number(values.noOfDaysInWeek) > 0) {
-    //   const wd = values.weekDays;
-    //   if (!Array.isArray(wd) || wd.length === 0) {
-    //     errs.weekDays = "Select weekday(s)";
-    //   } else if (
-    //     Array.isArray(wd) &&
-    //     wd.length !== Number(values.noOfDaysInWeek)
-    //   ) {
-    //     errs.weekDays = `Select exactly ${Number(
-    //       values.noOfDaysInWeek
-    //     )} day(s)`;
-    //   }
-    // }
-
     return errs;
   }, [values]);
 

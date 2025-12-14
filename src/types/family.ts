@@ -1,26 +1,27 @@
 export interface Family {
-	familyId?: number
-	familyName: string
-	familyTypeId: number
-	teamCategoryId: number | null
-	identityTypeId: number
-	profession: string
-	professionDetails: string
-	designation: string
-	emergencyContact: string
-	remarks?: string
-	email: string
-	status: 'active' | 'inactive' | 'block'
-	preferredLanguage: string
-	familyTypeName?: string
-	teamCategoryName?: string
-	identityTypeName?: string
-	createdAt?: string
-	updatedAt?: string
+  familyId?: number;
+  familyName: string;
+  familyTypeId: number;
+  teamCategoryId: number | null;
+  identityTypeId: number;
+  profession: string;
+  professionDetails: string;
+  designation: string;
+  emergencyContact: string;
+  remarks?: string;
+  email: string;
+  status: "active" | "inactive" | "block";
+  preferredLanguage: string;
+  familyTypeName?: string;
+  teamCategoryName?: string;
+  identityTypeName?: string;
+  createdFrom?: Date | string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FamilyResponse {
-	success: boolean
-	message: string
-	data: Family | Family[] | null
+  success: boolean;
+  message: string;
+  data: Family | Family[] | null;
 }

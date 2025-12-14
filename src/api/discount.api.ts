@@ -1,5 +1,6 @@
 import type { Discount } from "@/types/discount";
 import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
 
 export interface DiscountQuery {
   page?: number;
@@ -15,7 +16,9 @@ export interface DiscountQuery {
 
 const DISCOUNT_BASE = import.meta.env.VITE_APP_API_URL + "/discount";
 
-export function getDiscounts(params: DiscountQuery = {}): Promise<Discount[]> {
+export function getDiscounts(
+  params: DiscountQuery = {}
+): Promise<Response<Discount[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -28,11 +31,11 @@ export function getDiscounts(params: DiscountQuery = {}): Promise<Discount[]> {
     aboveUnits: params.aboveUnits ?? undefined,
   });
 
-  return request<Discount[]>(`${DISCOUNT_BASE}${qs}`);
+  return request<Response<Discount[]>>(`${DISCOUNT_BASE}${qs}`);
 }
 
-export function getDiscountById(id: number): Promise<Discount> {
-  return request<Discount>(`${DISCOUNT_BASE}/${id}`);
+export function getDiscountById(id: number): Promise<Response<Discount>> {
+  return request<Response<Discount>>(`${DISCOUNT_BASE}/${id}`);
 }
 
 export function createDiscount(

@@ -19,7 +19,6 @@ export function formatTime(timestamp: number): string {
     return `${minutes}m`
   }
 
-  // Less than 24 hours
   if (diff < 86400000) {
     return date.toLocaleTimeString("en-US", {
       hour: "numeric",

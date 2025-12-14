@@ -71,7 +71,6 @@ export default function App() {
                   path="/enrollment-dashboard"
                   element={<EnrollmentDashboard />}
                 />
-                {/* <Route path="/family" element={<FamilyPage />} /> */}
                 <Route path="/enrollment" element={<EnrollmentPage />} />
                 <Route path="/account/accounts" element={<AccountPage />} />
                 <Route

@@ -19,7 +19,7 @@ import type { Response } from "@/types/response";
 import type { Enrollment } from "@/types/enrollment";
 import type { Batch } from "@/types/batch";
 import { changeBatch, type BatchMember } from "@/api/batchMember.api";
-import BatchRequestForm from "@/components/view/enrollment-actions/BatchRequestedForm"; // adjust path if needed
+import BatchRequestForm from "@/components/view/enrollment-actions/BatchRequestedForm";
 
 const formatTime = (timeString: string) => {
   if (!timeString) return "";
@@ -64,7 +64,6 @@ const BatchChange = () => {
   const [inRequested, setInRequested] = useState(false);
   const [currentBatch, setCurrentBatch] = useState(false);
 
-  // modal state for requesting a spot in full batch
   const [requestModalOpen, setRequestModalOpen] = useState(false);
 
   useEffect(() => {
@@ -191,7 +190,6 @@ const BatchChange = () => {
           .
         </p>
       </motion.div>
-
       {loadingBatches ? (
         <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
           <div className="flex flex-col items-center gap-2">
@@ -242,7 +240,6 @@ const BatchChange = () => {
                 setSelectedBatchName(batch.batchName);
 
                 if (percentage >= 100 && !iscurrentBatch) {
-                  // full -> request flow
                   setInRequested(true);
                   setRequestModalOpen(true);
                 } else {
@@ -342,7 +339,6 @@ const BatchChange = () => {
           )}
         </motion.div>
       )}
-
       <div className="sticky bottom-0 mt-8 flex items-center justify-end border-t bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex gap-4">
           <button
@@ -354,7 +350,6 @@ const BatchChange = () => {
           </button>
           <button
             onClick={() => {
-              // If selected batch is full -> open request modal
               if (inRequested && !currentBatch) {
                 if (!selectedBatchId) {
                   toast({
@@ -386,8 +381,7 @@ const BatchChange = () => {
           </button>
         </div>
       </div>
-
-      {/* Batch request modal */}
+      ;
       <BatchRequestForm
         isOpen={requestModalOpen}
         onClose={() => {
@@ -399,7 +393,6 @@ const BatchChange = () => {
         enrollment={enrollment!}
         onSuccess={() => {
           setRequestModalOpen(false);
-          // post success behavior: navigate back or refetch batches/enrollment
           navigate(-1);
         }}
       />

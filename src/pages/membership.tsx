@@ -1,6 +1,3 @@
-// MembershipPage.tsx
-"use client";
-
 import { useState } from "react";
 import MembershipTable from "@/components/view/membership/membership-table";
 import MembershipFormModal from "@/components/view/membership/membership-form-modal";

@@ -24,7 +24,7 @@ import { getActivities } from "@/api/activity.api";
 import { toast } from "@/hooks/use-toast";
 import { enrollmentChange } from "@/api/enrollmentActions.api";
 
-const FREE_DAYS = 45; // medical break fixed free days
+const FREE_DAYS = 45;
 
 const MedicalBreak = () => {
   const { id }: any = useParams();
@@ -44,9 +44,9 @@ const MedicalBreak = () => {
     adjustment: 0,
     batchId: 0,
     billingAmount: 0,
-    billingRate: 0, // fixed 0 for medical break
+    billingRate: 0,
     cndn: 0,
-    commitedAmount: 0, // fixed 0 for medical break
+    commitedAmount: 0,
     courseId: 0,
     discountedAmount: 0,
     discountId: 0,
@@ -236,7 +236,6 @@ const MedicalBreak = () => {
     }));
   }, [values.startDate, oldEnrollment]);
 
-  // Whenever startDate changes, set endDate = startDate + FREE_DAYS
   useEffect(() => {
     if (!values?.startDate) return;
 
@@ -249,7 +248,6 @@ const MedicalBreak = () => {
     }));
   }, [values.startDate]);
 
-  // If academy changes we still load courses for that academy
   useEffect(() => {
     if (!values?.academyId) return;
 

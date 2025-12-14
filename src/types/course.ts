@@ -5,7 +5,6 @@ export interface Course {
   introductionDate: Date;
   suspendDate?: Date;
   courseName: string;
-  // typeOfCourse: "Booking" | "Charges" | "Training"; (we will use this after, not now)
   typeOfCourse: string;
   minEnrollmentUnit: number;
   totalParallelBatches: number;

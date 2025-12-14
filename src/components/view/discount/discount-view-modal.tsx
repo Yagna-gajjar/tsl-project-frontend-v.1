@@ -1,14 +1,10 @@
 import { useCallback } from "react";
-import {
-  Hash,
-  Calendar,
-  BarChart3,
-  CheckCircle,
-} from "lucide-react";
+import { Hash, Calendar, BarChart3, CheckCircle } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Discount } from "@/types/discount";
 import { getDiscountById } from "@/api/discount.api";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -49,8 +45,11 @@ const fields: FieldConfig<Discount>[] = [
     label: "Status",
     icon: CheckCircle,
     render: (v) => {
-      const statusColor = v.toLowerCase() === "active" ? "text-green-600" : "text-red-600";
-      return <span className={statusColor}>{v || "unknown"}</span>;
+      const statusColor =
+        String(v).toLowerCase() === "active"
+          ? "text-green-600"
+          : "text-red-600";
+      return <span className={statusColor}>{String(v) || "unknown"}</span>;
     },
   },
   {
@@ -77,13 +76,8 @@ export default function DiscountViewModal({
       const useId = id ?? discountId;
       if (!useId) throw new Error("Discount ID missing");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getDiscountById(Number(useId));
-
-      // normalize: API may return { success, data } or raw discount
-      if (res && res.data) return res.data as Discount;
-
-      return res as Discount;
+      const res: Response<Discount> = await getDiscountById(Number(useId));
+      return res?.data as Discount;
     },
     [discountId]
   );

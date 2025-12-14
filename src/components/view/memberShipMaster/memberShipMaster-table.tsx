@@ -64,17 +64,14 @@ export default function MembershipMasterTable({
         ? (res.data as MembershipMaster[])
         : [];
 
-      // Map backend fields to JS Date objects and normalize names
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
-        // interface uses "introductionDate" and "suspensionDate"
         introductionDate: r.introductionDate
           ? new Date(r.introductionDate)
           : undefined,
         suspensionDate: r.suspensionDate
           ? new Date(r.suspensionDate)
           : undefined,
-        // durationDays is number - keep as is
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
       })) as MembershipMaster[];

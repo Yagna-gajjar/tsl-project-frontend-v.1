@@ -1,4 +1,3 @@
-// UPDATED: membershipMaster -> MembershipMaster
 import { useCallback } from "react";
 import {
   Hash,
@@ -38,7 +37,6 @@ const boolBadge = (v?: boolean) => {
 const dateRender = (v?: Date | string | null) =>
   v ? new Date(v as Date).toLocaleString() : "-";
 
-// UPDATED FIELD KEYS TO MATCH NEW TYPE
 const fields: FieldConfig<MembershipMaster>[] = [
   { key: "membershipMasterId", label: "ID", icon: Hash },
   { key: "membershipType", label: "Membership Type", icon: Users },

@@ -51,9 +51,11 @@ export default function Billing() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response: Response<Academy[]> = await getAcademies({ limit: 500 });
+        const response: Response<Academy[]> = await getAcademies({
+          limit: 500,
+        });
         setTimeout(() => {
-          setAcademies(response.data as Academy[] || []);
+          setAcademies((response.data as Academy[]) || []);
           setLoading(false);
         }, 600);
       } catch (error) {
@@ -64,15 +66,14 @@ export default function Billing() {
     fetchData();
   }, []);
 
-  const filteredAcademies = academies.filter((academy) =>
-    academy?.academyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    academy?.academyType!.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAcademies = academies.filter(
+    (academy) =>
+      academy?.academyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      academy?.academyType!.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B1120] text-gray-900 dark:text-gray-100 p-6 transition-colors duration-300">
-
-      {/* Background Decorator (Subtle Gradient Blob) */}
       <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-100/50 to-transparent dark:from-blue-900/10 dark:to-transparent pointer-events-none" />
 
       <AnimatePresence mode="wait">
@@ -85,18 +86,20 @@ export default function Billing() {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="relative space-y-8 max-w-7xl mx-auto"
           >
-            {/* --- HEADER SECTION --- */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-gray-200/60 dark:border-gray-800/60">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
                   Billing Overview
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">
-                  Manage finances for <span className="text-blue-600 dark:text-blue-400 font-bold">{academies.length}</span> registered academies.
+                  Manage finances for{" "}
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">
+                    {academies.length}
+                  </span>{" "}
+                  registered academies.
                 </p>
               </div>
 
-              {/* Search Bar */}
               <div className="relative group w-full md:w-96">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-gray-400 transition-colors" />
@@ -111,7 +114,6 @@ export default function Billing() {
               </div>
             </div>
 
-            {/* --- GRID CONTENT --- */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -142,7 +144,9 @@ export default function Billing() {
                 <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
                   <Search className="h-8 w-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No results found</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  No results found
+                </h3>
                 <p className="text-gray-500 dark:text-gray-400">
                   We couldn't find anything matching "{searchTerm}".
                 </p>
@@ -179,7 +183,15 @@ export default function Billing() {
   );
 }
 
-function AcademyCard({ academy, onClick, index }: { academy: Academy; onClick: () => void; index: number }) {
+function AcademyCard({
+  academy,
+  onClick,
+  index,
+}: {
+  academy: Academy;
+  onClick: () => void;
+  index: number;
+}) {
   const theme = getAcademyTheme(academy?.academyType ?? "unknown");
   const Icon = theme.icon;
   const isDiscontinued = academy.discontinuedDate !== null;
@@ -204,16 +216,25 @@ function AcademyCard({ academy, onClick, index }: { academy: Academy; onClick: (
         ${theme.border}
       `}
     >
-      {/* Dynamic Colored Top Border */}
-      <div className={`absolute top-0 left-0 right-0 h-1.5 ${theme.bg.replace('/20', '')}`} />
+      <div
+        className={`absolute top-0 left-0 right-0 h-1.5 ${theme.bg.replace(
+          "/20",
+          ""
+        )}`}
+      />
 
-      {/* Decorative Background Blob on Hover */}
-      <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-2xl ${theme.bg.replace('bg-', 'bg-')}`} />
+      <div
+        className={`absolute -right-10 -top-10 w-32 h-32 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-2xl ${theme.bg.replace(
+          "bg-",
+          "bg-"
+        )}`}
+      />
 
       <div className="relative z-10 flex flex-col h-full">
-        {/* Header: Icon + Type + Status */}
         <div className="flex justify-between items-start mb-5">
-          <div className={`p-3.5 rounded-2xl ${theme.bg} ${theme.color} shadow-inner`}>
+          <div
+            className={`p-3.5 rounded-2xl ${theme.bg} ${theme.color} shadow-inner`}
+          >
             <Icon className="h-6 w-6" strokeWidth={2.5} />
           </div>
 
@@ -224,15 +245,18 @@ function AcademyCard({ academy, onClick, index }: { academy: Academy; onClick: (
           </div>
         </div>
 
-        {/* Title & Status */}
         <div className="mb-6">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
             {academy.academyName}
           </h3>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`inline-block w-2 h-2 rounded-full ${isDiscontinued ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
+            <span
+              className={`inline-block w-2 h-2 rounded-full ${
+                isDiscontinued ? "bg-red-500" : "bg-green-500 animate-pulse"
+              }`}
+            ></span>
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {isDiscontinued ? 'Discontinued' : 'Active Academy'}
+              {isDiscontinued ? "Discontinued" : "Active Academy"}
             </span>
           </div>
         </div>
@@ -240,7 +264,12 @@ function AcademyCard({ academy, onClick, index }: { academy: Academy; onClick: (
         <div className="space-y-3 mb-6 flex-grow">
           <InfoRow icon={Mail} text={academy.email as string} />
           <InfoRow icon={Phone} text={academy.contactNumber as string} />
-          <InfoRow icon={CalendarDays} text={`Joined ${new Date(academy?.registrationDate!).toLocaleDateString()}`} />
+          <InfoRow
+            icon={CalendarDays}
+            text={`Joined ${new Date(
+              academy?.registrationDate!
+            ).toLocaleDateString()}`}
+          />
         </div>
 
         <div className="pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-between">

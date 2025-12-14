@@ -105,7 +105,7 @@ export default function FamilyTable({
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res: any = await getFamilies({
+      const res: Response<Family[]> = await getFamilies({
         page,
         limit: pageSize,
         sortBy,
@@ -120,7 +120,7 @@ export default function FamilyTable({
         preferredLanguage: filters.preferredLanguage,
         createdFrom: filters.createdFrom,
         createdTo: filters.createdTo,
-      } as any);
+      });
 
       const rows = (res && (res.data ?? res.rows ?? res)) as
         | Family[]
@@ -143,10 +143,9 @@ export default function FamilyTable({
     }
   }, [page, pageSize, sortBy, sortOrder, filters]);
 
-  // Load data initially and whenever relevant deps change.
   useEffect(() => {
     loadData();
-  }, [loadData, refreshKey]); // <-- refreshKey triggers reload
+  }, [loadData, refreshKey]);
 
   const columns: Column<Family>[] = [
     {
@@ -234,7 +233,6 @@ export default function FamilyTable({
     setPage(newPage);
   };
 
-  // Delete dialog state
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -260,7 +258,7 @@ export default function FamilyTable({
           (res as Record<string, any>)?.message || "Failed to delete family"
         );
       }
-      await loadData(); // refresh table
+      await loadData();
     } catch (err) {
       console.error("Delete failed:", err);
     } finally {

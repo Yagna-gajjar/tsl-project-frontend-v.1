@@ -14,12 +14,10 @@ export default function Setting() {
       transition={{ duration: 0.2 }}
     >
       <div className="flex">
-        {/* Desktop Sidebar - Fixed */}
         <div className="hidden lg:block">
           <SettingSidebar />
         </div>
 
-        {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
           {sidebarOpen && (
             <>
@@ -43,7 +41,6 @@ export default function Setting() {
           )}
         </AnimatePresence>
 
-        {/* Main Content Area */}
         <main className="flex-1 h-screen overflow-auto w-[80%]">
           <div
             onClick={() => {
@@ -54,7 +51,6 @@ export default function Setting() {
             <Menu className="h-5 w-5 text-foreground" />
           </div>
           <div className="pt-5 px-2">
-            {/* Spacer for Navbar */}
             <Outlet />
           </div>
         </main>

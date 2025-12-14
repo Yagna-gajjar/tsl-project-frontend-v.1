@@ -70,7 +70,6 @@ const AvatarCell = ({
         }}
         title="Change Photo"
       >
-        {/* Placeholder / Fallback */}
         {(!isLoaded || hasError || !row.photo) && (
           <div
             className={`absolute inset-0 flex items-center justify-center text-white font-bold ${bgColorClass}`}
@@ -79,7 +78,6 @@ const AvatarCell = ({
           </div>
         )}
 
-        {/* Image */}
         {row.photo && !hasError && (
           <img
             src={imageUrl}
@@ -87,12 +85,12 @@ const AvatarCell = ({
             loading="lazy"
             onLoad={() => setIsLoaded(true)}
             onError={() => setHasError(true)}
-            className={`h-full w-full object-cover transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"
-              }`}
+            className={`h-full w-full object-cover transition-opacity duration-500 ${
+              isLoaded ? "opacity-100" : "opacity-0"
+            }`}
           />
         )}
 
-        {/* Hover Overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -164,8 +162,8 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray(res?.data)
-          ? (res.data as Coach[])
-          : [];
+        ? (res.data as Coach[])
+        : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -346,12 +344,13 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
       ],
       render: (r) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${r.status === "active"
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            r.status === "active"
               ? "bg-green-100 text-green-800"
               : r.status === "inactive"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
-            }`}
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
+          }`}
         >
           {r.status || "-"}
         </span>
@@ -443,7 +442,6 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
                 )}
               </div>
 
-              {/* Logic: If photo exists, user must remove it first. Else show input. */}
               {!selectedCoach?.photo ? (
                 <div className="w-full">
                   <Input
@@ -491,7 +489,6 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
                     Cancel
                   </Button>
 
-                  {/* Submit Button visible only if no current photo */}
                   {!selectedCoach?.photo && (
                     <Button
                       onClick={handleUploadSubmit}

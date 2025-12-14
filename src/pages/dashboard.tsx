@@ -167,16 +167,13 @@ export default function Dashboard() {
 
 	return (
     <div className="space-y-6">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={controls}
         className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            TSL Dashboard
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground">TSL Dashboard</h1>
           <p className="text-muted-foreground">
             Monitor your TSL operations in real-time
           </p>
@@ -193,7 +190,6 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
@@ -241,9 +237,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -285,7 +279,6 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        {/* Project Status Chart */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -321,9 +314,7 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Equipment Status & Tasks */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Equipment Status */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -368,7 +359,6 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        {/* Upcoming Tasks */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -416,7 +406,6 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Recent Activities */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

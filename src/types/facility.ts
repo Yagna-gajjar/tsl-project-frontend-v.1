@@ -1,4 +1,3 @@
-// src/types/facility.ts
 export interface Facility {
   facilityId?: number;
   facilityName: string;

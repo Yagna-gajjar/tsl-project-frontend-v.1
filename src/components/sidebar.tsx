@@ -319,7 +319,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
                   </AnimatePresence>
                 </motion.button>
 
-                {/* Submenu */}
                 <AnimatePresence>
                   {isSectionExpanded && hasSubmenu && (
                     <motion.div

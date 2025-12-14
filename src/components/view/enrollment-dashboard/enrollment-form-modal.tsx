@@ -28,7 +28,6 @@ import type { Coach } from "@/types/coach";
 
 import BatchRequestedForm from "@/components/view/enrollment-actions/BatchRequestedForm";
 
-// WEEK_DAYS constant stays as numbers (1..7)
 const WEEK_DAYS = [
   { label: "Monday", value: 1 },
   { label: "Tuesday", value: 2 },
@@ -59,9 +58,6 @@ const EnrollmentFormNew = ({
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [selectedCourse, setSelectedCourse] = useState<Course>();
   const [coaches, setCoaches] = useState<Coach[]>([]);
-
-  // removed selectedDayList; weekDays will be number[] in values
-
   const [showBatchRequest, setShowBatchRequest] = useState(false);
   const [requestBatchDetails, setRequestBatchDetails] = useState<{
     batchId: number;
@@ -277,7 +273,6 @@ const EnrollmentFormNew = ({
     if (foundCourse) {
       setSelectedCourse(foundCourse);
 
-      // Reset weekDays array when course changes
       setValues((prev) => ({ ...prev, weekDays: [] }));
 
       const sessionCharging = isCourseChargingBySession(foundCourse);
@@ -361,7 +356,6 @@ const EnrollmentFormNew = ({
 
   useEffect(() => {
     fetchDiscount();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedDays, values.sessionUnits]);
 
   useEffect(() => {
@@ -510,9 +504,7 @@ const EnrollmentFormNew = ({
       }
 
       if (field === "weekDays") {
-        // Expecting value as array of numbers (or strings that can be Number'ed)
         if (Array.isArray(value)) {
-          // limit is based on selectedCourse.noOfDaysInWeek or 7
           const limit = (selectedCourse as any)?.noOfDaysInWeek || 7;
 
           if (value.length > limit) {
@@ -524,7 +516,6 @@ const EnrollmentFormNew = ({
             return;
           }
 
-          // convert to number[], filter invalid, unique, sort
           const nums = value
             .map((v: any) => Number(v))
             .filter((n: number) => Number.isFinite(n) && n >= 1 && n <= 7);
@@ -663,11 +654,9 @@ const EnrollmentFormNew = ({
         return;
       }
 
-      // Build payload: convert weekDays array to compact numeric representation expected by backend
       const payload: any = { ...values };
 
       if (Array.isArray(values.weekDays)) {
-        // e.g. [1,3,5] -> "135" -> 135
         const joined = values.weekDays
           .map((n) => Number(n))
           .filter(Number.isFinite)
@@ -760,7 +749,6 @@ const EnrollmentFormNew = ({
     }
   };
 
-  // Fields: multiselect uses values.weekDays (number[]) directly
   const fields = [
     {
       name: "memberName",
@@ -829,7 +817,6 @@ const EnrollmentFormNew = ({
             })`,
             type: "multiselect",
             options: WEEK_DAYS,
-            // IMPORTANT: FormContent should expect the value for this field in values.weekDays (number[])
             required: true,
           },
         ]),
@@ -964,8 +951,9 @@ const EnrollmentFormNew = ({
       label: "Coach Name",
       type: "select",
       options: coaches.map((c) => ({
-        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${c.coachLastName
-          }`.trim(),
+        label: `${c.coachFirstName} ${c.coachMiddleName ?? ""} ${
+          c.coachLastName
+        }`.trim(),
         value: c.coachId,
       })),
     },
@@ -1012,14 +1000,14 @@ const EnrollmentFormNew = ({
     },
     ...(paymentValues.paymentMode !== "cash"
       ? [
-        {
-          name: "transactionId",
-          label: "Transaction ID",
-          type: "text",
-          required: true,
-          disabled: false,
-        },
-      ]
+          {
+            name: "transactionId",
+            label: "Transaction ID",
+            type: "text",
+            required: true,
+            disabled: false,
+          },
+        ]
       : []),
     {
       name: "paid",

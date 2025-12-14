@@ -35,12 +35,11 @@ export default function AcceptBatchRequest({
     {}
   );
 
-  // helper: subtract one day and return YYYY-MM-DD (ISO date)
   const subtractOneDayIso = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
       const prev = new Date(d.getTime() - 24 * 60 * 60 * 1000);
-      return prev.toISOString().split("T")[0]; // yyyy-mm-dd
+      return prev.toISOString().split("T")[0];
     } catch {
       return null;
     }
@@ -51,16 +50,13 @@ export default function AcceptBatchRequest({
     setAcceptingIds((s) => ({ ...s, [item.batchMemberId]: true }));
 
     try {
-      // 1) Fetch enrollment (text first)
-      const enrollmentRes: Response | any = await getEnrollmentById(item.enrollmentId)
+      const enrollmentRes: Response | any = await getEnrollmentById(
+        item.enrollmentId
+      );
 
       if (!enrollmentRes.success) {
-        console.error(
-          "Enrollment fetch failed",
-        );
-        throw new Error(
-          `Enrollment fetch failed `
-        );
+        console.error("Enrollment fetch failed");
+        throw new Error(`Enrollment fetch failed `);
       }
       const enrollment = enrollmentRes?.data;
       const oldBatchId = enrollment?.batchId;
@@ -142,16 +138,14 @@ export default function AcceptBatchRequest({
         });
       }
 
-      // remove request locally
       setRequests((prev) =>
         prev.filter((r) => r.batchMemberId !== item.batchMemberId)
       );
       if (onAccepted) onAccepted();
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
-        description:
-          "Failed to accept",
+        description: "Failed to accept",
         variant: "destructive",
       });
     }
@@ -182,7 +176,7 @@ export default function AcceptBatchRequest({
         parts.push(`operator: ${String(reason).trim()}`);
       const finalReason = parts.join(", ");
 
-      const body: { status: string, reason: string } = {
+      const body: { status: string; reason: string } = {
         status: "rejected",
         reason: finalReason,
       };
@@ -190,13 +184,11 @@ export default function AcceptBatchRequest({
       const res = await updateBatchMember(id, body);
 
       if (!res.success) {
-        // server may send text or JSON error
         throw new Error(`Failed to update`);
       }
 
       setRequests((prev) => prev.filter((r) => r.batchMemberId !== id));
 
-      // try parse success message if JSON else fallback
       try {
         setRequestLen((prev: number) => prev - 1);
         toast({
@@ -233,7 +225,6 @@ export default function AcceptBatchRequest({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.35 }}
@@ -242,7 +233,6 @@ export default function AcceptBatchRequest({
             className="fixed inset-0 bg-black z-[60]"
           />
 
-          {/* Sidebar */}
           <motion.aside
             initial={{ x: "100%" }}
             animate={{ x: 0 }}

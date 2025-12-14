@@ -73,7 +73,6 @@ const AvatarCell = ({
         }}
         title="Change Avatar"
       >
-        {/* Placeholder: Visible if image is loading, has error, or no avatar exists */}
         {(!isLoaded || hasError || !row.avatar) && (
           <div
             className={`absolute inset-0 flex items-center justify-center text-white font-bold ${bgColorClass}`}
@@ -82,7 +81,6 @@ const AvatarCell = ({
           </div>
         )}
 
-        {/* Image: Uses native lazy loading and fade-in effect */}
         {row.avatar && !hasError && (
           <img
             src={imageUrl}
@@ -90,12 +88,12 @@ const AvatarCell = ({
             loading="lazy"
             onLoad={() => setIsLoaded(true)}
             onError={() => setHasError(true)}
-            className={`h-full w-full object-cover transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"
-              }`}
+            className={`h-full w-full object-cover transition-opacity duration-500 ${
+              isLoaded ? "opacity-100" : "opacity-0"
+            }`}
           />
         )}
 
-        {/* Hover Overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -207,7 +205,7 @@ export default function MemberTable({
     const ok = await confirm({
       title: "Delete this member?",
       description: "Are you sure want to delete this member?",
-      variant: "destructive"
+      variant: "destructive",
     });
 
     if (!ok) return;
@@ -269,7 +267,7 @@ export default function MemberTable({
       await deleteAvatar(selectedMember.memberId!, selectedMember.avatar);
 
       await fetchMembers();
-      setSelectedMember(prev => prev ? { ...prev, avatar: null } : null);
+      setSelectedMember((prev) => (prev ? { ...prev, avatar: null } : null));
       setPreviewUrl(null);
     } catch (error) {
       console.error("Remove avatar failed", error);
@@ -374,8 +372,8 @@ export default function MemberTable({
             row.status === "active"
               ? "default"
               : row.status === "inactive"
-                ? "secondary"
-                : "destructive"
+              ? "secondary"
+              : "destructive"
           }
         >
           {row.status}
@@ -421,7 +419,6 @@ export default function MemberTable({
         idKey="memberId"
       />
 
-      {/* --- UPLOAD MODAL --- */}
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-lg bg-background border border-foreground p-6 shadow-xl animate-in fade-in zoom-in duration-200">
@@ -430,7 +427,6 @@ export default function MemberTable({
             </h3>
 
             <div className="flex flex-col items-center gap-6">
-              {/* Preview Circle */}
               <div className="relative h-32 w-32 rounded-full border-2 border-dashed border-foreground flex items-center justify-center overflow-hidden bg-background">
                 {previewUrl ? (
                   <img
@@ -443,7 +439,6 @@ export default function MemberTable({
                 )}
               </div>
 
-              {/* Conditional Rendering: If avatar exists, show delete message, else show input */}
               {!selectedMember?.avatar ? (
                 <div className="w-full">
                   <Input
@@ -491,7 +486,6 @@ export default function MemberTable({
                     Cancel
                   </Button>
 
-                  {/* Submit Button only visible when uploading is allowed (no current avatar) */}
                   {!selectedMember?.avatar && (
                     <Button
                       onClick={handleUploadSubmit}

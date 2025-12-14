@@ -1,6 +1,3 @@
-// src/app/(admin)/coach-assignments/page.tsx
-"use client";
-
 import { useState } from "react";
 import CoachAssignmentTable from "@/components/view/coachAssignment/coachAssignment-table";
 import CoachAssignmentFormModal from "@/components/view/coachAssignment/coachAssignment-form-modal";

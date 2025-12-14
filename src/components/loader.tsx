@@ -24,7 +24,6 @@ export function GlobalLoader({ message = "Loading...", size = "md" }: GlobalLoad
 	return (
     <div className="flex flex-col items-center justify-center space-y-4">
       <div className={`flex items-center ${containerClasses[size]}`}>
-        {/* Animated TSL icons */}
         <motion.div
           animate={{
             rotate: [0, 360],
@@ -73,7 +72,6 @@ export function GlobalLoader({ message = "Loading...", size = "md" }: GlobalLoad
         </motion.div>
       </div>
 
-      {/* Loading dots */}
       <div className="flex space-x-1">
         {[0, 1, 2].map((i) => (
           <motion.div

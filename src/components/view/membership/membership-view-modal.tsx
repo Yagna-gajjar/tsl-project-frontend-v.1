@@ -105,13 +105,9 @@ export default function MembershipViewModal({
     [membershipId]
   );
 
-  /**
-   * Inject button logic EXACTLY like FamilyViewModal
-   */
   const fields = useMemo(() => {
     return baseViewFields
       .filter((f) => {
-        // Hide Add Account button if account already exists
         if (f.key === "addAccount" && rowData?.accountId != null) {
           return false;
         }

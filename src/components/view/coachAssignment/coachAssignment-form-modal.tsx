@@ -1,6 +1,3 @@
-// src/components/coach-assignment/CoachAssignmentFormModal.tsx
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";

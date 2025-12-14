@@ -1,7 +1,3 @@
-// src/components/EnrollmentDashboard/EnrollmentDashboard.tsx
-
-"use client";
-
 import type React from "react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -107,12 +103,10 @@ export default function EnrollmentDashboard() {
         />
       </motion.div>
 
-      {/* 2. DRAG HANDLE / EXPAND-COLLAPSE TOGGLE */}
       <div
         className="relative w-full h-10 flex justify-center items-center cursor-ns-resize z-30 "
         onMouseDown={handleMouseDown}
       >
-        {/* Expand/Collapse Button - Enhanced for Clarity */}
         <Button
           onClick={toggleExpand}
           className="py-1 h-8 px-4 rounded-full z-20 flex items-center gap-2"
@@ -125,12 +119,10 @@ export default function EnrollmentDashboard() {
           <ExpandCollapseIcon className="h-4 w-4 transition-transform duration-300" />
         </Button>
 
-        {/* Optional: Add a subtle line for the drag handle on desktop */}
         <div className="absolute w-full h-1 bg-border/50 transition-colors duration-200 hover:bg-border top-1/2 -translate-y-1/2 -z-10 md:block hidden" />
         <GripVertical className="absolute h-4 w-4 text-muted-foreground/70 -z-10 md:block hidden" />
       </div>
 
-      {/* 3. DYNAMICALLY SIZED BOTTOM SECTION */}
       <motion.div
         className="z-40 overflow-hidden"
         style={{ height: bottomSectionTargetHeight }}

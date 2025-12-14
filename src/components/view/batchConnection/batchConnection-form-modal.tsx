@@ -50,7 +50,6 @@ export default function BatchConnectionFormModal({
   }, [initialData, isOpen]);
 
   useEffect(() => {
-    // fetch options for the three dropdowns
     const fetch = async () => {
       try {
         const [mRes, pRes, poRes] = await Promise.all([
@@ -59,10 +58,10 @@ export default function BatchConnectionFormModal({
           getBatch({ limit: 1000, batchType: "post" }),
         ]);
 
-        setMainOptions(mRes?.data as any);
-        setPreOptions(pRes?.data as any);
-        setPostOptions(poRes?.data as any);
-      } catch (err) {
+        setMainOptions(mRes?.data as Batch[]);
+        setPreOptions(pRes?.data as Batch[]);
+        setPostOptions(poRes?.data as Batch[]);
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load batches",
@@ -89,7 +88,6 @@ export default function BatchConnectionFormModal({
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
     if (!values.mainBatchId) errs.mainBatchId = "Main batch is required";
-    // startDate/endDate could be optional; add checks if required
     if (values.startDate && values.endDate) {
       const s = new Date(String(values.startDate));
       const e = new Date(String(values.endDate));

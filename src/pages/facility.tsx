@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import FacilityTable from "@/components/view/facility/facility-table";
 import FacilityFormModal from "@/components/view/facility/facility-form-modal";
@@ -15,7 +13,6 @@ export default function FacilityPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editRow, setEditRow] = useState<Facility | null>(null);
 
-  // increment this to trigger table refresh
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 

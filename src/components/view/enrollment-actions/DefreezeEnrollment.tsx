@@ -18,6 +18,7 @@ import { getCourseById } from "@/api/course.api";
 import { getBatch } from "@/api/batch.api";
 import type { Batch } from "@/types/batch";
 import { enrollmentChange } from "@/api/enrollmentActions.api";
+import { toast } from "@/hooks/use-toast";
 
 const DefreezeEnrollment = () => {
   const { id }: any = useParams();
@@ -69,8 +70,7 @@ const DefreezeEnrollment = () => {
     }
   };
   function calculateDays(startISO?: any, endISO?: any, inclusive = false) {
-    if (!startISO || !endISO) return 0; // or return null, throw error, etc.
-    // Extract only the date part (yyyy-mm-dd)
+    if (!startISO || !endISO) return 0;
     const startDate = parseISO(startISO.slice(0, 10));
     const endDate = parseISO(endISO.slice(0, 10));
 
@@ -126,7 +126,7 @@ const DefreezeEnrollment = () => {
       try {
         const res: Response<Course> = await getCourseById(id);
         if (!mounted) return;
-        setCourse(res?.data || {} as Course);
+        setCourse(res?.data || ({} as Course));
         setValues((prev) => ({
           ...prev,
           activityName: res?.data!.activityName || "",
@@ -141,7 +141,9 @@ const DefreezeEnrollment = () => {
 
     const fetchOldEnrollmentAndBatches = async () => {
       try {
-        const response: Response<Batch[] | any> = await getEnrollmentById(Number(oldEnrollment.oldEnrollmentId));
+        const response: Response<Batch[] | any> = await getEnrollmentById(
+          Number(oldEnrollment.oldEnrollmentId)
+        );
         const data = response?.data;
         if (!data) {
           setError("No enrollment data returned");
@@ -151,7 +153,6 @@ const DefreezeEnrollment = () => {
         if (!mounted) return;
         setLastEnrollment(data);
 
-        // ensure courseId exists
         if (!data.courseId && data.courseId !== 0) {
           console.error("Missing courseId on enrollment data:", data);
           setError("Missing courseId in enrollment");
@@ -160,7 +161,12 @@ const DefreezeEnrollment = () => {
 
         try {
           await fetchCourse(Number(data.courseId));
-        } catch (err) {
+        } catch {
+          toast({
+            title: "Error",
+            description: "Failed to fetch courses.",
+            variant: "destructive",
+          });
         }
 
         setValues((prev) => ({
@@ -173,11 +179,9 @@ const DefreezeEnrollment = () => {
           academyId: data.academyId,
         }));
 
-        // --- Attempt to fetch batches. Try the two most common argument shapes ---
         try {
           let batchRes;
 
-          // Try object param first
           try {
             batchRes = await getBatch({ courseId: data.courseId });
           } catch (errObj) {
@@ -185,9 +189,8 @@ const DefreezeEnrollment = () => {
               "getBatch(object) failed, trying primitive id. error:",
               errObj
             );
-            // Try primitive param fallback
             batchRes = await getBatch({
-              courseId: Number(data.courseId)
+              courseId: Number(data.courseId),
             });
           }
 
@@ -197,7 +200,6 @@ const DefreezeEnrollment = () => {
           console.error("Failed to load batches:", err);
           if (mounted) setError("Failed to load batches.");
         }
-
       } catch (err) {
         console.error("fetchOldEnrollmentAndBatches error:", err);
         if (mounted) setError("Failed to fetch enrollment details");
@@ -344,13 +346,6 @@ const DefreezeEnrollment = () => {
       required: false,
       disabled: true,
     },
-    // {
-    // 	name: "discountedAmount",
-    // 	label: "Discounted Amount",
-    // 	type: "number",
-    // 	required: false,
-    // 	disabled: true,
-    // },
     {
       name: "commitedAmount",
       label: "Commited Amount",
@@ -370,19 +365,6 @@ const DefreezeEnrollment = () => {
       type: "number",
       disabled: true,
     },
-    // {
-    // 	name: "discountId",
-    // 	label: "Discount ID",
-    // 	type: "number",
-    // 	required: false,
-    // 	disabled: true
-    // },
-    // {
-    // 	name: "isDiscounted",
-    // 	label: "Do you want to remove applied discount?",
-    // 	type: "checkbox",
-    // 	required: false,
-    // },
     {
       name: "remarks",
       label: "Remarks",

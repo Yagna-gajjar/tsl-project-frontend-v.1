@@ -13,6 +13,7 @@ import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Enrollment } from "@/types/enrollment";
 import { getEnrollmentById } from "@/api/enrollment.api";
 import type { FieldConfig } from "@/components/view-modal/types";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -56,9 +57,9 @@ const fields: FieldConfig<Enrollment>[] = [
         v === "active"
           ? "text-green-600"
           : v === "inactive"
-            ? "text-yellow-600"
-            : "text-blue-600";
-      return <span className={statusColor}>{v as string || "unknown"}</span>;
+          ? "text-yellow-600"
+          : "text-blue-600";
+      return <span className={statusColor}>{(v as string) || "unknown"}</span>;
     },
   },
   { key: "freeDays", label: "Free Days", icon: Hash },
@@ -82,7 +83,6 @@ const fields: FieldConfig<Enrollment>[] = [
       return `Rs. ${Number(amount)?.toFixed(2) || "0.00"}`;
     },
   },
-  // --- new billing fields ---
   {
     key: "billingAmount",
     label: "Billing Amount",
@@ -144,13 +144,11 @@ export default function EnrollmentViewModal({
       const useId = id ?? enrollmentId;
       if (!useId) throw new Error("Enrollment ID missing");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res: any = await getEnrollmentById(Number(useId));
+      const res: Response<Enrollment> = await getEnrollmentById(Number(useId));
 
-      // normalize: API may return { success, data } or raw enrollment
       if (res && res.data) return res.data as Enrollment;
 
-      return res as Enrollment;
+      return res as Enrollment | any;
     },
     [enrollmentId]
   );

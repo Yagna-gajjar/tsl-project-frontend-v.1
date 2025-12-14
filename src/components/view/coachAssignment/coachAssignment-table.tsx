@@ -1,6 +1,3 @@
-// src/components/coach-assignment/CoachAssignmentTable.tsx
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
@@ -54,15 +51,7 @@ export default function CoachAssignmentTable({
         : Array.isArray(res?.data)
         ? res.data
         : [];
-      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
-        ...r,
-        createdAt: (r as any).createdAt
-          ? new Date((r as any).createdAt)
-          : undefined,
-        updatedAt: (r as any).updatedAt
-          ? new Date((r as any).updatedAt)
-          : undefined,
-      })) as CoachAssignment[];
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []) as CoachAssignment[];
 
       setData(rows);
     } catch (err) {
@@ -171,14 +160,6 @@ export default function CoachAssignmentTable({
       filterType: null,
       render: (r) =>
         r.endDate ? new Date(r.endDate).toLocaleDateString() : "-",
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      sortable: true,
-      filterType: null,
-      render: (r) =>
-        r.createdAt ? new Date(r.createdAt).toLocaleString() : "-",
     },
   ];
 
