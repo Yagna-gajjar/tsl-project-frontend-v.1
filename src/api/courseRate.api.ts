@@ -10,6 +10,7 @@ export interface CourseRateQuery {
 	search?: string;
 	courseId?: number;
 	entityType?: string;
+	courseName?: string;
 }
 
 const RATE_BASE = import.meta.env.VITE_APP_API_URL + "/course-rate";
@@ -17,6 +18,7 @@ const RATE_BASE = import.meta.env.VITE_APP_API_URL + "/course-rate";
 export function getCourseRates(
 	params: CourseRateQuery = {}
 ): Promise<Response<CourseRate[]>> {
+	console.log(params, " parms");
 	const qs = toQueryString({
 		page: params.page ?? 1,
 		limit: params.limit ?? 10,
@@ -25,6 +27,7 @@ export function getCourseRates(
 		search: params.search ?? undefined,
 		courseId: params.courseId ?? undefined,
 		entityType: params.entityType ?? undefined,
+		courseName: params.courseName ?? undefined
 	});
 
 	return request<Response<CourseRate[]>>(`${RATE_BASE}${qs}`);

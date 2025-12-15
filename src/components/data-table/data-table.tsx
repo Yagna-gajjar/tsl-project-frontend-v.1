@@ -41,7 +41,7 @@ export function DataTable<T>({
     direction: "asc" | "desc";
   } | null>(null);
   const [filters, setFilters] = useState<
-    Record<string, string | number | Date | Object | boolean>
+    Record<string, string | number | Date | Object | boolean | undefined>
   >({});
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const resizingColumn = useRef<string | null>(null);

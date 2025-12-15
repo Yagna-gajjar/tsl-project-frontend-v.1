@@ -13,6 +13,7 @@ import type { Course } from "@/types/course";
 import type { Enums } from "@/types/enums";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { format } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 
 const emptyRate: CourseRate = {
 	courseRateId: 0,
@@ -63,7 +64,11 @@ export default function CourseRateFormModal({
 				setCourses(cRes.data ?? []);
 				setEntityTypes(eRes.data ?? []);
 			} catch (e) {
-				console.error("Failed to load master data", e);
+				toast({
+					title: "Error",
+					description: "Failed to load data.",
+					variant: "destructive"
+				})
 			} finally {
 				setLoading(false);
 			}
@@ -116,8 +121,17 @@ export default function CourseRateFormModal({
 			}
 			onSave();
 			onClose();
+			toast({
+				title: "Success",
+				description: "Data submitted successfully.",
+				variant: "success"
+			})
 		} catch (err) {
-			console.error(err);
+			toast({
+				title: "Error",
+				description: "Failed to submit data.",
+				variant: "destructive"
+			})
 		} finally {
 			setIsSubmitting(false);
 		}
