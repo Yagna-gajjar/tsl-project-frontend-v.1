@@ -10,7 +10,6 @@ import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
-  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -34,18 +33,19 @@ import { createFullCourse } from "@/api/course.api";
 import { getActivities } from "@/api/activity.api";
 import { getEnumsByCategory } from "@/api/enums.api";
 import { getAcademies } from "@/api/academy.api";
-import type {
-  Course,
-  CoursePackage,
-  CourseRate,
-  CourseShare,
-} from "@/types/course";
+import type { Course } from "@/types/course";
 import type { Activity } from "@/types/activity";
 import type { Enums } from "@/types/enums";
 import type { Response } from "@/types/response";
 import type { Academy } from "@/types/academy";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import type { CoursePackage } from "@/types/coursePackage";
+import type { CourseRate } from "@/types/courseRate";
+import type { CourseShare } from "@/types/courseShare";
+import { getMembershipMasters } from "@/api/membershipMaster.api";
+import type { MembershipMaster } from "@/types/memberShipMaster";
+import { toast } from "@/hooks/use-toast";
 
 interface CourseFormState {
   course: Partial<Course>;
@@ -82,7 +82,8 @@ const emptyPackage: CoursePackage = {
 const emptyRate: CourseRate = {
   courseRateId: 0,
   courseId: 0,
-  entityType: null,
+  membershipMasterId: 0,
+  membershipType: "",
   aboveUnits: 0,
   unitRate: 0,
   introduceDate: format(new Date(), "yyyy-MM-dd"),
@@ -99,6 +100,15 @@ const defaultShares: CourseShare[] = [
     courseId: 0,
     shareType: "TSL Charges",
     share: 100,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    courseShareId: 0,
+    academyId: 8,
+    courseId: 0,
+    shareType: "Facility Charges",
+    share: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -205,7 +215,9 @@ export default function CourseFormModal({
   const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
   const [courseTypeOptions, setCourseTypeOptions] = useState<Enums[]>([]);
   const [academyOptions, setAcademyOptions] = useState<Academy[]>([]);
-  const [entityTypeOptions, setEntityTypeOptions] = useState<Enums[]>([]);
+  const [entityTypeOptions, setEntityTypeOptions] = useState<
+    MembershipMaster[]
+  >([]);
   const [shareAcademyOptions, setShareAcademyOptions] = useState<Academy[]>([]);
 
   const loadMasterData = useCallback(
@@ -219,13 +231,15 @@ export default function CourseFormModal({
         const [actRes, typeRes, entityRes, academyRes] = await Promise.all([
           getActivities({ limit: 500 }),
           getEnumsByCategory("courseType"),
-          getEnumsByCategory("EntityType"),
+          getMembershipMasters({ limit: 500 }),
           getAcademies({ limit: 500 }),
         ]);
 
         setActivityOptions((actRes as Response<Activity[]>)?.data ?? []);
         setCourseTypeOptions((typeRes as Response<Enums[]>)?.data ?? []);
-        setEntityTypeOptions((entityRes as Response<Enums[]>)?.data ?? []);
+        setEntityTypeOptions(
+          (entityRes as Response<MembershipMaster[]>)?.data ?? []
+        );
         setShareAcademyOptions((academyRes as Response<Academy[]>)?.data ?? []);
 
         if (activityName) {
@@ -252,11 +266,9 @@ export default function CourseFormModal({
         limit: 200,
       });
 
-      const items = Array.isArray((res as any)?.data ?? res)
-        ? (res as any).data ?? res
-        : [];
+      const items = Array.isArray(res?.data ?? res) ? res.data ?? res : [];
 
-      setAcademyOptions(items);
+      setAcademyOptions(items as Academy[]);
     } catch {
       setAcademyOptions([]);
     }
@@ -279,7 +291,7 @@ export default function CourseFormModal({
         availabilityPattern: initialData.course.availabilityPattern
           ? numberToWeekArray(initialData.course.availabilityPattern as string)
           : [],
-      } as any;
+      };
 
       const ratesData = initialData.rates.map((r) => ({
         ...r,
@@ -332,46 +344,59 @@ export default function CourseFormModal({
     });
   };
 
+  const TAX_SHARE_TYPES = ["CGST", "SGST"];
+
   const handleShareChange = (
     index: number,
     field: keyof CourseShare,
     value: any
   ) => {
     setFormState((p) => {
-      const updatedShares = [...p.shares];
+      const shares = [...p.shares];
+      const current = shares[index];
 
-      if (field === "share") {
-        const newValue = Number(value) || 0;
-        const oldValue = updatedShares[index].share;
-        const delta = newValue - oldValue;
+      // Non-share fields (academyId, shareType, etc.)
+      if (field !== "share") {
+        shares[index] = { ...current, [field]: value };
+        return { ...p, shares };
+      }
 
-        updatedShares[index] = {
-          ...updatedShares[index],
-          [field]: newValue,
-        };
+      const newValue = Number(value) || 0;
+      const oldValue = current.share || 0;
+      const delta = newValue - oldValue;
 
-        const tslIndex = updatedShares.findIndex(
-          (s) => s.shareType === "TSL Charges"
+      const isTax = TAX_SHARE_TYPES.includes(current.shareType || "");
+
+      // Update current share
+      shares[index] = { ...current, share: newValue };
+
+      // 1️⃣ CGST / SGST → mirror to the other tax, DO NOT touch TSL
+      if (isTax) {
+        const otherTaxIndex = shares.findIndex(
+          (s, i) => i !== index && TAX_SHARE_TYPES.includes(s.shareType || "")
         );
 
-        if (tslIndex !== -1 && index !== tslIndex) {
-          const newTslValue = Math.max(
-            0,
-            updatedShares[tslIndex].share - delta
-          );
-          updatedShares[tslIndex] = {
-            ...updatedShares[tslIndex],
-            share: newTslValue,
+        if (otherTaxIndex !== -1) {
+          shares[otherTaxIndex] = {
+            ...shares[otherTaxIndex],
+            share: newValue,
           };
         }
-      } else {
-        updatedShares[index] = {
-          ...updatedShares[index],
-          [field]: value,
+
+        return { ...p, shares };
+      }
+
+      // 2️⃣ Non-GST share → adjust TSL only
+      const tslIndex = shares.findIndex((s) => s.shareType === "TSL Charges");
+
+      if (tslIndex !== -1 && tslIndex !== index) {
+        shares[tslIndex] = {
+          ...shares[tslIndex],
+          share: Math.max(0, shares[tslIndex].share - delta),
         };
       }
 
-      return { ...p, shares: updatedShares };
+      return { ...p, shares };
     });
   };
 
@@ -514,7 +539,16 @@ export default function CourseFormModal({
       };
 
       const res = await createFullCourse(updatedFormState);
-      console.log(res, " = formState");
+
+      if (res?.success) {
+        toast({
+          title: "success",
+          description: "course crerated successfully",
+          variant: "success",
+        });
+      } else {
+        throw "failed to make course";
+      }
 
       onSave();
       onClose();
@@ -522,7 +556,11 @@ export default function CourseFormModal({
       setGlobalError(
         err instanceof Error ? err.message : "An error occurred during save."
       );
-      console.error("Submission Error:", err);
+      toast({
+        title: "Failed",
+        description: "failed to create course",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -554,14 +592,6 @@ export default function CourseFormModal({
                   : "Create New Course"}
               </DialogTitle>
             </DialogHeader>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
 
           {/* Content */}
@@ -1103,7 +1133,7 @@ function CourseForm({
 
 interface RatesListProps {
   rates: CourseRate[];
-  entityTypeOptions: Enums[];
+  entityTypeOptions: MembershipMaster[];
   errors: Record<string, string>;
   onChange: (index: number, field: keyof CourseRate, value: any) => void;
   onRemove: (index: number) => void;
@@ -1146,18 +1176,25 @@ const RatesList = ({
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor={`rate_${index}_entityType`}>Entity Type</Label>
+                <Label htmlFor={`rate_${index}_entityType`}>
+                  Membership Type
+                </Label>
                 <Select
-                  value={rate.entityType || ""}
-                  onValueChange={(v) => onChange(index, "entityType", v)}
+                  value={rate.membershipMasterId || 0}
+                  onValueChange={(v) =>
+                    onChange(index, "membershipMasterId", v)
+                  }
                 >
-                  <SelectTrigger id={`rate_${index}_entityType`}>
+                  <SelectTrigger id={`rate_${index}_membershipMasterId`}>
                     <SelectValue placeholder="Select Type" />
                   </SelectTrigger>
                   <SelectContent>
                     {entityTypeOptions.map((e) => (
-                      <SelectItem key={e.id} value={e.value}>
-                        {e.value}
+                      <SelectItem
+                        key={e.membershipMasterId}
+                        value={e.membershipMasterId}
+                      >
+                        {e.membershipType}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1222,7 +1259,7 @@ const RatesList = ({
               </div>
 
               <div>
-                <Label htmlFor={`rate_${index}_freezing`}>Freezing Cost</Label>
+                <Label htmlFor={`rate_${index}_freezing`}>Freezing Value</Label>
                 <Input
                   id={`rate_${index}_freezing`}
                   type="number"
@@ -1470,9 +1507,8 @@ const PackagesList = ({
                     <SelectValue placeholder="Select Link Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="locationShare">
-                      Location Share
-                    </SelectItem>
+                    <SelectItem value="Pre">Pre</SelectItem>
+                    <SelectItem value="post">Post</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors[`package_${index}_linkType`] && (

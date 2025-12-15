@@ -17,7 +17,7 @@ const MEMBERSHIP_BASE = import.meta.env.VITE_APP_API_URL + "/membership";
 
 export function getMemberships(
   params: MembershipQuery = {}
-): Promise<membership[]> {
+): Promise<Response<membership[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -29,7 +29,7 @@ export function getMemberships(
     status: params.status ?? undefined,
   });
 
-  return request<membership[]>(`${MEMBERSHIP_BASE}${qs}`);
+  return request<Response<membership[]>>(`${MEMBERSHIP_BASE}${qs}`);
 }
 
 export function getMembershipById(id: number): Promise<Response> {

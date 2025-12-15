@@ -1,14 +1,15 @@
 export interface CourseRate {
-	courseRateId: number;
-	courseId: number;
-	entityType?: string | null;
-	aboveUnits: number;
-	unitRate: number;
-	introduceDate: string;
-	changable: boolean;
-	freezing: number;
-	createdAt: string;
-	updatedAt: string;
+  courseRateId: number;
+  courseId: number;
+  membershipMasterId?: string | number;
+  aboveUnits: number;
+  unitRate: number;
+  introduceDate: string;
+  changable: boolean;
+  freezing: number;
+  createdAt: string;
+  updatedAt: string;
 
-	courseName?: string;
+  membershipType?: string | null;
+  courseName?: string;
 }
