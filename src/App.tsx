@@ -55,6 +55,7 @@ import MembershipLinkPage from "./pages/membership-link";
 import CoursePackagePage from "./pages/course-package";
 import CourseSharePage from "./pages/courseShare";
 import CourseRatePage from "./pages/course-rate";
+import ExcelUploader from "./components/ExcelUploader";
 
 export default function App() {
   return (
@@ -200,6 +201,7 @@ export default function App() {
                 <Route path="/setting/*" element={<NotFound />} />
               </Route>
               <Route path="/login" element={<LoginForm />} />
+              <Route path="/excel" element={<ExcelUploader />} />
               <Route path="/signup" element={<Signup />} />
             </Routes>
           </Router>
