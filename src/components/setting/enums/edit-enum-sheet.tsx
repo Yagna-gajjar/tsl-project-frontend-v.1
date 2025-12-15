@@ -218,7 +218,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="enumCase">enumCase</Label>
+						<Label htmlFor="enumCase">Case</Label>
 						<Input
 							id="desc"
 							value={formData.enumCase == 0 ? "0" : formData.enumCase || ""}
