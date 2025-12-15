@@ -67,6 +67,7 @@ const navigationItems: NavigationItem[] = [
     submenu: [
       { label: "Courses", href: "/course/courses", icon: BookA },
       { label: "Course Share", href: "/course/course-share", icon: Share2 },
+      { label: "Course Rate", href: "/course/course-rate", icon: IndianRupee },
       {
         label: "Course Packages",
         href: "/course/course-package",
@@ -318,11 +319,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
                         className="ml-auto"
                       >
                         <ChevronDown
-                          className={`h-4 w-4 ${
-                            location.pathname.startsWith(item.href + "/")
+                          className={`h-4 w-4 ${location.pathname.startsWith(item.href + "/")
                               ? "text-background"
                               : "text-muted-foreground"
-                          }`}
+                            }`}
                         />
                       </motion.div>
                     )}

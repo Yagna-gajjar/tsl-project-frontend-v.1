@@ -16,7 +16,6 @@ import NotFound from "./pages/NotFound";
 import Signup from "./pages/Signup";
 import { AuthProvider } from "./contexts/authContext";
 import Setting from "./pages/setting";
-import FamilyPage from "./pages/family";
 import MemberPage from "./pages/member";
 import FamilyTypePage from "@/components/setting/family-type/family-type";
 import TeamCategoryPage from "@/components/setting/team-category/team-category";
@@ -55,6 +54,7 @@ import AccountMemberPage from "./pages/accountMember";
 import MembershipLinkPage from "./pages/membership-link";
 import CoursePackagePage from "./pages/course-package";
 import CourseSharePage from "./pages/courseShare";
+import CourseRatePage from "./pages/course-rate";
 
 export default function App() {
   return (
@@ -142,6 +142,10 @@ export default function App() {
                 <Route
                   path="/course/course-package"
                   element={<CoursePackagePage />}
+                />
+                <Route
+                  path="/course/course-rate"
+                  element={<CourseRatePage />}
                 />
                 <Route path="/batch/batches" element={<BatchPage />} />
                 <Route
