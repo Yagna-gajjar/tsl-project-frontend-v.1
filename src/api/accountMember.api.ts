@@ -17,19 +17,24 @@ export interface AccountMemberQuery {
 export function getAccountMembers(
   params: AccountMemberQuery = {}
 ): Promise<Response<AccountMember[]>> {
-  return request(`${BASE_URL}${toQueryString(params)}`, { method: "GET" });
+  return request<Response<AccountMember[]>>(
+    `${BASE_URL}${toQueryString(params)}`,
+    { method: "GET" }
+  );
 }
 
 export function getAccountMemberById(
   id: number
 ): Promise<Response<AccountMember>> {
-  return request(`${BASE_URL}/${id}`, { method: "GET" });
+  return request<Response<AccountMember>>(`${BASE_URL}/${id}`, {
+    method: "GET",
+  });
 }
 
 export function createAccountMember(
   payload: Omit<AccountMember, "accountMemberId" | "createdAt" | "updatedAt">
 ): Promise<Response<AccountMember>> {
-  return request(BASE_URL, {
+  return request<Response<AccountMember>>(BASE_URL, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -39,20 +44,24 @@ export function updateAccountMember(
   id: number,
   payload: Partial<AccountMember>
 ): Promise<Response<AccountMember>> {
-  return request(`${BASE_URL}/${id}`, {
+  return request<Response<AccountMember>>(`${BASE_URL}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteAccountMember(id: number): Promise<Response<void>> {
-  return request(`${BASE_URL}/${id}`, { method: "DELETE" });
+export function deleteAccountMember(
+  id: number
+): Promise<Response<AccountMember>> {
+  return request<Response<AccountMember>>(`${BASE_URL}/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export function bulkAccountMember(
   payload: Omit<AccountMember, "accountMemberId" | "createdAt" | "updatedAt">
 ): Promise<Response<AccountMember>> {
-  return request(`${BASE_URL}/bulk`, {
+  return request<Response<AccountMember>>(`${BASE_URL}/bulk`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

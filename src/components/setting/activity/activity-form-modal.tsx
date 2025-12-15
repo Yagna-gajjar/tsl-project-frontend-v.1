@@ -4,10 +4,7 @@ import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 
-import {
-  createActivity,
-  editActivity
-} from "@/api/activity.api";
+import { createActivity, updateActivity } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
 
@@ -30,7 +27,8 @@ export function ActivityFormModal({
 
   const empty: Partial<Activity> = {
     activityName: initialData?.activityName ?? "",
-    activityType: (initialData?.activityType ?? "art") as Activity['activityType'],
+    activityType: (initialData?.activityType ??
+      "art") as Activity["activityType"],
     description: initialData?.description ?? "",
   };
 
@@ -80,12 +78,14 @@ export function ActivityFormModal({
     try {
       const payload: Partial<Activity> = {
         activityName: String(values.activityName ?? "").trim(),
-        activityType: (String(values.activityType ?? "").trim() as Activity['activityType']),
+        activityType: String(
+          values.activityType ?? ""
+        ).trim() as Activity["activityType"],
         description: String(values.description ?? "").trim(),
       };
 
       if (isEdit && initialData?.activityId) {
-        await editActivity(Number(initialData.activityId), payload);
+        await updateActivity(Number(initialData.activityId), payload);
       } else {
         await createActivity(payload as Activity);
       }
@@ -100,7 +100,8 @@ export function ActivityFormModal({
       onSaved?.(values as Activity);
       onClose();
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to save activity";
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to save activity";
       setError(errorMsg);
       toast({
         variant: "destructive",

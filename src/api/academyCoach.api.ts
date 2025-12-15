@@ -60,8 +60,10 @@ export function updateAcademyCoach(
   });
 }
 
-export function deleteAcademyCoach(id: number): Promise<AcademyCoach> {
-  return request<AcademyCoach>(`${ACADEMY_COACH_BASE}/${id}`, {
+export function deleteAcademyCoach(
+  id: number
+): Promise<Response<AcademyCoach>> {
+  return request<Response<AcademyCoach>>(`${ACADEMY_COACH_BASE}/${id}`, {
     method: "DELETE",
   });
 }

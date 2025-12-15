@@ -15,7 +15,9 @@ export interface CoachesQuery {
 
 const COACH_BASE = import.meta.env.VITE_APP_API_URL + "/coach";
 
-export function getCoaches(params: CoachesQuery = {}): Promise<Response> {
+export function getCoaches(
+  params: CoachesQuery = {}
+): Promise<Response<Coach>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 20,
@@ -27,7 +29,7 @@ export function getCoaches(params: CoachesQuery = {}): Promise<Response> {
     status: params.status,
   });
 
-  return request<Response>(`${COACH_BASE}${qs}`);
+  return request<Response<Coach>>(`${COACH_BASE}${qs}`);
 }
 
 export function getCoachById(id: number): Promise<Response> {

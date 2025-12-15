@@ -30,26 +30,29 @@ export function getActivities(
   return request<Response<Activity[]>>(`${ACTIVITY_BASE}${qs}`);
 }
 
-export function getActivityById(id: number): Promise<Response> {
-    return request<Response>(`${ACTIVITY_BASE}/${id}`)
+export function getActivityById(id: number): Promise<Response<Activity>> {
+  return request<Response<Activity>>(`${ACTIVITY_BASE}/${id}`);
 }
 
-export function createActivity(payload: Activity): Promise<Response> {
-    return request<Response>(ACTIVITY_BASE, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-    })
+export function createActivity(payload: Activity): Promise<Response<Activity>> {
+  return request<Response<Activity>>(ACTIVITY_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
-export function editActivity(id: number, payload: Partial<Activity>): Promise<Response> {
-    return request<Response>(`${ACTIVITY_BASE}/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-    })
+export function updateActivity(
+  id: number,
+  payload: Partial<Activity>
+): Promise<Response<Activity>> {
+  return request<Response<Activity>>(`${ACTIVITY_BASE}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
-export function deleteActivity(id: number): Promise<Response> {
-    return request<Response>(`${ACTIVITY_BASE}/${id}`, {
-        method: 'DELETE',
-    })
+export function deleteActivity(id: number): Promise<Response<Activity>> {
+  return request<Response<Activity>>(`${ACTIVITY_BASE}/${id}`, {
+    method: "DELETE",
+  });
 }

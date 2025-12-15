@@ -55,8 +55,8 @@ export function updateAcademy(
   });
 }
 
-export function deleteAcademy(id: number): Promise<Response> {
-  return request<Response>(`${ACADEMY_BASE}/${id}`, {
+export function deleteAcademy(id: number): Promise<Response<Academy>> {
+  return request<Response<Academy>>(`${ACADEMY_BASE}/${id}`, {
     method: "DELETE",
   });
 }

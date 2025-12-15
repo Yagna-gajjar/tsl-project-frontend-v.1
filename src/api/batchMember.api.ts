@@ -18,8 +18,10 @@ export function getBatchMember(
   return request<Response<BatchMember[]>>(`${BATCH_MEMBER_BASE}${qs}`);
 }
 
-export function changeBatch(payload: BatchMember): Promise<Response> {
-  return request<Response>(`${BATCH_MEMBER_BASE}/change-batch`, {
+export function changeBatch(
+  payload: BatchMember
+): Promise<Response<BatchMember>> {
+  return request<Response<BatchMember>>(`${BATCH_MEMBER_BASE}/change-batch`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

@@ -53,8 +53,8 @@ export function updateAccount(
   });
 }
 
-export function deleteAccount(id: number): Promise<Response> {
-  return request<Response>(`${ACCOUNT_BASE}/${id}`, {
+export function deleteAccount(id: number): Promise<Response<Account>> {
+  return request<Response<Account>>(`${ACCOUNT_BASE}/${id}`, {
     method: "DELETE",
   });
 }

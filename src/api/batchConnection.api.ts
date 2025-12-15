@@ -46,8 +46,8 @@ export function createBatchConnection(
     BatchConnection,
     "batchConnectionId" | "createdAt" | "updatedAt"
   >
-): Promise<Response> {
-  return request<Response>(BASE, {
+): Promise<Response<BatchConnection>> {
+  return request<Response<BatchConnection>>(BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -56,13 +56,17 @@ export function createBatchConnection(
 export function updateBatchConnection(
   id: number,
   payload: Partial<BatchConnection>
-): Promise<Response> {
-  return request<Response>(`${BASE}/${id}`, {
+): Promise<Response<BatchConnection>> {
+  return request<Response<BatchConnection>>(`${BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteBatchConnection(id: number): Promise<Response> {
-  return request<Response>(`${BASE}/${id}`, { method: "DELETE" });
+export function deleteBatchConnection(
+  id: number
+): Promise<Response<BatchConnection>> {
+  return request<Response<BatchConnection>>(`${BASE}/${id}`, {
+    method: "DELETE",
+  });
 }

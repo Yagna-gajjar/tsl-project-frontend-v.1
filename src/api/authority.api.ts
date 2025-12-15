@@ -13,7 +13,9 @@ export interface AuthorityQuery {
   active?: boolean;
 }
 
-export function getAuthorities(params: AuthorityQuery = {}) {
+export function getAuthorities(
+  params: AuthorityQuery = {}
+): Promise<Response<Authority[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 1000,
@@ -22,7 +24,7 @@ export function getAuthorities(params: AuthorityQuery = {}) {
     active: params.active,
   });
 
-  return request(`${AUTHORITY_BASE}${qs}`);
+  return request<Response<Authority[]>>(`${AUTHORITY_BASE}${qs}`);
 }
 
 interface changeauthority {

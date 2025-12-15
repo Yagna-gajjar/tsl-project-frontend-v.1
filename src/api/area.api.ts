@@ -38,8 +38,8 @@ export function getAreaById(id: number): Promise<Response<Area>> {
 
 export function createArea(
   payload: Omit<Area, "areaId" | "createdAt" | "updatedAt">
-): Promise<Response> {
-  return request<Response>(AREA_BASE, {
+): Promise<Response<Area>> {
+  return request<Response<Area>>(AREA_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -48,15 +48,15 @@ export function createArea(
 export function updateArea(
   id: number,
   payload: Partial<Area>
-): Promise<Response> {
-  return request<Response>(`${AREA_BASE}/${id}`, {
+): Promise<Response<Area>> {
+  return request<Response<Area>>(`${AREA_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteArea(id: number): Promise<Response> {
-  return request<Response>(`${AREA_BASE}/${id}`, {
+export function deleteArea(id: number): Promise<Response<Area>> {
+  return request<Response<Area>>(`${AREA_BASE}/${id}`, {
     method: "DELETE",
   });
 }

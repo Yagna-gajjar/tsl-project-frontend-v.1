@@ -53,6 +53,8 @@ import EntityPage from "./pages/entity";
 import AccountPage from "./pages/account";
 import AccountMemberPage from "./pages/accountMember";
 import MembershipLinkPage from "./pages/membership-link";
+import CoursePackagePage from "./pages/course-package";
+import CourseSharePage from "./pages/courseShare";
 
 export default function App() {
   return (
@@ -132,7 +134,15 @@ export default function App() {
                   path="/staff-management/coach-assignment"
                   element={<CoachAssignmentsPage />}
                 />
-                <Route path="/courses" element={<CoursePage />} />
+                <Route path="/course/courses" element={<CoursePage />} />
+                <Route
+                  path="course/course-share"
+                  element={<CourseSharePage />}
+                />
+                <Route
+                  path="/course/course-package"
+                  element={<CoursePackagePage />}
+                />
                 <Route path="/batch/batches" element={<BatchPage />} />
                 <Route
                   path="/batch/attendance-sheet/:id"

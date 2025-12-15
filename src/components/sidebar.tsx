@@ -23,6 +23,8 @@ import {
   Book,
   IndianRupee,
   Crown,
+  Share2,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -61,8 +63,16 @@ const navigationItems: NavigationItem[] = [
   },
   {
     name: "Courses",
-    href: "/courses",
     icon: BookA,
+    submenu: [
+      { label: "Courses", href: "/course/courses", icon: BookA },
+      { label: "Course Share", href: "/course/course-share", icon: Share2 },
+      {
+        label: "Course Packages",
+        href: "/course/course-package",
+        icon: Package,
+      },
+    ],
   },
   {
     name: "Batch",

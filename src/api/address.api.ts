@@ -18,47 +18,49 @@ export interface AddressesQuery {
 
 const ADDRESS_BASE = import.meta.env.VITE_APP_API_URL + '/address'
 
-export function getAddresses(params: AddressesQuery = {}): Promise<Response> {
-	const qs = toQueryString({
-		page: params.page ?? 1,
-		limit: params.limit ?? 10,
-		sortBy: params.sortBy ?? 'addressId',
-		sortOrder: params.sortOrder ?? 'ASC',
+export function getAddresses(
+  params: AddressesQuery = {}
+): Promise<Response<Address[]>> {
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 10,
+    sortBy: params.sortBy ?? "addressId",
+    sortOrder: params.sortOrder ?? "ASC",
 
-		search: params.search,
-		line1: params.line1,
-		city: params.city,
-		state: params.state,
-		pinCode: params.pinCode,
-		country: params.country
-	})
+    search: params.search,
+    line1: params.line1,
+    city: params.city,
+    state: params.state,
+    pinCode: params.pinCode,
+    country: params.country,
+  });
 
-	return request<Response>(`${ADDRESS_BASE}${qs}`)
+  return request<Response<Address[]>>(`${ADDRESS_BASE}${qs}`);
 }
 
-export function getAddressById(id: number): Promise<Response> {
-	return request<Response>(`${ADDRESS_BASE}/${id}`)
+export function getAddressById(id: number): Promise<Response<Address>> {
+  return request<Response<Address>>(`${ADDRESS_BASE}/${id}`);
 }
 
-export function createAddress(payload: Address): Promise<Response> {
-	return request<Response>(ADDRESS_BASE, {
-		method: 'POST',
-		body: JSON.stringify(payload)
-	})
+export function createAddress(payload: Address): Promise<Response<Address>> {
+  return request<Response<Address>>(ADDRESS_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function updateAddress(
-	id: number,
-	payload: Partial<Address>
-): Promise<Response> {
-	return request<Response>(`${ADDRESS_BASE}/${id}`, {
-		method: 'PUT',
-		body: JSON.stringify(payload)
-	})
+  id: number,
+  payload: Partial<Address>
+): Promise<Response<Address>> {
+  return request<Response<Address>>(`${ADDRESS_BASE}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
-export function deleteAddress(id: number): Promise<Address> {
-	return request<Address>(`${ADDRESS_BASE}/${id}`, {
-		method: 'DELETE'
-	})
+export function deleteAddress(id: number): Promise<Response<Address>> {
+  return request<Response<Address>>(`${ADDRESS_BASE}/${id}`, {
+    method: "DELETE",
+  });
 }
