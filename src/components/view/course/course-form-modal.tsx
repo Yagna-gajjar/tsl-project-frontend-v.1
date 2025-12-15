@@ -4,36 +4,28 @@ import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 
-import { createCourse, updateCourse } from "@/api/course.api";
-import { createCourseShare } from "@/api/courseShare.api";
-import { createCoursePackage } from "@/api/coursePackage.api";
+import type { Course } from "@/types/course";
+import type { Activity } from "@/types/activity";
+import type { Enums } from "@/types/enums";
 
+import { createCourse, updateCourse } from "@/api/course.api";
 import { getActivities } from "@/api/activity.api";
-import { getAcademies } from "@/api/academy.api";
 import { getEnumsByCategory } from "@/api/enums.api";
 
-import type { Course } from "@/types/course";
-import type { CourseShare } from "@/types/courseShare";
-import type { CoursePackage } from "@/types/coursePackage";
-import type { Activity } from "@/types/activity";
-import type { Academy } from "@/types/academy";
-import type { Enums } from "@/types/enums";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import type { Response } from "@/types/response";
+import { getAcademies } from "@/api/academy.api";
+import type { Academy } from "@/types/academy";
 
-/* ---------------- EMPTY OBJECTS ---------------- */
+type Props = {
+  isOpen: boolean;
+  initialData?: Course;
+  onClose: () => void;
+  onSave: () => void;
+};
 
-const emptyCourse: Course = {
+const empty: Course = {
   courseId: 0,
   academyId: 0,
   courseName: "",
@@ -59,79 +51,126 @@ const emptyCourse: Course = {
   updatedAt: "",
 };
 
-const emptyShare: CourseShare = {
-  courseShareId: 0,
-  academyId: 0,
-  shareType: "",
-  share: 0,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-const emptyPackage: CoursePackage = {
-  coursePackageId: 0,
-  courseId: 0,
-  linkType: "",
-  activityType: "",
-  createdAt: "",
-  updatedAt: "",
-};
-
-/* ---------------- PROPS ---------------- */
-
-type Props = {
-  isOpen: boolean;
-  initialData?: Course;
-  onClose: () => void;
-  onSave: () => void;
-};
-
-export default function CourseCreateWithShareAndPackageForm({
+export default function CourseFormModal({
   isOpen,
   initialData,
   onClose,
   onSave,
 }: Props) {
-  /* ---------------- STATE ---------------- */
-
-  const [course, setCourse] = useState<Course>(emptyCourse);
-  const [shares, setShares] = useState<CourseShare[]>([]);
-  const [packages, setPackages] = useState<CoursePackage[]>([]);
-
+  const [values, setValues] = useState<Course>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [academies, setAcademies] = useState<Academy[]>([]);
-  const [courseTypes, setCourseTypes] = useState<Enums[]>([]);
+  const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
 
-  /* ---------------- LOAD MASTER DATA ---------------- */
+  const [courseTypeOptions, setCourseTypeOptions] = useState<Enums[]>([]);
+  const [academyOptions, setAcademyOptions] = useState<Academy[]>([]);
+  const [loadingAcademies, setLoadingAcademies] = useState(false);
+
+  const numberToWeekArray = (code?: number | string | null): string[] => {
+    if (code === undefined || code === null) return [];
+    const s = String(code);
+    const map: Record<string, string> = {
+      "1": "monday",
+      "2": "tuesday",
+      "3": "wednesday",
+      "4": "thursday",
+      "5": "friday",
+      "6": "saturday",
+      "7": "sunday",
+    };
+    const arr: string[] = [];
+    for (const ch of s) {
+      if (map[ch]) arr.push(map[ch]);
+    }
+    return arr;
+  };
+
+  const weekArrayToNumber = (arr?: any[]): number | undefined => {
+    if (!Array.isArray(arr) || arr.length === 0) return undefined;
+    const map: Record<string, number> = {
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6,
+      sunday: 7,
+    };
+    const nums = arr
+      .map((v) => (typeof v === "string" ? v.toLowerCase() : ""))
+      .map((k) => map[k])
+      .filter((n) => Number.isFinite(n)) as number[];
+
+    if (nums.length === 0) return undefined;
+    nums.sort((a, b) => a - b);
+    return Number(nums.join(""));
+  };
+
+  const WEEKDAY_OPTIONS = useMemo(
+    () => [
+      { label: "Monday", value: "monday" },
+      { label: "Tuesday", value: "tuesday" },
+      { label: "Wednesday", value: "wednesday" },
+      { label: "Thursday", value: "thursday" },
+      { label: "Friday", value: "friday" },
+      { label: "Saturday", value: "saturday" },
+      { label: "Sunday", value: "sunday" },
+    ],
+    []
+  );
+
+  const loadAcademiesByActivity = useCallback(
+    async (activityName?: string | null) => {
+      if (!activityName) {
+        setAcademyOptions([]);
+        return;
+      }
+
+      try {
+        setLoadingAcademies(true);
+        const res = await getAcademies({
+          academyType: activityName,
+          limit: 200,
+        });
+
+        const items = Array.isArray((res as any)?.data ?? res)
+          ? (res as any).data ?? res
+          : [];
+
+        setAcademyOptions(items);
+      } catch {
+        setAcademyOptions([]);
+      } finally {
+        setLoadingAcademies(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    if (!isOpen) return;
+    const init = async () => {
+      const resActivity: Response<Activity[]> = await getActivities({
+        limit: 500,
+      });
+      const actOpts = resActivity?.data as Activity[];
 
-    const load = async () => {
-      const [a, ac, ct] = await Promise.all([
-        getActivities({ limit: 500 }),
-        getAcademies({ limit: 500 }),
-        getEnumsByCategory("courseType"),
-      ]);
+      setActivityOptions(actOpts);
 
-      setActivities(a?.data ?? []);
-      setAcademies(ac?.data ?? []);
-      setCourseTypes(ct?.data ?? []);
+      const resEnums: Response<Enums[]> = await getEnumsByCategory(
+        "courseType"
+      );
+      const enumOpts = resEnums?.data as Enums[];
+      setCourseTypeOptions(enumOpts);
     };
 
-    load();
-  }, [isOpen]);
-
-  /* ---------------- INIT ---------------- */
+    init();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
-      setCourse({
+      setValues({
         ...initialData,
         introduceDate: initialData.introduceDate
           ? format(new Date(initialData.introduceDate), "yyyy-MM-dd")
@@ -141,316 +180,299 @@ export default function CourseCreateWithShareAndPackageForm({
           : null,
       });
     } else {
-      setCourse(emptyCourse);
-      setShares([]);
-      setPackages([]);
+      setValues(empty);
     }
-
     setErrors({});
     setError(null);
   }, [initialData, isOpen]);
 
-  /* ---------------- COURSE CHANGE ---------------- */
+  const onChange = (
+    field: keyof Course,
+    value: string | number | boolean | null
+  ) => {
+    // ACTIVITY CHANGED
+    if (field === "activityName") {
+      const activityName = value ? String(value) : null;
 
-  const onCourseChange = (field: keyof Course, value: any) => {
-    setCourse((p) => ({ ...p, [field]: value }));
+      const selectedActivity = activityOptions.find(
+        (a) => a.activityName === activityName
+      );
+
+      setValues((p) => ({
+        ...p,
+        activityName,
+        academyId: 0, // reset
+        classification: selectedActivity?.activityType ?? null, // 🔥 AUTO SET
+      }));
+
+      setAcademyOptions([]);
+      loadAcademiesByActivity(activityName);
+
+      setErrors((e) => {
+        const copy = { ...e };
+        delete copy.activityName;
+        delete copy.academyId;
+        return copy;
+      });
+      return;
+    }
+
+    // ACADEMY CHANGED
+    if (field === "academyId") {
+      setValues((p) => ({
+        ...p,
+        academyId: value ? Number(value) : 0,
+      }));
+      setErrors((e) => {
+        const copy = { ...e };
+        delete copy.academyId;
+        return copy;
+      });
+      return;
+    }
+
+    // DEFAULT
+    setValues((p) => ({ ...p, [field]: value }));
+    if (errors[field]) {
+      setErrors((e) => {
+        const copy = { ...e };
+        delete copy[field];
+        return copy;
+      });
+    }
   };
 
-  /* ---------------- VALIDATION ---------------- */
-
-  const validate = () => {
+  const validate = useCallback(() => {
     const e: Record<string, string> = {};
 
-    if (!course.courseName) e.courseName = "Required";
-    if (!course.activityName) e.activityName = "Required";
-    if (!course.courseType) e.courseType = "Required";
-    if (!course.introduceDate) e.introduceDate = "Required";
+    if (!values.courseName?.trim()) e.courseName = "Course name is required";
 
-    shares.forEach((s, i) => {
-      if (!s.academyId) e[`share-${i}`] = "Academy required in share";
-      if (!s.shareType) e[`shareType-${i}`] = "Share type required";
-      if (s.share <= 0 || s.share > 100)
-        e[`shareValue-${i}`] = "Share must be 1–100";
-    });
+    if (!values.activityName) e.activityName = "Activity is required";
 
-    packages.forEach((p, i) => {
-      if (!p.activityType) e[`package-activity-${i}`] = "Activity required";
-      if (!p.linkType) e[`package-link-${i}`] = "Link type required";
-    });
+    if (!values.courseType) e.courseType = "Course type is required";
+
+    if (!values.introduceDate) e.introduceDate = "Introduce date is required";
+
+    if (values.sessionMinutes <= 0)
+      e.sessionMinutes = "Session minutes must be > 0";
+
+    if (values.noOfDaysInWeek <= 0)
+      e.noOfDaysInWeek = "Days per week must be > 0";
+
+    if (values.minEnrollmentUnits <= 0)
+      e.minEnrollmentUnits = "Min enrollment units must be > 0";
+
+    if (values.batchCapacity <= 0)
+      e.batchCapacity = "Batch capacity must be > 0";
+
+    if (values.totalParallelBatches <= 0)
+      e.totalParallelBatches = "Parallel batches must be > 0";
+
+    if (values.minAge <= 0) e.minAge = "Min age must be > 0";
+
+    if (values.maxAge <= 0) e.maxAge = "Max age must be > 0";
+
+    if (values.minAge > values.maxAge)
+      e.maxAge = "Max age must be greater than min age";
+    if (
+      !values.availabilityPattern ||
+      !Array.isArray(values.availabilityPattern) ||
+      values.availabilityPattern.length === 0
+    ) {
+      e.availabilityPattern = "Select at least one weekday";
+    }
+
+    if (!values.academyId || values.academyId <= 0) {
+      e.academyId = "Academy is required";
+    }
+
+    if (!values.classification) {
+      e.classification = "Classification is required";
+    }
 
     return e;
-  };
-
-  /* ---------------- SUBMIT ---------------- */
+  }, [values]);
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     setError(null);
 
-    const v = validate();
-    if (Object.keys(v).length) {
-      setErrors(v);
+    const vErrors = validate();
+    if (Object.keys(vErrors).length) {
+      setErrors(vErrors);
       setIsSubmitting(false);
       return;
     }
 
     try {
-      let courseId = initialData?.courseId;
+      const availabilityCode = weekArrayToNumber(
+        values.availabilityPattern as any[]
+      );
 
-      if (courseId) {
-        await updateCourse(courseId, course);
+      const payload: Partial<Course> = {
+        ...values,
+        availabilityPattern: availabilityCode as any,
+        suspensionDate: values.suspensionDate || null,
+      };
+      console.log(payload);
+
+      if (initialData?.courseId) {
+        await updateCourse(initialData.courseId, payload);
       } else {
-        const res = await createCourse(course);
-        courseId = res?.data?.courseId;
-      }
-
-      if (!courseId) throw new Error("Course creation failed");
-
-      for (const s of shares) {
-        await createCourseShare({ ...s, courseId });
-      }
-
-      for (const p of packages) {
-        await createCoursePackage({ ...p, courseId });
+        await createCourse(payload as Course);
       }
 
       onSave();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
-  }, [course, shares, packages]);
-
-  /* ---------------- COURSE FIELDS ---------------- */
+  }, [values, validate, initialData, onSave, onClose]);
 
   const fields: FormFieldConfig<Course>[] = [
     { name: "courseName", label: "Course Name", type: "text", required: true },
+
     {
       name: "activityName",
       label: "Activity",
       type: "select",
       required: true,
-      options: activities.map((a) => ({
+      options: activityOptions.map((a) => ({
         label: a.activityName,
         value: a.activityName,
       })),
     },
+
+    {
+      name: "academyId",
+      label: "Academy",
+      type: "select",
+      required: true,
+      disabled: loadingAcademies || !values.activityName,
+      options: academyOptions.map((a) => ({
+        label: a.academyName,
+        value: String(a.academyId),
+      })),
+    },
+
+    {
+      name: "classification",
+      label: "Classification (Activity Type)",
+      type: "text",
+      disabled: true,
+    },
+
     {
       name: "courseType",
       label: "Course Type",
       type: "select",
       required: true,
-      options: courseTypes.map((c) => ({
+      options: courseTypeOptions.map((c) => ({
         label: c.value,
         value: c.value,
       })),
     },
-    { name: "introduceDate", label: "Introduce Date", type: "Date" },
+    {
+      name: "introduceDate",
+      label: "Introduce Date",
+      type: "Date",
+      required: true,
+    },
+    { name: "suspensionDate", label: "Suspension Date", type: "Date" },
+
+    {
+      name: "chargingPattern",
+      label: "Charging Pattern",
+      type: "select",
+      options: [
+        { label: "Unit", value: "Unit" },
+        { label: "Day", value: "Day" },
+        { label: "Session", value: "Session" },
+      ],
+    },
+
+    { name: "sessionMinutes", label: "Session Minutes", type: "number" },
+    { name: "noOfDaysInWeek", label: "Days Per Week", type: "number" },
+
+    {
+      name: "availabilityPattern",
+      label: "Available On",
+      type: "multiselect",
+      options: WEEKDAY_OPTIONS,
+      required: true,
+    },
+
+    {
+      name: "minEnrollmentUnits",
+      label: "Min Enrollment Units",
+      type: "number",
+    },
+    { name: "batchCapacity", label: "Batch Capacity", type: "number" },
+    {
+      name: "totalParallelBatches",
+      label: "Parallel Batches",
+      type: "number",
+    },
+
+    { name: "minAge", label: "Min Age", type: "number" },
+    { name: "maxAge", label: "Max Age", type: "number" },
+
+    {
+      name: "gender",
+      label: "Gender",
+      type: "select",
+      options: [
+        { label: "Male", value: "Male" },
+        { label: "Female", value: "Female" },
+        { label: "Any", value: "Any" },
+      ],
+    },
+
+    { name: "changable", label: "Changable", type: "checkbox" },
+    {
+      name: "freezingAllowed",
+      label: "Freezing Allowed (days)",
+      type: "number",
+    },
   ];
 
   if (!isOpen) return null;
 
-  /* ---------------- RENDER ---------------- */
-
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hiddenn">
-        <div className="flex flex-col max-h-[90vh] overflow-hidden">
-          <FormHeader
-            title={initialData ? "Edit Course" : "Create Course"}
-            onClose={onClose}
-          />
+      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
+        <FormHeader
+          title={initialData ? "Edit Course" : "Add Course"}
+          onClose={onClose}
+        />
 
-          <div className="max-h-[75vh] overflow-auto">
-            <FormContent
-              fields={fields}
-              values={course}
-              errors={errors}
-              loading={loading}
-              onChange={onCourseChange}
-              layout="grid"
-            />
-            <div className="px-4 bg-background">
-              {/* -------- SHARES -------- */}
-              <section className="p-4 border border-gray-200 rounded-lg shadow-sm mb-6">
-                <div className="flex justify-between items-center mb-4 border-b pb-2">
-                  <h3 className="text-xl font-bold text-foreground">
-                    Course Shares
-                  </h3>
-                  <Button
-                    onClick={() => setShares((s) => [...s, emptyShare])}
-                    // Assuming a default primary style for the Button component
-                  >
-                    + Add Share
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  {shares.map((s, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-[1fr_1fr_0.5fr_max-content] gap-3 items-center"
-                    >
-                      {/* Academy Select (Shadcn) */}
-                      <Select
-                        value={String(s.academyId)}
-                        onValueChange={(value) => {
-                          const v = [...shares];
-                          v[i].academyId = Number(value);
-                          setShares(v);
-                        }}
-                      >
-                        <SelectTrigger className="border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
-                          <SelectValue placeholder="Select Academy" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {academies.map((a) => (
-                            <SelectItem
-                              key={a.academyId}
-                              value={String(a.academyId)}
-                            >
-                              {a.academyName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {/* Share Type Input (Shadcn) */}
-                      <Input
-                        placeholder="Share Type (e.g., Commission)"
-                        value={s.shareType}
-                        onChange={(e) => {
-                          const v = [...shares];
-                          v[i].shareType = e.target.value;
-                          setShares(v);
-                        }}
-                        className="border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                      />
-
-                      {/* Percentage Input (Shadcn + wrapper for %) */}
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          placeholder="%"
-                          value={s.share}
-                          onChange={(e) => {
-                            const v = [...shares];
-                            v[i].share = Number(e.target.value);
-                            setShares(v);
-                          }}
-                          className="border border-gray-300 rounded-lg pr-8 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
-                          min="0"
-                          max="100"
-                        />
-                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                          %
-                        </span>
-                      </div>
-
-                      {/* Remove Button (Updated Styling) */}
-                      <button
-                        onClick={() =>
-                          setShares((x) => x.filter((_, idx) => idx !== i))
-                        }
-                        aria-label="Remove Share"
-                      >
-                        <div className="text-gray-500 hover:bg-red-500 hover:text-background p-1 ml-2 rounded-lg transition duration-150">
-                          <X className="w-5 h-5" />
-                        </div>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* -------- PACKAGES -------- */}
-              <section className="p-4 border border-gray-200 rounded-lg shadow-sm">
-                <div className="flex justify-between items-center mb-4 border-b pb-2">
-                  <h3 className="text-xl font-bold">Course Packages</h3>
-                  <Button
-                    onClick={() => setPackages((p) => [...p, emptyPackage])}
-                    // Assuming a default primary style for the Button component
-                  >
-                    + Add Package
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  {packages.map((p, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-[1fr_1fr_max-content] gap-3 items-center"
-                    >
-                      {/* Activity Select (Shadcn) */}
-                      <Select
-                        value={p.activityType}
-                        onValueChange={(value) => {
-                          const v = [...packages];
-                          v[i].activityType = value;
-                          setPackages(v);
-                        }}
-                      >
-                        <SelectTrigger className="border border-gray-300 rounded-lg transition duration-150">
-                          <SelectValue placeholder="Select Activity Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {activities.map((a) => (
-                            <SelectItem
-                              key={a.activityId}
-                              value={a.activityName}
-                            >
-                              {a.activityName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {/* Link Type Select (Shadcn) */}
-                      <Select
-                        value={p.linkType}
-                        onValueChange={(value) => {
-                          const v = [...packages];
-                          v[i].linkType = value;
-                          setPackages(v);
-                        }}
-                      >
-                        <SelectTrigger className="border border-gray-300 rounded-lg transition duration-150">
-                          <SelectValue placeholder="Select Link Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="locationShare">
-                            Location Share
-                          </SelectItem>
-                          {/* Add other options as needed */}
-                        </SelectContent>
-                      </Select>
-
-                      {/* Remove Button (Updated Styling) */}
-                      <button
-                        onClick={() =>
-                          setPackages((x) => x.filter((_, idx) => idx !== i))
-                        }
-                        aria-label="Remove Package"
-                      >
-                        <div className="text-gray-500 hover:bg-red-500 hover:text-background p-1 ml-2 rounded-lg transition duration-150">
-                          <X className="w-5 h-5" />
-                        </div>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </section>
+        <div className="overflow-auto max-h-[50vh]">
+          {error && (
+            <div className="m-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+              {error}
             </div>
-          </div>
-          <FormFooter
-            onSubmit={handleSubmit}
-            onClose={onClose}
-            submitLabel={initialData ? "Update" : "Create"}
+          )}
+
+          <FormContent
+            fields={fields}
+            values={values}
+            errors={errors}
+            loading={false}
+            error={error}
             isSubmitting={isSubmitting}
+            onChange={onChange}
+            layout="grid"
           />
         </div>
+
+        <FormFooter
+          onClose={onClose}
+          onSubmit={handleSubmit}
+          submitLabel={initialData ? "Update" : "Create"}
+          isSubmitting={isSubmitting}
+        />
       </DialogContent>
     </Dialog>
   );
