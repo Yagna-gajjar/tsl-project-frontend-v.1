@@ -53,6 +53,13 @@ export function createCourse(
   });
 }
 
+export function createFullCourse(payload: any): Promise<Response<any>> {
+  return request<Response<any>>(`${COURSE_BASE}/full`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function updateCourse(
   id: number,
   payload: Partial<Omit<Course, "courseId" | "createdAt" | "updatedAt">>

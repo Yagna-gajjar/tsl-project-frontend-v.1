@@ -18,8 +18,6 @@ export interface Course {
   maxAge: number;
   gender?: "Male" | "Female" | "Any" | null;
   feeClassification?: string | null;
-  changable: boolean;
-  freezingAllowed: number;
   createdAt: string;
   updatedAt: string;
 }

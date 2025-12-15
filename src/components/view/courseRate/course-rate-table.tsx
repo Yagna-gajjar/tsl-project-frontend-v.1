@@ -64,29 +64,41 @@ export default function CourseRateTable({
 	}, [filterCourseId]);
 
 	const columns: Column<CourseRate>[] = [
-		{ header: "Entity Type", key: "entityType", sortable: true, filterType: "text" },
-		{
-			header: "Rate",
-			key: "unitRate",
-			render: (r) => `₹${r.unitRate}`,
-			sortable: true,
-			filterType: "number"
-		},
-		{ header: "Above Units", key: "aboveUnits", sortable: true },
-		{ header: "Freezing", key: "freezing", sortable: true },
-		{
-			header: "Effective Date",
-			key: "introduceDate",
-			render: (r) => new Date(r.introduceDate).toLocaleDateString(),
-			sortable: true,
-		},
-		{
-			header: "Changable",
-			key: "changable",
-			render: (r) => (r.changable ? "Yes" : "No"),
-			sortable: true
-		},
-	];
+    {
+      header: "Course Name",
+      key: "courseId",
+      render: (r) => `${r.courseName}`,
+      sortable: true,
+      filterType: "text",
+    },
+    {
+      header: "Entity Type",
+      key: "entityType",
+      sortable: true,
+      filterType: "text",
+    },
+    {
+      header: "Rate",
+      key: "unitRate",
+      render: (r) => `₹${r.unitRate}`,
+      sortable: true,
+      filterType: "number",
+    },
+    { header: "Above Units", key: "aboveUnits", sortable: true },
+    { header: "Freezing", key: "freezing", sortable: true },
+    {
+      header: "Effective Date",
+      key: "introduceDate",
+      render: (r) => new Date(r.introduceDate).toLocaleDateString(),
+      sortable: true,
+    },
+    {
+      header: "Changable",
+      key: "changable",
+      render: (r) => (r.changable ? "Yes" : "No"),
+      sortable: true,
+    },
+  ];
 
 	return (
 		<>
