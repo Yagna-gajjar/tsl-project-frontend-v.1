@@ -82,6 +82,24 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  const handleExport = async (): Promise<Account[]> => {
+    const res: Response<Account[]> = await getAccounts({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      search: search || undefined,
+    });
+
+    const rows = Array.isArray(res?.data) ? res.data : [];
+
+    return rows.map((r) => ({
+      ...r,
+      regDate: new Date(r.regDate),
+      suspensionDate: r.suspensionDate ? new Date(r.suspensionDate) : undefined,
+    }));
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
@@ -118,6 +136,8 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey="accountId"
+        exportFileName="Account"
+        onExport={handleExport}
       />
 
       <ConfirmDialog

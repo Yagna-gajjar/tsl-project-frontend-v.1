@@ -120,6 +120,40 @@ function DebitNoteTable({ onView, onEdit }: Props) {
     setPage(1);
   };
 
+  const handleExport = async (): Promise<DebitNote[]> => {
+    const res: Response<DebitNote[]> = await getDebitNotes({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      search: search || undefined,
+      memberName: filters.memberName as string | undefined,
+      academyName: filters.academyName as string | undefined,
+      coachName: filters.coachName as string | undefined,
+      debitNoteType: filters.debitNoteType as string | undefined,
+      debitNoteRemarks: filters.debitNoteRemarks as string | undefined,
+      dateFrom: filters.dateFrom as Date | undefined,
+      dateTo: filters.dateTo as Date | undefined,
+    });
+
+    let rowsRaw: unknown[] = [];
+
+    if (Array.isArray(res)) {
+      rowsRaw = res;
+    } else if (res && typeof res === "object") {
+      const maybeData = (res as any).data;
+      if (Array.isArray(maybeData)) {
+        rowsRaw = maybeData;
+      } else if (maybeData && Array.isArray(maybeData.rows)) {
+        rowsRaw = maybeData.rows;
+      } else if (Array.isArray((res as any).rows)) {
+        rowsRaw = (res as any).rows;
+      }
+    }
+
+    return Array.isArray(rowsRaw) ? (rowsRaw as DebitNote[]) : [];
+  };
+
   const handlePageChange = (p: number) => setPage(p);
 
   const columns: Column<DebitNote>[] = [
@@ -221,6 +255,8 @@ function DebitNoteTable({ onView, onEdit }: Props) {
         onView={(row) => onView?.(row)}
         onEdit={(row) => onEdit?.(row)}
         idKey={"debitNoteId"}
+        exportFileName="DebitNote"
+        onExport={handleExport}
       />
     </div>
   );

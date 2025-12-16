@@ -143,6 +143,33 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
 
   const handlePageChange = (p: number) => setPage(p);
 
+  const handleExport = async (): Promise<Batch[]> => {
+    const res = await getBatch({
+      page: 1,
+      limit: data.length,
+      sortBy,
+      sortOrder: sortOrder,
+      search: search || undefined,
+      batchName: filters.batchName as string | undefined,
+      coachName: filters.coachName as string | undefined,
+      facilityName: filters.facilityName as string | undefined,
+      courseName: filters.courseName as string | undefined,
+    });
+
+    const rowsRaw = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.data)
+      ? (res?.data as Batch[])
+      : [];
+    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
+      ...r,
+      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+    })) as Batch[];
+
+    return rows;
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -360,6 +387,8 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey={"batchId"}
+        exportFileName="Batch"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}

@@ -1325,7 +1325,6 @@ const RatesList = ({
                 onChange={(e) =>
                   onChange(index, "freezing", Number(e.target.value))
                 }
-                onKeyDown={(e) => handleKeyDown(e, index, true)}
               />
             </div>
 
@@ -1336,6 +1335,7 @@ const RatesList = ({
                 size="sm"
                 onClick={() => onRemove(index)}
                 className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                onKeyDown={(e) => handleKeyDown(e, index, true)}
               >
                 <Trash2 className="w-3 h-3" />
               </Button>

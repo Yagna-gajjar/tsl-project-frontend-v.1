@@ -58,6 +58,11 @@ export default function AccountMemberTable({ onView, onEdit }: Props) {
 
   const [delId, setDelId] = useState<number | null>(null);
 
+  const handleExport = async (): Promise<AccountMember[]> => {
+    const res = await getAccountMembers({ page: 1, limit: data.length });
+    return Array.isArray(res?.data) ? res.data : [];
+  };
+
   return (
     <>
       <DataTable<AccountMember>
@@ -74,6 +79,8 @@ export default function AccountMemberTable({ onView, onEdit }: Props) {
         onEdit={onEdit}
         onDelete={(id) => setDelId(id ?? null)}
         idKey="accountMemberId"
+        exportFileName="AccountMember"
+        onExport={handleExport}
       />
 
       <ConfirmDialog

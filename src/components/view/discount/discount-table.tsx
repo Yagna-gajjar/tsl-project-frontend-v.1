@@ -28,6 +28,7 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [total, setTotal] = useState<number>(0);
 
   const loadData = useCallback(async () => {
     try {
@@ -57,9 +58,11 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
       })) as Discount[];
 
       setData(rows);
+      setTotal(rows.length);
     } catch (error) {
       console.error("Failed to fetch discounts", error);
       setData([]);
+      setTotal(0);
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +96,26 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
     setSortBy(column);
     setSortOrder(direction);
     setPage(1);
+  };
+
+  const handleExport = async (): Promise<Discount[]> => {
+    const res = await getDiscounts({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder: sortOrder,
+      search: search || undefined,
+      courseId: filters.courseId as number | undefined,
+      status: filters.status as string | undefined,
+      courseName: filters.courseName as string | undefined,
+    });
+
+    const rowsRaw = Array.isArray(res)
+      ? res
+      : Array.isArray((res as Record<string, unknown>)?.data)
+      ? ((res as Record<string, unknown>).data as Discount[])
+      : [];
+    return Array.isArray(rowsRaw) ? rowsRaw : [];
   };
 
   const handleDelete = async () => {
@@ -195,7 +218,7 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
@@ -208,6 +231,8 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey={"discountId"}
+        exportFileName="Discount"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}

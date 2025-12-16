@@ -134,6 +134,20 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
 
   const handlePageChange = (p: number) => setPage(p);
 
+  const handleExport = async (): Promise<Activity[]> => {
+    const res: Response<Activity[]> = await getActivities({
+      page: 1,
+      limit: total,
+      sortBy,
+      sorting: sortOrder,
+      search: search || undefined,
+      activityName: filters.activityName as string | undefined,
+      activityType: filters.activityType as string | undefined,
+    });
+
+    return Array.isArray(res?.data) ? res.data : [];
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -155,9 +169,7 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
           : true;
 
       if (!ok) {
-        throw new Error(
-          (res)?.message || "Failed to delete activity"
-        );
+        throw new Error(res?.message || "Failed to delete activity");
       }
       await loadData();
     } catch (err) {
@@ -192,6 +204,8 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
         onEdit={(row) => onEdit?.(row)}
         onDelete={(id: number | undefined) => handleDelete(id)}
         idKey={"activityId"}
+        exportFileName="Activities"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}
