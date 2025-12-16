@@ -6,6 +6,7 @@ export interface CourseRate {
   unitRate: number;
   introduceDate: string;
   changable: boolean;
+  daySelection: boolean;
   freezing: number;
   createdAt: string;
   updatedAt: string;
