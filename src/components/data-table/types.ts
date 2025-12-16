@@ -25,13 +25,19 @@ export interface PaginationState {
 export interface DynamicTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  pagination?: PaginationState;
+  pagination?: any;
   isLoading?: boolean;
+
   onSearchChange?: (value: string) => void;
   onFilterChange?: (key: string, value: any) => void;
   onSortChange?: (key: string, direction: "ASC" | "DESC") => void;
+
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
-  onDelete?: (id: number | undefined) => void;
+  onDelete?: (id: any) => void;
+
   idKey?: keyof T;
+  
+  onExport?: () => Promise<T[]>;
+  exportFileName?: string;
 }

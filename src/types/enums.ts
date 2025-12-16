@@ -4,12 +4,14 @@ export interface Enums {
     value: string;
     status: boolean;
     description?: string | null;
+    enumCase: number;
     createdAt?: string;
     updatedAt?: string;
 }
 
 export interface EnumGroup {
     category: string;
+    enumCase: number[];
     values: string[];
     ids: number[];
     status: boolean[];

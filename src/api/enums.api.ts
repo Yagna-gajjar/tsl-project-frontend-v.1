@@ -10,13 +10,14 @@ export interface EnumsQuery {
     search?: string;
     filters?: Object;
     sortOrder?: "ASC" | "DESC";
-    pagination?: Object
+    pagination?: Object;
+    enumCase?: number;
 }
 
 const ENUMS_BASE = import.meta.env.VITE_APP_API_URL + '/enum';
 
 export function getAllEnumByGroup() {
-  return request(`${ENUMS_BASE}/group`);
+    return request(`${ENUMS_BASE}/group`);
 }
 
 export function getAllEnums(params: EnumsQuery = {}): Promise<Response<Enums[]>> {
@@ -26,15 +27,16 @@ export function getAllEnums(params: EnumsQuery = {}): Promise<Response<Enums[]>>
         sortBy: params.sortBy ?? 'id',
         sorting: params.sorting ?? 'ASC',
         search: params.search,
+        enumCase: params.enumCase
     });
 
     return request<Response<Enums[]>>(`${ENUMS_BASE}${qs}`);
 }
 
 export function getEnumsByCategory(
-  categoryName: string
+    categoryName: string
 ): Promise<Response<Enums[]>> {
-  return request<Response<Enums[]>>(`${ENUMS_BASE}/${categoryName}`);
+    return request<Response<Enums[]>>(`${ENUMS_BASE}/${categoryName}`);
 }
 
 export function createEnum(payload: Enums): Promise<Response<Enums>> {

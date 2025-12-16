@@ -38,6 +38,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 		category: "",
 		value: "",
 		description: "",
+		enumCase: 0,
 		status: true
 	});
 
@@ -86,6 +87,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 					category: initialCategory,
 					value: "",
 					description: "",
+					enumCase: 0,
 					status: true
 				});
 			}
@@ -99,6 +101,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 				category: formData.category,
 				value: formData.value,
 				description: formData.description,
+				enumCase: formData.enumCase,
 				status: formData.status
 			};
 
@@ -110,7 +113,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 			}
 
 			if (res?.success) {
-				toast({ title: "Success", description: "Saved successfully", variant: "default" });
+				toast({ title: "Success", description: "Saved successfully", variant: "success" });
 				onSaved();
 				onClose();
 			}
@@ -126,7 +129,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 		setLoading(true);
 		try {
 			await deleteEnum(initialData.id);
-			toast({ title: "Deleted", description: "Item removed successfully", variant: "default" });
+			toast({ title: "Deleted", description: "Item removed successfully", variant: "success" });
 			onSaved();
 			onClose();
 		} catch {
@@ -210,7 +213,18 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 							value={formData.description || ""}
 							onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
 							placeholder="Optional description..."
-							className="resize-none h-24"
+							className="resize-none h-20"
+						/>
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="enumCase">Case</Label>
+						<Input
+							id="desc"
+							value={formData.enumCase == 0 ? "0" : formData.enumCase || ""}
+							onChange={e => setFormData(prev => ({ ...prev, enumCase: Number(e.target.value) }))}
+							placeholder="enumCase... default 0"
+							className="h-10"
 						/>
 					</div>
 

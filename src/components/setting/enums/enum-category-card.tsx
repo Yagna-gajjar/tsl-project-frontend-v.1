@@ -17,7 +17,8 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
 		category: group.category,
 		value: val,
 		status: group.status[i],
-		description: group.description[i]
+		description: group.description[i],
+		enumCase: group.enumCase[i],
 	}));
 
 	return (
@@ -36,7 +37,6 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
 				</Button>
 			</div>
 
-			{/* Items List */}
 			<div className="divide-y divide-slate-100 dark:divide-zinc-800 max-h-[350px] overflow-y-auto">
 				{items.map((item) => (
 					<div
@@ -45,13 +45,12 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
 						className="group flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors"
 					>
 						<div className="flex items-center gap-3 overflow-hidden">
-							{/* Status Indicator */}
 							<TooltipProvider>
 								<Tooltip>
 									<TooltipTrigger>
 										<div className={`
-                      w-2 h-2 rounded-full ring-2 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900 
-                      ${item.status ? "bg-emerald-500 ring-emerald-100" : "bg-slate-300 ring-slate-100"}
+							w-2 h-2 rounded-full ring-2 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900 
+							${item.status ? "bg-emerald-500 ring-emerald-100" : "bg-slate-300 ring-slate-100"}
                     `} />
 									</TooltipTrigger>
 									<TooltipContent>{item.status ? "Active" : "Inactive"}</TooltipContent>
@@ -59,15 +58,24 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
 							</TooltipProvider>
 
 							<div className="flex flex-col min-w-0">
-								<span className={`text-sm font-medium truncate ${!item.status && "text-muted-foreground line-through decoration-slate-400"}`}>
+								<span
+									className={`text-sm font-medium truncate ${!item.status ? "text-muted-foreground line-through decoration-slate-400" : ""
+										}`}
+								>
 									{item.value}
+									<span className="ml-2 text-xs text-muted-foreground">
+										Case: {item.enumCase}
+									</span>
 								</span>
+
 								{item.description && (
 									<span className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
-										<Info className="w-3 h-3" /> {item.description}
+										<Info className="w-3 h-3" />
+										{item.description}
 									</span>
 								)}
 							</div>
+
 						</div>
 
 						<Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">

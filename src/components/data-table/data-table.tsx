@@ -1,7 +1,5 @@
-"use client";
-
 import type React from "react";
-
+import { exportToExcel } from "@/lib/export-to-excel";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Table,
@@ -19,6 +17,7 @@ import type { DynamicTableProps } from "./types";
 import { TablePagination } from "./table-pagination";
 import { TableToolbar } from "./table-toolbar";
 import { TableMobileCard } from "./table-mobile-card";
+import { toast } from "@/hooks/use-toast";
 
 export function DataTable<T>({
   data,
@@ -32,6 +31,8 @@ export function DataTable<T>({
   onEdit,
   onDelete,
   idKey = "id" as keyof T,
+  exportFileName,
+  onExport
 }: DynamicTableProps<T>) {
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(columns.filter((c) => !c.hidden).map((c) => String(c.key)))
@@ -41,8 +42,9 @@ export function DataTable<T>({
     direction: "asc" | "desc";
   } | null>(null);
   const [filters, setFilters] = useState<
-    Record<string, string | number | Date | Object | boolean>
+    Record<string, string | number | Date | Object | boolean | undefined>
   >({});
+  const [isExporting, setIsExporting] = useState(false);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const resizingColumn = useRef<string | null>(null);
   const startX = useRef<number>(0);
@@ -57,6 +59,64 @@ export function DataTable<T>({
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [columnWidths]);
+
+  const handleExport = async () => {
+    if (!onExport || isExporting) return;
+
+    try {
+      setIsExporting(true);
+
+      toast({
+        title: "Export started",
+        description: "Preparing data for export...",
+      });
+
+      const allRows = await onExport();
+
+      if (!allRows || !allRows.length) {
+        toast({
+          title: "Info",
+          description: "No data to export",
+        });
+        return;
+      }
+
+      // 🔥 Collect ALL keys from API response
+      const allKeys = Array.from(
+        new Set(
+          allRows.flatMap((row) => Object.keys(row as Record<string, any>))
+        )
+      );
+
+      const exportColumns = allKeys.map((key) => ({
+        key,
+        header: key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (c) => c.toUpperCase()),
+      }));
+
+      exportToExcel(
+        allRows as any[],
+        exportColumns as any[],
+        exportFileName || "Export"
+      );
+
+      toast({
+        title: "Export completed",
+        description: "Your file has been downloaded successfully.",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Export failed",
+        description: "Something went wrong while exporting data.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleColumnToggle = (key: string) => {
     const newVisible = new Set(visibleColumns);
@@ -151,11 +211,11 @@ export function DataTable<T>({
     return (
       <div className="w-full space-y-4">
         <TableToolbar
-          onSearch={onSearchChange || (() => {})}
+          onSearch={onSearchChange || (() => { })}
           columns={columns}
           visibleColumns={visibleColumns}
           onColumnToggle={handleColumnToggle}
-          filters={filters}
+          filters={filters as any}
           onFilterChange={handleFilter}
           sortConfig={sortConfig}
           onSortChange={handleSort}
@@ -173,14 +233,16 @@ export function DataTable<T>({
   return (
     <div className="space-y-4 w-full">
       <TableToolbar
-        onSearch={onSearchChange || (() => {})}
+        onSearch={onSearchChange || (() => { })}
         columns={columns}
         visibleColumns={visibleColumns}
         onColumnToggle={handleColumnToggle}
-        filters={filters}
+        filters={filters as any}
         onFilterChange={handleFilter}
         sortConfig={sortConfig}
         onSortChange={handleSort}
+        onExport={onExport ? handleExport : undefined}
+        isExporting={isExporting}
       />
 
       <div className="hidden md:block rounded-md border shadow-sm bg-card overflow-hidden">

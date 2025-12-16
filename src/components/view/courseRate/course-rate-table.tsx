@@ -27,8 +27,11 @@ export default function CourseRateTable({
 	const [total, setTotal] = useState(0);
 
 	const [search, setSearch] = useState("");
+	const [filters, setFilters] = useState<
+		Record<string, string | number | undefined>
+	>({});
 	const [sortBy, setSortBy] = useState<keyof CourseRate>("courseRateId");
-	const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC"); // Newest first usually
+	const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
 	const [deleteId, setDeleteId] = useState<number | null>(null);
 	const [deleteOpen, setDeleteOpen] = useState(false);
@@ -43,6 +46,8 @@ export default function CourseRateTable({
 				sortBy,
 				sortOrder,
 				courseId: filterCourseId,
+				entityType: filters.entityType as string | undefined,
+				courseName: filters.courseName as string | undefined
 			});
 
 			setData(res.data ?? []);
@@ -53,7 +58,12 @@ export default function CourseRateTable({
 		} finally {
 			setLoading(false);
 		}
-	}, [page, limit, search, sortBy, sortOrder, filterCourseId]);
+	}, [page, limit, search, sortBy, sortOrder, filterCourseId, filters]);
+
+	const handleFilterChange = async (filterKey: string, value: string | number | undefined) => {
+		setFilters((prev) => ({ ...prev, [filterKey]: value || undefined }));
+		setPage(1);
+	}
 
 	useEffect(() => {
 		loadData();
@@ -126,6 +136,7 @@ export default function CourseRateTable({
 					setDeleteId(id ?? null);
 					setDeleteOpen(true);
 				}}
+				onFilterChange={handleFilterChange}
 				idKey="courseRateId"
 			/>
 
