@@ -32,7 +32,7 @@ export function DataTable<T>({
   onDelete,
   idKey = "id" as keyof T,
   exportFileName,
-  onExport
+  onExport,
 }: DynamicTableProps<T>) {
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(columns.filter((c) => !c.hidden).map((c) => String(c.key)))
@@ -211,7 +211,7 @@ export function DataTable<T>({
     return (
       <div className="w-full space-y-4">
         <TableToolbar
-          onSearch={onSearchChange || (() => { })}
+          onSearch={onSearchChange || (() => {})}
           columns={columns}
           visibleColumns={visibleColumns}
           onColumnToggle={handleColumnToggle}
@@ -231,31 +231,31 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="space-y-4 w-full">
-      <TableToolbar
-        onSearch={onSearchChange || (() => { })}
-        columns={columns}
-        visibleColumns={visibleColumns}
-        onColumnToggle={handleColumnToggle}
-        filters={filters as any}
-        onFilterChange={handleFilter}
-        sortConfig={sortConfig}
-        onSortChange={handleSort}
-        onExport={onExport ? handleExport : undefined}
-        isExporting={isExporting}
-      />
+    <>
+      <div className="space-y-4 w-full">
+        <TableToolbar
+          onSearch={onSearchChange || (() => {})}
+          columns={columns}
+          visibleColumns={visibleColumns}
+          onColumnToggle={handleColumnToggle}
+          filters={filters as any}
+          onFilterChange={handleFilter}
+          sortConfig={sortConfig}
+          onSortChange={handleSort}
+          onExport={onExport ? handleExport : undefined}
+          isExporting={isExporting}
+        />
 
-      <div className="hidden md:block rounded-md border shadow-sm bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <div className="max-h-[600px] overflow-y-auto">
+        <div className="hidden md:block rounded-md border shadow-sm bg-card">
+          <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
             <Table>
-              <TableHeader className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/20 dark:to-background sticky top-0 z-20">
+              <TableHeader className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
                 <TableRow className="">
                   {displayColumns.map((col, idx) => (
                     <TableHead
                       key={String(col.key)}
                       className={cn(
-                        "p-4 font-semibold text-blue-900 dark:text-blue-100 relative border-r border-border",
+                        "sticky p-4 font-semibold text-blue-900 dark:text-blue-100 border-r border-border",
                         col.align === "center" && "text-center",
                         col.align === "right" && "text-right"
                       )}
@@ -392,8 +392,7 @@ export function DataTable<T>({
         onDelete={onDelete}
         idKey={idKey}
       />
-
       {pagination && <TablePagination pagination={pagination} />}
-    </div>
+    </>
   );
 }
