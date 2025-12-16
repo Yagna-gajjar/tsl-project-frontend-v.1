@@ -122,6 +122,27 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
 
   const handlePageChange = (p: number) => setPage(p);
 
+  const handleExport = async (): Promise<FamilyType[]> => {
+    const res: any = await getFamilyTypes({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder: sortOrder,
+      search: search || undefined,
+      familyTypeName: filters.familyTypeName ?? undefined,
+      maxMembers: filters.maxMembers ?? undefined,
+    } as any);
+
+    const rowsRaw = res?.data ?? res ?? [];
+    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => ({
+      ...r,
+      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+    })) as FamilyType[];
+
+    return rows;
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -183,6 +204,8 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
         onEdit={(row) => onEdit?.(row)}
         onDelete={(id: number | undefined) => handleDelete(id)}
         idKey={"familyTypeId"}
+        exportFileName="FamilyType"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}

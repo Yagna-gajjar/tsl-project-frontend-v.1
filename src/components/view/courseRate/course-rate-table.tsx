@@ -8,72 +8,86 @@ import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 
 type Props = {
-	onView?: (row: CourseRate) => void;
-	onEdit?: (row: CourseRate) => void;
-	refreshKey?: number;
-	filterCourseId?: number; // Optional prop to filter strictly by course
+  onView?: (row: CourseRate) => void;
+  onEdit?: (row: CourseRate) => void;
+  refreshKey?: number;
+  filterCourseId?: number;
 };
 
 export default function CourseRateTable({
-	onView,
-	onEdit,
-	refreshKey,
-	filterCourseId
+  onView,
+  onEdit,
+  refreshKey,
+  filterCourseId,
 }: Props) {
-	const [data, setData] = useState<CourseRate[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [page, setPage] = useState(1);
-	const [limit] = useState(10);
-	const [total, setTotal] = useState(0);
+  const [data, setData] = useState<CourseRate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
 
-	const [search, setSearch] = useState("");
-	const [filters, setFilters] = useState<
-		Record<string, string | number | undefined>
-	>({});
-	const [sortBy, setSortBy] = useState<keyof CourseRate>("courseRateId");
-	const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<
+    Record<string, string | number | undefined>
+  >({});
+  const [sortBy, setSortBy] = useState<keyof CourseRate>("courseRateId");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
-	const [deleteId, setDeleteId] = useState<number | null>(null);
-	const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const handleExport = async (): Promise<CourseRate[]> => {
+    const res: Response<CourseRate[]> = await getCourseRates({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      search: search || undefined,
+    });
 
-	const loadData = useCallback(async () => {
-		setLoading(true);
-		try {
-			const res: Response<CourseRate[]> = await getCourseRates({
-				page,
-				limit,
-				search: search || undefined,
-				sortBy,
-				sortOrder,
-				courseId: filterCourseId,
-				entityType: filters.entityType as string | undefined,
-				courseName: filters.courseName as string | undefined
-			});
+    return Array.isArray(res?.data) ? res.data : [];
+  };
 
-			setData(res.data ?? []);
-			setTotal(res.pagination?.total ?? 0);
-		} catch {
-			toast({ title: "Failed to load rates", variant: "destructive" });
-			setData([]);
-		} finally {
-			setLoading(false);
-		}
-	}, [page, limit, search, sortBy, sortOrder, filterCourseId, filters]);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res: Response<CourseRate[]> = await getCourseRates({
+        page,
+        limit,
+        search: search || undefined,
+        sortBy,
+        sortOrder,
+        courseId: filterCourseId,
+        entityType: filters.entityType as string | undefined,
+        courseName: filters.courseName as string | undefined,
+      });
 
-	const handleFilterChange = async (filterKey: string, value: string | number | undefined) => {
-		setFilters((prev) => ({ ...prev, [filterKey]: value || undefined }));
-		setPage(1);
-	}
+      setData(res.data ?? []);
+      setTotal(res.pagination?.total ?? 0);
+    } catch {
+      toast({ title: "Failed to load rates", variant: "destructive" });
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, search, sortBy, sortOrder, filterCourseId, filters]);
 
-	useEffect(() => {
-		loadData();
-	}, [loadData, refreshKey]);
+  const handleFilterChange = async (
+    filterKey: string,
+    value: string | number | undefined
+  ) => {
+    setFilters((prev) => ({ ...prev, [filterKey]: value || undefined }));
+    setPage(1);
+  };
 
-	useEffect(() => {
-		setPage(1);
-	}, [filterCourseId]);
+  useEffect(() => {
+    loadData();
+  }, [loadData, refreshKey]);
 
-	const columns: Column<CourseRate>[] = [
+  useEffect(() => {
+    setPage(1);
+  }, [filterCourseId]);
+
+  const columns: Column<CourseRate>[] = [
     {
       header: "Course Name",
       key: "courseId",
@@ -110,51 +124,52 @@ export default function CourseRateTable({
     },
   ];
 
-	return (
-		<>
-			<DataTable<CourseRate>
-				data={data}
-				columns={columns}
-				isLoading={loading}
-				pagination={{
-					page,
-					limit,
-					total,
-					onPageChange: setPage,
-				}}
-				onSearchChange={(q) => {
-					setSearch(q);
-					setPage(1);
-				}}
-				onSortChange={(c, d) => {
-					setSortBy(c as keyof CourseRate);
-					setSortOrder(d);
-				}}
-				onView={onView}
-				onEdit={onEdit}
-				onDelete={(id) => {
-					setDeleteId(id ?? null);
-					setDeleteOpen(true);
-				}}
-				onFilterChange={handleFilterChange}
-				idKey="courseRateId"
-			/>
+  return (
+    <>
+      <DataTable<CourseRate>
+        data={data}
+        columns={columns}
+        isLoading={loading}
+        pagination={{
+          page,
+          limit,
+          total,
+          onPageChange: setPage,
+        }}
+        onSearchChange={(q) => {
+          setSearch(q);
+          setPage(1);
+        }}
+        onSortChange={(c, d) => {
+          setSortBy(c as keyof CourseRate);
+          setSortOrder(d);
+        }}
+        onView={onView}
+        onEdit={onEdit}
+        onDelete={(id) => {
+          setDeleteId(id ?? null);
+          setDeleteOpen(true);
+        }}
+        onFilterChange={handleFilterChange}
+        onExport={handleExport}
+        idKey="courseRateId"
+      />
 
-			<ConfirmDialog
-				isOpen={deleteOpen}
-				onClose={() => setDeleteOpen(false)}
-				title="Delete Rate?"
-				description="This will permanently delete this pricing configuration."
-				confirmText="Delete"
-				variant="destructive"
-				onConfirm={async () => {
-					if (!deleteId) return;
-					await deleteCourseRate(deleteId);
-					toast({ title: "Rate deleted" });
-					setDeleteOpen(false);
-					loadData();
-				}}
-			/>
-		</>
-	);
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete Rate?"
+        description="This will permanently delete this pricing configuration."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={async () => {
+          if (!deleteId) return;
+          await deleteCourseRate(deleteId);
+          toast({ title: "Rate deleted" });
+          setDeleteOpen(false);
+          loadData();
+        }}
+      />
+    </>
+  );
 }

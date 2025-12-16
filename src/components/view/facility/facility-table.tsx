@@ -128,6 +128,33 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
 
   const handlePageChange = (p: number) => setPage(p);
 
+  const handleExport = async (): Promise<Facility[]> => {
+    const res = await getFacilities({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder: sortOrder,
+      search: search || undefined,
+      facilityName: filters.facilityName as string | undefined,
+      facilityType: filters.facilityType as string | undefined,
+      areaSQFT: filters.areaSQFT as number | undefined,
+      academicCapacity: filters.capacity as number | undefined,
+    });
+
+    const rowsRaw = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.data)
+      ? (res.data as Facility[])
+      : [];
+    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
+      ...r,
+      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+    })) as Facility[];
+
+    return rows;
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -186,6 +213,8 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
         onEdit={(row) => onEdit?.(row)}
         onDelete={(id: number | undefined) => handleDelete(id)}
         idKey={"facilityId"}
+        exportFileName="Facility"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}

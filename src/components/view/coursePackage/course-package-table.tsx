@@ -66,6 +66,15 @@ export default function CoursePackageTable({
     { header: "Link Type", key: "linkType" },
   ];
 
+  const handleExport = async (): Promise<CoursePackage[]> => {
+    const res: Response<CoursePackage[]> = await getCoursePackages({
+      page: 1,
+      limit: total,
+    });
+
+    return Array.isArray(res?.data) ? res.data : [];
+  };
+
   return (
     <>
       <DataTable<CoursePackage>
@@ -85,6 +94,8 @@ export default function CoursePackageTable({
           setDeleteOpen(true);
         }}
         idKey="coursePackageId"
+        exportFileName="CoursePackage"
+        onExport={handleExport}
       />
 
       <ConfirmDialog

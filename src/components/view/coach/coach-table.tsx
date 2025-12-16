@@ -209,6 +209,33 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
 
   const handlePageChange = (p: number) => setPage(p);
 
+  const handleExport = async (): Promise<Coach[]> => {
+    const res = await getCoaches({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder: sortOrder,
+      search: search || undefined,
+      coachFirstName: filters.coachFirstName as string | undefined,
+      coachLastName: filters.coachLastName as string | undefined,
+      status: filters.status as string | undefined,
+    });
+
+    const rowsRaw = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.data)
+      ? (res?.data as Coach[])
+      : [];
+    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
+      ...r,
+      joinDate: r.joinDate ? new Date(r.joinDate) : undefined,
+      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+    })) as Coach[];
+
+    return rows;
+  };
+
   const handleDelete = async (id: number | undefined) => {
     if (!id) return;
     try {
@@ -406,6 +433,8 @@ export default function CoachTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey={"coachId"}
+        exportFileName="Coach"
+        onExport={handleExport}
       />
 
       <ConfirmDialog

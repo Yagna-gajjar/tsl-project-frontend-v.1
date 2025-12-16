@@ -53,6 +53,18 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
     loadData();
   }, [loadData, refreshKey]);
 
+  const handleExport = async (): Promise<Course[]> => {
+    const res: Response<Course[]> = await getCourses({
+      page: 1,
+      limit: total,
+      search: search || undefined,
+      sortBy,
+      sortOrder,
+    });
+
+    return Array.isArray(res?.data) ? res.data : [];
+  };
+
   const columns: Column<Course>[] = [
     { header: "Course Name", key: "courseName", sortable: true },
     { header: "Activity", key: "activityName" },
@@ -102,6 +114,8 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey="courseId"
+        exportFileName="Courses"
+        onExport={handleExport}
       />
 
       <ConfirmDialog

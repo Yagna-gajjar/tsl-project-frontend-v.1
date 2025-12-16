@@ -90,6 +90,31 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
 
   const handlePageChange = (p: number) => setPage(p);
 
+  const handleExport = async (): Promise<Area[]> => {
+    const res = await getAreas({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      search: search || undefined,
+      areaName: filters.areaName as string | undefined,
+      facilityId: filters.facilityId as number | undefined,
+    });
+
+    const rowsRaw = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.data)
+      ? (res.data as Area[])
+      : [];
+    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
+      ...r,
+      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+    })) as Area[];
+
+    return rows;
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -179,6 +204,8 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey={"areaId"}
+        exportFileName="Area"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}

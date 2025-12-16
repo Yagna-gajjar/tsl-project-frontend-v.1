@@ -203,6 +203,35 @@ export default function IdentityTypeTable({
   };
   const handlePageChange = (p: number) => setPage(p);
 
+  const handleExport = async (): Promise<IdentityType[]> => {
+    const params: IdentityTypesQuery = {
+      page: 1,
+      limit: total,
+      sortBy,
+      order: sortOrder,
+    };
+    if (search) params.search = search;
+    if (filters.familyTypeId !== undefined)
+      params.familyTypeId = Number(filters.familyTypeId);
+    if (filters.teamCategoryId !== undefined)
+      params.teamCategoryId = Number(filters.teamCategoryId);
+    if (filters.discount !== undefined)
+      params.discount = Number(filters.discount);
+    if (filters.identityTypeName !== undefined)
+      params.identityTypeName = String(filters.identityTypeName);
+
+    const res: Response<IdentityType[]> = await getIdentityTypes(params);
+
+    const rowsRaw = Array.isArray(res) ? res : res?.data ?? [];
+    const rows = (rowsRaw || []).map((r: IdentityType) => ({
+      ...r,
+      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+    })) as IdentityType[];
+
+    return rows;
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -252,6 +281,8 @@ export default function IdentityTypeTable({
         onEdit={(row) => onEdit?.(row)}
         onDelete={(id) => handleDelete(id)}
         idKey={"identityTypeId"}
+        exportFileName="IdentityType"
+        onExport={handleExport}
       />
 
       <ConfirmDialog

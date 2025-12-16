@@ -100,6 +100,42 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
     setPage(1);
   };
 
+  const handleExport = async (): Promise<Enrollment[]> => {
+    const res = await getEnrollments({
+      page: 1,
+      limit: data.length,
+      sortBy,
+      sortOrder: sortOrder,
+      search: search || undefined,
+      academyId: filters.academyId as number | undefined,
+      courseId: filters.courseId as number | undefined,
+      memberId: filters.memberId as number | undefined,
+      status: filters.status as string | undefined,
+      memberFirstName: filters.memberFirstName as string | undefined,
+      academyName: filters.academyName as string | undefined,
+      courseName: filters.courseName as string | undefined,
+      billingAmount: filters?.billingAmount as undefined | undefined,
+      billingRate: filters.billingRate as number | undefined,
+      cndn: filters.cndn as number | undefined,
+    });
+
+    const rowsRaw = Array.isArray(res)
+      ? res
+      : Array.isArray((res as Record<string, unknown>)?.data)
+      ? ((res as Record<string, unknown>).data as Enrollment[])
+      : [];
+    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
+      ...r,
+      enrollmentDate: r.enrollmentDate ? new Date(r.enrollmentDate) : undefined,
+      startDate: r.startDate ? new Date(r.startDate) : undefined,
+      endDate: r.endDate ? new Date(r.endDate) : undefined,
+      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+    })) as Enrollment[];
+
+    return rows;
+  };
+
   const columns: Column<Enrollment>[] = [
     {
       header: "Enrollment Date",
@@ -299,6 +335,8 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
         onSortChange={handleSortChange}
         onView={(row) => onView?.(row)}
         idKey={"enrollmentId"}
+        exportFileName="Enrollment"
+        onExport={handleExport}
       />
     </div>
   );

@@ -93,6 +93,31 @@ export default function TeamCategoryTable({
   };
 
   const handlePageChange = (p: number) => setPage(p);
+
+  const handleExport = async (): Promise<TeamCategory[]> => {
+    const res: Response<TeamCategory[]> = await getTeamCategories({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      search: search || undefined,
+      categoryName: String(filters.categoryName) ?? undefined,
+      shortName: String(filters.shortName) ?? undefined,
+      access: String(filters.access) ?? undefined,
+    });
+
+    const rowsRaw = res?.data ?? res ?? [];
+    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map(
+      (r: TeamCategory) => ({
+        ...r,
+        createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+        updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+      })
+    ) as TeamCategory[];
+
+    return rows;
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -114,10 +139,7 @@ export default function TeamCategoryTable({
           : true;
 
       if (!ok) {
-        throw new Error(
-          res?.message ||
-          "Failed to delete team category"
-        );
+        throw new Error(res?.message || "Failed to delete team category");
       }
 
       await loadData();
@@ -200,6 +222,8 @@ export default function TeamCategoryTable({
         onEdit={(row) => onEdit?.(row)}
         onDelete={(id) => handleDelete(id)}
         idKey={"teamCategoryId"}
+        exportFileName="TeamCategory"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}

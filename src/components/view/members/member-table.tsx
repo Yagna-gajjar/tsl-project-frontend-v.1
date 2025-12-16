@@ -298,6 +298,19 @@ export default function MemberTable({
     }
   };
 
+  const handleExport = async (): Promise<Member[]> => {
+    const res: Response<Member[]> = await getMembers({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      search: search || undefined,
+      ...filters,
+    });
+
+    return Array.isArray(res?.data) ? res.data : [];
+  };
+
   const columns: Column<Member>[] = [
     {
       key: "avatar",
@@ -416,6 +429,8 @@ export default function MemberTable({
         onEdit={(row) => onOpenForm(row)}
         onDelete={(id) => handleDelete(Number(id))}
         idKey="memberId"
+        exportFileName="Member"
+        onExport={handleExport}
       />
 
       {uploadModalOpen && (

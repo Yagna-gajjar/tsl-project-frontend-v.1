@@ -19,6 +19,7 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
 
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<
@@ -51,9 +52,11 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       })) as Payment[];
 
       setData(rows);
+      setTotal(rows.length);
     } catch (err) {
       console.error("Failed to fetch payments", err);
       setData([]);
+      setTotal(0);
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +89,25 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
   };
 
   const handlePageChange = (p: number) => setPage(p);
+
+  const handleExport = async (): Promise<Payment[]> => {
+    const res = await getPayments({
+      page: 1,
+      limit: total,
+      sortBy,
+      sorting: sortOrder,
+      search: search || undefined,
+      paymentType: filters.paymentType as string | undefined,
+      paymentMode: filters.paymentMode as string | undefined,
+    });
+
+    const rowsRaw = Array.isArray(res)
+      ? res
+      : Array.isArray((res as Record<string, unknown>)?.data)
+      ? ((res as Record<string, unknown>).data as Payment[])
+      : [];
+    return Array.isArray(rowsRaw) ? rowsRaw : [];
+  };
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -132,7 +154,9 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       filterType: null,
       render: (r) => (
-        <span className="text-sm">{Number(r.totalAmount)?.toFixed(2) ?? "-"}</span>
+        <span className="text-sm">
+          {Number(r.totalAmount)?.toFixed(2) ?? "-"}
+        </span>
       ),
     },
     {
@@ -150,7 +174,9 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       filterType: null,
       render: (r) => (
-        <span className="text-sm">{Number(r.remaining)?.toFixed(2) ?? "-"}</span>
+        <span className="text-sm">
+          {Number(r.remaining)?.toFixed(2) ?? "-"}
+        </span>
       ),
     },
     {
@@ -194,7 +220,7 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
@@ -207,6 +233,8 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey={"paymentId"}
+        exportFileName="Payment"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}

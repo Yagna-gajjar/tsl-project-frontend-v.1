@@ -233,6 +233,28 @@ export default function FamilyTable({
     setPage(newPage);
   };
 
+  const handleExport = async (): Promise<Family[]> => {
+    const res: Response<Family[]> = await getFamilies({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      familyName: filters.familyName,
+      profession: filters.profession,
+      email: filters.email,
+      status: filters.status,
+      identityTypeId: filters.identityTypeId,
+      familyTypeId: filters.familyTypeId,
+      teamCategoryId: filters.teamCategoryId,
+      preferredLanguage: filters.preferredLanguage,
+      createdFrom: filters.createdFrom,
+      createdTo: filters.createdTo,
+    });
+
+    const rows = (res && (res.data ?? res.rows ?? res)) as Family[] | undefined;
+    return Array.isArray(rows) ? rows : [];
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -286,6 +308,8 @@ export default function FamilyTable({
         onEdit={(row) => onOpenForm(row)}
         onDelete={(id) => handleDelete(id)}
         idKey={"familyId"}
+        exportFileName="Family"
+        onExport={handleExport}
       />
 
       <ConfirmDialog

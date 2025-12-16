@@ -67,6 +67,15 @@ export default function CourseShareTable({
     },
   ];
 
+  const handleExport = async (): Promise<CourseShare[]> => {
+    const res: Response<CourseShare[]> = await getCourseShares({
+      page: 1,
+      limit: total,
+    });
+
+    return Array.isArray(res?.data) ? res.data : [];
+  };
+
   return (
     <>
       <DataTable<CourseShare>
@@ -86,6 +95,8 @@ export default function CourseShareTable({
           setDeleteOpen(true);
         }}
         idKey="courseShareId"
+        exportFileName="CourseShare"
+        onExport={handleExport}
       />
 
       <ConfirmDialog
