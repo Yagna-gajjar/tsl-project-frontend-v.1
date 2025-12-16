@@ -91,6 +91,7 @@ const emptyRate: CourseRate = {
   unitRate: 0,
   introduceDate: format(new Date(), "yyyy-MM-dd"),
   changable: false,
+  daySelection: false,
   freezing: 0,
   createdAt: "",
   updatedAt: "",
@@ -1187,10 +1188,7 @@ const RatesList = ({
       index === rates.length - 1
     ) {
       e.preventDefault();
-      // Add new rate when Tab on last field of last row
-      // This will trigger the parent's addArrayItem function if called with a dummy value for a required field
-      onChange(rates.length, "unitRate", 0); // Trigger add via parent by changing an empty rate
-      // Attempt to focus the first field of the newly added row
+      onChange(rates.length, "unitRate", 0);
       setTimeout(() => {
         const nextInput = document.querySelector<HTMLInputElement>(
           `#rate_${rates.length}_membershipMasterId`
@@ -1204,14 +1202,15 @@ const RatesList = ({
 
   return (
     <div className="space-y-1">
-      <div className="grid grid-cols-[1fr,1fr,1fr,0.8fr,0.8fr,0.8fr,60px] gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
-        <div>Membership Type</div>
-        <div>Unit Rate*</div>
-        <div>Introduce Date*</div>
-        <div>Above Units</div>
-        <div>Freezing</div>
-        <div>Changeable</div>
-        <div></div>
+      <div className="grid grid-cols-[0.8fr,0.8fr,0.8fr,0.6fr,0.4fr,0.4fr,0.6fr,60px] items-center gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
+        <div className="text-center">Membership Type</div>
+        <div className="text-center">Unit Rate*</div>
+        <div className="text-center">Introduce Date*</div>
+        <div className="text-center">Above Units</div>
+        <div className="text-center">Day Selection</div>
+        <div className="text-center">Changeable</div>
+        <div className="text-center">Freezing</div>
+        <div className="text-center"></div>
       </div>
 
       <AnimatePresence mode="popLayout">
@@ -1223,9 +1222,9 @@ const RatesList = ({
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.15 }}
             layout
-            className="grid grid-cols-[1fr,1fr,1fr,0.8fr,0.8fr,0.8fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
+            className="grid grid-cols-[0.8fr,0.8fr,0.8fr,0.6fr,0.4fr,0.4fr,0.6fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
           >
-            <div>
+            <div className="">
               <Select
                 value={rate.membershipMasterId || 0}
                 onValueChange={(v) =>
@@ -1299,16 +1298,12 @@ const RatesList = ({
               />
             </div>
 
-            <div>
-              <Input
-                type="number"
-                className="h-8 text-xs"
-                id={`rate_${index}_freezing`}
-                value={rate.freezing}
-                onChange={(e) =>
-                  onChange(index, "freezing", Number(e.target.value))
+            <div className="flex items-center justify-center">
+              <Checkbox
+                checked={rate.daySelection}
+                onCheckedChange={(checked) =>
+                  onChange(index, "daySelection", Boolean(checked))
                 }
-                onKeyDown={(e) => handleKeyDown(e, index, true)}
               />
             </div>
 
@@ -1318,6 +1313,19 @@ const RatesList = ({
                 onCheckedChange={(checked) =>
                   onChange(index, "changable", Boolean(checked))
                 }
+              />
+            </div>
+            <div>
+              <Input
+                type="number"
+                disabled={!rate.changable}
+                className="h-8 text-xs"
+                id={`rate_${index}_freezing`}
+                value={rate.freezing}
+                onChange={(e) =>
+                  onChange(index, "freezing", Number(e.target.value))
+                }
+                onKeyDown={(e) => handleKeyDown(e, index, true)}
               />
             </div>
 
