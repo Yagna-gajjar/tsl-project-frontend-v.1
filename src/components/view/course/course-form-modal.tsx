@@ -1,9 +1,12 @@
+"use client";
+
+import type React from "react";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Trash2,
-  Calendar,
   DollarSign,
   Share2,
   Package,
@@ -313,6 +316,151 @@ export default function CourseFormModal({
     setGlobalError(null);
   }, [initialData, isOpen]);
 
+  const validate = useCallback((): Record<string, string> => {
+    const e: Record<string, string> = {};
+    const c = formState.course;
+
+    if (!c.courseName?.trim()) e.courseName = "Course name is required";
+    if (!c.activityName) e.activityName = "Activity is required";
+    if (!c.courseType) e.courseType = "Course type is required";
+    if (!c.introduceDate) e.introduceDate = "Introduce date is required";
+    if (c.sessionMinutes === undefined || c.sessionMinutes <= 0)
+      e.sessionMinutes = "Session minutes must be > 0";
+    if (c.noOfDaysInWeek === undefined || c.noOfDaysInWeek <= 0)
+      e.noOfDaysInWeek = "Days per week must be > 0";
+    if (c.minEnrollmentUnits === undefined || c.minEnrollmentUnits <= 0)
+      e.minEnrollmentUnits = "Min enrollment units must be > 0";
+    if (c.batchCapacity === undefined || c.batchCapacity <= 0)
+      e.batchCapacity = "Batch capacity must be > 0";
+    if (c.totalParallelBatches === undefined || c.totalParallelBatches <= 0)
+      e.totalParallelBatches = "Parallel batches must be > 0";
+    if (c.minAge === undefined || c.minAge <= 0)
+      e.minAge = "Min age must be > 0";
+    if (c.maxAge === undefined || c.maxAge <= 0)
+      e.maxAge = "Max age must be > 0";
+    if (c.minAge! > c.maxAge!)
+      e.maxAge = "Max age must be greater than min age";
+    if (
+      !c.availabilityPattern ||
+      (Array.isArray(c.availabilityPattern) &&
+        c.availabilityPattern.length === 0)
+    ) {
+      e.availabilityPattern = "Select at least one weekday";
+    }
+    if (!c.academyId || c.academyId <= 0) e.academyId = "Academy is required";
+    if (!c.classification) e.classification = "Classification is required";
+
+    if (formState.rates.length === 0)
+      e.rates = "At least one Course Rate must be added.";
+    if (formState.shares.length === 0)
+      e.shares = "At least one Course Share must be added.";
+
+    const totalShare = formState.shares.reduce(
+      (sum, s) => sum + (s.share || 0),
+      0
+    );
+    if (totalShare !== 100) {
+      e.sharesTotal = `Total share must equal 100% (current: ${totalShare}%)`;
+    }
+
+    formState.rates.forEach((r, i) => {
+      if (!r.unitRate) e[`rate_${i}_unitRate`] = "Rate required";
+      if (!r.introduceDate) e[`rate_${i}_introduceDate`] = "Date required";
+    });
+
+    formState.shares.forEach((s, i) => {
+      if (!s.academyId || s.academyId <= 0)
+        e[`share_${i}_academyId`] = "Academy required";
+      if (!s.shareType) e[`share_${i}_shareType`] = "Type required";
+      if (s.share === undefined || s.share < 0 || s.share > 100)
+        e[`share_${i}_share`] = "Share (0-100) required";
+    });
+
+    formState.packages.forEach((p, i) => {
+      if (!p.linkType) e[`package_${i}_linkType`] = "Link Type required";
+    });
+
+    return e;
+  }, [formState]);
+
+  const handleSubmit = useCallback(async () => {
+    setIsSubmitting(true);
+    setGlobalError(null);
+
+    const vErrors = validate();
+    if (Object.keys(vErrors).length) {
+      setErrors(vErrors);
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const availabilityCode = weekArrayToNumber(
+        formState.course.availabilityPattern as string[]
+      );
+      const updatedFormState = {
+        ...formState,
+        course: {
+          ...formState.course,
+          availabilityPattern: String(availabilityCode),
+          suspensionDate: formState.course.suspensionDate || null,
+        },
+      };
+
+      const res = await createFullCourse(updatedFormState);
+
+      if (res?.success) {
+        toast({
+          title: "success",
+          description: "course crerated successfully",
+          variant: "success",
+        });
+      } else {
+        throw "failed to make course";
+      }
+
+      onSave();
+      onClose();
+    } catch (err) {
+      setGlobalError(
+        err instanceof Error ? err.message : "An error occurred during save."
+      );
+      toast({
+        title: "Failed",
+        description: "failed to create course",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formState, validate, onSave, onClose]);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey && isOpen) {
+        // Don't submit if focused on textarea or if in a select dropdown
+        const target = e.target as HTMLElement;
+        if (
+          target.tagName === "TEXTAREA" ||
+          target.getAttribute("role") === "combobox" ||
+          target.closest('[role="dialog"][data-state="open"]')
+        ) {
+          return;
+        }
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleGlobalKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [isOpen, handleSubmit]);
+
   const handleCourseChange = (
     field: keyof Course,
     value: string | number | boolean | null | string[]
@@ -446,125 +594,6 @@ export default function CourseFormModal({
       [key]: p[key].filter((_, i) => i !== index),
     }));
   };
-
-  const validate = useCallback((): Record<string, string> => {
-    const e: Record<string, string> = {};
-    const c = formState.course;
-
-    if (!c.courseName?.trim()) e.courseName = "Course name is required";
-    if (!c.activityName) e.activityName = "Activity is required";
-    if (!c.courseType) e.courseType = "Course type is required";
-    if (!c.introduceDate) e.introduceDate = "Introduce date is required";
-    if (c.sessionMinutes === undefined || c.sessionMinutes <= 0)
-      e.sessionMinutes = "Session minutes must be > 0";
-    if (c.noOfDaysInWeek === undefined || c.noOfDaysInWeek <= 0)
-      e.noOfDaysInWeek = "Days per week must be > 0";
-    if (c.minEnrollmentUnits === undefined || c.minEnrollmentUnits <= 0)
-      e.minEnrollmentUnits = "Min enrollment units must be > 0";
-    if (c.batchCapacity === undefined || c.batchCapacity <= 0)
-      e.batchCapacity = "Batch capacity must be > 0";
-    if (c.totalParallelBatches === undefined || c.totalParallelBatches <= 0)
-      e.totalParallelBatches = "Parallel batches must be > 0";
-    if (c.minAge === undefined || c.minAge <= 0)
-      e.minAge = "Min age must be > 0";
-    if (c.maxAge === undefined || c.maxAge <= 0)
-      e.maxAge = "Max age must be > 0";
-    if (c.minAge! > c.maxAge!)
-      e.maxAge = "Max age must be greater than min age";
-    if (
-      !c.availabilityPattern ||
-      (Array.isArray(c.availabilityPattern) &&
-        c.availabilityPattern.length === 0)
-    ) {
-      e.availabilityPattern = "Select at least one weekday";
-    }
-    if (!c.academyId || c.academyId <= 0) e.academyId = "Academy is required";
-    if (!c.classification) e.classification = "Classification is required";
-
-    if (formState.rates.length === 0)
-      e.rates = "At least one Course Rate must be added.";
-    if (formState.shares.length === 0)
-      e.shares = "At least one Course Share must be added.";
-
-    const totalShare = formState.shares.reduce(
-      (sum, s) => sum + (s.share || 0),
-      0
-    );
-    if (totalShare !== 100) {
-      e.sharesTotal = `Total share must equal 100% (current: ${totalShare}%)`;
-    }
-
-    formState.rates.forEach((r, i) => {
-      if (!r.unitRate) e[`rate_${i}_unitRate`] = "Rate required";
-      if (!r.introduceDate) e[`rate_${i}_introduceDate`] = "Date required";
-    });
-
-    formState.shares.forEach((s, i) => {
-      if (!s.academyId || s.academyId <= 0)
-        e[`share_${i}_academyId`] = "Academy required";
-      if (!s.shareType) e[`share_${i}_shareType`] = "Type required";
-      if (s.share === undefined || s.share < 0 || s.share > 100)
-        e[`share_${i}_share`] = "Share (0-100) required";
-    });
-
-    formState.packages.forEach((p, i) => {
-      if (!p.linkType) e[`package_${i}_linkType`] = "Link Type required";
-    });
-
-    return e;
-  }, [formState]);
-
-  const handleSubmit = useCallback(async () => {
-    setIsSubmitting(true);
-    setGlobalError(null);
-
-    const vErrors = validate();
-    if (Object.keys(vErrors).length) {
-      setErrors(vErrors);
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const availabilityCode = weekArrayToNumber(
-        formState.course.availabilityPattern as string[]
-      );
-      const updatedFormState = {
-        ...formState,
-        course: {
-          ...formState.course,
-          availabilityPattern: String(availabilityCode),
-          suspensionDate: formState.course.suspensionDate || null,
-        },
-      };
-
-      const res = await createFullCourse(updatedFormState);
-
-      if (res?.success) {
-        toast({
-          title: "success",
-          description: "course crerated successfully",
-          variant: "success",
-        });
-      } else {
-        throw "failed to make course";
-      }
-
-      onSave();
-      onClose();
-    } catch (err) {
-      setGlobalError(
-        err instanceof Error ? err.message : "An error occurred during save."
-      );
-      toast({
-        title: "Failed",
-        description: "failed to create course",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [formState, validate, onSave, onClose]);
 
   const totalShare = useMemo(
     () => formState.shares.reduce((sum, s) => sum + (s.share || 0), 0),
@@ -1146,147 +1175,162 @@ const RatesList = ({
   onChange,
   onRemove,
 }: RatesListProps) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    index: number,
+    isLastField: boolean
+  ) => {
+    if (
+      e.key === "Tab" &&
+      !e.shiftKey &&
+      isLastField &&
+      index === rates.length - 1
+    ) {
+      e.preventDefault();
+      // Add new rate when Tab on last field of last row
+      // This will trigger the parent's addArrayItem function if called with a dummy value for a required field
+      onChange(rates.length, "unitRate", 0); // Trigger add via parent by changing an empty rate
+      // Attempt to focus the first field of the newly added row
+      setTimeout(() => {
+        const nextInput = document.querySelector<HTMLInputElement>(
+          `#rate_${rates.length}_membershipMasterId`
+        );
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }, 100);
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
+      <div className="grid grid-cols-[1fr,1fr,1fr,0.8fr,0.8fr,0.8fr,60px] gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
+        <div>Membership Type</div>
+        <div>Unit Rate*</div>
+        <div>Introduce Date*</div>
+        <div>Above Units</div>
+        <div>Freezing</div>
+        <div>Changeable</div>
+        <div></div>
+      </div>
+
       <AnimatePresence mode="popLayout">
         {rates.map((rate, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.15 }}
             layout
-            className="p-5 border border-primary/20 bg-primary/5 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            className="grid grid-cols-[1fr,1fr,1fr,0.8fr,0.8fr,0.8fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-semibold text-foreground flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-primary" />
-                Rate #{index + 1}
-              </h4>
+            <div>
+              <Select
+                value={rate.membershipMasterId || 0}
+                onValueChange={(v) =>
+                  onChange(index, "membershipMasterId", Number(v))
+                }
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {entityTypeOptions.map((e) => (
+                    <SelectItem
+                      key={e.membershipMasterId}
+                      value={e.membershipMasterId}
+                    >
+                      {e.membershipType}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors[`rate_${index}_entityType`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`rate_${index}_entityType`]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                id={`rate_${index}_unitRate`}
+                value={rate.unitRate}
+                onChange={(e) =>
+                  onChange(index, "unitRate", Number(e.target.value))
+                }
+              />
+              {errors[`rate_${index}_unitRate`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`rate_${index}_unitRate`]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Input
+                type="date"
+                className="h-8 text-xs"
+                id={`rate_${index}_introduceDate`}
+                value={rate.introduceDate}
+                onChange={(e) =>
+                  onChange(index, "introduceDate", e.target.value)
+                }
+              />
+              {errors[`rate_${index}_introduceDate`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`rate_${index}_introduceDate`]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                id={`rate_${index}_aboveUnits`}
+                value={rate.aboveUnits}
+                onChange={(e) =>
+                  onChange(index, "aboveUnits", Number(e.target.value))
+                }
+              />
+            </div>
+
+            <div>
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                id={`rate_${index}_freezing`}
+                value={rate.freezing}
+                onChange={(e) =>
+                  onChange(index, "freezing", Number(e.target.value))
+                }
+                onKeyDown={(e) => handleKeyDown(e, index, true)}
+              />
+            </div>
+
+            <div className="flex items-center justify-center">
+              <Checkbox
+                checked={rate.changable}
+                onCheckedChange={(checked) =>
+                  onChange(index, "changable", Boolean(checked))
+                }
+              />
+            </div>
+
+            <div className="flex justify-center">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(index)}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3 h-3" />
               </Button>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor={`rate_${index}_entityType`}>
-                  Membership Type
-                </Label>
-                <Select
-                  value={rate.membershipMasterId || 0}
-                  onValueChange={(v) =>
-                    onChange(index, "membershipMasterId", v)
-                  }
-                >
-                  <SelectTrigger id={`rate_${index}_membershipMasterId`}>
-                    <SelectValue placeholder="Select Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {entityTypeOptions.map((e) => (
-                      <SelectItem
-                        key={e.membershipMasterId}
-                        value={e.membershipMasterId}
-                      >
-                        {e.membershipType}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors[`rate_${index}_entityType`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`rate_${index}_entityType`]}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor={`rate_${index}_unitRate`}>Unit Rate*</Label>
-                <Input
-                  id={`rate_${index}_unitRate`}
-                  type="number"
-                  value={rate.unitRate}
-                  onChange={(e) =>
-                    onChange(index, "unitRate", Number(e.target.value))
-                  }
-                />
-                {errors[`rate_${index}_unitRate`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`rate_${index}_unitRate`]}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label
-                  htmlFor={`rate_${index}_introduceDate`}
-                  className="flex items-center gap-1"
-                >
-                  <Calendar className="w-3 h-3" />
-                  Introduce Date*
-                </Label>
-                <Input
-                  id={`rate_${index}_introduceDate`}
-                  type="date"
-                  value={rate.introduceDate}
-                  onChange={(e) =>
-                    onChange(index, "introduceDate", e.target.value)
-                  }
-                />
-                {errors[`rate_${index}_introduceDate`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`rate_${index}_introduceDate`]}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor={`rate_${index}_aboveUnits`}>Above Units</Label>
-                <Input
-                  id={`rate_${index}_aboveUnits`}
-                  type="number"
-                  value={rate.aboveUnits}
-                  onChange={(e) =>
-                    onChange(index, "aboveUnits", Number(e.target.value))
-                  }
-                />
-              </div>
-
-              <div>
-                <Label htmlFor={`rate_${index}_freezing`}>Freezing Value</Label>
-                <Input
-                  id={`rate_${index}_freezing`}
-                  type="number"
-                  value={rate.freezing}
-                  onChange={(e) =>
-                    onChange(index, "freezing", Number(e.target.value))
-                  }
-                />
-              </div>
-
-              <div className="flex items-end pb-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox
-                    id={`rate_${index}_changable`}
-                    checked={rate.changable}
-                    onCheckedChange={(checked) =>
-                      onChange(index, "changable", Boolean(checked))
-                    }
-                  />
-                  <Label
-                    htmlFor={`rate_${index}_changable`}
-                    className="cursor-pointer"
-                  >
-                    Changeable
-                  </Label>
-                </label>
-              </div>
             </div>
           </motion.div>
         ))}
@@ -1296,9 +1340,8 @@ const RatesList = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-12 text-muted-foreground"
+          className="text-center py-8 text-muted-foreground text-sm"
         >
-          <DollarSign className="w-12 h-12 mx-auto mb-3 opacity-20" />
           <p>No rates added yet. Click "Add Rate" to get started.</p>
         </motion.div>
       )}
@@ -1321,100 +1364,125 @@ const SharesList = ({
   onChange,
   onRemove,
 }: SharesListProps) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    index: number,
+    isLastField: boolean
+  ) => {
+    if (
+      e.key === "Tab" &&
+      !e.shiftKey &&
+      isLastField &&
+      index === shares.length - 1
+    ) {
+      e.preventDefault();
+      // Add new share when Tab on last field of last row
+      // This will trigger the parent's addArrayItem function if called with a dummy value for a required field
+      onChange(shares.length, "academyId", 0); // Trigger add via parent by changing an empty share
+      // Attempt to focus the first field of the newly added row
+      setTimeout(() => {
+        const nextInput = document.querySelector<HTMLInputElement>(
+          `#share_${shares.length}_academyId`
+        );
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }, 100);
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
+      <div className="grid grid-cols-[2fr,1.5fr,1fr,60px] gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
+        <div>Academy*</div>
+        <div>Share Type*</div>
+        <div>Share (%)*</div>
+        <div></div>
+      </div>
+
       <AnimatePresence mode="popLayout">
         {shares.map((share, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.15 }}
             layout
-            className="p-5 border border-primary/20 bg-primary/5 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            className="grid grid-cols-[2fr,1.5fr,1fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-semibold text-foreground flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-primary" />
-                {share.shareType || `Share #${index + 1}`}
-              </h4>
+            <div>
+              <Select
+                value={String(share.academyId || "")}
+                onValueChange={(v) => onChange(index, "academyId", Number(v))}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select Academy" />
+                </SelectTrigger>
+                <SelectContent>
+                  {academyOptions.map((a) => (
+                    <SelectItem key={a.academyId} value={String(a.academyId)}>
+                      {a.academyName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors[`share_${index}_academyId`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`share_${index}_academyId`]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Input
+                className="h-8 text-xs"
+                id={`share_${index}_shareType`}
+                value={share.shareType}
+                onChange={(e) => onChange(index, "shareType", e.target.value)}
+                disabled={share.shareType === "TSL Charges"}
+              />
+              {errors[`share_${index}_shareType`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`share_${index}_shareType`]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                className={cn(
+                  "h-8 text-xs",
+                  share.share > 0 && "font-semibold",
+                  share.shareType === "TSL Charges" && "text-primary"
+                )}
+                id={`share_${index}_share`}
+                value={share.share}
+                onChange={(e) =>
+                  onChange(index, "share", Number(e.target.value))
+                }
+                onKeyDown={(e) => handleKeyDown(e, index, true)}
+              />
+              {errors[`share_${index}_share`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`share_${index}_share`]}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-center">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(index)}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3 h-3" />
               </Button>
-            </div>
-
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-5">
-                <Label htmlFor={`share_${index}_academyId`}>Academy*</Label>
-                <Select
-                  value={String(share.academyId || "")}
-                  onValueChange={(v) => onChange(index, "academyId", Number(v))}
-                >
-                  <SelectTrigger id={`share_${index}_academyId`}>
-                    <SelectValue placeholder="Select Academy" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {academyOptions.map((a) => (
-                      <SelectItem key={a.academyId} value={String(a.academyId)}>
-                        {a.academyName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors[`share_${index}_academyId`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`share_${index}_academyId`]}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-4">
-                <Label htmlFor={`share_${index}_shareType`}>Share Type*</Label>
-                <Input
-                  id={`share_${index}_shareType`}
-                  value={share.shareType}
-                  onChange={(e) => onChange(index, "shareType", e.target.value)}
-                  disabled={share.shareType === "TSL Charges"}
-                  className={
-                    share.shareType === "TSL Charges" ? "bg-muted" : ""
-                  }
-                />
-                {errors[`share_${index}_shareType`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`share_${index}_shareType`]}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-3">
-                <Label htmlFor={`share_${index}_share`}>Share (%)*</Label>
-                <Input
-                  id={`share_${index}_share`}
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={share.share}
-                  onChange={(e) =>
-                    onChange(index, "share", Number(e.target.value))
-                  }
-                  className={cn(
-                    share.share > 0 && "font-semibold",
-                    share.shareType === "TSL Charges" && "text-primary"
-                  )}
-                />
-                {errors[`share_${index}_share`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`share_${index}_share`]}
-                  </p>
-                )}
-              </div>
             </div>
           </motion.div>
         ))}
@@ -1438,85 +1506,107 @@ const PackagesList = ({
   onChange,
   onRemove,
 }: PackagesListProps) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    index: number,
+    isLastField: boolean
+  ) => {
+    if (
+      e.key === "Tab" &&
+      !e.shiftKey &&
+      isLastField &&
+      index === packages.length - 1
+    ) {
+      e.preventDefault();
+      // Add new package when Tab on last field of last row
+      // This will trigger the parent's addArrayItem function if called with a dummy value for a required field
+      onChange(packages.length, "activityId", 0); // Trigger add via parent by changing an empty package
+      // Attempt to focus the first field of the newly added row
+      setTimeout(() => {
+        const nextInput = document.querySelector<HTMLInputElement>(
+          `#pkg_${packages.length}_activityId`
+        );
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }, 100);
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
+      <div className="grid grid-cols-[1fr,1fr,60px] gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
+        <div>Activity</div>
+        <div>Link Type*</div>
+        <div></div>
+      </div>
+
       <AnimatePresence mode="popLayout">
         {packages.map((pkg, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.15 }}
             layout
-            className="p-5 border border-primary/20 bg-primary/5 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            className="grid grid-cols-[1fr,1fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-semibold text-foreground flex items-center gap-2">
-                <Package className="w-4 h-4 text-primary" />
-                Package #{index + 1}
-              </h4>
+            <div>
+              <Select
+                value={String(pkg.activityId || "")}
+                onValueChange={(v) => onChange(index, "activityId", Number(v))}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select Activity" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activityOptions.map((a) => (
+                    <SelectItem key={a.activityId} value={String(a.activityId)}>
+                      {a.activityName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors[`package_${index}_activityId`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`package_${index}_activityId`]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Select
+                value={pkg.linkType}
+                onValueChange={(v) => {
+                  onChange(index, "linkType", v);
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select Link Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pre">Pre</SelectItem>
+                  <SelectItem value="post">Post</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors[`package_${index}_linkType`] && (
+                <p className="text-[10px] text-destructive mt-0.5">
+                  {errors[`package_${index}_linkType`]}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-center">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(index)}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3 h-3" />
               </Button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor={`pkg_${index}_activityId`}>Activity</Label>
-                <Select
-                  value={String(pkg.activityId || "")}
-                  onValueChange={(v) =>
-                    onChange(index, "activityId", Number(v))
-                  }
-                >
-                  <SelectTrigger id={`pkg_${index}_activityId`}>
-                    <SelectValue placeholder="Select Activity" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activityOptions.map((a) => (
-                      <SelectItem
-                        key={a.activityId}
-                        value={String(a.activityId)}
-                      >
-                        {a.activityName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors[`package_${index}_activityId`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`package_${index}_activityId`]}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor={`pkg_${index}_linkType`}>Link Type*</Label>
-                <Select
-                  value={pkg.linkType}
-                  onValueChange={(v) => onChange(index, "linkType", v)}
-                >
-                  <SelectTrigger id={`pkg_${index}_linkType`}>
-                    <SelectValue placeholder="Select Link Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pre">Pre</SelectItem>
-                    <SelectItem value="post">Post</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors[`package_${index}_linkType`] && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors[`package_${index}_linkType`]}
-                  </p>
-                )}
-              </div>
             </div>
           </motion.div>
         ))}
@@ -1526,9 +1616,8 @@ const PackagesList = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-12 text-muted-foreground"
+          className="text-center py-8 text-muted-foreground text-sm"
         >
-          <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
           <p>No packages added yet. Click "Add Package" to get started.</p>
         </motion.div>
       )}
