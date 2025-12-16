@@ -18,6 +18,7 @@ import {
   Filter,
   ArrowUpDown,
   CalendarIcon,
+  Download,
 } from "lucide-react";
 import type { Column } from "./types";
 import {
@@ -47,6 +48,8 @@ interface TableToolbarProps<T> {
   onFilterChange: (key: string, value: string | number | Date) => void;
   sortConfig: { key: string; direction: "asc" | "desc" } | null;
   onSortChange: (key: string, direction: "asc" | "desc") => void;
+  onExport?: () => void;
+  isExporting?: boolean;
 }
 
 export function TableToolbar<T>({
@@ -57,6 +60,8 @@ export function TableToolbar<T>({
   onFilterChange,
   sortConfig,
   onSortChange,
+  onExport,
+  isExporting,
 }: TableToolbarProps<T>) {
   const [tempFilters, setTempFilters] = useState<Record<string, string | number | Date | Object | boolean>>(() => ({
     ...filters,
@@ -106,7 +111,7 @@ export function TableToolbar<T>({
           <Input
             type="number"
             placeholder={`Filter ${column.header}...`}
-            value={value ?? ""}
+            value={value as any ?? ""}
             onChange={(e) => {
               const v = e.target.value;
               setTempFilters((p) => ({ ...p, [key]: v }));
@@ -187,15 +192,15 @@ export function TableToolbar<T>({
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {value ? format(value, "dd MMM yyyy") : <span>Pick a date</span>}
+                {value ? format(value as any, "dd MMM yyyy") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={value}
+                selected={value as any}
                 onSelect={(date) => {
-                  setTempFilters((p) => ({ ...p, [key]: date }));
+                  setTempFilters((p: any) => ({ ...p, [key]: date }));
                   debounceShowApply();
                 }}
                 initialFocus
@@ -207,7 +212,7 @@ export function TableToolbar<T>({
         return (
           <Input
             placeholder={`Filter ${column.header}...`}
-            value={value ?? ""}
+            value={value as any ?? ""}
             onChange={(e) => {
               const v = e.target.value;
               setTempFilters((p) => ({ ...p, [key]: v }));
@@ -245,7 +250,7 @@ export function TableToolbar<T>({
             : String(prev) !== String(v);
 
       if (changed) {
-        onFilterChange(k, v ?? "");
+        onFilterChange(k, v as any ?? "");
       }
     });
 
@@ -494,6 +499,33 @@ export function TableToolbar<T>({
               })}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {onExport && (
+            <Button
+              size="sm"
+              onClick={onExport}
+              disabled={isExporting}
+              className={cn(
+                "h-9 gap-2 text-white shadow-sm",
+                "bg-gradient-to-r from-blue-600 to-indigo-600",
+                "hover:from-blue-700 hover:to-indigo-700",
+                "disabled:from-blue-400 disabled:to-indigo-400"
+              )}
+            >
+              {isExporting ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
+                  Exporting…
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export
+                </>
+              )}
+            </Button>
+          )}
+
         </div>
       </div>
     </div>

@@ -47,8 +47,8 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray(res?.data)
-        ? (res.data as Academy[])
-        : [];
+          ? (res.data as Academy[])
+          : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -174,6 +174,20 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
     }
   };
 
+  const handleExport = async (): Promise<Academy[]> => {
+    const res: Response<Academy[]> = await getAcademies({
+      page: 1,
+      limit: total,
+      sortBy,
+      sortOrder,
+      search: search || undefined,
+      academyName: filters.academyName as string | undefined,
+      academyType: filters.academyType as string | undefined,
+    });
+
+    return Array.isArray(res?.data) ? res.data : [];
+  };
+
   return (
     <div>
       <DataTable<Academy>
@@ -196,6 +210,8 @@ export default function AcademyTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteOpen(true);
         }}
         idKey={"academyId"}
+        exportFileName="Academies"
+        onExport={handleExport}
       />
       <ConfirmDialog
         isOpen={deleteOpen}
