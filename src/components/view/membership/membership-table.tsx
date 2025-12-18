@@ -139,10 +139,10 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => `Rs. ${Number(r.totalIssueCharges ?? 0).toFixed(2)}`,
     },
     {
-      key: "totalSpendComm",
+      key: "totalSpentCa",
       header: "Spent",
       sortable: true,
-      render: (r) => `Rs. ${Number(r.totalSpendComm ?? 0).toFixed(2)}`,
+      render: (r) => `Rs. ${Number(r.totalSpentCa ?? 0).toFixed(2)}`,
     },
     {
       key: "status",

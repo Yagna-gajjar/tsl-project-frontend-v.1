@@ -96,32 +96,42 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 
 	const handleSave = async () => {
 		setLoading(true);
+		
 		try {
-			const payload = {
-				category: formData.category,
-				value: formData.value,
-				description: formData.description,
-				enumCase: formData.enumCase,
-				status: formData.status
-			};
+      const payload = {
+        category: formData.category,
+        value: formData.value,
+        description: formData.description,
+        enumCase: formData.enumCase,
+        status: formData.status,
+      };
 
-			let res: any;
-			if (isEdit && initialData?.id) {
-				res = await updateEnum(initialData.id, payload);
-			} else {
-				res = await createEnum(payload as any);
-			}
+      let res: any;
+      if (isEdit && initialData?.id) {
+        res = await updateEnum(initialData.id, payload);
+      } else {
+        console.log(payload);
+        res = await createEnum(payload as any);
+      }
 
-			if (res?.success) {
-				toast({ title: "Success", description: "Saved successfully", variant: "success" });
-				onSaved();
-				onClose();
-			}
-		} catch (e) {
-			toast({ title: "Error", description: "Failed to save", variant: "destructive" });
-		} finally {
-			setLoading(false);
-		}
+      if (res?.success) {
+        toast({
+          title: "Success",
+          description: "Saved successfully",
+          variant: "success",
+        });
+        onSaved();
+        onClose();
+      }
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to save",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
 	};
 
 	const handleDelete = async () => {

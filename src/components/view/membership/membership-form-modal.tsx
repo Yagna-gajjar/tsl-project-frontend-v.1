@@ -16,6 +16,8 @@ import type { Response } from "@/types/response";
 
 import { toast } from "@/hooks/use-toast";
 import { addDays, format } from "date-fns";
+import type { Entity } from "@/types/entity";
+import { getEntities } from "@/api/entity.api";
 
 type Props = {
   isOpen: boolean;
@@ -41,13 +43,15 @@ const empty: membership = {
 
   totalFBalance: 0,
   totalCBalance: 0,
-  totalSpendComm: 0,
+  totalSpentCa: 0,
 
-  minDepositeRequiredFBalance: 0,
-  minDepositeRequiredCBalance: 0,
+  caDepositPRRequiredFBalance: 0,
+  caDepositPRRequiredCBalance: 0,
   depositeReq: 0,
 
-  giftVouchers: 0,
+  entityId: 0,
+
+  vBalPrInCas: 0,
 
   status: "active",
 
@@ -81,6 +85,8 @@ export default function MembershipFormModal({
     MembershipMaster[]
   >([]);
   const [accountOptions, setAccountOptions] = useState<Account[]>([]);
+
+  const [entity, setEntity] = useState<Entity[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -142,6 +148,13 @@ export default function MembershipFormModal({
         });
         const accRows = accRes?.data as Account[];
         setAccountOptions(accRows);
+
+        const entRes: Response<Entity[]> = await getEntities({
+          page: 1,
+          limit: 1000,
+        });
+        const entRows = entRes?.data as Entity[];
+        setEntity(entRows);
       } catch {
         toast({
           title: "Error",
@@ -186,9 +199,9 @@ export default function MembershipFormModal({
     );
 
     /* 2. Applicable Discount */
-    const memberLimit = Number(selectedMembership.commDiscountPerMember);
+    const memberLimit = Number(selectedMembership.DisOnCaUptoMembers);
     const discountPerMember =
-      Number(selectedMembership.decreaseCommByPR ?? 0) / 100;
+      Number(selectedMembership.disOnCaPerMember ?? 0) / 100;
 
     let applicableMembers;
     if (members === 1) {
@@ -217,18 +230,18 @@ export default function MembershipFormModal({
     );
 
     /* 4. Total F Balance */
-    const feePaymentComm = (selectedMembership?.feePaymentComm as number) / 100;
-    const tfBal = Math.floor((intermediate * feePaymentComm) / 100) * 100;
+    const fBalPrInCa = (selectedMembership?.fBalPrInCa as number) / 100;
+    const tfBal = Math.floor((intermediate * fBalPrInCa) / 100) * 100;
 
     /* 5. Total C Balance */
-    const minCBalance = selectedMembership.minCBalance / 100;
-    const tcBal = Math.floor((intermediate * minCBalance) / 100) * 100;
+    const cBalPrInCa = selectedMembership.cBalPrInCa / 100;
+    const tcBal = Math.floor((intermediate * cBalPrInCa) / 100) * 100;
 
     /* 6. Total Spent */
     const totalSpent = tfBal + tcBal;
 
     /* 7. Min Deposit F Balance Required */
-    const minDepositRate = Number(selectedMembership.minDeposite ?? 0) / 100;
+    const minDepositRate = Number(selectedMembership.caDepositPR ?? 0) / 100;
     const minDepositFBalanceReq = Math.floor(tfBal * minDepositRate);
 
     /* 8. Min Deposit C Balance Required */
@@ -238,22 +251,22 @@ export default function MembershipFormModal({
     const depositReq = totalSpent + totalIssueCharges;
 
     /* 10. Gift Vouchers */
-    const giftVouchers =
+    const vBalPrInCas =
       Math.ceil(
-        ((totalSpent / 100) * Number(selectedMembership?.giftVoucher)) / 100
+        ((totalSpent / 100) * Number(selectedMembership?.vBalPrInCa)) / 100
       ) * 100;
 
     setValues((prev) => ({
       ...prev,
       totalIssueCharges: totalIssueCharges,
       appDiscount: appDisc,
-      totalSpendComm: totalSpent,
+      totalSpentCa: totalSpent,
       totalFBalance: tfBal,
       totalCBalance: tcBal,
-      minDepositeRequiredFBalance: minDepositFBalanceReq,
-      minDepositeRequiredCBalance: minDepositCBalanceReq,
+      caDepositPRRequiredFBalance: minDepositFBalanceReq,
+      caDepositPRRequiredCBalance: minDepositCBalanceReq,
       depositeReq: depositReq,
-      giftVouchers: giftVouchers,
+      vBalPrInCas: vBalPrInCas,
     }));
   }, [debouncedMembers, selectedMembership]);
   const onChange = (
@@ -371,13 +384,16 @@ export default function MembershipFormModal({
 
         totalFBalance: Number(values.totalFBalance),
         totalCBalance: Number(values.totalCBalance),
-        totalSpendComm: Number(values.totalSpendComm),
+        totalSpentCa: Number(values.totalSpentCa),
 
         minDepositeRequiredFBalance: Number(values.minDepositeRequiredFBalance),
         minDepositeRequiredCBalance: Number(values.minDepositeRequiredCBalance),
         depositeReq: Number(values.depositeReq),
 
-        giftVouchers: Number(values.giftVouchers),
+        QualifyingRecieptNo: Number(values.QualifyingRecieptNo),
+        refundPaymentNo: Number(values.refundPaymentNo),
+
+        vBalPrInCas: Number(values.vBalPrInCas),
         status: values.status,
       };
 
@@ -412,6 +428,16 @@ export default function MembershipFormModal({
       required: true,
     },
     {
+      name: "entityId",
+      label: "Entity Name",
+      type: "select",
+      options: entity.map((a) => ({
+        value: a.entityId,
+        label: a.entityName,
+      })),
+      required: true,
+    },
+    {
       name: "accountId",
       label: "Account",
       type: "select",
@@ -433,7 +459,7 @@ export default function MembershipFormModal({
     { name: "totalFBalance", label: "Total F Balance", type: "number" },
     { name: "totalCBalance", label: "Total Credit Balance", type: "number" },
     {
-      name: "totalSpendComm",
+      name: "totalSpentCa",
       label: "Total Spent",
       type: "number",
       disabled: true,
@@ -451,7 +477,15 @@ export default function MembershipFormModal({
     },
     { name: "depositeReq", label: "Deposit Required", type: "number" },
 
-    { name: "giftVouchers", label: "Gift Vouchers", type: "number" },
+    { name: "vBalPrInCas", label: "Gift Vouchers", type: "number" },
+
+    {
+      name: "QualifyingRecieptNo",
+      label: "Qualifying RecieptNo",
+      type: "number",
+    },
+
+    { name: "refundPaymentNo", label: "refund Payment Number", type: "number" },
 
     {
       name: "status",

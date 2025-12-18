@@ -56,7 +56,7 @@ const baseViewFields: FieldConfig<membership | any>[] = [
     render: toRs,
   },
   {
-    key: "totalSpendComm",
+    key: "totalSpentCa",
     label: "Total Spent",
     icon: CreditCard,
     render: toRs,

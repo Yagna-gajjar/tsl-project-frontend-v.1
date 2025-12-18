@@ -7,6 +7,8 @@ import { FormContent } from "@/components/form-modal/form-content";
 import { createActivity, updateActivity } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
+import type { Enums } from "@/types/enums";
+import { getEnumsByCategory } from "@/api/enums.api";
 
 type Props = {
   isOpen: boolean;
@@ -36,11 +38,20 @@ export function ActivityFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [activityType, setActivityType] = useState<Enums[]>([]);
 
   useEffect(() => {
     setValues({ ...empty, ...(initialData ?? {}) });
     setFieldErrors({});
     setError(null);
+
+    const fetchActivity = async () => {
+      const actRes = await getEnumsByCategory("ActivityType");
+      const acrRows = actRes?.data as Enums[];
+      setActivityType(acrRows);
+    };
+
+    fetchActivity();
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof Activity, val: string) => {
