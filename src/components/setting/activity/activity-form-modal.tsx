@@ -81,6 +81,9 @@ export function ActivityFormModal({
         activityType: String(
           values.activityType ?? ""
         ).trim() as Activity["activityType"],
+        cgst: Number(values.cgst),
+        sgst: Number(values.sgst),
+        srgst: Number(values.srgst),
         description: String(values.description ?? "").trim(),
       };
 
@@ -117,6 +120,24 @@ export function ActivityFormModal({
       name: "activityName",
       label: "Activity Name",
       type: "text",
+      required: true,
+    },
+    {
+      name: "cgst",
+      label: "CGST",
+      type: "Number",
+      required: true,
+    },
+    {
+      name: "sgst",
+      label: "SGST",
+      type: "Number",
+      required: true,
+    },
+    {
+      name: "srgst",
+      label: "SRGST",
+      type: "Number",
       required: true,
     },
     {
