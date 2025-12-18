@@ -7,6 +7,8 @@ import { FormContent } from "@/components/form-modal/form-content";
 import { createActivity, updateActivity } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
+import type { Enums } from "@/types/enums";
+import { getEnumsByCategory } from "@/api/enums.api";
 
 type Props = {
   isOpen: boolean;
@@ -36,11 +38,20 @@ export function ActivityFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [activityType, setActivityType] = useState<Enums[]>([]);
 
   useEffect(() => {
     setValues({ ...empty, ...(initialData ?? {}) });
     setFieldErrors({});
     setError(null);
+
+    const fetchActivity = async () => {
+      const actRes = await getEnumsByCategory("ActivityType");
+      const acrRows = actRes?.data as Enums[];
+      setActivityType(acrRows);
+    };
+
+    fetchActivity();
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof Activity, val: string) => {
@@ -81,6 +92,9 @@ export function ActivityFormModal({
         activityType: String(
           values.activityType ?? ""
         ).trim() as Activity["activityType"],
+        cgst: Number(values.cgst),
+        sgst: Number(values.sgst),
+        srgst: Number(values.srgst),
         description: String(values.description ?? "").trim(),
       };
 
@@ -117,6 +131,24 @@ export function ActivityFormModal({
       name: "activityName",
       label: "Activity Name",
       type: "text",
+      required: true,
+    },
+    {
+      name: "cgst",
+      label: "CGST",
+      type: "Number",
+      required: true,
+    },
+    {
+      name: "sgst",
+      label: "SGST",
+      type: "Number",
+      required: true,
+    },
+    {
+      name: "srgst",
+      label: "SRGST",
+      type: "Number",
       required: true,
     },
     {

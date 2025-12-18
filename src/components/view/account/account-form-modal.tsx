@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
+import { format } from "date-fns";
 
 type Props = {
   isOpen: boolean;
@@ -23,7 +24,7 @@ type Props = {
 
 const empty: Account = {
   accountId: 0,
-  regDate: new Date(),
+  regDate: format(new Date(), "yyyy-MM-dd"),
   suspensionDate: undefined,
   entityId: 0,
   defineEntity: "",
@@ -49,11 +50,12 @@ export default function AccountFormModal({
 }: Props) {
   const [values, setValues] = useState<Account>(empty);
   const [entities, setEntities] = useState<Entity[]>([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [adminInstructionOpt, setAdminInstructionOpt] = useState<Enums[]>([]);
-
+  const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
+  const [isEntityTypeLocked, setIsEntityTypeLocked] = useState(false);
 
   useEffect(() => {
     const loadEntities = async () => {
@@ -61,16 +63,46 @@ export default function AccountFormModal({
       setEntities(res.data ?? []);
     };
     loadEntities();
+
+    const fetchEntityTypeEnums = async () => {
+      const res: Response<Enums[]> = await getEnumsByCategory("EntityType");
+      setEntityTypeEnums(res.data ?? []);
+    };
+
+    fetchEntityTypeEnums();
   }, []);
 
   useEffect(() => {
-  
+    if (!values.entityId) {
+      // No entity selected → enable dropdown
+      setIsEntityTypeLocked(false);
+      setValues((p) => ({ ...p, entityType: "" }));
+      return;
+    }
+
+    const selectedEntity = entities.find(
+      (e) => e.entityId === Number(values.entityId)
+    );
+
+    if (selectedEntity?.entityType) {
+      setValues((p) => ({
+        ...p,
+        defineEntity: selectedEntity.entityType,
+      }));
+      setIsEntityTypeLocked(true);
+    } else {
+      // Safety fallback
+      setIsEntityTypeLocked(false);
+    }
+  }, [values.entityId, entities]);
+
+  useEffect(() => {
     if (initialData) {
       setValues({
         ...initialData,
-        regDate: formatDateForInput(initialData.regDate),
+        regDate: initialData.regDate,
         suspensionDate: initialData.suspensionDate
-          ? formatDateForInput(initialData.suspensionDate)
+          ? initialData.suspensionDate
           : undefined,
 
         line1: initialData.line1 || "",
@@ -92,15 +124,14 @@ export default function AccountFormModal({
       setAdminInstructionOpt(data);
     };
 
-    fetchAdminInstructionOpt()
-
+    fetchAdminInstructionOpt();
   }, [initialData, isOpen]);
-    
+
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
 
-    if (!values.entityId) {
-      errs.entityId = "Entity is required";
+    if (!values.defineEntity?.trim()) {
+      errs.defineEntity = "Entity Type is required";
     }
 
     if (!values.name?.trim()) {
@@ -120,7 +151,6 @@ export default function AccountFormModal({
 
     return errs;
   }, [values]);
-  
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
@@ -150,13 +180,16 @@ export default function AccountFormModal({
         country: values.country,
         pinCode: values.pinCode,
       };
-      
+
       if (initialData?.accountId) {
-        const res: Response<Account> = await updateAccount(initialData.accountId, payload);
+        const res: Response<Account> = await updateAccount(
+          initialData.accountId,
+          payload
+        );
         if (res.success) {
           toast({ title: "Account Created", variant: "success" });
         } else {
-          throw("Failed to created account")
+          throw "Failed to created account";
         }
       } else {
         const res: Response<Account> = await createAccount(payload as Account);
@@ -176,7 +209,6 @@ export default function AccountFormModal({
       setIsSubmitting(false);
     }
   }, [values, initialData, validate, onSave, onClose]);
-  
 
   const fields: FormFieldConfig<Account>[] = [
     {
@@ -189,7 +221,25 @@ export default function AccountFormModal({
       })),
       required: true,
     },
-    { name: "defineEntity", label: "Define Entity", type: "text" },
+    {
+      name: "defineEntity",
+      label: "Define Entity",
+      type: "select",
+      required: true,
+      disabled: isEntityTypeLocked,
+      options: isEntityTypeLocked
+        ? [
+            {
+              label: values.defineEntity,
+              value: values.defineEntity,
+            },
+          ]
+        : entityTypeEnums?.map((e) => ({
+            label: e.value,
+            value: e.value,
+          })),
+    },
+
     { name: "name", label: "Account Name", type: "text", required: true },
     { name: "contact", label: "Contact", type: "text" },
     {

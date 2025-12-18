@@ -83,11 +83,25 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
       ),
     },
     {
-      key: "activityType",
-      header: "Activity Type",
+      key: "cgct",
+      header: "CGST",
       sortable: true,
       filterType: "text",
-      render: (r) => r.activityType ?? "-",
+      render: (r) => r.cgst ?? "-",
+    },
+    {
+      key: "sgst",
+      header: "SGST",
+      sortable: true,
+      filterType: "text",
+      render: (r) => r.sgst ?? "-",
+    },
+    {
+      key: "srgst",
+      header: "SRGST",
+      sortable: true,
+      filterType: "text",
+      render: (r) => r.srgst ?? "-",
     },
     {
       key: "description",

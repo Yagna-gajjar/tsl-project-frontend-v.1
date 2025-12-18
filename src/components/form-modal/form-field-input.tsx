@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import type { ReactNode } from "react";
 import { X, ChevronDown } from "lucide-react";
+import { format } from "date-fns";
 
 type Option = { label: string; value: number | string | Date };
 
@@ -373,6 +374,7 @@ export default function FormFieldInput({
           />
         );
       case "date":
+        console.log(baseInputClass);
         return (
           <Popover>
             <PopoverTrigger asChild>

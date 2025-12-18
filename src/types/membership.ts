@@ -16,13 +16,17 @@ export interface membership {
 
   totalFBalance: number;
   totalCBalance: number;
-  totalSpendComm: number;
+  totalSpentCa: number;
 
   minDepositeRequiredFBalance: number;
   minDepositeRequiredCBalance: number;
   depositeReq: number;
 
-  giftVouchers: number;
+  entityId?: number;
+  QualifyingRecieptNo?: number;
+  refundPaymentNo?: number;
+
+  vBalPrInCas: number;
 
   status: "active" | "inactive" | "cancelled" | string;
 

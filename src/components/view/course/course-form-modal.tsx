@@ -90,7 +90,7 @@ const emptyRate: CourseRate = {
   aboveUnits: 0,
   unitRate: 0,
   introduceDate: format(new Date(), "yyyy-MM-dd"),
-  changable: false,
+  changable: 0,
   daySelection: false,
   freezing: 0,
   createdAt: "",
@@ -1145,6 +1145,7 @@ function CourseForm({
             <SelectItem value="Unit">Unit</SelectItem>
             <SelectItem value="Day">Day</SelectItem>
             <SelectItem value="Session">Session</SelectItem>
+            <SelectItem value="Session">School</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1308,10 +1309,13 @@ const RatesList = ({
             </div>
 
             <div className="flex items-center justify-center">
-              <Checkbox
-                checked={rate.changable}
-                onCheckedChange={(checked) =>
-                  onChange(index, "changable", Boolean(checked))
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                id={`rate_${index}_freezing`}
+                value={rate.changable}
+                onChange={(e) =>
+                  onChange(index, "changable", Number(e.target.value))
                 }
               />
             </div>

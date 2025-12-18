@@ -8,22 +8,22 @@ export interface Member {
   bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
   gender: "male" | "female" | "other";
   status: "active" | "inactive" | "block";
-  schoolName?: string;
+  personalStatusOrganization?: string;
   qualification?: string;
   idProofType?:
-  | "aadhar card"
-  | "pan card"
-  | "voter id"
-  | "passport"
-  | "driving license"
-  | "other";
+    | "aadhar card"
+    | "pan card"
+    | "voter id"
+    | "passport"
+    | "driving license"
+    | "other";
   idProofNumber?: string;
   contactNumber?: string;
   transportMode: "self drive" | "parents" | "van" | "walking" | "other";
   addressId: number;
   avatar?: string | null;
   remarks?: string;
-  personalStatus?: string;
+  maratialStatus?: string;
   createdAt?: Date;
   updatedAt?: Date;
 

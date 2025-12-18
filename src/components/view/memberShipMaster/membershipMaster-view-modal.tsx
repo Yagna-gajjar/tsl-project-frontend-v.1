@@ -65,19 +65,19 @@ const fields: FieldConfig<MembershipMaster>[] = [
     render: (v) => toRs(v as number),
   },
   {
-    key: "minDeposite",
+    key: "caDepositPR",
     label: "Min F Balance",
     icon: CreditCard,
     render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
   },
   {
-    key: "minCBalance",
+    key: "cBalPrInCa",
     label: "Min C Balance",
     icon: CreditCard,
     render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
   },
   {
-    key: "giftVoucher",
+    key: "vBalPrInCa",
     label: "Min V Balance (Gift Voucher)",
     icon: CreditCard,
     render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
@@ -119,7 +119,7 @@ const fields: FieldConfig<MembershipMaster>[] = [
     render: (v) => String(v ?? 0),
   },
   {
-    key: "cancellationCharges",
+    key: "cancelChargesPrOnCa",
     label: "Cancellation Charges",
     icon: CreditCard,
     render: (v) => toRs(v as number),

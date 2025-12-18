@@ -63,39 +63,35 @@ export default function AcademyExcelUpload({ isOpen, onClose, onSuccess }: Acade
 	}, []);
 
 	const handleCreateAcademy = useCallback(async (row: AcademyImportRow) => {
+    const payload: Partial<Academy> = {
+      academyName: row.academyName,
+      academyType: row.academyType,
+      email: row.email,
+      addressId: Number(row.addressId),
+      registrationDate: row.registrationDate
+        ? new Date(row.registrationDate).toISOString()
+        : new Date().toISOString(),
+      contactNumber: String(row.contactNumber),
+      instagram: row.instagram,
+      facebook: row.facebook,
+      youtube: row.youtube,
+      about: row.about,
 
-		const cleanValue = (val: any) => (val === 'null' || val === '' ? null : val);
+      share_main: Number(row.share_main),
+      share_tsl: Number(row.share_tsl),
+      share_tanna: Number(row.share_tanna),
+      share_expenses: Number(row.share_expenses),
 
-		const parseNum = (val: any) => {
-			const num = Number(val);
-			return isNaN(num) ? 0 : num;
-		};
+      panCard: row.panCard,
+      discountinuedDate: row.discountinuedDate
+        ? new Date(row.discountinuedDate).toISOString()
+        : undefined,
+    };
 
-		const payload: Partial<Academy | any> = {
-			academyName: row.academyName,
-			academyType: row.academyType,
-			email: row.email,
-			addressId: cleanValue(row.addressId),
-			registrationDate: row.registrationDate ? new Date(row.registrationDate).toISOString() : new Date().toISOString(),
-			contactNumber: String(row.contactNumber),
-			instagram: cleanValue(row.instagram),
-			facebook: cleanValue(row.facebook),
-			youtube: cleanValue(row.youtube),
-			about: cleanValue(row.about),
+    await createAcademy(payload as Academy);
 
-			share_main: parseNum(row.share_main),
-			share_tsl: parseNum(row.share_tsl),
-			share_tanna: parseNum(row.share_tanna),
-			share_expenses: parseNum(row.share_expenses),
-
-			panCard: cleanValue(row.panCard),
-			discountinuedDate: row.discountinuedDate ? new Date(row.discountinuedDate).toISOString() : undefined
-		};
-
-		await createAcademy(payload as any);
-
-		console.log(`✅ Imported: ${payload.academyName}`);
-	}, []);
+    console.log(`✅ Imported: ${payload.academyName}`);
+  }, []);
 
 	const handleUploadComplete = useCallback(() => {
 		onSuccess();

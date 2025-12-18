@@ -7,6 +7,7 @@ import {
   FileText,
   Calendar,
   Clock,
+  IndianRupee,
 } from "lucide-react";
 
 type Props = {
@@ -18,22 +19,25 @@ type Props = {
 const fields = [
   { key: "activityName", label: "Activity Name", icon: Type },
   { key: "activityType", label: "Activity Type", icon: Tag },
+  { key: "cgst", label: "CGST", icon: IndianRupee },
+  { key: "sgst", label: "SGST", icon: IndianRupee },
+  { key: "srgst", label: "SRGST", icon: IndianRupee },
   { key: "description", label: "Description", icon: FileText },
 
   {
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: Activity) => (v.createdAt ? new Date(v.createdAt).toLocaleString() : "-"),
+    render: (v: Activity) =>
+      v.createdAt ? new Date(v.createdAt).toLocaleString() : "-",
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: Activity) => (
-      v.updatedAt ? new Date(v.updatedAt).toLocaleString() : "-"
-    ),
-  }
+    render: (v: Activity) =>
+      v.updatedAt ? new Date(v.updatedAt).toLocaleString() : "-",
+  },
 ];
 
 export default function ActivityViewModal({ isOpen, onClose, item }: Props) {

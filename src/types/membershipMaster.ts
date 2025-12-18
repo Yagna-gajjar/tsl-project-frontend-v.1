@@ -12,16 +12,16 @@ export interface MembershipMaster {
   membershipDetails: string;
 
   durationDays: number;
-  minDeposite: number;
+  caDepositPR: number;
   minIssueCharge: number;
   perMemberRegCharge: number;
   commPerMonthPerMember?: number;
   memberLimit?: number;
-  commDiscountPerMember?: number;
-  decreaseCommByPR?: number;
-  feePaymentComm?: number;
-  minCBalance: number;
-  giftVoucher?: number;
+  DisOnCaUptoMembers?: number;
+  disOnCaPerMember?: number;
+  fBalPrInCa?: number;
+  cBalPrInCa: number;
+  vBalPrInCa?: number;
 
   bookingDiscount: number;
   graceDays: number;
@@ -32,8 +32,10 @@ export interface MembershipMaster {
   birthdayVenueUsage: number;
   anniversaryVenueUsage: number;
 
-  cancellationCharges: number;
+  cancelChargesPrOnCa: number;
 
   createdAt?: Date;
   updatedAt?: Date;
+
+  status?: string;
 }

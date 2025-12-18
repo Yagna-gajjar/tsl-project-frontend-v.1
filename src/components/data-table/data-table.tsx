@@ -249,7 +249,7 @@ export function DataTable<T>({
         <div className="hidden md:block rounded-md border shadow-sm bg-card">
           <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
             <Table>
-              <TableHeader className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+              <TableHeader className="bg-blue-50 dark:bg-blue-950/50">
                 <TableRow className="">
                   {displayColumns.map((col, idx) => (
                     <TableHead
