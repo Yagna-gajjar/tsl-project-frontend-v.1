@@ -23,9 +23,7 @@ import IdentityTypePage from "@/components/setting/identity-type/identity-type";
 import ActivityPage from "@/components/setting/activity/activity";
 import FacilityPage from "@/pages/facility";
 import AreaPage from "@/pages/area";
-import AcademyPage from "@/pages/academy";
 import CoachPage from "@/pages/coach";
-import AcademyCoachPage from "@/pages/academyCoach";
 import CoachSkillPage from "@/pages/coachSkill";
 import CoursePage from "@/pages/course";
 import DiscountPage from "./pages/discount";
@@ -117,12 +115,7 @@ export default function App() {
                   element={<FacilityAllotmentsPage />}
                 />
                 <Route path="/member" element={<MemberPage />} />
-                <Route path="/academy" element={<AcademyPage />} />
                 <Route path="/staff-management/coach" element={<CoachPage />} />
-                <Route
-                  path="/staff-management/academy-coaches"
-                  element={<AcademyCoachPage />}
-                />
                 <Route
                   path="/staff-management/coach-skills"
                   element={<CoachSkillPage />}
