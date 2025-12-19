@@ -255,7 +255,7 @@ export function DataTable<T>({
                     <TableHead
                       key={String(col.key)}
                       className={cn(
-                        "sticky p-4 font-semibold text-blue-900 dark:text-blue-100 border-r border-border",
+                        "sticky font-semibold text-blue-900 dark:text-blue-100 border-r border-border",
                         col.align === "center" && "text-center",
                         col.align === "right" && "text-right"
                       )}
@@ -281,7 +281,7 @@ export function DataTable<T>({
                     </TableHead>
                   ))}
                   {(onView || onEdit || onDelete) && (
-                    <TableHead className="w-[100px] text-right p-4 font-semibold text-blue-900 dark:text-blue-100">
+                    <TableHead className="w-[100px] text-right font-semibold text-blue-900 dark:text-blue-100">
                       Actions
                     </TableHead>
                   )}
@@ -312,7 +312,7 @@ export function DataTable<T>({
                           <TableCell
                             key={String(col.key)}
                             className={cn(
-                              "border-r border-border px-2 py-2 overflow-hidden",
+                              "border-r px-2 border-border overflow-hidden",
                               col.align === "center" && "text-center",
                               col.align === "right" && "text-right"
                             )}
@@ -337,7 +337,7 @@ export function DataTable<T>({
                         );
                       })}
                       {(onView || onEdit || onDelete) && (
-                        <TableCell className="text-right p-4">
+                        <TableCell className="text-right">
                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             {onView && (
                               <Button

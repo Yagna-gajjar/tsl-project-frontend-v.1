@@ -4,12 +4,12 @@ import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 import type { Entity } from "@/types/entity";
-import { createEntity, updateEntity } from "@/api/entity.api";
-import { formatDateForInput } from "@/lib/utils";
 import type { FormFieldConfig } from "@/components/form-modal/types";
-import { toast } from "@/hooks/use-toast";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
+import { format } from "date-fns";
+import { createEntity, updateEntity } from "@/api/entity.api";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -24,6 +24,21 @@ const empty: Entity = {
   entityType: "",
   legalStatus: "",
   legalName: "",
+  line1: "",
+  line2: "",
+  city: "",
+  pinCode: "",
+  state: "",
+  country: "",
+  financialDetails: "",
+  gstRegNo: 0,
+  otherFinancialDetails: "",
+  email: "",
+  officeContact: "",
+  sector: "",
+  entityNature: "",
+  entityRole: "",
+  status: "",
   regDate: new Date(),
   suspensionDate: undefined,
 } as Entity;
@@ -39,15 +54,18 @@ export default function EntityFormModal({
   const [entityTypeOpt, setEntityTypeOpt] = useState<Enums[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-
+  const [sectorEnum, setSectorEnum] = useState<Enums[]>([]);
+  const [entityNatureEnum, setEntityNatureEnum] = useState<Enums[]>([]);
+  const [entityRoleEnum, setEntityRoleEnum] = useState<Enums[]>([]);
+  const [entityStatusEnum, setEntityStatusEnum] = useState<Enums[]>([]);
 
   useEffect(() => {
     if (initialData) {
       setValues({
         ...initialData,
-        regDate: formatDateForInput(initialData.regDate),
+        regDate: format(initialData.regDate, "yyyy-MM-dd"),
         suspensionDate: initialData.suspensionDate
-          ? formatDateForInput(initialData.suspensionDate)
+          ? format(initialData.suspensionDate, "yyyy-MM-dd")
           : undefined,
       });
     } else {
@@ -55,12 +73,44 @@ export default function EntityFormModal({
     }
 
     const fetchEntityType = async () => {
-      const res = await getEnumsByCategory( "EntityType" );
+      const res = await getEnumsByCategory("EntityType");
       const data = res?.data as Enums[];
       setEntityTypeOpt(data);
     };
 
     fetchEntityType();
+
+    const fetchSector = async () => {
+      const res = await getEnumsByCategory("sector");
+      const data = res?.data as Enums[];
+      setSectorEnum(data);
+    };
+
+    fetchSector();
+
+    const fetchEntityNature = async () => {
+      const res = await getEnumsByCategory("EntityNature");
+      const data = res?.data as Enums[];
+      setEntityNatureEnum(data);
+    };
+
+    fetchEntityNature();
+
+    const fetchEntityRole = async () => {
+      const res = await getEnumsByCategory("EntityRole");
+      const data = res?.data as Enums[];
+      setEntityRoleEnum(data);
+    };
+
+    fetchEntityRole();
+
+    const fetchEntityStatus = async () => {
+      const res = await getEnumsByCategory("EntityStatus");
+      const data = res?.data as Enums[];
+      setEntityStatusEnum(data);
+    };
+
+    fetchEntityStatus();
   }, [initialData, isOpen]);
 
   const validate = useCallback(() => {
@@ -76,7 +126,6 @@ export default function EntityFormModal({
 
     return errs;
   }, [values]);
-  
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
@@ -97,11 +146,21 @@ export default function EntityFormModal({
           ? new Date(values.suspensionDate)
           : undefined,
       };
+      console.log(payload);
 
       if (initialData?.entityId) {
-        await updateEntity(initialData.entityId, payload);
+        const res: Response<Entity> = await updateEntity(
+          initialData.entityId,
+          payload
+        );
+        if (!res.success) {
+          throw "Failed to create entity";
+        }
       } else {
-        await createEntity(payload as any);
+        const res: Response<Entity> = await createEntity(payload as any);
+        if (!res.success) {
+          throw "Failed to create entity";
+        }
       }
 
       onSave();
@@ -112,10 +171,15 @@ export default function EntityFormModal({
       setIsSubmitting(false);
     }
   }, [values, initialData, validate, onSave, onClose]);
-  
 
   const fields: FormFieldConfig<Entity>[] = [
     { name: "entityName", label: "Entity Name", type: "text", required: true },
+    { name: "regDate", label: "Registration Date", type: "Date" },
+    {
+      name: "suspensionDate",
+      label: "Suspension Date",
+      type: "Date",
+    },
     {
       name: "entityType",
       label: "Entity Type",
@@ -128,11 +192,64 @@ export default function EntityFormModal({
     },
     { name: "legalStatus", label: "Legal Status", type: "text" },
     { name: "legalName", label: "Legal Name", type: "text" },
-    { name: "regDate", label: "Registration Date", type: "Date" },
+    { name: "line1", label: "Address Line 1", type: "text" },
+    { name: "line2", label: "Address Line 2", type: "text" },
+    { name: "city", label: "City", type: "text" },
+    { name: "state", label: "state", type: "text" },
+    { name: "pinCode", label: "pin Code", type: "text" },
+    { name: "country", label: "country", type: "text" },
+    { name: "financialDetails", label: "PAN", type: "text" },
+    { name: "gstRegNo", label: "GST Reg No", type: "text" },
     {
-      name: "suspensionDate",
-      label: "Suspension Date",
-      type: "Date",
+      name: "otherFinancialDetails",
+      label: "Other Financial Details",
+      type: "text",
+    },
+    {
+      name: "email",
+      label: "Email",
+      type: "text",
+    },
+    {
+      name: "officeContact",
+      label: "Office Contact",
+      type: "text",
+    },
+    {
+      name: "sector",
+      label: "sector",
+      type: "select",
+      options: sectorEnum?.map((s) => ({
+        value: s.value,
+        label: s.value + " (" + s.enumCase + ")",
+      })),
+    },
+    {
+      name: "entityNature",
+      label: "Entity Nature",
+      type: "select",
+      options: entityNatureEnum?.map((s) => ({
+        value: s.value,
+        label: s.value + " (" + s.enumCase + ")",
+      })),
+    },
+    {
+      name: "entityRole",
+      label: "Entity Role",
+      type: "select",
+      options: entityRoleEnum?.map((s) => ({
+        value: s.value,
+        label: s.value + " (" + s.enumCase + ")",
+      })),
+    },
+    {
+      name: "status",
+      label: "status",
+      type: "select",
+      options: entityStatusEnum?.map((s) => ({
+        value: s.value,
+        label: s.value + " (" + s.enumCase + ")",
+      })),
     },
   ];
 
@@ -141,7 +258,7 @@ export default function EntityFormModal({
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-        <div className="flex flex-col max-h-[90vh] overflow-hidden">
+        <div className="flex flex-col max-h-[70vh] overflow-hidden">
           <FormHeader
             title={initialData ? "Edit Entity" : "Add Entity"}
             onClose={onClose}

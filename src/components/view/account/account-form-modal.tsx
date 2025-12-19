@@ -7,7 +7,6 @@ import type { Account } from "@/types/account";
 import type { Entity } from "@/types/entity";
 import { createAccount, updateAccount } from "@/api/account.api";
 import { getEntities } from "@/api/entity.api";
-import { formatDateForInput } from "@/lib/utils";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
@@ -27,13 +26,12 @@ const empty: Account = {
   regDate: format(new Date(), "yyyy-MM-dd"),
   suspensionDate: undefined,
   entityId: 0,
-  defineEntity: "",
+  defineEntity: "Family",
   name: "",
   addressId: undefined,
   contact: "",
   proffesionalSector: "",
   adminInstruction: "",
-
   line1: "",
   line2: "",
   city: "",
@@ -54,29 +52,21 @@ export default function AccountFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [adminInstructionOpt, setAdminInstructionOpt] = useState<Enums[]>([]);
-  const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
-  const [isEntityTypeLocked, setIsEntityTypeLocked] = useState(false);
-
   useEffect(() => {
     const loadEntities = async () => {
       const res: Response<Entity[]> = await getEntities({ limit: 500 });
       setEntities(res.data ?? []);
     };
     loadEntities();
-
-    const fetchEntityTypeEnums = async () => {
-      const res: Response<Enums[]> = await getEnumsByCategory("EntityType");
-      setEntityTypeEnums(res.data ?? []);
-    };
-
-    fetchEntityTypeEnums();
   }, []);
 
   useEffect(() => {
-    if (!values.entityId) {
-      // No entity selected → enable dropdown
-      setIsEntityTypeLocked(false);
-      setValues((p) => ({ ...p, entityType: "" }));
+    console.log(values.entityId);
+    if (!values.entityId || values.entityId == 0) {
+      setValues((p) => ({
+        ...p,
+        defineEntity: "Family",
+      }));
       return;
     }
 
@@ -85,14 +75,17 @@ export default function AccountFormModal({
     );
 
     if (selectedEntity?.entityType) {
-      setValues((p) => ({
-        ...p,
-        defineEntity: selectedEntity.entityType,
-      }));
-      setIsEntityTypeLocked(true);
-    } else {
-      // Safety fallback
-      setIsEntityTypeLocked(false);
+      if (values.entityId === null) {
+        setValues((p) => ({
+          ...p,
+          defineEntity: "Family",
+        }));
+      } else {
+        setValues((p) => ({
+          ...p,
+          defineEntity: selectedEntity.entityType,
+        }));
+      }
     }
   }, [values.entityId, entities]);
 
@@ -101,10 +94,7 @@ export default function AccountFormModal({
       setValues({
         ...initialData,
         regDate: initialData.regDate,
-        suspensionDate: initialData.suspensionDate
-          ? initialData.suspensionDate
-          : undefined,
-
+        suspensionDate: initialData.suspensionDate || undefined,
         line1: initialData.line1 || "",
         line2: initialData.line2 || "",
         city: initialData.city || "",
@@ -120,8 +110,7 @@ export default function AccountFormModal({
       const res: Response<Enums[]> = await getEnumsByCategory(
         "adminInstruction"
       );
-      const data = res?.data as Enums[];
-      setAdminInstructionOpt(data);
+      setAdminInstructionOpt(res.data ?? []);
     };
 
     fetchAdminInstructionOpt();
@@ -130,24 +119,14 @@ export default function AccountFormModal({
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
 
-    if (!values.defineEntity?.trim()) {
+    if (!values.defineEntity?.trim())
       errs.defineEntity = "Entity Type is required";
-    }
-
-    if (!values.name?.trim()) {
-      errs.name = "Account name is required";
-    }
-
-    if (!values.line1 || String(values.line1).trim() === "")
-      errs.line1 = "Address Line 1 is required";
-    if (!values.city || String(values.city).trim() === "")
-      errs.city = "City is required";
-    if (!values.state || String(values.state).trim() === "")
-      errs.state = "State is required";
-    if (!values.country || String(values.country).trim() === "")
-      errs.country = "Country is required";
-    if (!values.pinCode || String(values.pinCode).trim() === "")
-      errs.pinCode = "Pin Code is required";
+    if (!values.name?.trim()) errs.name = "Account name is required";
+    if (!values.line1?.trim()) errs.line1 = "Address Line 1 is required";
+    if (!values.city?.trim()) errs.city = "City is required";
+    if (!values.state?.trim()) errs.state = "State is required";
+    if (!values.country?.trim()) errs.country = "Country is required";
+    if (!values.pinCode?.trim()) errs.pinCode = "Pin Code is required";
 
     return errs;
   }, [values]);
@@ -157,7 +136,7 @@ export default function AccountFormModal({
     setError(null);
 
     const errs = validate();
-    if (Object.keys(errs).length > 0) {
+    if (Object.keys(errs).length) {
       setFieldErrors(errs);
       setIsSubmitting(false);
       return;
@@ -172,33 +151,18 @@ export default function AccountFormModal({
           : undefined,
         entityId: Number(values.entityId),
         addressId: values.addressId ? Number(values.addressId) : undefined,
-
-        line1: values.line1,
-        line2: values.line2,
-        city: values.city,
-        state: values.state,
-        country: values.country,
-        pinCode: values.pinCode,
       };
 
-      if (initialData?.accountId) {
-        const res: Response<Account> = await updateAccount(
-          initialData.accountId,
-          payload
-        );
-        if (res.success) {
-          toast({ title: "Account Created", variant: "success" });
-        } else {
-          throw "Failed to created account";
-        }
-      } else {
-        const res: Response<Account> = await createAccount(payload as Account);
-        if (res.success) {
-          toast({ title: "Account updated", variant: "success" });
-        } else {
-          throw "Failed to updated account";
-        }
-      }
+      const res: Response<Account> = initialData?.accountId
+        ? await updateAccount(initialData.accountId, payload)
+        : await createAccount(payload as Account);
+
+      if (!res.success) throw new Error();
+
+      toast({
+        title: initialData ? "Account updated" : "Account created",
+        variant: "success",
+      });
 
       onSave();
       onClose();
@@ -215,48 +179,33 @@ export default function AccountFormModal({
       name: "entityId",
       label: "Entity",
       type: "select",
-      options: entities.map((e) => ({
-        label: e.entityName,
-        value: e.entityId,
-      })),
-      required: true,
+      options: [
+        { label: "None", value: Number(0) },
+        ...entities.map((e) => ({
+          label: e.entityName,
+          value: e.entityId,
+        })),
+      ],
     },
     {
       name: "defineEntity",
       label: "Define Entity",
-      type: "select",
+      type: "text",
+      disabled: true,
       required: true,
-      disabled: isEntityTypeLocked,
-      options: isEntityTypeLocked
-        ? [
-            {
-              label: values.defineEntity,
-              value: values.defineEntity,
-            },
-          ]
-        : entityTypeEnums?.map((e) => ({
-            label: e.value,
-            value: e.value,
-          })),
     },
-
     { name: "name", label: "Account Name", type: "text", required: true },
     { name: "contact", label: "Contact", type: "text" },
-    {
-      name: "proffesionalSector",
-      label: "Professional Sector",
-      type: "text",
-    },
+    { name: "proffesionalSector", label: "Professional Sector", type: "text" },
     {
       name: "adminInstruction",
       label: "Admin Instruction",
       type: "select",
       options: adminInstructionOpt.map((a) => ({
-        value: a.value,
         label: a.value,
+        value: a.value,
       })),
     },
-
     { name: "line1", label: "Address Line 1", type: "text", required: true },
     { name: "line2", label: "Address Line 2", type: "text" },
     { name: "city", label: "City", type: "text", required: true },
@@ -264,11 +213,7 @@ export default function AccountFormModal({
     { name: "country", label: "Country", type: "text", required: true },
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
     { name: "regDate", label: "Registration Date", type: "Date" },
-    {
-      name: "suspensionDate",
-      label: "Suspension Date",
-      type: "Date",
-    },
+    { name: "suspensionDate", label: "Suspension Date", type: "Date" },
   ];
 
   if (!isOpen) return null;
@@ -290,17 +235,16 @@ export default function AccountFormModal({
             isSubmitting={isSubmitting}
             onChange={(f, v) => {
               setValues((p) => ({ ...p, [f]: v }));
-              setFieldErrors((prev) => {
-                if (!prev[f as string]) return prev;
-                const copy = { ...prev };
-                delete copy[f as string];
-                return copy;
+              setFieldErrors((e) => {
+                if (!e[f as string]) return e;
+                const c = { ...e };
+                delete c[f as string];
+                return c;
               });
             }}
             layout="grid"
           />
         </div>
-
         <FormFooter
           onClose={onClose}
           onSubmit={handleSubmit}

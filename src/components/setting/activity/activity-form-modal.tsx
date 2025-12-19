@@ -9,6 +9,7 @@ import type { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -147,7 +148,7 @@ export function ActivityFormModal({
     },
     {
       name: "srgst",
-      label: "SRGST",
+      label: "Service Accounting Code",
       type: "Number",
       required: true,
     },
@@ -173,7 +174,7 @@ export function ActivityFormModal({
       label: "Description",
       type: "textarea",
     },
-  ] as any;
+  ];
 
   return (
     <Dialog

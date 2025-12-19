@@ -55,8 +55,7 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
       })) as Activity[];
 
       setData(rows);
-      const totalCount = rows.length ?? 0;
-      setTotal(totalCount);
+      setTotal(res?.pagination.total);
     } catch (err) {
       console.error("Failed to fetch activities", err);
       setData([]);
