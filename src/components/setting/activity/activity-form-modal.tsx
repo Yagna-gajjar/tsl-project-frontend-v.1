@@ -157,17 +157,10 @@ export function ActivityFormModal({
       label: "Activity Type",
       type: "select",
       required: true,
-      options: [
-        { label: "Art", value: "art" },
-        { label: "Child Development", value: "child development" },
-        { label: "Fitness", value: "fitness" },
-        { label: "Performing Arts", value: "performing arts" },
-        { label: "Recreation", value: "recreation" },
-        { label: "Self Development", value: "self development" },
-        { label: "Services", value: "services" },
-        { label: "Sports", value: "sports" },
-        { label: "TSL Charges", value: "tsl charges" },
-      ],
+      options: activityType?.map((a) => ({
+        value: a.value,
+        label: a.value,
+      })),
     },
     {
       name: "description",

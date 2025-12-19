@@ -17,7 +17,7 @@ type Props = {
 export default function AccountMemberTable({ onView, onEdit }: Props) {
   const [data, setData] = useState<AccountMember[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1); 
 
   const load = useCallback(async () => {
     setLoading(true);
