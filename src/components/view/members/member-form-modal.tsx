@@ -13,6 +13,7 @@ import { createAccountMember } from "@/api/accountMember.api";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
+import { format } from "date-fns";
 
 type Props = {
   isOpen: boolean;
@@ -54,6 +55,8 @@ export function MemberFormModal({
 }: Props) {
   const isEdit = Boolean(initialData && initialData.memberId);
   const empty: MemberFormState = {
+    regDate: initialData?.regDate ?? format(new Date(), "yyy-MM-dd"),
+    suspensionDate: initialData?.suspensionDate ?? "",
     memberFirstName: initialData?.memberFirstName ?? "",
     memberMiddleName: initialData?.memberMiddleName ?? "",
     memberLastName: initialData?.memberLastName ?? "",
@@ -61,15 +64,19 @@ export function MemberFormModal({
     email: initialData?.email ?? "",
     bloodGroup: initialData?.bloodGroup,
     gender: initialData?.gender ?? "male",
-    status: initialData?.status ?? "active",
+    personalStatus: initialData?.personalStatus ?? "",
     personalStatusOrganization: initialData?.personalStatusOrganization ?? "",
-    maratialStatus: initialData?.maratialStatus ?? "",
+    personalStatusSector: initialData?.personalStatusSector ?? "",
+    mothertongue: initialData?.mothertongue ?? "",
     qualification: initialData?.qualification ?? "",
     idProofType: initialData?.idProofType,
     idProofNumber: initialData?.idProofNumber ?? "",
     contactNumber: initialData?.contactNumber ?? "",
     transportMode: initialData?.transportMode ?? "self drive",
     remarks: initialData?.remarks ?? "",
+    maratialStatus: initialData?.maratialStatus ?? "",
+    admitInstruction: initialData?.admitInstruction,
+    status: initialData?.status ?? "active",
     line1: initialData?.line1 ?? "",
     line2: initialData?.line2 ?? "",
     city: initialData?.city ?? "",
@@ -84,6 +91,15 @@ export function MemberFormModal({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [defaultAccount, setDefaultAccount] = useState<number>(0);
+  const [personalStatusEnum, setPersonalStatusEnum] = useState<Enums[]>([]);
+  const [personalStatusSectorEnum, setPersonalStatusSectorEnum] = useState<
+    Enums[]
+  >([]);
+  const [qualificationEnum, setqualificationEnum] = useState<Enums[]>([]);
+  const [idProofTypeEnum, setIdProofTypeEnum] = useState<Enums[]>([]);
+  const [transportModeEnum, setTransportModeEnum] = useState<Enums[]>([]);
+  const [maratialStatusEnum, setMaratialStatusEnum] = useState<Enums[]>([]);
+  const [admitInstructionEnum, setAdmitInstructionEnum] = useState<Enums[]>([]);
   useEffect(() => {
     setValues({
       ...empty,
@@ -126,6 +142,26 @@ export function MemberFormModal({
     };
 
     fetchDefaultAccount();
+
+    const fetchEnumByCategory = async (
+      category: string,
+      setState: React.Dispatch<React.SetStateAction<Enums[]>>
+    ) => {
+      try {
+        const res: Response<Enums[]> = await getEnumsByCategory(category);
+        setState(res?.data ?? []);
+      } catch (err) {
+        console.error(`Failed to fetch enum: ${category}`, err);
+        setState([]);
+      }
+    };
+    fetchEnumByCategory("personalStatus", setPersonalStatusEnum);
+    fetchEnumByCategory("personalStatusSector", setPersonalStatusSectorEnum);
+    fetchEnumByCategory("qualification", setqualificationEnum);
+    fetchEnumByCategory("idProofType", setIdProofTypeEnum);
+    fetchEnumByCategory("TransportMode", setTransportModeEnum);
+    fetchEnumByCategory("maratialStatus", setMaratialStatusEnum);
+    fetchEnumByCategory("adminInstruction", setAdmitInstructionEnum);
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof MemberFormState, val: any) => {
@@ -140,6 +176,18 @@ export function MemberFormModal({
 
   const fields: FormFieldConfig<Member>[] = [
     {
+      name: "regDate",
+      label: "Registration Date",
+      type: "Date",
+      required: true,
+    },
+    {
+      name: "suspensionDate",
+      label: "suspension Date",
+      type: "Date",
+      required: true,
+    },
+    {
       name: "memberFirstName",
       label: "First Name",
       type: "text",
@@ -149,7 +197,6 @@ export function MemberFormModal({
     { name: "memberLastName", label: "Last Name", type: "text" },
     { name: "dob", label: "DOB", type: "Date", required: true },
     { name: "email", label: "Email", type: "text" },
-    { name: "contactNumber", label: "Contact Number", type: "text" },
     {
       name: "bloodGroup",
       label: "Blood Group",
@@ -177,47 +224,89 @@ export function MemberFormModal({
       required: true,
     },
     {
-      name: "transportMode",
-      label: "Transport Mode",
+      name: "personalStatus",
+      label: "Personal Status",
       type: "select",
-      options: [
-        { label: "Self drive", value: "self drive" },
-        { label: "Parents", value: "parents" },
-        { label: "Van", value: "van" },
-        { label: "Walking", value: "walking" },
-        { label: "Other", value: "other" },
-      ],
-      required: true,
+      options: personalStatusEnum?.map((p) => ({
+        value: p.value,
+        label: p.value,
+      })),
     },
     {
       name: "personalStatusOrganization",
       label: "Personal Status Organization",
       type: "text",
     },
-    { name: "maratialStatus", label: "maratialStatus", type: "text" },
-    { name: "qualification", label: "Qualification", type: "text" },
+    {
+      name: "personalStatusSector",
+      label: "Personal Status Sector",
+      type: "select",
+      options: personalStatusSectorEnum?.map((p) => ({
+        value: p.value,
+        label: p.value,
+      })),
+    },
+    {
+      name: "mothertongue",
+      label: "Mothertongue",
+      type: "text",
+      required: true,
+    },
+    {
+      name: "qualification",
+      label: "Qualification",
+      type: "select",
+      options: qualificationEnum?.map((q) => ({
+        value: q.value,
+        label: q.value,
+      })),
+      required: true,
+    },
     {
       name: "idProofType",
       label: "ID Proof Type",
       type: "select",
-      options: [
-        { label: "Aadhar Card", value: "aadhar card" },
-        { label: "PAN Card", value: "pan card" },
-        { label: "Voter ID", value: "voter id" },
-        { label: "Passport", value: "passport" },
-        { label: "Driving License", value: "driving license" },
-        { label: "Other", value: "other" },
-      ],
+      options: idProofTypeEnum?.map((i) => ({
+        value: i.value,
+        label: i.value,
+      })),
     },
     { name: "idProofNumber", label: "ID Proof Number", type: "text" },
-
+    { name: "contactNumber", label: "Contact Number", type: "text" },
+    {
+      name: "transportMode",
+      label: "Transport Mode",
+      type: "select",
+      options: transportModeEnum?.map((t) => ({
+        value: t.value,
+        label: t.value,
+      })),
+      required: true,
+    },
     { name: "line1", label: "Address Line 1", type: "text", required: true },
     { name: "line2", label: "Address Line 2", type: "text" },
     { name: "city", label: "City", type: "text", required: true },
     { name: "state", label: "State", type: "text", required: true },
     { name: "country", label: "Country", type: "text", required: true },
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
-
+    {
+      name: "maratialStatus",
+      label: "maratialStatus",
+      type: "select",
+      options: maratialStatusEnum?.map((m) => ({
+        value: m.value,
+        label: m.value,
+      })),
+    },
+    {
+      name: "admitInstruction",
+      label: "Admit Instruction",
+      type: "select",
+      options: admitInstructionEnum?.map((m) => ({
+        value: m.value,
+        label: m.value,
+      })),
+    },
     {
       name: "status",
       label: "Status",
@@ -271,22 +360,25 @@ export function MemberFormModal({
     }
 
     try {
-      const payload: any = {
+      const payload: Member = {
+        regDate: new Date(values.regDate) as Date,
+        suspensionDate: values.suspensionDate ?? "",
         memberFirstName: String(values.memberFirstName ?? "").trim(),
         memberMiddleName: values.memberMiddleName ?? "",
         memberLastName: values.memberLastName ?? "",
         dob: values.dob ? new Date(values.dob) : undefined,
         email: emailVal || undefined,
         bloodGroup: values.bloodGroup,
-        gender: values.gender,
-        status: values.status,
+        gender: values.gender ?? "",
+        personalStatus: values.personalStatus ?? "",
         personalStatusOrganization: values.personalStatusOrganization ?? "",
-        maratialStatus: values.maratialStatus ?? "",
+        personalStatusSector: values.personalStatusSector ?? "",
+        mothertongue: values.mothertongue ?? "",
         qualification: values.qualification ?? "",
         idProofType: values.idProofType,
         idProofNumber: values.idProofNumber ?? "",
         contactNumber: contactVal || undefined,
-        transportMode: values.transportMode,
+        transportMode: values.transportMode ?? "",
         remarks: values.remarks ?? "",
         line1: values.line1,
         line2: values.line2,
@@ -294,7 +386,12 @@ export function MemberFormModal({
         state: values.state,
         country: values.country,
         pinCode: values.pinCode,
+        maratialStatus: values.maratialStatus ?? "",
+        admitInstruction: values.admitInstruction ?? "",
+        status: values.status ?? "active",
       };
+      console.log(payload);
+
       let res: Response<Member>;
       if (isEdit && initialData?.memberId) {
         res = await updateMember(Number(initialData.memberId), payload);
