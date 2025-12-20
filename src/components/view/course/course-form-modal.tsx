@@ -430,7 +430,7 @@ export default function CourseFormModal({
       );
       console.log(selectedActivity);
 
-      setFormState((p) => ({
+      setFormState((p: any) => ({
         ...p,
         course: {
           ...p.course,
@@ -590,25 +590,25 @@ export default function CourseFormModal({
                 errors.rates ||
                 errors.shares ||
                 errors.sharesTotal) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="mx-6 mt-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-start gap-3"
-                  >
-                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-medium">
-                        {globalError || "Please review errors below"}
-                      </p>
-                      {errors.rates && <p className="mt-1">• {errors.rates}</p>}
-                      {errors.shares && <p className="mt-1">• {errors.shares}</p>}
-                      {errors.sharesTotal && (
-                        <p className="mt-1">• {errors.sharesTotal}</p>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mx-6 mt-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-start gap-3"
+                >
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      {globalError || "Please review errors below"}
+                    </p>
+                    {errors.rates && <p className="mt-1">• {errors.rates}</p>}
+                    {errors.shares && <p className="mt-1">• {errors.shares}</p>}
+                    {errors.sharesTotal && (
+                      <p className="mt-1">• {errors.sharesTotal}</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
 
             <Tabs

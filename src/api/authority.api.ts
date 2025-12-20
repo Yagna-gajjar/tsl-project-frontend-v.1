@@ -50,6 +50,15 @@ export function getAuthorityById(id: number): Promise<Response<Authority>> {
   return request<Response<Authority>>(`${AUTHORITY_BASE}/${id}`);
 }
 
+
+export function getAuthorityByEntity(
+  id: number
+): Promise<Response<Authority[]>> {
+  return request<Response<Authority[]>>(
+    `${AUTHORITY_BASE}/authorityByEntity/${id}`
+  );
+}
+
 export function createAuthority(
   payload: Omit<Authority, "authorityId">
 ): Promise<Response<Authority>> {

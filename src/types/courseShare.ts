@@ -4,9 +4,9 @@ export interface CourseShare {
   entityId: number;
   roleInCourse?: string;
   share: number;
-  cgst: number;
-  sgst: number;
-  approvalAuthorityId: number;
+  cgst?: number;
+  sgst?: number;
+  approvalAuthorityId?: number;
   createdAt: Date;
   updatedAt: Date;
 
