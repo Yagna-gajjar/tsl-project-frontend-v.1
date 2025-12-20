@@ -5,7 +5,13 @@ import { getAuthorities, deleteAuthority } from "@/api/authority.api";
 import type { Authority } from "@/types/authority";
 import { toast } from "@/hooks/use-toast";
 
-export default function AuthorityTable({ onView, onEdit, refreshKey }: any) {
+type Props = {
+  onView?: (row: Authority) => void;
+  onEdit?: (row: Authority) => void;
+  refreshKey?: number;
+};
+
+export default function AuthorityTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Authority[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);

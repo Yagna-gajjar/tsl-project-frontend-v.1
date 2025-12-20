@@ -42,14 +42,13 @@ export default function AuthorityFormModal({
   const [members, setMembers] = useState<AccountMember[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
 
-  /* -------------------- init -------------------- */
   useEffect(() => {
     if (initialData) setValues(initialData);
     else setValues(empty);
   }, [initialData, isOpen]);
 
-  /* -------------------- load accounts -------------------- */
   useEffect(() => {
     const loadAccounts = async () => {
       try {
@@ -62,7 +61,6 @@ export default function AuthorityFormModal({
     loadAccounts();
   }, []);
 
-  /* -------------------- load members by account -------------------- */
   useEffect(() => {
     const loadMembers = async () => {
       if (!values.accountId) {
@@ -85,7 +83,6 @@ export default function AuthorityFormModal({
     loadMembers();
   }, [values.accountId]);
 
-  /* -------------------- validation -------------------- */
   const validate = useCallback(() => {
     const e: Record<string, string> = {};
     if (!values.accountId) e.accountId = "Account required";
@@ -94,9 +91,9 @@ export default function AuthorityFormModal({
     return e;
   }, [values]);
 
-  /* -------------------- submit -------------------- */
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setError(null);
     const errs = validate();
 
     if (Object.keys(errs).length) {
@@ -129,13 +126,13 @@ export default function AuthorityFormModal({
       onSave();
       onClose();
     } catch {
+      setError("Failed to save account");
       toast({ title: "Save failed", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* -------------------- fields -------------------- */
   const fields: FormFieldConfig<Authority>[] = [
     {
       name: "accountId",
@@ -176,6 +173,9 @@ export default function AuthorityFormModal({
             fields={fields}
             values={values}
             errors={fieldErrors}
+            error={error}
+            loading={false}
+            isSubmitting={isSubmitting}
             onChange={(f, v) => {
               setValues((p) => ({
                 ...p,

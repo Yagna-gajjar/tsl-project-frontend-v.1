@@ -5,4 +5,8 @@ export interface Authority {
   linkingDate?: Date | string;
   dlinkDate?: Date | string;
   level?: number;
+
+  memberFirstName: string;
+  memberLastName: string;
+  accountName: string;
 }

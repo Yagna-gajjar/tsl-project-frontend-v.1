@@ -566,13 +566,11 @@ const AttendanceSheet = () => {
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
-                                                        ${
-                                                          selectedIds.has(
-                                                            getMemberId(member)
-                                                          )
-                                                            ? "bg-blue-100 text-blue-700"
-                                                            : "bg-gray-100 text-gray-500"
-                                                        }`}
+                                ${
+                                  selectedIds.has(getMemberId(member))
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-gray-100 text-gray-500"
+                                }`}
                           >
                             {member.memberName?.charAt(0) || "U"}
                           </div>
