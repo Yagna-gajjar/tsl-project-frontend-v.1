@@ -5,54 +5,44 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 
-// Types
 import type { Member } from "@/types/member";
 import type { Batch } from "@/types/batch";
 
-// Sections
 import TopSection from "./top-section";
 import BottomSection from "./bottom-section";
 import { Button } from "@/components/ui/button";
 
 export default function EnrollmentDashboard() {
-  // --- 1. Hierarchical Selection State ---
   const [selectedEntityId, setSelectedEntityId] = useState<number | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [selectedMembershipId, setSelectedMembershipId] = useState<number | null>(null);
 
-  // --- 2. Other UI State ---
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [memberDetails, setMemberDetails] = useState<Member | null>(null);
   const [middleview, setMiddleview] = useState<any>(null);
 
-  const [topHeight, setTopHeight] = useState(100); // Default shared view
+  const [topHeight, setTopHeight] = useState(100);
   const [isDragging, setIsDragging] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // --- 3. Handlers with Reset Logic ---
   const handleEntitySelect = (id: number | null) => {
     setSelectedEntityId(id);
-    setSelectedAccountId(null); // Reset children
-    setSelectedMemberId(null);
-    setSelectedMembershipId(null);
-    setMemberDetails(null);
+    setSelectedAccountId(null);
   };
 
   const handleAccountSelect = (id: number | null) => {
     setSelectedAccountId(id);
-    setSelectedMemberId(null); // Reset children
     setSelectedMembershipId(null);
-    setMemberDetails(null);
   };
 
   const handleMemberSelect = (id: number | null) => {
     setSelectedMemberId(id);
-    // Note: Membership might change independently or stay, 
-    // usually we keep it or reset based on business rules
+    setSelectedAccountId(null);
+    setSelectedMembershipId(null);
+    setMemberDetails(null);
   };
 
-  // --- 4. Layout Logic ---
   const handleMouseDown = () => {
     if (!isExpanded) {
       setIsDragging(true);
@@ -73,7 +63,6 @@ export default function EnrollmentDashboard() {
     if (newHeight > 20 && newHeight < 85) setTopHeight(newHeight);
   };
 
-  // --- 5. Data Fetching (History/Middleview) ---
   useEffect(() => {
     const fetchMemberHistory = async () => {
       if (!selectedMemberId) {
@@ -115,7 +104,6 @@ export default function EnrollmentDashboard() {
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
         <TopSection
-          // IDs
           selectedEntityId={selectedEntityId}
           selectedAccountId={selectedAccountId}
           selectedMemberId={selectedMemberId}
@@ -123,7 +111,6 @@ export default function EnrollmentDashboard() {
           selectedBatch={selectedBatch ? (selectedBatch as any).id : null}
           memberDetails={memberDetails}
 
-          // Selection Handlers
           onEntitySelect={handleEntitySelect}
           onAccountSelect={handleAccountSelect}
           onMemberSelect={handleMemberSelect}
