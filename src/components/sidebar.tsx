@@ -9,7 +9,6 @@ import {
   CreditCard,
   ChevronLeft,
   ChevronRight,
-  HomeIcon,
   User,
   User2,
   ChevronDown,
@@ -25,7 +24,6 @@ import {
   Crown,
   Share2,
   Package,
-  Gavel,
   CircleSlash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
