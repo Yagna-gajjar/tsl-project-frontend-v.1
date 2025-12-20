@@ -1,23 +1,58 @@
+"use client";
+
 import type React from "react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GripVertical, ChevronUp, ChevronDown } from "lucide-react";
+
+// Types
 import type { Member } from "@/types/member";
+import type { Batch } from "@/types/batch";
+
+// Sections
 import TopSection from "./top-section";
 import BottomSection from "./bottom-section";
 import { Button } from "@/components/ui/button";
 
 export default function EnrollmentDashboard() {
-  const [selectedFamilyId, setSelectedFamilyId] = useState<number | null>(null);
+  // --- 1. Hierarchical Selection State ---
+  const [selectedEntityId, setSelectedEntityId] = useState<number | null>(null);
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
-  const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
-  const [memberDetails, setMemberDetails] = useState<Member | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [middleview, setMiddleview] = useState<any>();
+  const [selectedMembershipId, setSelectedMembershipId] = useState<number | null>(null);
 
-  const [topHeight, setTopHeight] = useState(100);
+  // --- 2. Other UI State ---
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+  const [memberDetails, setMemberDetails] = useState<Member | null>(null);
+  const [middleview, setMiddleview] = useState<any>(null);
+
+  const [topHeight, setTopHeight] = useState(100); // Default shared view
+  const [isDragging, setIsDragging] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // --- 3. Handlers with Reset Logic ---
+  const handleEntitySelect = (id: number | null) => {
+    setSelectedEntityId(id);
+    setSelectedAccountId(null); // Reset children
+    setSelectedMemberId(null);
+    setSelectedMembershipId(null);
+    setMemberDetails(null);
+  };
+
+  const handleAccountSelect = (id: number | null) => {
+    setSelectedAccountId(id);
+    setSelectedMemberId(null); // Reset children
+    setSelectedMembershipId(null);
+    setMemberDetails(null);
+  };
+
+  const handleMemberSelect = (id: number | null) => {
+    setSelectedMemberId(id);
+    // Note: Membership might change independently or stay, 
+    // usually we keep it or reset based on business rules
+  };
+
+  // --- 4. Layout Logic ---
   const handleMouseDown = () => {
     if (!isExpanded) {
       setIsDragging(true);
@@ -32,99 +67,102 @@ export default function EnrollmentDashboard() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || isExpanded) return;
-
     const container = e.currentTarget as HTMLDivElement;
     const rect = container.getBoundingClientRect();
     const newHeight = ((e.clientY - rect.top) / rect.height) * 100;
-
-    if (newHeight > 30 && newHeight < 80) {
-      setTopHeight(newHeight);
-    }
+    if (newHeight > 20 && newHeight < 85) setTopHeight(newHeight);
   };
 
-  const toggleExpand = () => {
-    setIsExpanded((prev) => !prev);
-  };
-
+  // --- 5. Data Fetching (History/Middleview) ---
   useEffect(() => {
-    const fetchMember = async () => {
+    const fetchMemberHistory = async () => {
+      if (!selectedMemberId) {
+        setMiddleview(null);
+        return;
+      }
       try {
-        if (!selectedMemberId) {
-          setMiddleview(null);
-          return;
-        }
         const res = await fetch(
-          `http://localhost:9705/api/enrollment/${selectedMemberId}/middleview`,
-          { method: "GET" }
+          `http://localhost:9705/api/enrollment/${selectedMemberId}/middleview`
         );
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+        if (!res.ok) throw new Error("Failed to fetch history");
         const data = await res.json();
         setMiddleview(data.data);
       } catch (err) {
-        console.error("Got error fetching middleview:", err);
+        console.error("History fetch error:", err);
         setMiddleview(null);
       }
     };
-    fetchMember();
+    fetchMemberHistory();
   }, [selectedMemberId]);
 
   const topSectionTargetHeight = isExpanded ? "0%" : `${topHeight}%`;
   const bottomSectionTargetHeight = isExpanded ? "100%" : `${100 - topHeight}%`;
 
-  const ExpandCollapseIcon = isExpanded ? ChevronDown : ChevronUp;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
       className="h-[87vh] flex flex-col overflow-hidden bg-background"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
+      {/* TOP SECTION: Dropdowns & Configuration */}
       <motion.div
-        className="flex overflow-hidden"
+        className="flex overflow-hidden border-b border-border/40"
         style={{ height: topSectionTargetHeight }}
         animate={{ height: topSectionTargetHeight }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
         <TopSection
-          selectedFamilyId={selectedFamilyId}
+          // IDs
+          selectedEntityId={selectedEntityId}
+          selectedAccountId={selectedAccountId}
           selectedMemberId={selectedMemberId}
-          selectedBatch={selectedBatch}
+          selectedMembershipId={selectedMembershipId}
+          selectedBatch={selectedBatch ? (selectedBatch as any).id : null}
           memberDetails={memberDetails}
-          onFamilySelect={setSelectedFamilyId}
-          onMemberSelect={setSelectedMemberId}
-          onBatchSelect={setSelectedBatch as any}
+
+          // Selection Handlers
+          onEntitySelect={handleEntitySelect}
+          onAccountSelect={handleAccountSelect}
+          onMemberSelect={handleMemberSelect}
+          onMembershipSelect={setSelectedMembershipId}
+          onBatchSelect={setSelectedBatch}
           onMemberDetailsChange={setMemberDetails}
         />
       </motion.div>
 
+      {/* RESIZE HANDLE / TOGGLE BAR */}
       <div
-        className="relative w-full h-10 flex justify-center items-center cursor-ns-resize z-30 "
+        className="relative w-full h-10 flex justify-center items-center cursor-ns-resize z-30 group"
         onMouseDown={handleMouseDown}
       >
         <Button
-          onClick={toggleExpand}
-          className="py-1 h-8 px-4 rounded-full z-20 flex items-center gap-2"
-          variant="default"
-          title={isExpanded ? "Collapse View" : "View Full History/Details"}
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="py-1 h-8 px-4 rounded-full z-20 flex items-center gap-2 shadow-lg transition-transform active:scale-95"
+          variant="secondary"
         >
-          <span className="text-sm font-semibold">
-            {!isExpanded ? "View" : "hide"} History
+          <span className="text-xs font-bold tracking-tight">
+            {isExpanded ? "SHOW CONTROLS" : "VIEW HISTORY"}
           </span>
-          <ExpandCollapseIcon className="h-4 w-4 transition-transform duration-300" />
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronUp className="h-4 w-4" />
+          )}
         </Button>
 
-        <div className="absolute w-full h-1 bg-border/50 transition-colors duration-200 hover:bg-border top-1/2 -translate-y-1/2 -z-10 md:block hidden" />
-        <GripVertical className="absolute h-4 w-4 text-muted-foreground/70 -z-10 md:block hidden" />
+        {/* Decorative Line */}
+        <div className="absolute w-full h-[1px] bg-border group-hover:bg-primary/40 transition-colors top-1/2 -translate-y-1/2 -z-10" />
+        <div className="absolute bg-background px-2 top-1/2 -translate-y-1/2 md:block hidden">
+          <GripVertical className="h-4 w-4 text-muted-foreground/40" />
+        </div>
       </div>
 
+      {/* BOTTOM SECTION: Historical Data / Tables */}
       <motion.div
-        className="z-40 overflow-hidden"
+        className="z-40 overflow-hidden bg-muted/5"
         style={{ height: bottomSectionTargetHeight }}
         animate={{ height: bottomSectionTargetHeight }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
