@@ -1,14 +1,15 @@
 export interface Batch {
   batchId: number;
   batchType: string;
-  entityId: number;
-  activityId: number;
-  membershipIdshipId: number;
-  courseId: number;
   batchName: string;
+  courseId: number;
+  activityId: number;
+  membershipId: number;
+  entityId: number;
   introduceDate: Date | string;
   suspendedDate: Date | string;
   maxCapacity: number;
+  sessionMinutes: number;
   startTime: Date | string;
   endTime: Date | string;
   daysPerWeek: number;
