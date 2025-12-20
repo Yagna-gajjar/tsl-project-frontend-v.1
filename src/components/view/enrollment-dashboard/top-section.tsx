@@ -1,151 +1,207 @@
 "use client";
 
 import type React from "react";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { GripVertical, User2 } from "lucide-react";
+import { GripVertical, User2, Loader2 } from "lucide-react";
+
 import type { Member } from "@/types/member";
 import type { Batch } from "@/types/batch";
+import type { membership } from "@/types/membership";
+import type { Entity } from "@/types/entity";
+import type { Account } from "@/types/account";
+import type { Response } from "@/types/response";
+
 import FamilyPanel from "./panel/family-panel";
 import EnrollmentPanel from "./panel/enrollment-panel";
 import BatchDetailsPanel from "./panel/batch-details-panel";
 
+import { getEntities } from "@/api/entity.api";
+import { getMemberById } from "@/api/member.api";
+import { getMemberships } from "@/api/membership.api";
+import { toast } from "@/hooks/use-toast";
+import { getAccounts } from "@/api/account.api";
+import { getAccountMembers } from "@/api/accountMember.api";
+import type { AccountMember } from "@/types/accountMember";
+
 interface TopSectionProps {
-  selectedFamilyId: number | null;
+  selectedEntityId: number | null;
+  selectedAccountId: number | null;
   selectedMemberId: number | null;
+  selectedMembershipId: number | null;
   selectedBatch: number | null;
   memberDetails: Member | null;
-  onFamilySelect: (id: number | null) => void;
+
+  onEntitySelect: (id: number | null) => void;
+  onAccountSelect: (id: number | null) => void;
   onMemberSelect: (id: number | null) => void;
+  onMembershipSelect: (id: number | null) => void;
   onBatchSelect: (batch: Batch | null) => void;
   onMemberDetailsChange: (member: Member | null) => void;
 }
 
 export default function TopSection({
-  selectedFamilyId,
+  selectedEntityId,
+  selectedAccountId,
   selectedMemberId,
+  selectedMembershipId,
   selectedBatch,
   memberDetails,
-  onFamilySelect,
+  onEntitySelect,
+  onAccountSelect,
   onMemberSelect,
+  onMembershipSelect,
   onBatchSelect,
   onMemberDetailsChange,
 }: TopSectionProps) {
-  const [leftWidth, setLeftWidth] = useState(25);
-  const [rightWidth, setRightWidth] = useState(25);
+  const [leftWidth, setLeftWidth] = useState(27);
+  const [rightWidth, setRightWidth] = useState(27);
   const [isDraggingLeft, setIsDraggingLeft] = useState(false);
   const [isDraggingRight, setIsDraggingRight] = useState(false);
-
   const [isLargeScreen, setIsLargeScreen] = useState(true);
 
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [members, setMembers] = useState<AccountMember[]>([]);
+  const [memberships, setMemberships] = useState<membership[]>([]);
+  const [loadingMember, setLoadingMember] = useState(false);
+
   const middleWidth = 100 - leftWidth - rightWidth;
-  const memberName =
-    memberDetails?.memberFirstName && memberDetails?.memberLastName
-      ? `${memberDetails.memberFirstName} ${memberDetails.memberLastName}`
-      : "";
+  const memberName = memberDetails
+    ? `${memberDetails.memberFirstName ?? ""} ${memberDetails.memberLastName ?? ""}`.trim()
+    : "";
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
-    const updateScreenSize = () => {
-      setLeftWidth(27);
-      setRightWidth(27);
-      setIsLargeScreen(mediaQuery.matches);
-    };
-
-    updateScreenSize();
-
-    mediaQuery.addEventListener("change", updateScreenSize);
-
-    return () => mediaQuery.removeEventListener("change", updateScreenSize);
+    getEntities().then((res: Response<Entity[]>) => {
+      if (res.success) setEntities(res.data || []);
+    }).catch(() => toast({ title: "Error", description: "Failed to fetch entities", variant: "destructive" }));
   }, []);
 
-  const handleMouseDown = (side: "left" | "right") => {
-    if (!isLargeScreen) return;
-    if (side === "left") setIsDraggingLeft(true);
-    if (side === "right") setIsDraggingRight(true);
-  };
+  useEffect(() => {
+    if (!selectedEntityId) {
+      setAccounts([]);
+      return;
+    }
+    getAccounts({ entityId: selectedEntityId }).then((res: any) => {
+      const data = res?.data ?? res ?? [];
+      setAccounts(data);
+    });
+  }, [selectedEntityId]);
 
-  const handleMouseUp = () => {
-    setIsDraggingLeft(false);
-    setIsDraggingRight(false);
-  };
+  useEffect(() => {
+    if (!selectedAccountId) {
+      setMembers([]);
+      setMemberships([]);
+      return;
+    }
+    getAccountMembers({ accountId: selectedAccountId }).then((res: Response<AccountMember[]>) => {
+      setMembers(res?.data ?? []);
+    });
+    getMemberships({ accountId: selectedAccountId }).then((res: Response<membership[]>) => {
+      setMemberships(res?.data ?? []);
+    });
+  }, [selectedAccountId]);
+
+  useEffect(() => {
+    if (!selectedMemberId) {
+      onMemberDetailsChange(null);
+      return;
+    }
+    setLoadingMember(true);
+    getMemberById(selectedMemberId)
+      .then((res: any) => {
+        onMemberDetailsChange(res?.data ?? res);
+      })
+      .finally(() => setLoadingMember(false));
+  }, [selectedMemberId, onMemberDetailsChange]);
+
+  const entitiesOptions = useMemo(() =>
+    entities.map(e => ({ id: (e as any).entityId, name: e.entityName })), [entities]);
+
+  const accountOptions = useMemo(() =>
+    accounts.map(a => ({ id: a.accountId ?? (a as any).familyId, name: a.name })), [accounts]);
+
+  const memberOptions = useMemo(() =>
+    members.map(m => ({
+      id: (m as any).memberId ?? (m as any).id,
+      name: `${(m as any).memberFirstName ?? ""} ${(m as any).memberLastName ?? ""}`.trim()
+    })), [members]);
+
+  const membershipOptions = useMemo(() =>
+    memberships.map(ms => ({
+      id: ms.membershipId,
+      name: `${ms.membershipId} - ${ms.status}`
+    })), [memberships]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isLargeScreen) return;
-
     const container = e.currentTarget as HTMLDivElement;
     const rect = container.getBoundingClientRect();
-    const newLeftWidth = ((e.clientX - rect.left) / rect.width) * 100;
-    const newRightWidth = ((rect.right - e.clientX) / rect.width) * 100;
-
-    if (isDraggingLeft && newLeftWidth > 15 && newLeftWidth < 40) {
-      if (newLeftWidth + rightWidth < 80) {
-        setLeftWidth(newLeftWidth);
-      }
+    if (isDraggingLeft) {
+      const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+      if (newWidth > 15 && newWidth < 40 && newWidth + rightWidth < 80) setLeftWidth(newWidth);
     }
-
-    if (isDraggingRight && newRightWidth > 15 && newRightWidth < 40) {
-      if (leftWidth + newRightWidth < 80) {
-        setRightWidth(newRightWidth);
-      }
+    if (isDraggingRight) {
+      const newWidth = ((rect.right - e.clientX) / rect.width) * 100;
+      if (newWidth > 15 && newWidth < 40 && leftWidth + newWidth < 80) setRightWidth(newWidth);
     }
   };
 
-  const getPanelWidth = (baseWidth: number) => {
-    return isLargeScreen ? { width: `${baseWidth}%` } : { width: "100%" };
-  };
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateScreenSize = () => setIsLargeScreen(mediaQuery.matches);
+    updateScreenSize();
+    mediaQuery.addEventListener("change", updateScreenSize);
+    return () => mediaQuery.removeEventListener("change", updateScreenSize);
+  }, []);
 
   return (
     <div
-      className="flex flex-col lg:flex-row w-full overflow-hidden relative"
+      className="flex flex-col lg:flex-row w-full h-full overflow-hidden relative"
       onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseUp={() => { setIsDraggingLeft(false); setIsDraggingRight(false); }}
+      onMouseLeave={() => { setIsDraggingLeft(false); setIsDraggingRight(false); }}
     >
       <motion.div
-        style={getPanelWidth(leftWidth)}
-        className="lg:border-r border-border/50 overflow-hidden mb-4 lg:mb-0 lg:pr-1"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
+        style={isLargeScreen ? { width: `${leftWidth}%` } : { width: "100%" }}
+        className="lg:border-r border-border/50 overflow-hidden"
       >
         <FamilyPanel
-          selectedFamilyId={selectedFamilyId}
+          selectedEntityId={selectedEntityId}
+          selectedAccountId={selectedAccountId}
           selectedMemberId={selectedMemberId}
-          memberName={memberName}
-          onFamilySelect={onFamilySelect}
-          onMemberSelect={onMemberSelect}
-          onMemberDetailsChange={onMemberDetailsChange}
+          selectedMembershipId={selectedMembershipId}
+          entityOptions={entitiesOptions}
+          accountOptions={accountOptions}
+          memberOptions={memberOptions}
+          membershipOptions={membershipOptions}
+          onEntityChange={onEntitySelect}
+          onAccountChange={onAccountSelect}
+          onMemberChange={onMemberSelect}
+          onMembershipChange={onMembershipSelect}
         />
       </motion.div>
 
       {isLargeScreen && (
-        <motion.div
-          onMouseDown={() => handleMouseDown("left")}
-          className={`w-1 bg-gradient-to-b from-transparent via-primary/20 to-transparent hover:bg-gradient-to-b hover:via-primary/40 cursor-col-resize transition-all group ${
-            isDraggingLeft ? "via-primary/50" : ""
-          }`}
-          whileHover={{ scaleX: 1.5 }}
+        <div
+          onMouseDown={() => setIsDraggingLeft(true)}
+          className="w-1 cursor-col-resize hover:bg-primary/30 transition-colors flex items-center justify-center z-10"
         >
-          <motion.div
-            initial={false}
-            animate={{ opacity: isDraggingLeft ? 1 : 0 }}
-            className="h-full flex items-center justify-center"
-          >
-            <GripVertical className="h-3.5 w-3.5 text-primary" />
-          </motion.div>
-        </motion.div>
+          <GripVertical className="h-4 w-4 text-muted-foreground/30" />
+        </div>
       )}
 
+      {/* MIDDLE: Enrollment Management */}
       <motion.div
         style={isLargeScreen ? { width: `${middleWidth}%` } : { width: "100%" }}
-        className="overflow-hidden border-b lg:border-none pb-4 lg:pb-0 mb-4 lg:mb-0"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        className="overflow-hidden bg-muted/5"
       >
-        {memberName ? (
+        {loadingMember ? (
+          <div className="h-full flex flex-col items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+            <p className="text-xs text-muted-foreground mt-2">Loading details...</p>
+          </div>
+        ) : selectedMemberId ? (
           <EnrollmentPanel
             selectedMemberId={selectedMemberId}
             memberName={memberName}
@@ -153,36 +209,25 @@ export default function TopSection({
             onBatchSelect={onBatchSelect}
           />
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/5 gap-3"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-              className="p-3 rounded-full bg-primary/10"
-            >
-              <User2 className="h-8 w-8 text-primary/60" />
-            </motion.div>
-            <p className="text-center px-4">
-              <span className="block text-sm font-medium text-foreground">
-                No member selected
-              </span>
-              <span className="block text-xs text-muted-foreground mt-1">
-                Select a member to view details
-              </span>
-            </p>
-          </motion.div>
+          <div className="h-full flex flex-col items-center justify-center opacity-60">
+            <User2 className="h-10 w-10 mb-2 text-muted-foreground" />
+            <p className="text-sm font-medium">Select a member to view details</p>
+          </div>
         )}
       </motion.div>
 
+      {isLargeScreen && (
+        <div
+          onMouseDown={() => setIsDraggingRight(true)}
+          className="w-1 cursor-col-resize hover:bg-primary/30 transition-colors flex items-center justify-center z-10"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground/30" />
+        </div>
+      )}
+
       <motion.div
-        style={getPanelWidth(rightWidth)}
-        className="lg:border-l border-border/50 overflow-hidden bg-background pt-4 lg:pt-0 lg:pl-1 duration-300"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        style={isLargeScreen ? { width: `${rightWidth}%` } : { width: "100%" }}
+        className="lg:border-l border-border/50 overflow-hidden bg-background"
       >
         <BatchDetailsPanel selectedBatch={selectedBatch} />
       </motion.div>

@@ -9,7 +9,7 @@ export interface MembershipQuery {
   sortOrder?: SortOrder;
   search?: string;
   membershipMasterId?: number;
-  familyId?: number;
+  accountId?: number;
   status?: string;
 }
 
@@ -25,7 +25,7 @@ export function getMemberships(
     sortOrder: params.sortOrder ?? "ASC",
     search: params.search ?? undefined,
     membershipMasterId: params.membershipMasterId ?? undefined,
-    familyId: params.familyId ?? undefined,
+    accountId: params.accountId ?? undefined,
     status: params.status ?? undefined,
   });
 
