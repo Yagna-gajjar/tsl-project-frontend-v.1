@@ -35,6 +35,7 @@ export function BatchFormModal({
   onSaved,
   layout = "grid",
 }: Props) {
+  // --- Helper Functions (Keep Original) ---
   const numberToWeekArray = (code?: number | string | null): string[] => {
     if (code === undefined || code === null) return [];
     const s = String(code);
@@ -69,7 +70,6 @@ export function BatchFormModal({
       .map((v) => (typeof v === "string" ? v.toLowerCase() : ""))
       .map((k) => map[k])
       .filter((n) => Number.isFinite(n)) as number[];
-
     if (nums.length === 0) return undefined;
     nums.sort((a, b) => a - b);
     return Number(nums.join(""));
@@ -87,10 +87,6 @@ export function BatchFormModal({
       if (Number.isNaN(t.getTime())) return undefined;
       return dfFormat(t, "HH:mm");
     }
-    const maybeDate = new Date(t);
-    if (!Number.isNaN(maybeDate.getTime())) {
-      return dfFormat(maybeDate, "HH:mm");
-    }
     return undefined;
   };
 
@@ -105,7 +101,6 @@ export function BatchFormModal({
     const hhmm = normalizeTimeToHHmm(t);
     if (!hhmm) return null;
     const [hh, mm] = hhmm.split(":").map((n) => Number(n));
-    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
     return hh * 60 + mm;
   };
 
@@ -128,42 +123,119 @@ export function BatchFormModal({
     return normalizeTimeToHHmm(t);
   };
 
+  // --- Pagination & Data State ---
   const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const [hasMoreActivities, setHasMoreActivities] = useState(true);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+
   const [membershipOptions, setMembershipOptions] = useState<membership[]>([]);
-  const getAllActivityOptionFun = async () => {
+  const [membershipPage, setMembershipPage] = useState(1);
+  const [hasMoreMemberships, setHasMoreMemberships] = useState(true);
+  const [loadingMemberships, setLoadingMemberships] = useState(false);
+
+  const [entityOptions, setEntityOptions] = useState<Entity[]>([]);
+  const [entityPage, setEntityPage] = useState(1);
+  const [hasMoreEntities, setHasMoreEntities] = useState(true);
+  const [loadingEntities, setLoadingEntities] = useState(false);
+
+  const PAGE_SIZE = 20;
+
+  // --- API Fetchers with Infinite Scroll Support ---
+  const fetchActivities = async (isInitial = false) => {
+    if (loadingActivities || (!hasMoreActivities && !isInitial)) return;
+    setLoadingActivities(true);
     try {
-      const response: Response<Activity[]> = await getActivities({
-        limit: 200,
+      const page = isInitial ? 1 : activityPage;
+      const response = await getActivities({
+        limit: PAGE_SIZE,
+        page: page,
       });
       const items = response?.data || [];
-
-      setActivityOptions(items);
-    } catch (err) {
+      console.log(PAGE_SIZE, page, response.data);
+      setActivityOptions((prev) => (isInitial ? items : [...prev, ...items]));
+      setHasMoreActivities(items.length === PAGE_SIZE);
+      setActivityPage(page + 1);
+    } catch {
       toast({
         title: "Error",
         description: "Failed to fetch activities",
         variant: "destructive",
       });
-      setActivityOptions([]);
+    } finally {
+      setLoadingActivities(false);
     }
   };
 
-  const getMembershipOptionFun = async () => {
+  const fetchMemberships = async (isInitial = false) => {
+    if (loadingMemberships || (!hasMoreMemberships && !isInitial)) return;
+    setLoadingMemberships(true);
     try {
-      const res: Response<membership[]> = await getMemberships({
-        limit: 200,
+      const page = isInitial ? 1 : membershipPage;
+      const res = await getMemberships({
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
       });
-      const items = res?.data || ([] as membership[]);
-      setMembershipOptions(items);
+      const items = res?.data || [];
+      setMembershipOptions((prev) => (isInitial ? items : [...prev, ...items]));
+      setHasMoreMemberships(items.length === PAGE_SIZE);
+      setMembershipPage(page + 1);
     } catch {
       toast({
         title: "Error",
-        description: "Failed to fetch Membership",
+        description: "Failed to fetch memberships",
         variant: "destructive",
       });
+    } finally {
+      setLoadingMemberships(false);
     }
   };
 
+  const fetchEntities = async (isInitial = false) => {
+    if (loadingEntities || (!hasMoreEntities && !isInitial)) return;
+    setLoadingEntities(true);
+    try {
+      const page = isInitial ? 1 : entityPage;
+      const res = await getEntities({
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+      });
+      const items = res?.data || [];
+      setEntityOptions((prev) => (isInitial ? items : [...prev, ...items]));
+      setHasMoreEntities(items.length === PAGE_SIZE);
+      setEntityPage(page + 1);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to fetch entities",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingEntities(false);
+    }
+  };
+
+  const [batchTypeOptions, setBatchTypeOptions] = useState<Enums[]>([]);
+  const loadBatchType = async () => {
+    try {
+      const res = await getEnumsByCategory("batchType");
+      setBatchTypeOptions(res?.data || []);
+    } catch {
+      setBatchTypeOptions([]);
+    }
+  };
+
+  const [courses, setCourses] = useState<Course[]>([]);
+  const loadCourses = async (activityId: number) => {
+    try {
+      const res = await getCourses({ activityId });
+      setCourses(res?.data || []);
+    } catch {
+      setCourses([]);
+    }
+  };
+
+  // --- Form State ---
   const empty: Partial<Batch> = {
     batchType: initialData?.batchType ?? "",
     entityId: initialData?.entityId ?? undefined,
@@ -188,12 +260,6 @@ export function BatchFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const [entity, setEntity] = useState<Entity[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loadingOptions, setLoadingOptions] = useState(false);
-
-  const [batchType, setBatchType] = useState<Enums[]>([]);
-
   const WEEKDAY_OPTIONS = useMemo(
     () => [
       { label: "Monday", value: "monday" },
@@ -208,310 +274,73 @@ export function BatchFormModal({
   );
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    const loadTopOptions = async () => {
-      setLoadingOptions(true);
-      try {
-        await getAllActivityOptionFun();
-        await getEntitiesOptionFun();
-        await getMembershipOptionFun();
-      } catch (err) {
-        console.error("Failed to load top-level options:", err);
-        toast({
-          title: "Error",
-          description: "Failed to load options",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingOptions(false);
-      }
-    };
-
-    loadTopOptions();
-  }, [isOpen]);
-
-  const loadBatchType = useCallback(async () => {
-    try {
-      const res: Response<Enums[]> = await getEnumsByCategory("batchType");
-
-      const items = Array.isArray(res?.data) ? res.data : [];
-
-      setBatchType(items);
-
-      if (!res?.success) {
-        toast({
-          title: "Warning",
-          description: "Failed to fetch enum (server returned error)",
-          variant: "destructive",
-        });
-      }
-    } catch {
-      toast({
-        title: "Failed",
-        description: "failed to fetch enum",
-        variant: "destructive",
-      });
-      setBatchType([]);
+    if (isOpen) {
+      setValues({ ...empty, ...initialData });
+      loadBatchType();
+      fetchActivities(true);
+      fetchEntities(true);
+      fetchMemberships(true);
+      if (initialData?.activityId) loadCourses(Number(initialData.activityId));
     }
-  }, []);
+  }, [isOpen, initialData]);
 
-  const getEntitiesOptionFun = useCallback(async () => {
-    try {
-      setLoadingOptions(true);
-      const res: Response<Entity[]> = await getEntities({
-        limit: 100,
-      });
-      const items = res?.data as Entity[];
-      setEntity(items);
-    } catch (err) {
-      console.error("Failed to load academies for activity:", err);
-      setEntity([]);
-      toast({
-        title: "Error",
-        description: "Failed to load academies",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingOptions(false);
-    }
-  }, []);
-
-  const loadCourses = useCallback(async (activityId: number) => {
-    try {
-      const res: Response<Course[]> = await getCourses({
-        activityId: activityId,
-      });
-
-      const items = res?.data as Course[];
-      setCourses(items);
-    } catch (err) {
-      console.error("Failed to load courses", err);
-      setCourses([]);
-      toast({
-        title: "Error",
-        description: "Failed to load courses",
-        variant: "destructive",
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    const mapped = {
-      ...empty,
-      ...(initialData && {
-        batchType: initialData.batchType ?? empty.batchType,
-        entityId: initialData.entityId ?? empty.entityId,
-        activityId: initialData.activityId ?? empty.activityId,
-        membershipId: initialData.membershipId ?? empty.membershipId,
-        courseId: initialData.courseId ?? empty.courseId,
-        batchName: initialData.batchName ?? empty.batchName,
-        introduceDate:
-          formatDateInput(initialData?.introduceDate) ?? empty.introduceDate,
-        suspendedDate:
-          formatDateInput(initialData?.suspendedDate) ?? empty.suspendedDate,
-        maxCapacity: initialData.maxCapacity ?? empty.maxCapacity,
-        startTime: formatTimeInput(initialData?.startTime) ?? empty.startTime,
-        endTime: formatTimeInput(initialData?.endTime) ?? empty.endTime,
-        daysPattern:
-          numberToWeekArray(initialData?.daysPattern as any) ??
-          empty.daysPattern,
-        admissionCriteria:
-          initialData.admissionCriteria ?? empty.admissionCriteria,
-        status: initialData?.status ?? empty.status,
-      }),
-    };
-
-    loadBatchType();
-
-    getAllActivityOptionFun();
-    setValues(mapped);
-    setFieldErrors({});
-    setError(null);
-  }, [initialData, isOpen]);
-
+  // --- Handlers ---
   const onChange = (field: keyof Batch, val: any) => {
     if (field === "activityId") {
       const activityId = val ? Number(val) : undefined;
-      setValues((p) => ({
-        ...p,
-        activityId,
-        courseId: undefined,
-      }));
-      loadCourses(activityId ?? 0);
-      setFieldErrors((prev) => {
-        if (!prev.activityId) return prev;
-        const copy = { ...prev };
-        delete copy.activityId;
-        return copy;
-      });
+      setValues((p) => ({ ...p, activityId, courseId: undefined }));
+      if (activityId) loadCourses(activityId);
       return;
     }
+
     if (field === "courseId") {
       const courseIdVal = val ? Number(val) : undefined;
-      const selectedCourse = courseIdVal
-        ? courses.find((c) => Number(c.courseId) === Number(courseIdVal))
-        : undefined;
-
-      setValues((prev: any) => {
-        let daysPattern = prev.daysPattern;
-        if (selectedCourse && selectedCourse.daysPattern != null) {
-          const auto = numberToWeekArray(selectedCourse.daysPattern as any);
-          if (auto.length > 0) {
-            daysPattern = auto;
-          }
-        }
-        let sessionMinutes = prev.sessionMinutes;
-        if (selectedCourse) {
-          sessionMinutes = selectedCourse.sessionMinutes;
-        }
-        let nextEndTime = prev.endTime;
-        if (selectedCourse && prev.startTime) {
-          nextEndTime = addMinutesToTime(
-            prev.startTime,
-            selectedCourse.sessionMinutes
-          );
-        }
-
-        let maxCapacity: number | null | undefined = prev.maxCapacity
-          ? prev.maxCapacity
-          : null;
-        if (selectedCourse) {
-          maxCapacity = selectedCourse.batchCapacity;
-        }
-
-        let daysPerWeek: number | null | undefined = prev.daysPerWeek
-          ? prev.daysPerWeek
-          : null;
-        if (selectedCourse) {
-          daysPerWeek = selectedCourse.noOfDaysInWeek;
-        }
-
-        return {
-          ...prev,
-          courseId: courseIdVal,
-          sessionMinutes: sessionMinutes,
-          daysPerWeek: daysPerWeek,
-          daysPattern: daysPattern,
-          endTime: nextEndTime,
-          maxCapacity: maxCapacity,
-        };
-      });
-
-      setFieldErrors((prev) => {
-        if (!prev.courseId) return prev;
-        const copy = { ...prev };
-        delete copy.courseId;
-        return copy;
-      });
-      return;
-    }
-    if (field === "entityId") {
-      const entityId = val ? Number(val) : undefined;
-      setValues((p) => ({
-        ...p,
-        entityId,
+      const selectedCourse = courses.find(
+        (c) => Number(c.courseId) === Number(courseIdVal)
+      );
+      setValues((prev: any) => ({
+        ...prev,
+        courseId: courseIdVal,
+        sessionMinutes: selectedCourse?.sessionMinutes || prev.sessionMinutes,
+        daysPerWeek: selectedCourse?.noOfDaysInWeek || prev.daysPerWeek,
+        daysPattern: selectedCourse?.daysPattern
+          ? numberToWeekArray(selectedCourse.daysPattern as any)
+          : prev.daysPattern,
+        endTime:
+          selectedCourse && prev.startTime
+            ? addMinutesToTime(prev.startTime, selectedCourse.sessionMinutes)
+            : prev.endTime,
+        maxCapacity: selectedCourse?.batchCapacity || prev.maxCapacity,
       }));
-      setFieldErrors((prev) => {
-        if (!prev.entityId) return prev;
-        const copy = { ...prev };
-        delete copy.entityId;
-        return copy;
-      });
-      return;
-    }
-
-    if (field === "daysPattern") {
-      const newVal = Array.isArray(val) ? val : val ? [val] : [];
-      setValues((p) => ({ ...p, daysPattern: newVal }));
-      setFieldErrors((prev) => {
-        if (!prev.daysPattern) return prev;
-        const copy = { ...prev };
-        delete copy.daysPattern;
-        return copy;
-      });
       return;
     }
 
     if (field === "startTime") {
-      setValues((prev) => {
-        const nextEndTime = addMinutesToTime(
-          val, // ✅ use new startTime
-          Number(prev.sessionMinutes)
-        );
-
-        return {
-          ...prev,
-          startTime: val,
-          endTime: nextEndTime,
-        };
-      });
-
-      setValues((p) => ({ ...p, [field]: val }));
-      setFieldErrors((prev) => {
-        if (!prev[field as string]) return prev;
-        const copy = { ...prev };
-        delete copy[field as string];
-        return copy;
-      });
+      setValues((prev) => ({
+        ...prev,
+        startTime: val,
+        endTime: addMinutesToTime(val, Number((prev as any).sessionMinutes)),
+      }));
+      return;
     }
-    setValues((p) => ({ ...p, [field]: val }));
 
+    setValues((p) => ({ ...p, [field]: val }));
+    setFieldErrors((prev) => {
+      const copy = { ...prev };
+      delete copy[field as string];
+      return copy;
+    });
   };
 
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
-    if (!values.batchName || String(values.batchName).trim() === "") {
-      errs.batchName = "Batch name is required";
-    }
-    if (!values.activityId) {
-      errs.activityId = "Activity is required";
-    }
-    if (!values.entityId) {
-      errs.entityId = "entity is required";
-    }
-
-    if (!values.startTime) {
-      errs.startTime = "Start time is required";
-    }
-    if (!values.endTime) {
-      errs.endTime = "End time is required";
-    }
-
-    if (
-      !values.daysPattern ||
-      !Array.isArray(values.daysPattern) ||
-      values.daysPattern.length < 1
-    ) {
+    if (!values.batchName?.trim()) errs.batchName = "Batch name is required";
+    if (!values.activityId) errs.activityId = "Activity is required";
+    if (!values.entityId) errs.entityId = "Entity is required";
+    if (!values.startTime) errs.startTime = "Start time is required";
+    if (!values.endTime) errs.endTime = "End time is required";
+    if (!Array.isArray(values.daysPattern) || values.daysPattern.length < 1)
       errs.daysPattern = "Select at least one weekday";
-    }
-
-    try {
-      const startMin = timeToMinutes(values.startTime);
-      const endMin = timeToMinutes(values.endTime);
-      if (startMin === null) {
-        errs.startTime = "Invalid start time";
-      }
-      if (endMin === null) {
-        errs.endTime = "Invalid end time";
-      }
-      if (startMin !== null && endMin !== null && endMin < startMin) {
-        errs.endTime = "End time cannot be before start time";
-      }
-    } catch {}
-
-    try {
-      const intro = values.introduceDate
-        ? new Date(values.introduceDate as any)
-        : null;
-      const susp = values.suspendedDate
-        ? new Date(values.suspendedDate as any)
-        : null;
-      if (intro && susp && susp < intro) {
-        errs.suspendedDate = "Suspended date cannot be before introduce date";
-      }
-    } catch {}
-
     return errs;
   }, [values]);
 
@@ -519,8 +348,6 @@ export function BatchFormModal({
     setIsSubmitting(true);
     setError(null);
     const errs = validate();
-    console.log(errs);
-    
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       setIsSubmitting(false);
@@ -528,151 +355,101 @@ export function BatchFormModal({
     }
 
     try {
-      const normalizedStart = normalizeTimeToHHmm(values.startTime);
-      const normalizedEnd = normalizeTimeToHHmm(values.endTime);
-
-      const weekCode = weekArrayToNumber(values.daysPattern as any[]);
-
       const payload: Partial<Batch> = {
-        batchType: values.batchType,
+        ...values,
         entityId: Number(values.entityId),
-        activityId: values.activityId ? Number(values.activityId) : undefined,
+        activityId: Number(values.activityId),
         membershipId: Number(values.membershipId),
-        courseId: values.courseId ? Number(values.courseId) : undefined,
-        batchName: String(values.batchName ?? "").trim(),
+        maxCapacity: Number(values.maxCapacity),
+        daysPattern: weekArrayToNumber(values.daysPattern as any[]),
         introduceDate: values.introduceDate
           ? new Date(values.introduceDate as any)
           : new Date(),
-        suspendedDate: values.suspendedDate
-          ? new Date(values.suspendedDate as any)
-          : undefined,
-        maxCapacity: Number(values.maxCapacity),
-        startTime: normalizedStart,
-        endTime: normalizedEnd,
-        daysPerWeek: Number(values.daysPerWeek),
-        daysPattern: weekCode,
-        admissionCriteria: values.admissionCriteria,
-        status: values.status ?? "active",
       };
 
-      let res: any;
-      if (isEdit && initialData?.batchId) {
-        res = await editBatch(Number(initialData.batchId), payload);
+      let res = isEdit
+        ? await editBatch(Number(initialData?.batchId), payload)
+        : await createBatch(payload as Batch);
+
+      if (res?.success || res?.data) {
         toast({
           title: "Success",
-          description: "Batch updated successfully",
+          description: `Batch ${isEdit ? "updated" : "created"}`,
           variant: "success",
         });
+        onSaved?.(values as Batch);
+        onClose();
       } else {
-        res = await createBatch(payload as Batch);
-        toast({
-          title: "Success",
-          description: "Batch created successfully",
-          variant: "success",
-        });
+        throw new Error(res?.message || "Failed to save");
       }
-
-      const ok =
-        typeof res?.success !== "undefined"
-          ? res.success === true || String(res.success) === "true"
-          : true;
-
-      if (!ok) {
-        const msg = res?.message ?? "Failed to save";
-        setError(msg);
-
-        toast({
-          title: "Save failed",
-          description: msg,
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      onSaved?.(values as Batch);
-      onClose();
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Failed to save batch";
-      setError(errorMsg);
+    } catch (err: any) {
+      setError(err.message);
       toast({
+        title: "Error",
+        description: err.message,
         variant: "destructive",
-        description: errorMsg,
       });
     } finally {
       setIsSubmitting(false);
     }
   }, [values, isEdit, initialData, onSaved, onClose, validate]);
 
+  // --- Fields Configuration with Virtualization ---
   const fields = [
     {
       name: "batchType",
       label: "Batch Type",
       type: "select",
-      options: batchType?.map((b) => ({
+      options: batchTypeOptions.map((b) => ({
         value: b.value,
         label: String(b.value),
       })),
       required: true,
     },
-    {
-      name: "batchName",
-      label: "Batch Name",
-      type: "text",
-      required: true,
-    },
+    { name: "batchName", label: "Batch Name", type: "text", required: true },
     {
       name: "activityId",
       label: "Activity",
       type: "select",
-      options: activityOptions?.map((a) => ({
+      options: activityOptions.map((a) => ({
         label: a.activityName,
         value: a.activityId,
       })),
       required: true,
+      onLoadMore: () => fetchActivities(),
+      isLoadingMore: loadingActivities,
     },
     {
       name: "courseId",
       label: "Course",
       type: "select",
-      required: false,
-      options: courses?.map((c) => ({
-        label: c.courseName,
-        value: c.courseId,
-      })),
-      disabled: loadingOptions,
+      options: courses.map((c) => ({ label: c.courseName, value: c.courseId })),
     },
     {
       name: "entityId",
-      label: "entity",
+      label: "Entity",
       type: "select",
-      required: true,
-      options: entity?.map((a) => ({
-        label: a.entityName,
-        value: a.entityId,
+      options: entityOptions.map((e) => ({
+        label: e.entityName,
+        value: e.entityId,
       })),
-      disabled: loadingOptions,
+      required: true,
+      onLoadMore: () => fetchEntities(),
+      isLoadingMore: loadingEntities,
     },
-    {
-      name: "introduceDate",
-      label: "Introduce Date",
-      type: "Date",
-    },
-    {
-      name: "suspendedDate",
-      label: "Suspended Date",
-      type: "Date",
-    },
+    { name: "introduceDate", label: "Introduce Date", type: "Date" },
+    { name: "suspendedDate", label: "Suspended Date", type: "Date" },
     {
       name: "membershipId",
-      label: "membership",
+      label: "Membership",
       type: "select",
-      options: membershipOptions?.map((m) => ({
-        label: m.startDate + "-" + m.endDate,
+      options: membershipOptions.map((m) => ({
+        label: `${m.startDate} to ${m.endDate}`,
         value: m.membershipId,
       })),
       required: true,
+      onLoadMore: () => fetchMemberships(),
+      isLoadingMore: loadingMemberships,
     },
     {
       name: "maxCapacity",
@@ -686,12 +463,7 @@ export function BatchFormModal({
       type: "number",
       required: true,
     },
-    {
-      name: "startTime",
-      label: "Start Time",
-      type: "time",
-      required: true,
-    },
+    { name: "startTime", label: "Start Time", type: "time", required: true },
     {
       name: "endTime",
       label: "End Time",
@@ -712,11 +484,7 @@ export function BatchFormModal({
       required: true,
       options: WEEKDAY_OPTIONS,
     },
-    {
-      name: "admissionCriteria",
-      label: "Admission Criteria",
-      type: "text",
-    },
+    { name: "admissionCriteria", label: "Admission Criteria", type: "text" },
     {
       name: "status",
       label: "Status",
@@ -727,42 +495,38 @@ export function BatchFormModal({
         { label: "Suspended", value: "suspended" },
       ],
     },
-  ] as any;
+  ];
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
-      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-        <div className="flex flex-col max-h-[70vh] overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl p-0 bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
+        <div className="flex flex-col max-h-[90vh] overflow-hidden">
           <FormHeader
             title={isEdit ? "Edit Batch" : "Add Batch"}
             onClose={onClose}
           />
-          <FormContent
-            fields={fields}
-            values={values}
-            errors={fieldErrors}
-            loading={loadingOptions}
-            error={error}
+          <div className="flex-1 overflow-y-auto">
+            <FormContent
+              fields={fields}
+              values={values}
+              errors={fieldErrors}
+              loading={false}
+              error={error}
+              isSubmitting={isSubmitting}
+              onChange={onChange}
+              layout={layout}
+            />
+          </div>
+          <FormFooter
+            onClose={onClose}
+            onSubmit={handleSubmit}
+            submitLabel={isEdit ? "Update" : "Create"}
             isSubmitting={isSubmitting}
-            onChange={onChange}
-            layout={layout}
           />
         </div>
-        <FormFooter
-          onClose={onClose}
-          onSubmit={handleSubmit}
-          submitLabel={isEdit ? "Update" : "Create"}
-          isSubmitting={isSubmitting}
-        />
       </DialogContent>
     </Dialog>
   );
 }
-  
 
 export default BatchFormModal;
