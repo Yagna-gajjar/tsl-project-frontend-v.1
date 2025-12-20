@@ -150,124 +150,160 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 	};
 
 	return (
-		<Sheet open={isOpen} onOpenChange={onClose}>
-			<SheetContent className="w-[400px] sm:w-[540px]">
-				<SheetHeader>
-					<SheetTitle>{isEdit ? "Edit Enum" : "New Enum"}</SheetTitle>
-					<SheetDescription>
-						{isEdit ? "Update details for this lookup value." : "Add a new lookup value to the system."}
-					</SheetDescription>
-				</SheetHeader>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>{isEdit ? "Edit Enum" : "New Enum"}</SheetTitle>
+          <SheetDescription>
+            {isEdit
+              ? "Update details for this lookup value."
+              : "Add a new lookup value to the system."}
+          </SheetDescription>
+        </SheetHeader>
 
-				<div className="py-6 space-y-6">
+        <div className="py-6 space-y-6">
+          {/* Category Input */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Input
+              id="category"
+              value={formData.category}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, category: e.target.value }))
+              }
+              placeholder="e.g. UserRole"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Changing this will move the item to a different group.
+            </p>
+          </div>
 
-					{/* Category Input */}
-					<div className="space-y-2">
-						<Label htmlFor="category">Category</Label>
-						<Input
-							id="category"
-							value={formData.category}
-							onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
-							placeholder="e.g. UserRole"
-						/>
-						<p className="text-[11px] text-muted-foreground">
-							Changing this will move the item to a different group.
-						</p>
-					</div>
+          <div className="space-y-2">
+            <Label htmlFor="value">Item</Label>
 
-					<div className="space-y-2">
-						<Label htmlFor="value">Value</Label>
+            {isAccountCategory(formData.category) ? (
+              <Select
+                value={formData.value}
+                onValueChange={(val) =>
+                  setFormData((prev) => ({ ...prev, value: val }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fetchedAccounts.length > 0 ? (
+                    fetchedAccounts.map((acc) => (
+                      <SelectItem
+                        key={acc.accountId}
+                        value={String(acc.accountId)}
+                      >
+                        {acc.name || `Account ${acc.accountId}`}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      No accounts found
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="value"
+                value={formData.value}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, value: e.target.value }))
+                }
+                placeholder="e.g. Admin"
+              />
+            )}
 
-						{isAccountCategory(formData.category) ? (
-							<Select
-								value={formData.value}
-								onValueChange={(val) => setFormData(prev => ({ ...prev, value: val }))}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Select Account" />
-								</SelectTrigger>
-								<SelectContent>
-									{fetchedAccounts.length > 0 ? (
-										fetchedAccounts.map((acc) => (
-											<SelectItem key={acc.accountId} value={String(acc.accountId)}>
-												{acc.name || `Account ${acc.accountId}`}
-											</SelectItem>
-										))
-									) : (
-										<div className="p-2 text-sm text-muted-foreground text-center">
-											No accounts found
-										</div>
-									)}
-								</SelectContent>
-							</Select>
-						) : (
-							<Input
-								id="value"
-								value={formData.value}
-								onChange={e => setFormData(prev => ({ ...prev, value: e.target.value }))}
-								placeholder="e.g. Admin"
-							/>
-						)}
+            {isAccountCategory(formData.category) && (
+              <p className="text-[11px] text-muted-foreground">
+                Selected Account ID will be saved as the Enum Value.
+              </p>
+            )}
+          </div>
 
-						{isAccountCategory(formData.category) && (
-							<p className="text-[11px] text-muted-foreground">
-								Selected Account ID will be saved as the Enum Value.
-							</p>
-						)}
-					</div>
+          <div className="space-y-2">
+            <Label htmlFor="desc">Description</Label>
+            <Textarea
+              id="desc"
+              value={formData.description || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Optional description..."
+              className="resize-none h-20"
+            />
+          </div>
 
-					<div className="space-y-2">
-						<Label htmlFor="desc">Description</Label>
-						<Textarea
-							id="desc"
-							value={formData.description || ""}
-							onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-							placeholder="Optional description..."
-							className="resize-none h-20"
-						/>
-					</div>
+          <div className="space-y-2">
+            <Label htmlFor="enumCase">Value</Label>
+            <Input
+              id="desc"
+              value={formData.enumCase == 0 ? "0" : formData.enumCase || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  enumCase: Number(e.target.value),
+                }))
+              }
+              placeholder="enumCase... default 0"
+              className="h-10"
+            />
+          </div>
 
-					<div className="space-y-2">
-						<Label htmlFor="enumCase">Case</Label>
-						<Input
-							id="desc"
-							value={formData.enumCase == 0 ? "0" : formData.enumCase || ""}
-							onChange={e => setFormData(prev => ({ ...prev, enumCase: Number(e.target.value) }))}
-							placeholder="enumCase... default 0"
-							className="h-10"
-						/>
-					</div>
+          <div className="flex items-center justify-between border p-3 rounded-lg bg-slate-50 dark:bg-zinc-900">
+            <div className="space-y-0.5">
+              <Label>Status</Label>
+              <div className="text-[12px] text-muted-foreground">
+                {formData.status
+                  ? "Active (Visible in app)"
+                  : "Inactive (Hidden)"}
+              </div>
+            </div>
+            <Switch
+              checked={formData.status}
+              onCheckedChange={(c) =>
+                setFormData((prev) => ({ ...prev, status: c }))
+              }
+            />
+          </div>
+        </div>
 
-					<div className="flex items-center justify-between border p-3 rounded-lg bg-slate-50 dark:bg-zinc-900">
-						<div className="space-y-0.5">
-							<Label>Status</Label>
-							<div className="text-[12px] text-muted-foreground">
-								{formData.status ? "Active (Visible in app)" : "Inactive (Hidden)"}
-							</div>
-						</div>
-						<Switch
-							checked={formData.status}
-							onCheckedChange={c => setFormData(prev => ({ ...prev, status: c }))}
-						/>
-					</div>
-				</div>
+        <SheetFooter className="flex justify-between items-center sm:justify-between gap-2">
+          {isEdit ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={loading}
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> Delete
+            </Button>
+          ) : (
+            <div></div>
+          )}
 
-				<SheetFooter className="flex justify-between items-center sm:justify-between gap-2">
-					{isEdit ? (
-						<Button variant="destructive" size="sm" onClick={handleDelete} disabled={loading}>
-							<Trash2 className="w-4 h-4 mr-2" /> Delete
-						</Button>
-					) : <div></div>}
-
-					<div className="flex gap-2">
-						<Button variant="outline" onClick={onClose}>Cancel</Button>
-						<Button onClick={handleSave} disabled={loading || !formData.category || !formData.value}>
-							{loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-							Save Changes
-						</Button>
-					</div>
-				</SheetFooter>
-			</SheetContent>
-		</Sheet>
-	);
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={loading || !formData.category || !formData.value}
+            >
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Save Changes
+            </Button>
+          </div>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
 }

@@ -3,7 +3,6 @@ import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { getAuthorities, deleteAuthority } from "@/api/authority.api";
 import type { Authority } from "@/types/authority";
-import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 
 export default function AuthorityTable({ onView, onEdit, refreshKey }: any) {
@@ -22,7 +21,11 @@ export default function AuthorityTable({ onView, onEdit, refreshKey }: any) {
   }, [loadData, refreshKey]);
 
   const columns: Column<Authority>[] = [
-    { key: "memberName", header: "Member" },
+    {
+      key: "memberId",
+      header: "Member",
+      render: (r) => r.memberFirstName + " " + r.memberLastName,
+    },
     { key: "accountName", header: "Account" },
     {
       key: "linkingDate",
