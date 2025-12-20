@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,150 +11,178 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, ChevronDown } from "lucide-react";
 
 type Option = { label: string; value: number | string | Date };
 
-export type FieldType =
-  | "text"
-  | "email"
-  | "number"
-  | "password"
-  | "textarea"
-  | "select"
-  | "multiselect"
-  | "checkbox"
-  | "date";
-
-interface Props {
-  type: FieldType;
-  name: string;
-  label: string;
-  value: any;
-  onChange: (v: any) => void;
-  placeholder?: string;
-  description?: string;
-  required?: boolean;
-  error?: string;
-  options?: Option[];
-  disabled?: boolean;
-  className?: string;
-  index?: number;
-  minDate?: string | Date;
-  maxDate?: string | Date;
-  // Infinite Loading Props
-  onLoadMore?: () => void;
-  isLoadingMore?: boolean;
-}
-
 function SearchableMultiselect({
-  options,
-  value,
+  options = [],
+  value = [],
   onChange,
   placeholder,
   disabled,
   onLoadMore,
   isLoadingMore,
+  isSingle = false, // Added to distinguish between select and multiselect
 }: any) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const valueStrings = new Set((value || []).map((v: any) => String(v)));
+  // Ensure value is always an array for the internal logic
+  const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
+
   const filteredOptions = options.filter((opt: Option) =>
     opt.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Handle clicking outside to close the dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const toggleOption = (optionValue: any) => {
-    const current = Array.isArray(value) ? value : [];
-    const isSelected = valueStrings.has(String(optionValue));
+    if (isSingle) {
+      onChange(optionValue);
+      setIsOpen(false);
+      return;
+    }
+
+    const isSelected = selectedValues.some(
+      (v: any) => String(v) === String(optionValue)
+    );
     if (isSelected) {
-      onChange(current.filter((v) => String(v) !== String(optionValue)));
+      onChange(
+        selectedValues.filter((v: any) => String(v) !== String(optionValue))
+      );
     } else {
-      onChange([...current, optionValue]);
+      onChange([...selectedValues, optionValue]);
     }
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative w-full max-h-10">
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`flex flex-wrap items-center gap-2 p-2 border rounded-md bg-background min-h-10 cursor-pointer ${
-          isOpen ? "ring-2 ring-ring" : ""
-        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`flex items-center justify-between gap-2 p-2 border rounded-md bg-background cursor-pointer transition-all ${
+          isOpen ? "ring-2 ring-ring border-primary" : "border-input"
+        } ${
+          disabled
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:border-accent-foreground/30"
+        }`}
       >
-        {value?.length > 0 ? (
-          value.map((val: any) => (
-            <span
-              key={String(val)}
-              className="bg-primary/10 text-primary px-2 py-0.5 rounded-sm text-xs flex items-center gap-1"
-            >
-              {options.find((o: any) => String(o.value) === String(val))
-                ?.label || val}
-              <X
-                size={12}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleOption(val);
-                }}
-              />
+        <div className="flex flex-wrap gap-1 flex-1">
+          {selectedValues.length > 0 ? (
+            selectedValues.map((val: any) => {
+              const opt = options.find(
+                (o: any) => String(o.value) === String(val)
+              );
+              return (
+                <span
+                  key={String(val)}
+                  className="bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-sm text-xs flex items-center gap-1"
+                >
+                  {opt?.label || val}
+                  {!disabled && (
+                    <X
+                      size={12}
+                      className="cursor-pointer hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleOption(val);
+                      }}
+                    />
+                  )}
+                </span>
+              );
+            })
+          ) : (
+            <span className="text-muted-foreground text-sm pl-1">
+              {placeholder}
             </span>
-          ))
-        ) : (
-          <span className="text-muted-foreground text-sm pl-1">
-            {placeholder}
-          </span>
-        )}
+          )}
+        </div>
+        <ChevronDown
+          size={16}
+          className={`text-muted-foreground transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </div>
 
       {isOpen && (
-        <div className="absolute top-full w-full z-50 mt-1 bg-popover border rounded-md shadow-md overflow-hidden">
-          <div className="p-2 border-b">
+        <div className="absolute top-full w-full z-50 mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div className="p-2 border-b bg-muted/30">
             <Input
               autoFocus
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8"
+              className="h-8 bg-background"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
           <div style={{ height: "250px" }}>
-            <Virtuoso
-              data={filteredOptions}
-              endReached={onLoadMore}
-              itemContent={(_index, opt) => {
-                const isSelected = valueStrings.has(String(opt.value));
-                return (
-                  <div
-                    onClick={() => toggleOption(opt.value)}
-                    className={`flex items-center px-3 py-2 cursor-pointer hover:bg-accent ${
-                      isSelected ? "bg-accent/50" : ""
-                    }`}
-                  >
+            {filteredOptions.length === 0 && !isLoadingMore ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No results found.
+              </div>
+            ) : (
+              <Virtuoso
+                style={{ height: "250px" }}
+                data={filteredOptions}
+                endReached={onLoadMore}
+                itemContent={(_index, opt) => {
+                  const isSelected = selectedValues.some(
+                    (v: any) => String(v) === String(opt.value)
+                  );
+                  return (
                     <div
-                      className={`mr-2 w-4 h-4 border rounded flex items-center justify-center ${
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleOption(opt.value);
+                      }}
+                      className={`flex items-center px-3 py-2.5 cursor-pointer transition-colors ${
                         isSelected
-                          ? "bg-primary border-primary"
-                          : "border-input"
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-muted/50"
                       }`}
                     >
-                      {isSelected && (
-                        <div className="w-2 h-2 bg-white rounded-full" />
-                      )}
+                      <div
+                        className={`mr-3 w-4 h-4 border rounded flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? "bg-primary border-primary"
+                            : "border-input"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="w-2 h-2 bg-primary-foreground rounded-full" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium">{opt.label}</span>
                     </div>
-                    <span className="text-sm">{opt.label}</span>
-                  </div>
-                );
-              }}
-              components={{
-                Footer: () =>
-                  isLoadingMore ? (
-                    <div className="p-2 flex justify-center">
-                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : null,
-              }}
-            />
+                  );
+                }}
+                components={{
+                  Footer: () =>
+                    isLoadingMore ? (
+                      <div className="p-3 flex justify-center bg-muted/10">
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      </div>
+                    ) : null,
+                }}
+              />
+            )}
           </div>
         </div>
       )}
@@ -162,7 +190,7 @@ function SearchableMultiselect({
   );
 }
 
-export default function FormFieldInput(props: Props) {
+export default function FormFieldInput(props: any) {
   const {
     type,
     name,
@@ -198,29 +226,28 @@ export default function FormFieldInput(props: Props) {
       case "multiselect":
         return (
           <SearchableMultiselect
-            options={options || []}
+            options={options}
             value={value}
             onChange={onChange}
             placeholder={placeholder}
             disabled={disabled}
             onLoadMore={onLoadMore}
             isLoadingMore={isLoadingMore}
+            isSingle={false}
           />
         );
 
       case "select":
-        // Single select using virtualization logic
         return (
           <SearchableMultiselect
-            options={options || []}
-            value={value ? [value] : []}
-            onChange={(vals: any[]) => {
-              onChange(vals[vals.length - 1]);
-            }}
+            options={options}
+            value={value}
+            onChange={onChange}
             placeholder={placeholder}
             disabled={disabled}
             onLoadMore={onLoadMore}
             isLoadingMore={isLoadingMore}
+            isSingle={true}
           />
         );
 
@@ -231,11 +258,12 @@ export default function FormFieldInput(props: Props) {
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left font-normal ${baseInputClass}`}
+                disabled={disabled}
               >
                 {value ? (
                   new Date(value).toLocaleDateString()
                 ) : (
-                  <span>Pick a date</span>
+                  <span>{placeholder || "Pick a date"}</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -254,7 +282,9 @@ export default function FormFieldInput(props: Props) {
               onCheckedChange={onChange}
               disabled={disabled}
             />
-            <Label htmlFor={name}>{label}</Label>
+            <Label htmlFor={name} className="cursor-pointer">
+              {label}
+            </Label>
           </div>
         );
 
@@ -275,13 +305,16 @@ export default function FormFieldInput(props: Props) {
   return (
     <div className={`grid w-full items-center gap-1.5 ${className}`}>
       {type !== "checkbox" && (
-        <Label htmlFor={name} className={error ? "text-destructive" : ""}>
+        <Label
+          htmlFor={name}
+          className={`${error ? "text-destructive" : ""} font-semibold text-sm`}
+        >
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
       )}
       {renderField()}
       {error && (
-        <p className="text-[0.8rem] font-medium text-destructive">{error}</p>
+        <p className="text-[0.75rem] font-medium text-destructive">{error}</p>
       )}
     </div>
   );

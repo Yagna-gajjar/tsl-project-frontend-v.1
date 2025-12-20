@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -19,6 +19,8 @@ import { getEntities } from "@/api/entity.api";
 import { createEnrollment } from "@/api/enrollment.api";
 
 import { toast } from "@/hooks/use-toast";
+import { getCourseRates } from "@/api/courseRate.api";
+import type { CourseRate } from "@/types/courseRate";
 
 type Props = {
   memberId: number;
@@ -33,6 +35,7 @@ const EnrollmentFormNew = ({ memberId, memberName }: Props) => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
+  const [courseRateOption, setCourseRateOption] = useState<CourseRate[]>([]);
 
   const [values, setValues] = useState<Enrollment>({
     enrollmentId: 0,
@@ -91,7 +94,22 @@ const EnrollmentFormNew = ({ memberId, memberName }: Props) => {
     status: "active",
   });
 
-  /* -------------------- LOAD MASTER DATA -------------------- */
+  const WEEK_DAYS = useMemo(
+    () => [
+      { label: "Monday", value: 1 },
+      { label: "Tuesday", value: 2 },
+      { label: "Wednesday", value: 3 },
+      { label: "Thursday", value: 4 },
+      { label: "Friday", value: 5 },
+      { label: "Saturday", value: 6 },
+      { label: "Sunday", value: 7 },
+    ],
+    []
+  );
+
+  const daysArrayToNumber = (days: number[]) => {
+    return Number(days.sort((a, b) => a - b).join(""));
+  };
 
   useEffect(() => {
     const loadInit = async () => {
@@ -142,33 +160,18 @@ const EnrollmentFormNew = ({ memberId, memberName }: Props) => {
     }));
   }, [memberName]);
 
-  /* -------------------- HANDLERS -------------------- */
+  useEffect(() => {
+    const loadCourseRate = async () => {
+      const res: Response<CourseRate[]> = await getCourseRates({
+        courseId: values.courseId,
+      });
+      const data = res?.data as CourseRate[];
+      setCourseRateOption(data);
+    };
+    loadCourseRate();
+  }, [values.courseId]);
 
   const onChange = useCallback((field: string, value: any) => {
-    const numberFields = [
-      "membershipMasterId",
-      "membershipId",
-      "accountId",
-      "activityId",
-      "academyEntityId",
-      "courseId",
-      "permittedDays",
-      "membersEnrolled",
-      "billingDaysSessions",
-      "billingRate",
-      "costToMember",
-      "roundedAmount",
-      "billingAmount",
-      "cgstAmount",
-      "sgstAmount",
-      "totalDebitAmount",
-      "processingCharge",
-    ];
-
-    if (numberFields.includes(field)) {
-      value = value === "" ? null : Number(value);
-    }
-
     setValues((prev) => ({
       ...prev,
       [field]: value,
@@ -177,7 +180,12 @@ const EnrollmentFormNew = ({ memberId, memberName }: Props) => {
 
   const handleSubmit = async () => {
     try {
-      const res: Response<Enrollment> = await createEnrollment(values);
+      const payload = {
+        ...values,
+        attendingPattern: daysArrayToNumber(values.attendingPattern),
+      };
+
+      const res: Response<Enrollment> = await createEnrollment(payload);
 
       if (res.success) {
         toast({
@@ -194,8 +202,6 @@ const EnrollmentFormNew = ({ memberId, memberName }: Props) => {
       setError("Enrollment creation failed");
     }
   };
-
-  /* -------------------- FORM FIELDS -------------------- */
 
   const fields = [
     {
@@ -251,6 +257,148 @@ const EnrollmentFormNew = ({ memberId, memberName }: Props) => {
         value: e.entityId,
         label: e.entityName,
       })),
+    },
+    {
+      name: "courseId",
+      label: "Course",
+      type: "select",
+      options: courses?.map((c) => ({
+        value: c.courseId,
+        label: c.courseName,
+      })),
+    },
+    {
+      name: "attendingPattern",
+      label: "Attending Pattern",
+      type: "multiselect",
+      require: true,
+      options: WEEK_DAYS,
+    },
+    {
+      name: "attendingPatternDays",
+      label: "Attending Pattern Days",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "billingDaysSessions",
+      label: "Billing Days Sessions",
+      type: "number",
+    },
+    {
+      name: "courseRateId",
+      label: "Course Rate",
+      type: "select",
+      options: courseRateOption?.map((c) => ({
+        value: c.courseRateId,
+        label: c.aboveUnits,
+      })),
+    },
+    {
+      name: "patternDiscount",
+      label: "Pattern Discount",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "rackPrice",
+      label: "Rack Price",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "dnOrDiscount",
+      label: "Dn Or Discount",
+      type: "text",
+      options: [
+        { value: "Dn", label: "Dn" },
+        { value: "Discount", label: "Discount" },
+      ],
+    },
+    {
+      name: "billingRate",
+      label: "Billing Rate",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "cgstAmount",
+      label: "CGST Amount",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "sgstAmount",
+      label: "SGST Amount",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "totalDebitAmount",
+      label: "Total Debit Amount",
+      type: "number",
+      disabled: true,
+    },
+    {
+      name: "openEnrollment",
+      label: "Open Enrollment",
+      type: "checkbox",
+    },
+    {
+      name: "printRemarks",
+      label: "Print Remarks",
+      type: "text",
+    },
+    {
+      name: "officeRemarks",
+      label: "Office Remarks",
+      type: "text",
+    },
+    {
+      name: "walkInName",
+      label: "walkIn Name",
+      type: "text",
+    },
+    {
+      name: "walkInContact",
+      label: "walkIn Contact",
+      type: "text",
+      disabled: true,
+    },
+    {
+      name: "memberApprovalStatus",
+      label: "Member Approval Status",
+      type: "text",
+      disabled: true,
+    },
+    {
+      name: "academyApprovalStatus",
+      label: "Academy Approval Status",
+      type: "text",
+      disabled: true,
+    },
+    {
+      name: "finalTSLApproval",
+      label: "Final TSL Approval",
+      type: "text",
+      disabled: true,
+    },
+    {
+      name: "ChangeNo",
+      label: "Change No",
+      type: "text",
+      disabled: true,
+    },
+    {
+      name: "previousCourseId",
+      label: "Previous CourseID",
+      type: "text",
+      disabled: true,
+    },
+    {
+      name: "processingCharges",
+      label: "Processing Charges",
+      type: "text",
     },
   ];
 
