@@ -6,7 +6,6 @@ import { FormContent } from "@/components/form-modal/form-content";
 
 import { createBatch, editBatch } from "@/api/batch.api";
 import { getCourses } from "@/api/course.api";
-import { getAcademies } from "@/api/academy.api";
 import type { Batch } from "@/types/batch";
 import { toast } from "@/hooks/use-toast";
 import { format as dfFormat } from "date-fns";
@@ -15,6 +14,11 @@ import { getActivities } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
+import { getEntities } from "@/api/entity.api";
+import type { Entity } from "@/types/entity";
+import type { membership } from "@/types/membership";
+import { getMemberships } from "@/api/membership.api";
+import type { Course } from "@/types/course";
 
 type Props = {
   isOpen: boolean;
@@ -125,10 +129,12 @@ export function BatchFormModal({
   };
 
   const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
-
-  const getAllActivity = async () => {
+  const [membershipOptions, setMembershipOptions] = useState<membership[]>([]);
+  const getAllActivityOptionFun = async () => {
     try {
-      const response: Response<Activity[]> = await getActivities({ limit: 100 });
+      const response: Response<Activity[]> = await getActivities({
+        limit: 200,
+      });
       const items = response?.data || [];
 
       setActivityOptions(items);
@@ -142,17 +148,37 @@ export function BatchFormModal({
     }
   };
 
+  const getMembershipOptionFun = async () => {
+    try {
+      const res: Response<membership[]> = await getMemberships({
+        limit: 200,
+      });
+      const items = res?.data || ([] as membership[]);
+      setMembershipOptions(items);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to fetch Membership",
+        variant: "destructive",
+      });
+    }
+  };
+
   const empty: Partial<Batch> = {
-    batchName: initialData?.batchName ?? "",
-    academyId: initialData?.academyId ?? undefined,
+    batchType: initialData?.batchType ?? "",
+    entityId: initialData?.entityId ?? undefined,
+    activityId: initialData?.activityId ?? undefined,
+    membershipId: initialData?.membershipId ?? undefined,
     courseId: initialData?.courseId ?? undefined,
-    maxCapacity: initialData?.maxCapacity ?? undefined,
-    activityName: initialData?.activityName ?? undefined,
+    batchName: initialData?.batchName ?? "",
     introduceDate: formatDateInput(initialData?.introduceDate) ?? undefined,
     suspendedDate: formatDateInput(initialData?.suspendedDate) ?? undefined,
+    maxCapacity: initialData?.maxCapacity ?? undefined,
     startTime: formatTimeInput(initialData?.startTime) ?? undefined,
     endTime: formatTimeInput(initialData?.endTime) ?? undefined,
-    weekDays: numberToWeekArray(initialData?.weekDays as any) ?? [],
+    daysPerWeek: initialData?.daysPerWeek ?? 0,
+    daysPattern: numberToWeekArray(initialData?.daysPattern as any) ?? [],
+    admissionCriteria: initialData?.admissionCriteria ?? undefined,
     status: (initialData?.status ?? "active") as "active" | "suspended",
   };
 
@@ -162,18 +188,8 @@ export function BatchFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const [academies, setAcademies] = useState<
-    Array<{ id: number; name: string }>
-  >([]);
-  const [courses, setCourses] = useState<
-    Array<{
-      id: number;
-      name: string;
-      sessionMinutes?: number;
-      weekDays?: number | string | null;
-      maxCapacity?: number | null;
-    }>
-  >([]);
+  const [entity, setEntity] = useState<Entity[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
   const [batchType, setBatchType] = useState<Enums[]>([]);
@@ -197,11 +213,9 @@ export function BatchFormModal({
     const loadTopOptions = async () => {
       setLoadingOptions(true);
       try {
-        await getAllActivity();
-
-        if (initialData?.activityName) {
-          await loadAcademiesByActivity(String(initialData.activityName));
-        }
+        await getAllActivityOptionFun();
+        await getEntitiesOptionFun();
+        await getMembershipOptionFun();
       } catch (err) {
         console.error("Failed to load top-level options:", err);
         toast({
@@ -242,24 +256,17 @@ export function BatchFormModal({
     }
   }, []);
 
-  const loadAcademiesByActivity = useCallback(async (activityName?: string) => {
+  const getEntitiesOptionFun = useCallback(async () => {
     try {
       setLoadingOptions(true);
-      const academiesData = await getAcademies({
-        academyType: activityName,
+      const res: Response<Entity[]> = await getEntities({
         limit: 100,
       });
-      const academyArr = Array.isArray(
-        (academiesData as any)?.data ?? academiesData
-      )
-        ? (academiesData as any)?.data ?? academiesData
-        : [];
-      setAcademies(
-        academyArr.map((a: any) => ({ id: a.academyId, name: a.academyName }))
-      );
+      const items = res?.data as Entity[];
+      setEntity(items);
     } catch (err) {
       console.error("Failed to load academies for activity:", err);
-      setAcademies([]);
+      setEntity([]);
       toast({
         title: "Error",
         description: "Failed to load academies",
@@ -270,26 +277,14 @@ export function BatchFormModal({
     }
   }, []);
 
-  const loadCourses = useCallback(async (academyId?: number | string) => {
+  const loadCourses = useCallback(async (activityId: number) => {
     try {
-      const id = academyId ? Number(academyId) : undefined;
-      const coursesData = await getCourses({ academyId: id });
+      const res: Response<Course[]> = await getCourses({
+        activityId: activityId,
+      });
 
-      const coursesArr = Array.isArray(
-        (coursesData as any)?.data ?? coursesData
-      )
-        ? (coursesData as any)?.data ?? coursesData
-        : [];
-
-      setCourses(
-        coursesArr.map((c: any) => ({
-          id: c.courseId,
-          name: c.courseName,
-          sessionMinutes: c.sessionMinutes,
-          weekDays: c.weekDays,
-          maxCapacity: c.batchCapacity,
-        }))
-      );
+      const items = res?.data as Course[];
+      setCourses(items);
     } catch (err) {
       console.error("Failed to load courses", err);
       setCourses([]);
@@ -305,106 +300,99 @@ export function BatchFormModal({
     const mapped = {
       ...empty,
       ...(initialData && {
-        batchName: initialData.batchName ?? empty.batchName,
-        academyId: initialData.academyId ?? empty.academyId,
+        batchType: initialData.batchType ?? empty.batchType,
+        entityId: initialData.entityId ?? empty.entityId,
+        activityId: initialData.activityId ?? empty.activityId,
+        membershipId: initialData.membershipId ?? empty.membershipId,
         courseId: initialData.courseId ?? empty.courseId,
-        activityName: initialData.activityName ?? empty.activityName,
+        batchName: initialData.batchName ?? empty.batchName,
         introduceDate:
           formatDateInput(initialData?.introduceDate) ?? empty.introduceDate,
         suspendedDate:
           formatDateInput(initialData?.suspendedDate) ?? empty.suspendedDate,
+        maxCapacity: initialData.maxCapacity ?? empty.maxCapacity,
         startTime: formatTimeInput(initialData?.startTime) ?? empty.startTime,
         endTime: formatTimeInput(initialData?.endTime) ?? empty.endTime,
-        weekDays:
-          numberToWeekArray(initialData?.weekDays as any) ?? empty.weekDays,
+        daysPattern:
+          numberToWeekArray(initialData?.daysPattern as any) ??
+          empty.daysPattern,
+        admissionCriteria:
+          initialData.admissionCriteria ?? empty.admissionCriteria,
         status: initialData?.status ?? empty.status,
       }),
     };
 
     loadBatchType();
 
-    getAllActivity();
+    getAllActivityOptionFun();
     setValues(mapped);
     setFieldErrors({});
     setError(null);
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof Batch, val: any) => {
-    if (field === "activityName") {
-      const activityName = val ? String(val) : undefined;
+    if (field === "activityId") {
+      const activityId = val ? Number(val) : undefined;
       setValues((p) => ({
         ...p,
-        activityName,
-        academyId: undefined,
+        activityId,
         courseId: undefined,
       }));
-      setAcademies([]);
-      if (activityName) {
-        loadAcademiesByActivity(activityName);
-      }
+      loadCourses(activityId ?? 0);
       setFieldErrors((prev) => {
-        if (!prev.activityName) return prev;
+        if (!prev.activityId) return prev;
         const copy = { ...prev };
-        delete copy.activityName;
+        delete copy.activityId;
         return copy;
       });
       return;
     }
-
-    if (field === "academyId") {
-      const academyId = val ? Number(val) : undefined;
-      setValues((p) => ({
-        ...p,
-        academyId,
-        courseId: undefined,
-      }));
-      loadCourses(academyId);
-      setFieldErrors((prev) => {
-        if (!prev.academyId) return prev;
-        const copy = { ...prev };
-        delete copy.academyId;
-        return copy;
-      });
-      return;
-    }
-
     if (field === "courseId") {
       const courseIdVal = val ? Number(val) : undefined;
       const selectedCourse = courseIdVal
-        ? courses.find((c) => Number(c.id) === Number(courseIdVal))
+        ? courses.find((c) => Number(c.courseId) === Number(courseIdVal))
         : undefined;
 
       setValues((prev: any) => {
-        let nextWeekDays = prev.weekDays;
-        if (selectedCourse && selectedCourse.weekDays != null) {
-          const auto = numberToWeekArray(selectedCourse.weekDays as any);
+        let daysPattern = prev.daysPattern;
+        if (selectedCourse && selectedCourse.daysPattern != null) {
+          const auto = numberToWeekArray(selectedCourse.daysPattern as any);
           if (auto.length > 0) {
-            nextWeekDays = auto;
+            daysPattern = auto;
           }
         }
-
+        let sessionMinutes = prev.sessionMinutes;
+        if (selectedCourse) {
+          sessionMinutes = selectedCourse.sessionMinutes;
+        }
         let nextEndTime = prev.endTime;
-        if (
-          selectedCourse &&
-          typeof selectedCourse.sessionMinutes === "number" &&
-          prev.startTime
-        ) {
+        if (selectedCourse && prev.startTime) {
           nextEndTime = addMinutesToTime(
             prev.startTime,
             selectedCourse.sessionMinutes
           );
         }
+
         let maxCapacity: number | null | undefined = prev.maxCapacity
           ? prev.maxCapacity
           : null;
         if (selectedCourse) {
-          maxCapacity = selectedCourse.maxCapacity;
+          maxCapacity = selectedCourse.batchCapacity;
+        }
+
+        let daysPerWeek: number | null | undefined = prev.daysPerWeek
+          ? prev.daysPerWeek
+          : null;
+        if (selectedCourse) {
+          daysPerWeek = selectedCourse.noOfDaysInWeek;
         }
 
         return {
           ...prev,
           courseId: courseIdVal,
-          weekDays: nextWeekDays,
+          sessionMinutes: sessionMinutes,
+          daysPerWeek: daysPerWeek,
+          daysPattern: daysPattern,
           endTime: nextEndTime,
           maxCapacity: maxCapacity,
         };
@@ -418,62 +406,57 @@ export function BatchFormModal({
       });
       return;
     }
-
-    if (field === "weekDays") {
-      const newVal = Array.isArray(val) ? val : val ? [val] : [];
-      setValues((p) => ({ ...p, weekDays: newVal }));
+    if (field === "entityId") {
+      const entityId = val ? Number(val) : undefined;
+      setValues((p) => ({
+        ...p,
+        entityId,
+      }));
       setFieldErrors((prev) => {
-        if (!prev.weekDays) return prev;
+        if (!prev.entityId) return prev;
         const copy = { ...prev };
-        delete copy.weekDays;
+        delete copy.entityId;
+        return copy;
+      });
+      return;
+    }
+
+    if (field === "daysPattern") {
+      const newVal = Array.isArray(val) ? val : val ? [val] : [];
+      setValues((p) => ({ ...p, daysPattern: newVal }));
+      setFieldErrors((prev) => {
+        if (!prev.daysPattern) return prev;
+        const copy = { ...prev };
+        delete copy.daysPattern;
         return copy;
       });
       return;
     }
 
     if (field === "startTime") {
-      const newStart = val;
       setValues((prev) => {
-        let nextEndTime = prev.endTime;
-
-        if (prev.courseId) {
-          const selectedCourse = courses.find(
-            (c) => Number(c.id) === Number(prev.courseId)
-          );
-          if (
-            selectedCourse &&
-            typeof selectedCourse.sessionMinutes === "number"
-          ) {
-            nextEndTime = addMinutesToTime(
-              newStart,
-              selectedCourse.sessionMinutes
-            );
-          }
-        }
+        const nextEndTime = addMinutesToTime(
+          val, // ✅ use new startTime
+          Number(prev.sessionMinutes)
+        );
 
         return {
           ...prev,
-          startTime: newStart,
+          startTime: val,
           endTime: nextEndTime,
         };
       });
 
+      setValues((p) => ({ ...p, [field]: val }));
       setFieldErrors((prev) => {
-        if (!prev.startTime) return prev;
+        if (!prev[field as string]) return prev;
         const copy = { ...prev };
-        delete copy.startTime;
+        delete copy[field as string];
         return copy;
       });
-      return;
     }
-
     setValues((p) => ({ ...p, [field]: val }));
-    setFieldErrors((prev) => {
-      if (!prev[field as string]) return prev;
-      const copy = { ...prev };
-      delete copy[field as string];
-      return copy;
-    });
+
   };
 
   const validate = useCallback(() => {
@@ -481,11 +464,11 @@ export function BatchFormModal({
     if (!values.batchName || String(values.batchName).trim() === "") {
       errs.batchName = "Batch name is required";
     }
-    if (!values.activityName) {
-      errs.activityName = "Activity is required";
+    if (!values.activityId) {
+      errs.activityId = "Activity is required";
     }
-    if (!values.academyId) {
-      errs.academyId = "Academy is required";
+    if (!values.entityId) {
+      errs.entityId = "entity is required";
     }
 
     if (!values.startTime) {
@@ -496,11 +479,11 @@ export function BatchFormModal({
     }
 
     if (
-      !values.weekDays ||
-      !Array.isArray(values.weekDays) ||
-      values.weekDays.length < 1
+      !values.daysPattern ||
+      !Array.isArray(values.daysPattern) ||
+      values.daysPattern.length < 1
     ) {
-      errs.weekDays = "Select at least one weekday";
+      errs.daysPattern = "Select at least one weekday";
     }
 
     try {
@@ -536,6 +519,8 @@ export function BatchFormModal({
     setIsSubmitting(true);
     setError(null);
     const errs = validate();
+    console.log(errs);
+    
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       setIsSubmitting(false);
@@ -546,27 +531,27 @@ export function BatchFormModal({
       const normalizedStart = normalizeTimeToHHmm(values.startTime);
       const normalizedEnd = normalizeTimeToHHmm(values.endTime);
 
-      const weekCode = weekArrayToNumber(values.weekDays as any[]);
+      const weekCode = weekArrayToNumber(values.daysPattern as any[]);
 
       const payload: Partial<Batch> = {
-        batchName: String(values.batchName ?? "").trim(),
         batchType: values.batchType,
-        academyId: Number(values.academyId),
-        maxCapacity: Number(values.maxCapacity),
-        admisionCriteria: values.admisionCriteria,
+        entityId: Number(values.entityId),
+        activityId: values.activityId ? Number(values.activityId) : undefined,
+        membershipId: Number(values.membershipId),
         courseId: values.courseId ? Number(values.courseId) : undefined,
-        activityName: values.activityName
-          ? String(values.activityName)
-          : undefined,
+        batchName: String(values.batchName ?? "").trim(),
         introduceDate: values.introduceDate
           ? new Date(values.introduceDate as any)
           : new Date(),
         suspendedDate: values.suspendedDate
           ? new Date(values.suspendedDate as any)
           : undefined,
+        maxCapacity: Number(values.maxCapacity),
         startTime: normalizedStart,
         endTime: normalizedEnd,
-        weekDays: weekCode,
+        daysPerWeek: Number(values.daysPerWeek),
+        daysPattern: weekCode,
+        admissionCriteria: values.admissionCriteria,
         status: values.status ?? "active",
       };
 
@@ -622,53 +607,84 @@ export function BatchFormModal({
 
   const fields = [
     {
-      name: "batchName",
-      label: "Batch Name",
-      type: "text",
-      required: true,
-    },
-    {
       name: "batchType",
       label: "Batch Type",
       type: "select",
-      options: batchType.map((b) => ({
+      options: batchType?.map((b) => ({
         value: b.value,
         label: String(b.value),
       })),
       required: true,
     },
     {
-      name: "activityName",
-      label: "Activity",
-      type: "select",
-      options: activityOptions.map((a) => ({
-        label: a.activityName,
-        value: a.activityName,
-      })),
+      name: "batchName",
+      label: "Batch Name",
+      type: "text",
       required: true,
     },
     {
-      name: "academyId",
-      label: "Academy",
+      name: "activityId",
+      label: "Activity",
       type: "select",
+      options: activityOptions?.map((a) => ({
+        label: a.activityName,
+        value: a.activityId,
+      })),
       required: true,
-      options: academies.map((a) => ({ label: a.name, value: String(a.id) })),
-      disabled: loadingOptions || !values.activityName,
     },
     {
       name: "courseId",
       label: "Course",
       type: "select",
       required: false,
-      options: courses.map((c) => ({ label: c.name, value: String(c.id) })),
-      disabled: loadingOptions || !values.academyId,
+      options: courses?.map((c) => ({
+        label: c.courseName,
+        value: c.courseId,
+      })),
+      disabled: loadingOptions,
     },
     {
-      name: "weekDays",
-      label: "Week Days",
-      type: "multiselect",
+      name: "entityId",
+      label: "entity",
+      type: "select",
       required: true,
-      options: WEEKDAY_OPTIONS,
+      options: entity?.map((a) => ({
+        label: a.entityName,
+        value: a.entityId,
+      })),
+      disabled: loadingOptions,
+    },
+    {
+      name: "introduceDate",
+      label: "Introduce Date",
+      type: "Date",
+    },
+    {
+      name: "suspendedDate",
+      label: "Suspended Date",
+      type: "Date",
+    },
+    {
+      name: "membershipId",
+      label: "membership",
+      type: "select",
+      options: membershipOptions?.map((m) => ({
+        label: m.startDate + "-" + m.endDate,
+        value: m.membershipId,
+      })),
+      required: true,
+    },
+    {
+      name: "maxCapacity",
+      label: "Max Capacity",
+      type: "number",
+      required: true,
+    },
+    {
+      name: "sessionMinutes",
+      label: "Session Minutes",
+      type: "number",
+      required: true,
     },
     {
       name: "startTime",
@@ -684,25 +700,22 @@ export function BatchFormModal({
       disabled: !!values.courseId,
     },
     {
-      name: "admissionCriteria",
-      label: "Admission Criteria",
-      type: "text",
-    },
-    {
-      name: "maxCapacity",
-      label: "Max Capacity",
-      type: "text",
+      name: "daysPerWeek",
+      label: "Days Per Week",
+      type: "number",
       required: true,
     },
     {
-      name: "introduceDate",
-      label: "Introduce Date",
-      type: "Date",
+      name: "daysPattern",
+      label: "Week Days",
+      type: "multiselect",
+      required: true,
+      options: WEEKDAY_OPTIONS,
     },
     {
-      name: "suspendedDate",
-      label: "Suspended Date",
-      type: "Date",
+      name: "admissionCriteria",
+      label: "Admission Criteria",
+      type: "text",
     },
     {
       name: "status",
@@ -724,33 +737,32 @@ export function BatchFormModal({
       }}
     >
       <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-        <div className="flex flex-col max-h-[90vh] overflow-hidden">
+        <div className="flex flex-col max-h-[70vh] overflow-hidden">
           <FormHeader
             title={isEdit ? "Edit Batch" : "Add Batch"}
             onClose={onClose}
           />
-          <div className="flex-1 overflow-y-auto">
-            <FormContent
-              fields={fields}
-              values={values}
-              errors={fieldErrors}
-              loading={loadingOptions}
-              error={error}
-              isSubmitting={isSubmitting}
-              onChange={onChange}
-              layout={layout}
-            />
-          </div>
-          <FormFooter
-            onClose={onClose}
-            onSubmit={handleSubmit}
-            submitLabel={isEdit ? "Update" : "Create"}
+          <FormContent
+            fields={fields}
+            values={values}
+            errors={fieldErrors}
+            loading={loadingOptions}
+            error={error}
             isSubmitting={isSubmitting}
+            onChange={onChange}
+            layout={layout}
           />
         </div>
+        <FormFooter
+          onClose={onClose}
+          onSubmit={handleSubmit}
+          submitLabel={isEdit ? "Update" : "Create"}
+          isSubmitting={isSubmitting}
+        />
       </DialogContent>
     </Dialog>
   );
 }
+  
 
 export default BatchFormModal;

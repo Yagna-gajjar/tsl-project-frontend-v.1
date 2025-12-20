@@ -25,6 +25,8 @@ import {
   Crown,
   Share2,
   Package,
+  Gavel,
+  CircleSlash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -61,6 +63,7 @@ const navigationItems: NavigationItem[] = [
       { label: "Accounts Member", href: "/account/account-member", icon: User },
     ],
   },
+  { name: "Authority", href: "/authority", icon: CircleSlash },
   {
     name: "Courses",
     icon: BookA,
@@ -125,25 +128,19 @@ const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  { name: "Academy", href: "/academy", icon: HomeIcon },
   { name: "Billing", href: "/billing", icon: IndianRupee },
   {
     name: "Staff Management",
     href: "/staff-management",
     icon: Users,
     submenu: [
-      { label: "Coach", href: "/staff-management/coach", icon: Users },
+      // { label: "Coach", href: "/staff-management/coach", icon: Users },
       {
         label: "Coach Assignment",
         href: "/staff-management/coach-assignment",
         icon: Users,
       },
       { label: "Skills", href: "/staff-management/coach-skills", icon: Award },
-      {
-        label: "Academy Coaches",
-        href: "/staff-management/academy-coaches",
-        icon: Users,
-      },
       {
         label: "Staff Attendance",
         href: "/staff-management/attendance",

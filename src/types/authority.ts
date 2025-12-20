@@ -3,5 +3,6 @@ export interface Authority {
   memberId: number;
   accountId: number;
   linkingDate?: Date | string;
-    dlinkDate?: Date | string;   
+  dlinkDate?: Date | string;
+  level?: number;
 }

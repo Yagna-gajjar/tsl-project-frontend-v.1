@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
-  const [data, setData] = useState<Entity[]>([]);
+  const [data, setData] = useState<Entity[]>([]); 
   const [isLoading, setIsLoading] = useState(false);
 
   const [page, setPage] = useState(1);

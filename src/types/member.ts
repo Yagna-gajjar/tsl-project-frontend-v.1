@@ -1,29 +1,29 @@
 export interface Member {
   memberId: number;
+  regDate: Date | string;
+  suspensionDate: Date | string;
   memberFirstName: string;
   memberMiddleName?: string;
   memberLastName: string;
-  dob: Date;
-  email: string;
+  dob: Date | undefined;
+  email: string | undefined;
   bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
-  gender: "male" | "female" | "other";
-  status: "active" | "inactive" | "block";
+  gender: string;
+  personalStatus: string;
   personalStatusOrganization?: string;
+  personalStatusSector: string;
+  mothertongue: string;
   qualification?: string;
-  idProofType?:
-    | "aadhar card"
-    | "pan card"
-    | "voter id"
-    | "passport"
-    | "driving license"
-    | "other";
+  idProofType?: string;
   idProofNumber?: string;
   contactNumber?: string;
-  transportMode: "self drive" | "parents" | "van" | "walking" | "other";
+  transportMode: string;
   addressId: number;
   avatar?: string | null;
   remarks?: string;
   maratialStatus?: string;
+  admitInstruction?: string;
+  status: "active" | "inactive" | "block";
   createdAt?: Date;
   updatedAt?: Date;
 

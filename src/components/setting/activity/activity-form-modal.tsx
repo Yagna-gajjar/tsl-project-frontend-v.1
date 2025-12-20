@@ -9,6 +9,7 @@ import type { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -147,7 +148,7 @@ export function ActivityFormModal({
     },
     {
       name: "srgst",
-      label: "SRGST",
+      label: "Service Accounting Code",
       type: "Number",
       required: true,
     },
@@ -156,24 +157,17 @@ export function ActivityFormModal({
       label: "Activity Type",
       type: "select",
       required: true,
-      options: [
-        { label: "Art", value: "art" },
-        { label: "Child Development", value: "child development" },
-        { label: "Fitness", value: "fitness" },
-        { label: "Performing Arts", value: "performing arts" },
-        { label: "Recreation", value: "recreation" },
-        { label: "Self Development", value: "self development" },
-        { label: "Services", value: "services" },
-        { label: "Sports", value: "sports" },
-        { label: "TSL Charges", value: "tsl charges" },
-      ],
+      options: activityType?.map((a) => ({
+        value: a.value,
+        label: a.value,
+      })),
     },
     {
       name: "description",
       label: "Description",
       type: "textarea",
     },
-  ] as any;
+  ];
 
   return (
     <Dialog

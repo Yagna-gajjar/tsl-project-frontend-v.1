@@ -11,7 +11,7 @@ export interface FormFieldConfig<T extends Record<string, any>> {
   description?: string;
   required?: boolean;
   validation?: (value: any) => string | true;
-  options?: Array<{ label: string; value: any }>;
+  options?: Array<{ label: string | null; value: any }>;
   icon?: ReactNode | LucideIcon;
   disabled?: boolean;
   className?: string;

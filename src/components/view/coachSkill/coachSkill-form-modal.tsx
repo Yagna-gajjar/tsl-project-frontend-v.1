@@ -10,6 +10,8 @@ import type { Response } from "@/types/response";
 import { getActivities } from "@/api/activity.api";
 import { getCoaches } from "@/api/coach.api";
 import type { FormFieldConfig } from "@/components/form-modal/types";
+import { getMembers } from "@/api/member.api";
+import type { Member } from "@/types/member";
 
 type Props = {
   isOpen: boolean;
@@ -41,14 +43,13 @@ export default function CoachSkillFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [coachOptions, setCoachOptions] = useState<{
-    value: string | number,
-    label: string
-  }[]>([]);
-  const [activityOptions, setActivityOptions] = useState<{
-    label: string,
-    value: string | number
-  }[]>([]);
+  const [coachOptions, setCoachOptions] = useState<Member[]>([]);
+  const [activityOptions, setActivityOptions] = useState<
+    {
+      label: string;
+      value: string | number;
+    }[]
+  >([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -63,28 +64,22 @@ export default function CoachSkillFormModal({
         setError(null);
 
         const [resCoach, resActivity] = await Promise.all([
-          getCoaches(),
+          getMembers({ limit: 1000 }),
           getActivities(),
         ]);
-        const coachOpts = Array.isArray(resCoach)
-          ? resCoach.map((coach) => ({
-            value: coach.coachId,
-            label: `${coach.coachFirstName} ${coach.coachLastName}`,
-          }))
-          : [];
+        const coachOpts = resCoach?.data as Member[];
 
         const activityOpts = Array.isArray(resActivity.data)
           ? resActivity.data.map((activity) => ({
-            value: activity.activityId,
-            label: `${activity.activityName}`,
-          }))
+              value: activity.activityId,
+              label: `${activity.activityName}`,
+            }))
           : [];
 
         setCoachOptions(coachOpts);
 
         setActivityOptions(activityOpts);
       } catch {
-
         toast({
           variant: "destructive",
           title: "Failed to load data",
@@ -191,8 +186,9 @@ export default function CoachSkillFormModal({
       }
       toast({
         title: "Success",
-        description: `Coach skill ${initialData?.coachSkillId ? "updated" : "created"
-          } successfully.`,
+        description: `Coach skill ${
+          initialData?.coachSkillId ? "updated" : "created"
+        } successfully.`,
         variant: "success",
       });
 
@@ -201,8 +197,9 @@ export default function CoachSkillFormModal({
     } catch (err) {
       toast({
         title: "Error",
-        description: `Failed to ${initialData?.coachSkillId ? "update" : "create"
-          } coach skill.`,
+        description: `Failed to ${
+          initialData?.coachSkillId ? "update" : "create"
+        } coach skill.`,
         variant: "destructive",
       });
     } finally {
@@ -215,7 +212,10 @@ export default function CoachSkillFormModal({
       name: "coachId",
       label: "Coach Name",
       type: "select",
-      options: coachOptions,
+      options: coachOptions?.map((c) => ({
+        value: c.memberId,
+        label: c.memberFirstName + " " + c.memberLastName,
+      })),
       required: true,
     },
     {

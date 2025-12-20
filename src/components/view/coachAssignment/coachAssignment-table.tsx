@@ -109,13 +109,6 @@ export default function CoachAssignmentTable({
 
   const columns: Column<CoachAssignment>[] = [
     {
-      key: "coachAssignmentId",
-      header: "ID",
-      sortable: true,
-      filterType: null,
-      render: (r) => <span>{r.coachAssignmentId}</span>,
-    },
-    {
       key: "coachName",
       header: "Coach",
       sortable: true,

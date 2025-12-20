@@ -8,23 +8,10 @@ export interface AuthorityQuery {
   page?: number;
   limit?: number;
   sortBy?: string;
+  sortOrder?: SortOrder;
   search?: string;
+  memberId?: number;
   accountId?: number;
-  active?: boolean;
-}
-
-export function getAuthorities(
-  params: AuthorityQuery = {}
-): Promise<Response<Authority[]>> {
-  const qs = toQueryString({
-    page: params.page ?? 1,
-    limit: params.limit ?? 1000,
-    sortBy: params.sortBy ?? "activityId",
-    accountId: params.accountId,
-    active: params.active,
-  });
-
-  return request<Response<Authority[]>>(`${AUTHORITY_BASE}${qs}`);
 }
 
 interface changeauthority {
@@ -40,5 +27,50 @@ export function changeAuthority(
   return request<Response<Authority[]>>(`${AUTHORITY_BASE}/change-authority`, {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+export function getAuthorities(
+  params: AuthorityQuery = {}
+): Promise<Response<Authority[]>> {
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 10,
+    sortBy: params.sortBy ?? "authorityId",
+    sortOrder: params.sortOrder ?? "ASC",
+    search: params.search,
+    memberId: params.memberId,
+    accountId: params.accountId,
+  });
+
+  return request<Response<Authority[]>>(`${AUTHORITY_BASE}${qs}`);
+}
+
+export function getAuthorityById(id: number): Promise<Response<Authority>> {
+  return request<Response<Authority>>(`${AUTHORITY_BASE}/${id}`);
+}
+
+export function createAuthority(
+  payload: Omit<Authority, "authorityId">
+): Promise<Response<Authority>> {
+  return request<Response<Authority>>(AUTHORITY_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateAuthority(
+  id: number,
+  payload: Partial<Authority>
+): Promise<Response<Authority>> {
+  return request<Response<Authority>>(`${AUTHORITY_BASE}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteAuthority(id: number): Promise<Response<void>> {
+  return request<Response<void>>(`${AUTHORITY_BASE}/${id}`, {
+    method: "DELETE",
   });
 }

@@ -553,20 +553,11 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose }: Props) {
                       <SelectValue placeholder="Set Relationship for ALL..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* {relationshipEnums.map((r) => (
+                      {relationshipEnums.map((r) => (
                         <SelectItem key={r.value} value={r.value}>
                           {r.value}
                         </SelectItem>
-                      ))} */}
-                      <SelectItem key={"son"} value={"son"}>
-                        son
-                      </SelectItem>
-                      <SelectItem key={"daughter"} value={"daughter"}>
-                        daughter
-                      </SelectItem>
-                      <SelectItem key={"wife"} value={"wife"}>
-                        wife
-                      </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
 
@@ -672,21 +663,11 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose }: Props) {
                         <SelectValue placeholder="Relationship..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* {relationshipEnums.map((r) => (
+                        {relationshipEnums.map((r) => (
                           <SelectItem key={r.value} value={r.value}>
                             {r.value}
                           </SelectItem>
-                        ))} */}
-
-                        <SelectItem key={"son"} value={"son"}>
-                          son
-                        </SelectItem>
-                        <SelectItem key={"daughter"} value={"daughter"}>
-                          daughter
-                        </SelectItem>
-                        <SelectItem key={"wife"} value={"wife"}>
-                          wife
-                        </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
