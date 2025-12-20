@@ -1,5 +1,5 @@
 export interface CoachAssignment {
-  academyId: number;
+  academyCoachesId: number;
   coachAssignmentId: number;
   coachId?: number | null;
   batchId?: number | null;

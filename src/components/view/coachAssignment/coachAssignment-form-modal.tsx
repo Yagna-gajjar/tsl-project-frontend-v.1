@@ -12,11 +12,11 @@ import type { Response } from "@/types/response";
 import { toast } from "@/hooks/use-toast";
 import { getBatch } from "@/api/batch.api";
 import type { Batch } from "@/types/batch";
-import { getAcademyCoaches } from "@/api/academyCoach.api";
-import type { AcademyCoach } from "@/types/academyCoach";
-import type { Academy } from "@/types/academy";
-import { getAcademies } from "@/api/academy.api";
 import type { FormFieldConfig } from "@/components/form-modal/types";
+import { getMembers } from "@/api/member.api";
+import type { Member } from "@/types/member";
+import { getAccountMembers } from "@/api/accountMember.api";
+import type { AccountMember } from "@/types/accountMember";
 
 type Props = {
   isOpen: boolean;
@@ -26,7 +26,7 @@ type Props = {
 };
 
 const empty: CoachAssignment = {
-  academyId: 0,
+  academyCoachesId: 0,
   coachAssignmentId: 0,
   coachId: undefined,
   batchId: undefined,
@@ -49,8 +49,8 @@ export default function CoachAssignmentFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const [academyOptions, setAcademyOptions] = useState<Academy[]>();
-  const [coachOptions, setCoachOptions] = useState<AcademyCoach[]>();
+  const [academyOptions, setAcademyOptions] = useState<AccountMember[]>();
+  const [coachOptions, setCoachOptions] = useState<Member[]>();
   const [batchOptions, setBatchOptions] = useState<Batch[]>();
 
   useEffect(() => {
@@ -62,10 +62,12 @@ export default function CoachAssignmentFormModal({
   useEffect(() => {
     const fetchAcademy = async () => {
       try {
-        const res: Response<Academy[]> = await getAcademies({
+        const res: Response<AccountMember[]> = await getAccountMembers({
           limit: 100,
         });
-        const data = Array.isArray(res.data) ? res.data : ([] as Academy[]);
+        const data = Array.isArray(res.data)
+          ? res.data
+          : ([] as AccountMember[]);
         setAcademyOptions(data);
       } catch (_) {
         toast({
@@ -82,11 +84,13 @@ export default function CoachAssignmentFormModal({
     const fetchOptions = async () => {
       try {
         const [cRes, bRes]: [
-          cRes: Response<AcademyCoach[]>,
+          cRes: Response<Member[]>,
           bRes: Response<Batch[]>
         ] = await Promise.all([
-          getAcademyCoaches({ limit: 1000, academyId: values.academyId }),
-          getBatch({ limit: 1000, academyId: values.academyId }),
+          getMembers({
+            limit: 1000,
+          }),
+          getBatch({ limit: 1000 }),
         ]);
 
         const coaches = Array.isArray(cRes?.data)
@@ -110,10 +114,10 @@ export default function CoachAssignmentFormModal({
         });
       }
     };
-    if (values.academyId != 0 || values.academyId != undefined) {
+    if (values.academyCoachesId != 0 || values.academyCoachesId != undefined) {
       fetchOptions();
     }
-  }, [values.academyId]);
+  }, [values.academyCoachesId]);
 
   const onChange = (
     field: keyof CoachAssignment,
@@ -205,12 +209,12 @@ export default function CoachAssignmentFormModal({
 
   const fields: FormFieldConfig<CoachAssignment>[] = [
     {
-      name: "academyId",
+      name: "academyCoachesId",
       label: "Academy",
       type: "select",
       options: academyOptions?.map((a) => ({
-        label: a.academyName,
-        value: a.academyId,
+        label: a.accountName,
+        value: a.accountMemberId,
       })),
       required: true,
     },
@@ -219,8 +223,8 @@ export default function CoachAssignmentFormModal({
       label: "Coach",
       type: "select",
       options: coachOptions?.map((c) => ({
-        label: c.coachFirstName + " " + c.coachLastName,
-        value: c.coachId,
+        label: c.memberFirstName + " " + c.memberLastName,
+        value: c.memberId,
       })),
       required: true,
     },

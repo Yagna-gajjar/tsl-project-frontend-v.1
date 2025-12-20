@@ -122,7 +122,7 @@ export default function CoachSkillTable({
       header: "Coach Name",
       key: "coachFirstName",
       render: (row: CoachSkill) =>
-        `${row.coachFirstName + " " + row.coachLastName}`,
+        `${row.memberFirstName + " " + row.memberLastName}`,
       filterType: "text",
       sortable: true,
     },

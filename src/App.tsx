@@ -54,6 +54,7 @@ import CoursePackagePage from "./pages/course-package";
 import CourseSharePage from "./pages/courseShare";
 import CourseRatePage from "./pages/course-rate";
 import ExcelUploader from "./components/ExcelUploader";
+import AuthorityPage from "./pages/authority";
 
 export default function App() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
                   element={<EnrollmentDashboard />}
                 />
                 <Route path="/enrollment" element={<EnrollmentPage />} />
+                <Route path="/authority" element={<AuthorityPage />} />
                 <Route path="/account/accounts" element={<AccountPage />} />
                 <Route
                   path="/account/account-member"
