@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +70,7 @@ function SearchableMultiselect({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-h-10">
+    <div ref={containerRef} className="relative w-full">
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={`flex items-center justify-between gap-2 p-2 border rounded-md bg-background cursor-pointer transition-all ${
@@ -83,17 +83,19 @@ function SearchableMultiselect({
       >
         <div className="flex flex-wrap gap-1 flex-1">
           {selectedValues.length > 0 ? (
-            selectedValues.map((val: any) => {
-              const opt = options.find(
-                (o: any) => String(o.value) === String(val)
-              );
+            selectedValues.map((val) => {
+              const opt = options.find((o) => String(o.value) === String(val));
               return (
                 <span
                   key={String(val)}
-                  className="bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-sm text-xs flex items-center gap-1"
+                  className={`${
+                    !isSingle
+                      ? `bg-primary/10 text-primary text-xs border border-primary/20`
+                      : `text-sm`
+                  } px-2 py-0.5 rounded-sm flex items-center gap-1`}
                 >
                   {opt?.label || val}
-                  {!disabled && (
+                  {!disabled && !isSingle && (
                     <X
                       size={12}
                       className="cursor-pointer hover:text-destructive"
@@ -132,19 +134,22 @@ function SearchableMultiselect({
               onClick={(e) => e.stopPropagation()}
             />
           </div>
-          <div style={{ height: "250px" }}>
+          <div>
             {filteredOptions.length === 0 && !isLoadingMore ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
                 No results found.
               </div>
             ) : (
               <Virtuoso
-                style={{ height: "250px" }}
+                style={{
+                  height: `${Math.min(filteredOptions.length * 42, 250)}px`,
+                  minHeight: "42px",
+                }}
                 data={filteredOptions}
                 endReached={onLoadMore}
                 itemContent={(_index, opt) => {
                   const isSelected = selectedValues.some(
-                    (v: any) => String(v) === String(opt.value)
+                    (v) => String(v) === String(opt.value)
                   );
                   return (
                     <div

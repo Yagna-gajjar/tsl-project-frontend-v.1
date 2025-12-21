@@ -4,47 +4,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, Loader2 } from "lucide-react";
-import type { Account } from "./membership-link-form-modal";
+import type { Membership } from "./membership-link-form-modal";
 
 type Props = {
   search: string;
   setSearch: (value: string) => void;
-  results: Account[];
+  results: Membership[];
   isSearching: boolean;
-  searchAccount: () => Promise<void>;
-  addAccount: (acc: Account) => void;
-  selectedAccounts: Account[];
+  searchMembership: () => Promise<void>;
+  addMembership: (membership: Membership) => void;
+  selectedMemberships: Membership[];
 };
 
-export default function AccountSearchPanel({
+export default function MembershipSearchPanel({
   search,
   setSearch,
   results,
   isSearching,
-  searchAccount,
-  addAccount,
-  selectedAccounts,
+  searchMembership,
+  addMembership,
+  selectedMemberships,
 }: Props) {
   return (
     <div className="space-y-4">
       <h3 className="font-extrabold text-xl text-primary border-b pb-2 tracking-wide">
         <span className="flex items-center gap-2">
           <Search className="w-5 h-5" />
-          Find Accounts
+          Find Memberships
         </span>
       </h3>
 
       <div className="flex gap-2">
         <Input
-          placeholder="Search by Name, Phone, or Email..."
+          placeholder="Search by Membership Name or ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && searchAccount()}
+          onKeyDown={(e) => e.key === "Enter" && searchMembership()}
           className="flex-grow text-base p-2.5"
           disabled={isSearching}
         />
         <Button
-          onClick={searchAccount}
+          onClick={searchMembership}
           disabled={isSearching}
           className="font-semibold px-4"
         >
@@ -60,34 +60,34 @@ export default function AccountSearchPanel({
       <div className="border border-border/70 rounded-lg bg-background shadow-inner h-80 transition-shadow duration-300">
         <ScrollArea className="h-full">
           {results.length > 0 ? (
-            results.map((acc) => (
+            results.map((membership) => (
               <div
-                key={acc.accountId}
+                key={membership.membershipId}
                 className="flex justify-between items-center p-3 border-b border-border/50 last:border-b-0 hover:bg-accent/50 transition-colors"
               >
                 <div className="text-sm">
                   <span className="font-semibold text-foreground block">
-                    {acc.name}
+                    {membership.name}
                   </span>
-                  {acc.phone && (
-                    <span className="text-muted-foreground text-xs">{`Phone: ${acc.phone}`}</span>
-                  )}
+                  <span className="text-muted-foreground text-xs">{`ID: ${membership.membershipId}`}</span>
                 </div>
                 <Button
                   size="sm"
-                  onClick={() => addAccount(acc)}
+                  onClick={() => addMembership(membership)}
                   variant={
-                    selectedAccounts.some((a) => a.accountId === acc.accountId)
+                    selectedMemberships.some(
+                      (m) => m.membershipId === membership.membershipId
+                    )
                       ? "secondary"
                       : "default"
                   }
-                  disabled={selectedAccounts.some(
-                    (a) => a.accountId === acc.accountId
+                  disabled={selectedMemberships.some(
+                    (m) => m.membershipId === membership.membershipId
                   )}
                   className="h-8 text-sm"
                 >
-                  {selectedAccounts.some(
-                    (a) => a.accountId === acc.accountId
+                  {selectedMemberships.some(
+                    (m) => m.membershipId === membership.membershipId
                   ) ? (
                     "Added"
                   ) : (
@@ -103,7 +103,7 @@ export default function AccountSearchPanel({
             </p>
           ) : (
             <p className="p-4 text-center text-base text-muted-foreground pt-12">
-              Start typing and click search to find accounts to link.
+              Start typing and click search to find memberships to link.
             </p>
           )}
         </ScrollArea>
