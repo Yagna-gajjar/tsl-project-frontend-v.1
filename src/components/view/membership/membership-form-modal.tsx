@@ -16,8 +16,6 @@ import type { Response } from "@/types/response";
 
 import { toast } from "@/hooks/use-toast";
 import { addDays, format } from "date-fns";
-import type { Entity } from "@/types/entity";
-import { getEntities } from "@/api/entity.api";
 
 type Props = {
   isOpen: boolean;
@@ -30,35 +28,24 @@ const empty: membership = {
   membershipId: 0,
   membershipMasterId: 0,
   accountId: null,
-
   startDate: format(new Date(), "yyyy-MM-dd"),
   endDate: undefined,
   graceDate: undefined,
   cancelationDate: undefined,
-
   members: 1,
-
   totalIssueCharges: 0,
   appDiscount: 0,
-
   totalFBalance: 0,
   totalCBalance: 0,
   totalSpentCa: 0,
-
   caDepositPRRequiredFBalance: 0,
   caDepositPRRequiredCBalance: 0,
   depositeReq: 0,
-
-  entityId: 0,
-
-  vBalPrInCas: 0,
-
+  vBalPrInCa: 0,
   status: "active",
-
   actualFBalance: 0,
   actualCBalance: 0,
   refundedAmount: 0,
-
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -84,9 +71,16 @@ export default function MembershipFormModal({
   const [membershipMasterOptions, setMembershipMasterOptions] = useState<
     MembershipMaster[]
   >([]);
+
+  const [membershipMasterPage, setMembershipMasterPage] = useState(1);
+  const [hasMoreMembershipMaster, setHasMembershipMaster] = useState(true);
+  const [loadingMembershipMaster, setLoadingMembershipMaster] = useState(false);
   const [accountOptions, setAccountOptions] = useState<Account[]>([]);
 
-  const [entity, setEntity] = useState<Entity[]>([]);
+  const [accountPage, setaccountPage] = useState(1);
+  const [hasMoreAccount, setHasMoreAccount] = useState(true);
+  const [loadingAccount, setLoadingAccount] = useState(false);
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -122,51 +116,69 @@ export default function MembershipFormModal({
     setError(null);
   }, [isOpen, initialData]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const load = async () => {
+  const fetchMembershipMaster = useCallback(
+    async (isInitial = false) => {
+      if (loadingMembershipMaster || (!hasMoreMembershipMaster && !isInitial))
+        return;
+      setLoadingMembershipMaster(true);
       try {
-        const mmRes: Response<MembershipMaster[]> = await getMembershipMasters({
-          page: 1,
-          limit: 1000,
-        });
-
-        const mmRows = mmRes?.data as MembershipMaster[];
-        setMembershipMasterOptions(mmRows);
-
-        if (initialData?.membershipMasterId) {
-          const activeMaster = mmRows.find(
-            (m) => m.membershipMasterId === initialData.membershipMasterId
-          );
-          if (activeMaster) setSelectedMembership(activeMaster);
-        }
-
-        const accRes: Response<Account[]> = await getAccounts({
-          page: 1,
-          limit: 1000,
-        });
-        const accRows = accRes?.data as Account[];
-        setAccountOptions(accRows);
-
-        const entRes: Response<Entity[]> = await getEntities({
-          page: 1,
-          limit: 1000,
-        });
-        const entRows = entRes?.data as Entity[];
-        setEntity(entRows);
+        const page = isInitial ? 1 : membershipMasterPage;
+        const response: Response<MembershipMaster[]> =
+          await getMembershipMasters({
+            limit: PAGE_SIZE,
+            page,
+          });
+        const items = response?.data || ([] as MembershipMaster[]);
+        setMembershipMasterOptions((prev) =>
+          isInitial ? items : [...prev, ...items]
+        );
+        setHasMembershipMaster(items.length === PAGE_SIZE);
+        setMembershipMasterPage(page + 1);
       } catch {
         toast({
           title: "Error",
-          description: "Failed to load dropdown data",
+          description: "Failed to fetch members",
           variant: "destructive",
         });
-        setMembershipMasterOptions([]);
-        setAccountOptions([]);
+      } finally {
+        setLoadingMembershipMaster(false);
       }
-    };
+    },
+    [loadingMembershipMaster, hasMoreMembershipMaster, membershipMasterPage]
+  );
 
-    load();
+  const fetchAccount = useCallback(
+    async (isInitial = false) => {
+      if (loadingAccount || (!hasMoreAccount && !isInitial)) return;
+      setLoadingMembershipMaster(true);
+      try {
+        const page = isInitial ? 1 : accountPage;
+        const response: Response<Account[]> = await getAccounts({
+          limit: PAGE_SIZE,
+          page,
+        });
+        const items = response?.data || ([] as Account[]);
+        setAccountOptions((prev) => (isInitial ? items : [...prev, ...items]));
+        setHasMoreAccount(items.length === PAGE_SIZE);
+        setaccountPage(page + 1);
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to fetch members",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingAccount(false);
+      }
+    },
+    [loadingAccount, hasMoreAccount, accountPage]
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    fetchMembershipMaster();
+    fetchAccount();
   }, [isOpen, initialData]);
 
   // 3. Debounce Effect for Members Input
@@ -191,7 +203,7 @@ export default function MembershipFormModal({
       selectedMembership.perMemberRegCharge ?? 0
     );
     const perMemberPerMonthCharge = Number(
-      selectedMembership.commPerMonthPerMember ?? 0
+      selectedMembership.caPerMemberPerMonth ?? 0
     );
     const totalIssueCharges = Math.max(
       perMemberRegCharge * members,
@@ -199,9 +211,9 @@ export default function MembershipFormModal({
     );
 
     /* 2. Applicable Discount */
-    const memberLimit = Number(selectedMembership.DisOnCaUptoMembers);
+    const memberLimit = Number(selectedMembership.disOnCaUptoMembers);
     const discountPerMember =
-      Number(selectedMembership.disOnCaPerMember ?? 0) / 100;
+      Number(selectedMembership.descreaseCaByPercentage ?? 0) / 100;
 
     let applicableMembers;
     if (members === 1) {
@@ -309,7 +321,7 @@ export default function MembershipFormModal({
       const newStartDate = new Date(value as string);
 
       setValues((prev) => {
-        const updates: Partial<membership> = { [field]: value };
+        const updates: Partial<membership> = { [field as string]: value };
 
         if (selectedMembership) {
           updates.endDate = format(
@@ -386,14 +398,14 @@ export default function MembershipFormModal({
         totalCBalance: Number(values.totalCBalance),
         totalSpentCa: Number(values.totalSpentCa),
 
-        minDepositeRequiredFBalance: Number(values.minDepositeRequiredFBalance),
-        minDepositeRequiredCBalance: Number(values.minDepositeRequiredCBalance),
+        caDepositPRRequiredFBalance: Number(values.caDepositPRRequiredFBalance),
+        caDepositPRRequiredCBalance: Number(values.caDepositPRRequiredCBalance),
         depositeReq: Number(values.depositeReq),
 
-        QualifyingRecieptNo: Number(values.QualifyingRecieptNo),
+        qualifyingRecieptNo: Number(values.qualifyingRecieptNo),
         refundPaymentNo: Number(values.refundPaymentNo),
 
-        vBalPrInCas: Number(values.vBalPrInCas),
+        vBalPrInCa: Number(values.vBalPrInCa),
         status: values.status,
       };
 
@@ -428,16 +440,6 @@ export default function MembershipFormModal({
       required: true,
     },
     {
-      name: "entityId",
-      label: "Entity Name",
-      type: "select",
-      options: entity.map((a) => ({
-        value: a.entityId,
-        label: a.entityName,
-      })),
-      required: true,
-    },
-    {
       name: "accountId",
       label: "Account",
       type: "select",
@@ -466,21 +468,21 @@ export default function MembershipFormModal({
     },
 
     {
-      name: "minDepositeRequiredFBalance",
+      name: "caDepositPRRequiredFBalance",
       label: "Min Deposit (F)",
       type: "number",
     },
     {
-      name: "minDepositeRequiredCBalance",
+      name: "caDepositPRRequiredCBalance",
       label: "Min Deposit (Credit)",
       type: "number",
     },
     { name: "depositeReq", label: "Deposit Required", type: "number" },
 
-    { name: "vBalPrInCas", label: "Gift Vouchers", type: "number" },
+    { name: "vBalPrInCa", label: "Gift Vouchers", type: "number" },
 
     {
-      name: "QualifyingRecieptNo",
+      name: "qualifyingRecieptNo",
       label: "Qualifying RecieptNo",
       type: "number",
     },

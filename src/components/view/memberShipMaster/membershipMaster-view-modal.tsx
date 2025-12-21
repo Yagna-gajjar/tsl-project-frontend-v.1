@@ -6,7 +6,7 @@ import {
   CheckCircle,
   Users,
   CreditCard,
-  Building2,
+  IndianRupee,
 } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { MembershipMaster } from "@/types/memberShipMaster";
@@ -38,23 +38,33 @@ const dateRender = (v?: Date | string | null) =>
   v ? new Date(v as Date).toLocaleString() : "-";
 
 const fields: FieldConfig<MembershipMaster>[] = [
-  { key: "membershipMasterId", label: "ID", icon: Hash },
   { key: "membershipType", label: "Membership Type", icon: Users },
+  {
+    key: "entityname",
+    label: "Entity Name",
+    icon: Users,
+  },
   {
     key: "introductionDate",
     label: "Introduce Date",
     icon: Calendar,
-    render: dateRender as any,
+    render: (v) => dateRender(v as string),
   },
   {
     key: "suspensionDate",
     label: "Suspend Date",
     icon: Calendar,
-    render: dateRender as any,
+    render: (v) => dateRender(v as string),
   },
   {
     key: "durationDays",
     label: "Duration (days)",
+    icon: Hash,
+    render: (v) => (typeof v === "number" ? String(v) : "-"),
+  },
+  {
+    key: "billingEntityOfFamily",
+    label: "billing Entity Of Family",
     icon: Hash,
     render: (v) => (typeof v === "number" ? String(v) : "-"),
   },
@@ -68,31 +78,49 @@ const fields: FieldConfig<MembershipMaster>[] = [
     key: "caDepositPR",
     label: "Min F Balance",
     icon: CreditCard,
-    render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
+    render: (v) => Number(v),
+  },
+  {
+    key: "perMemberRegCharge",
+    label: "Reg Charge / Member",
+    icon: IndianRupee,
+    render: (v) => Number(v),
+  },
+  {
+    key: "caPerMemberPerMonth",
+    label: "CA / Member / Month",
+    icon: IndianRupee,
+    render: (v) => Number(v),
+  },
+  {
+    key: "memberLimit",
+    label: "Member Limit",
+    icon: IndianRupee,
+    render: (v) => Number(v),
+  },
+  {
+    key: "fBalPrInCa",
+    label: "Min F Balance",
+    icon: CreditCard,
+    render: (v) => Number(v),
   },
   {
     key: "cBalPrInCa",
     label: "Min C Balance",
     icon: CreditCard,
-    render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
+    render: (v) => Number(v),
   },
   {
     key: "vBalPrInCa",
     label: "Min V Balance (Gift Voucher)",
     icon: CreditCard,
-    render: (v) => (v !== undefined ? Number(v).toFixed(2) : "-"),
-  },
-  {
-    key: "bookingDiscount",
-    label: "Booking Discount",
-    icon: Building2,
-    render: (v) => `${Number(v ?? 0).toFixed(2)}%`,
+    render: (v) => Number(v),
   },
   {
     key: "graceDays",
     label: "Grace Days",
     icon: Hash,
-    render: (v) => (v !== undefined ? String(v) : "-"),
+    render: (v) => Number(v),
   },
   {
     key: "guestAllowed",
@@ -134,13 +162,13 @@ const fields: FieldConfig<MembershipMaster>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: dateRender as any,
+    render: (v) => dateRender(v as string),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Calendar,
-    render: dateRender as any,
+    render: (v) => dateRender(v as string),
   },
 ];
 
