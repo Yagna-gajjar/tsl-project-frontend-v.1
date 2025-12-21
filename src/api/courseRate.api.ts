@@ -18,7 +18,6 @@ const RATE_BASE = import.meta.env.VITE_APP_API_URL + "/course-rate";
 export function getCourseRates(
 	params: CourseRateQuery = {}
 ): Promise<Response<CourseRate[]>> {
-	console.log(params, " parms");
 	const qs = toQueryString({
 		page: params.page ?? 1,
 		limit: params.limit ?? 10,

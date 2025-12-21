@@ -3,61 +3,61 @@ import { request, toQueryString, type SortOrder } from './helper'
 import type { Response } from '@/types/response'
 
 export interface MembersQuery {
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: SortOrder;
-  search?: string;
+	page?: number;
+	limit?: number;
+	sortBy?: string;
+	sortOrder?: SortOrder;
+	search?: string;
 
-  memberFirstName?: string;
-  memberLastName?: string;
-  gender?: string;
-  age?: number | string;
-  mobile?: string;
-  email?: string;
-  city?: string;
-  status?: string;
+	memberFirstName?: string;
+	memberLastName?: string;
+	gender?: string;
+	age?: number | string;
+	mobile?: string;
+	email?: string;
+	city?: string;
+	status?: string;
 
-  familyId?: number | string;
-  familyTypeId?: number | string;
-  identityTypeId?: number | string;
-  teamCategoryId?: number | string;
+	familyId?: number | string;
+	familyTypeId?: number | string;
+	identityTypeId?: number | string;
+	teamCategoryId?: number | string;
 
-  createdFrom?: string;
-  createdTo?: string;
-  maratialStatus?: string;
-  contactNumber?: string;
-  address?: string;
-  idProofNumber?: string;
-  includeCasual?: boolean;
+	createdFrom?: string;
+	createdTo?: string;
+	maratialStatus?: string;
+	contactNumber?: string;
+	address?: string;
+	idProofNumber?: string;
+	includeCasual?: boolean;
 }
 
 const MEMBER_BASE = import.meta.env.VITE_APP_API_URL + "/member";
 
 export function getMembers(
-  params: MembersQuery = {}
+	params: MembersQuery = {}
 ): Promise<Response<Member[]>> {
-  const qs = toQueryString({
-    page: params.page ?? 1,
-    limit: params.limit ?? 10,
-    sortBy: params.sortBy ?? "memberId",
-    sortOrder: params.sortOrder ?? "ASC",
-    search: params.search,
+	const qs = toQueryString({
+		page: params.page ?? 1,
+		limit: params.limit ?? 10,
+		sortBy: params.sortBy ?? "memberId",
+		sortOrder: params.sortOrder ?? "ASC",
+		search: params.search,
 
-    memberFirstName: params.memberFirstName,
-    memberLastName: params.memberLastName,
-    gender: params.gender,
-    mobile: params.mobile,
-    status: params.status,
-    city: params.city,
-    maratialStatus: params.maratialStatus,
-    contactNumber: params.contactNumber,
-    address: params.address,
-    idProofNumber: params.idProofNumber,
-    includeCasual: params.includeCasual,
-  });
+		memberFirstName: params.memberFirstName,
+		memberLastName: params.memberLastName,
+		gender: params.gender,
+		mobile: params.mobile,
+		status: params.status,
+		city: params.city,
+		maratialStatus: params.maratialStatus,
+		contactNumber: params.contactNumber,
+		address: params.address,
+		idProofNumber: params.idProofNumber,
+		includeCasual: params.includeCasual,
+	});
 
-  return request<Response<Member[]>>(`${MEMBER_BASE}${qs}`);
+	return request<Response<Member[]>>(`${MEMBER_BASE}${qs}`);
 }
 
 export function getMemberById(id: number): Promise<Response<Member>> {
