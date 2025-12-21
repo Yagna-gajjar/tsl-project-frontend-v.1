@@ -40,6 +40,7 @@ interface MembershipImportRow {
 	birthdayVenueUsage?: number | string;
 	anniversaryVenueUsage?: number | string;
 	cancelChargesPrOnCa?: number | string;
+	entityId?: number;
 }
 
 export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: MembershipExcelUploadProps) {
@@ -66,9 +67,10 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 		'clubAccess',
 		'birthdayVenueUsage',
 		'anniversaryVenueUsage',
-		'cancelChargesPrOnCa'
+		'cancelChargesPrOnCa',
+		'entityId'
 	], []);
-	
+
 	const handleCreateMembership = useCallback(async (row: MembershipImportRow) => {
 
 		const parseBoolToInt = (val: any): number =>
@@ -114,7 +116,7 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 			birthdayVenueUsage: Number(row.birthdayVenueUsage || 0),
 			anniversaryVenueUsage: Number(row.anniversaryVenueUsage || 0),
 			cancelChargesPrOnCa: row.cancelChargesPrOnCa || 0,
-
+			entityId: row.entityId,
 			status: "active"
 		};
 
@@ -160,7 +162,7 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 								title="Membership Master Sheet"
 								expectedColumns={expectedColumns}
 								createFunction={handleCreateMembership}
-								validateRow={()=>{}}
+								validateRow={() => { }}
 								onUploadComplete={onSuccess}
 							/>
 						</div>

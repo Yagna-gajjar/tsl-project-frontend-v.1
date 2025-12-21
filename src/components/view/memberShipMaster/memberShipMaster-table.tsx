@@ -132,7 +132,7 @@ export default function MembershipMasterTable({
     {
       header: "Entity Name",
       key: "entityId",
-      render: (row) => row.entityname || "-",
+      render: (row) => row.entityName || "-",
     },
     {
       header: "Introduce Date",
