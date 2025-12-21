@@ -55,7 +55,39 @@ export default function MembershipMasterFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [identityTypeOpt, setIdentityTypeOpt] = useState<Entity[]>([]);
+
+  const [entityOpt, setEntityOpt] = useState<Entity[]>([]);
+  const [entityPage, setEntityPage] = useState(1);
+  const [hasMoreEntity, setHasMoreEntity] = useState(true);
+  const [loadingEntity, setLoadingEntity] = useState(false);
+  const PAGE_SIZE = 20;
+
+  const fetchEntity = useCallback(
+    async (isInitial = false) => {
+      if (loadingEntity || (!hasMoreEntity && !isInitial)) return;
+      setLoadingEntity(true);
+      try {
+        const page = isInitial ? 1 : entityPage;
+        const response: Response<Entity[]> = await getEntities({
+          limit: PAGE_SIZE,
+          page,
+        });
+        const items = response?.data || ([] as Entity[]);
+        setEntityOpt((prev) => (isInitial ? items : [...prev, ...items]));
+        setHasMoreEntity(items.length === PAGE_SIZE);
+        setEntityPage(page + 1);
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to fetch members",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingEntity(false);
+      }
+    },
+    [loadingEntity, hasMoreEntity, entityPage]
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -89,15 +121,7 @@ export default function MembershipMasterFormModal({
         updatedAt: new Date(),
       });
     }
-
-    const fetchIdentyType = async () => {
-      const res: Response<Entity[]> = await getEntities();
-      const resOpt = res?.data as Entity[];
-      setIdentityTypeOpt(resOpt);
-    };
-
-    fetchIdentyType();
-
+    fetchEntity();
     setFieldErrors({});
     setError(null);
   }, [initialData, isOpen]);
@@ -154,7 +178,7 @@ export default function MembershipMasterFormModal({
     try {
       const payload: Partial<MembershipMaster> = {
         membershipType: String(values.membershipType),
-        identityTypeId: Number(values.identityTypeId),
+        entityId: Number(values.entityId),
         introductionDate: new Date(values.introductionDate).toISOString(),
         suspensionDate: values.suspensionDate
           ? new Date(values.suspensionDate).toISOString()
@@ -166,7 +190,7 @@ export default function MembershipMasterFormModal({
         minIssueCharge: Number(values.minIssueCharge),
         perMemberRegCharge: Number(values.perMemberRegCharge),
         memberLimit: Number(values.memberLimit),
-        commPerMonthPerMember: Number(values.commPerMonthPerMember),
+        caPerMemberPerMonth: Number(values.caPerMemberPerMonth),
         DisOnCaUptoMembers: Number(values.DisOnCaUptoMembers),
         disOnCaPerMember: Number(values.disOnCaPerMember),
         fBalPrInCa: Number(values.fBalPrInCa),
@@ -234,12 +258,12 @@ export default function MembershipMasterFormModal({
       required: true,
     },
     {
-      name: "identityTypeId",
-      label: "Identity Type",
+      name: "entityId",
+      label: "EntityName",
       type: "select",
-      options: identityTypeOpt?.map((i) => ({
-        value: i.entityId,
-        label: i.entityName,
+      options: entityOpt?.map((e) => ({
+        value: e.entityId,
+        label: e.entityName,
       })),
       required: true,
     },
@@ -292,7 +316,7 @@ export default function MembershipMasterFormModal({
       required: true,
     },
     {
-      name: "commPerMonthPerMember",
+      name: "caPerMemberPerMonth",
       label: "Commitment / Month / Member",
       type: "number",
       required: false,
