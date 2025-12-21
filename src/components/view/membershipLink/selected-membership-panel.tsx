@@ -2,47 +2,47 @@
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, Trash2 } from "lucide-react";
-import type { Account } from "./membership-link-form-modal";
+import { CreditCard, Trash2 } from "lucide-react";
+import type { Membership } from "./membership-link-form-modal";
 
 type Props = {
-  selectedAccounts: Account[];
-  removeAccount: (id: number) => void;
+  selectedMemberships: Membership[];
+  removeMembership: (id: number) => void;
 };
 
-export default function SelectedAccountsPanel({
-  selectedAccounts,
-  removeAccount,
+export default function SelectedMembershipsPanel({
+  selectedMemberships,
+  removeMembership,
 }: Props) {
   return (
     <div className="space-y-4">
       <h3 className="font-extrabold text-xl text-primary border-b pb-2 tracking-wide">
         <span className="flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          Selected Family ({selectedAccounts.length})
+          <CreditCard className="w-5 h-5" />
+          Selected Memberships ({selectedMemberships.length})
         </span>
       </h3>
 
       <div className="border border-border/70 rounded-lg bg-background shadow-inner h-80 transition-shadow duration-300">
         <ScrollArea className="h-full">
-          {selectedAccounts.length > 0 ? (
-            selectedAccounts.map((acc) => (
+          {selectedMemberships.length > 0 ? (
+            selectedMemberships.map((membership) => (
               <div
-                key={acc.accountId}
+                key={membership.membershipId}
                 className="flex justify-between items-center p-3 border-b border-primary/20 last:border-b-0 bg-secondary/10"
               >
                 <div className="text-sm">
                   <span className="font-semibold text-foreground block">
-                    {acc.name}
+                    {membership.name}
                   </span>
-                  <span className="text-muted-foreground text-xs">{`ID: ${acc.accountId}`}</span>
+                  <span className="text-muted-foreground text-xs">{`ID: ${membership.membershipId}`}</span>
                 </div>
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => removeAccount(acc.accountId)}
+                  onClick={() => removeMembership(membership.membershipId)}
                   className="h-8 w-8 p-0"
-                  title={`Remove ${acc.name}`}
+                  title={`Remove ${membership.name}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -50,7 +50,7 @@ export default function SelectedAccountsPanel({
             ))
           ) : (
             <p className="p-4 text-center text-base text-muted-foreground pt-12">
-              Accounts added will appear here.
+              Memberships added will appear here.
             </p>
           )}
         </ScrollArea>
