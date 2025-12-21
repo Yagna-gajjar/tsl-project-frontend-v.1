@@ -84,8 +84,13 @@ function SearchableMultiselect({
     <div ref={containerRef} className="relative w-full">
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`flex items-center justify-between gap-2 p-2 border rounded-md bg-background cursor-pointer transition-all ${isOpen ? "ring-2 ring-ring border-primary" : "border-input"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-accent-foreground/30"}`}
+        className={`flex items-center justify-between gap-2 p-2 border rounded-md bg-background cursor-pointer transition-all ${
+          isOpen ? "ring-2 ring-ring border-primary" : "border-input"
+        } ${
+          disabled
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:border-accent-foreground/30"
+        }`}
       >
         <div className="flex flex-wrap gap-1 flex-1 min-h-[1.5rem]">
           {selectedValues.length > 0 ? (
@@ -94,10 +99,11 @@ function SearchableMultiselect({
               return (
                 <span
                   key={String(val)}
-                  className={`${!isSingle
+                  className={`${
+                    !isSingle
                       ? `bg-primary/10 text-primary text-xs border border-primary/20`
                       : `text-sm`
-                    } px-2 py-0.5 rounded-sm flex items-center gap-1`}
+                  } px-2 py-0.5 rounded-sm flex items-center gap-1`}
                 >
                   {opt?.label ?? val}
                   {!disabled && !isSingle && (
@@ -114,12 +120,16 @@ function SearchableMultiselect({
               );
             })
           ) : (
-            <span className="text-muted-foreground text-sm pl-1">{placeholder}</span>
+            <span className="text-muted-foreground text-sm pl-1">
+              {placeholder}
+            </span>
           )}
         </div>
         <ChevronDown
           size={16}
-          className={`text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`text-muted-foreground transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </div>
 
@@ -137,7 +147,9 @@ function SearchableMultiselect({
           </div>
           <div>
             {filteredOptions.length === 0 && !isLoadingMore ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">No results found.</div>
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No results found.
+              </div>
             ) : (
               <Virtuoso
                 style={{
@@ -147,7 +159,9 @@ function SearchableMultiselect({
                 data={filteredOptions}
                 endReached={onLoadMore}
                 itemContent={(_index, opt) => {
-                  const isSelected = selectedValues.some((v) => String(v) === String(opt.value));
+                  const isSelected = selectedValues.some(
+                    (v) => String(v) === String(opt.value)
+                  );
                   return (
                     <div
                       key={String(opt.value)}
@@ -155,12 +169,18 @@ function SearchableMultiselect({
                         e.stopPropagation();
                         toggleOption(opt.value);
                       }}
-                      className={`flex items-center px-3 py-2.5 cursor-pointer transition-colors ${isSelected ? "bg-accent text-accent-foreground" : "hover:bg-muted/50"
-                        }`}
+                      className={`flex items-center px-3 py-2.5 cursor-pointer transition-colors ${
+                        isSelected
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-muted/50"
+                      }`}
                     >
                       <div
-                        className={`mr-3 w-4 h-4 border rounded flex items-center justify-center transition-colors ${isSelected ? "bg-primary border-primary" : "border-input"
-                          }`}
+                        className={`mr-3 w-4 h-4 border rounded flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? "bg-primary border-primary"
+                            : "border-input"
+                        }`}
                       >
                         {isSelected && (
                           <div className="w-2 h-2 bg-primary-foreground rounded-full" />

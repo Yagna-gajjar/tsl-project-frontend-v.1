@@ -1,41 +1,23 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-
+import { useEffect, useState, useCallback } from "react";
 import { FormContent } from "@/components/form-modal/form-content";
 import { FormFooter } from "@/components/form-modal/form-footer";
-
-import type { Enrollment } from "@/types/enrollment";
-import type { Response } from "@/types/response";
-import type { Activity } from "@/types/activity";
-import type { Course } from "@/types/course";
-import type { Member } from "@/types/member";
-import type { Entity } from "@/types/entity";
-
 import { getMembers } from "@/api/member.api";
+// Assuming you have an activity API similar to members
 import { getActivities } from "@/api/activity.api";
-import { getCourses } from "@/api/course.api";
-import { getEntities } from "@/api/entity.api";
-import { createEnrollment } from "@/api/enrollment.api";
-
 import { toast } from "@/hooks/use-toast";
-import { getCourseRates } from "@/api/courseRate.api";
+import { format } from "date-fns";
+import type { Enrollment } from "@/types/enrollment";
+import type { Activity } from "@/types/activity";
+import type { Entity } from "@/types/entity";
+import { getEntities } from "@/api/entity.api";
+import type { Course } from "@/types/course";
+import { getCourses } from "@/api/course.api";
 import type { CourseRate } from "@/types/courseRate";
+import { getCourseRates } from "@/api/courseRate.api";
+import { addDays } from "@/helpers/helper";
 
-type Props = {
-  setRateTableData: any;
-};
-
-const EnrollmentFormNew = ({ setRateTableData }: Props) => {
-  const navigate = useNavigate();
-
+const EnrollmentFormNew = () => {
   const [error, setError] = useState("");
-  const [members, setMembers] = useState<Member[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [entities, setEntities] = useState<Entity[]>([]);
-  const [courseRateOption, setCourseRateOption] = useState<CourseRate[]>([]);
-  const memberName = "djfv"
   const [values, setValues] = useState<Enrollment>({
     enrollmentId: 0,
     firstEnrollmentId: 0,
@@ -45,163 +27,279 @@ const EnrollmentFormNew = ({ setRateTableData }: Props) => {
     membershipId: 0,
     accountId: 0,
     memberId: 0,
-    memberName: memberName,
+    memberName: "",
     activityId: 0,
-
     permittedDays: 0,
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
     endDate: undefined,
     membersEnrolled: 1,
-
     academyEntityId: 0,
     courseId: 0,
-
     attendingPattern: "",
     attendingPatternDays: 0,
     billingDaysSessions: 0,
-
     courseRateId: 0,
     patternDiscount: 0,
     rackPrice: 0,
     dnOrDiscount: 0,
     dnAccountId: 0,
-
     billingRate: 0,
     costToMember: 0,
     roundedAmount: 0,
     billingAmount: 0,
-
     cgstAmount: 0,
     sgstAmount: 0,
     totalDebitAmount: 0,
-
     openEnrollment: false,
     printRemarks: "",
     officeRemarks: "",
-
     walkingName: "",
     walkingContact: "",
-
     memberApprovalStatus: 0,
     academyApprovalStatus: 0,
     finalTSLApproval: 0,
-
     changeNo: 0,
     previousCourseID: 0,
     processingCharge: 0,
-
     status: "active",
   });
 
-  const WEEK_DAYS = useMemo(
-    () => [
-      { label: "Monday", value: 1 },
-      { label: "Tuesday", value: 2 },
-      { label: "Wednesday", value: 3 },
-      { label: "Thursday", value: 4 },
-      { label: "Friday", value: 5 },
-      { label: "Saturday", value: 6 },
-      { label: "Sunday", value: 7 },
-    ],
-    []
+  const PAGE_SIZE = 20;
+
+  // --- Member State ---
+  const [memberOptions, setMemberOptions] = useState<any[]>([]);
+  const [memberPage, setMemberPage] = useState(1);
+  const [hasMoreMembers, setHasMoreMembers] = useState(true);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  // --- Activity State ---
+  const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const [hasMoreActivities, setHasMoreActivities] = useState(true);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+
+  // --- Entity State ---
+  const [entityOptions, setEntityOptions] = useState<Entity[]>([]);
+  const [entityPage, setEntityPage] = useState(1);
+  const [hasMoreEntity, setHasMoreEntity] = useState(true);
+  const [loadingEntity, setLoadingEntity] = useState(false);
+
+  // --- Course State ---
+  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
+  const [coursePage, setCoursePage] = useState(1);
+  const [hasMoreCourse, setHasMoreCourse] = useState(true);
+  const [loadingCourse, setLoadingCourse] = useState(false);
+
+  // --- Course Rate State ---
+  const [courseRateOptions, setCourseRateOptions] = useState<CourseRate[]>([]);
+  const [courseRatePage, setCourseRatePage] = useState(1);
+  const [hasMoreCourseRate, setHasMoreCourseRate] = useState(true);
+  const [loadingCourseRate, setLoadingCourseRate] = useState(false);
+
+  // --- Member Fetching Logic ---
+  const fetchMembers = useCallback(
+    async (isInitial = false) => {
+      if (loadingMembers || (!hasMoreMembers && !isInitial)) return;
+      setLoadingMembers(true);
+      try {
+        const page = isInitial ? 1 : memberPage;
+        const response = await getMembers({ limit: PAGE_SIZE, page });
+        const items = response?.data || [];
+        setMemberOptions((prev) => (isInitial ? items : [...prev, ...items]));
+        setHasMoreMembers(items.length === PAGE_SIZE);
+        setMemberPage(page + 1);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch members",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingMembers(false);
+      }
+    },
+    [loadingMembers, hasMoreMembers, memberPage]
   );
+
+  const fetchActivities = useCallback(
+    async (isInitial = false) => {
+      if (loadingActivities || (!hasMoreActivities && !isInitial)) return;
+      setLoadingActivities(true);
+      try {
+        const page = isInitial ? 1 : activityPage;
+        const response = await getActivities({ limit: PAGE_SIZE, page });
+        const items = response?.data || [];
+        setActivityOptions((prev) => (isInitial ? items : [...prev, ...items]));
+        setHasMoreActivities(items.length === PAGE_SIZE);
+        setActivityPage(page + 1);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch activities",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingActivities(false);
+      }
+    },
+    [loadingActivities, hasMoreActivities, activityPage]
+  );
+
+  const fetchAcademyEntity = useCallback(
+    async (isInitial = false) => {
+      if (loadingEntity || (!hasMoreEntity && !isInitial)) return;
+      setLoadingEntity(true);
+      try {
+        const page = isInitial ? 1 : entityPage;
+        const response = await getEntities({ limit: PAGE_SIZE, page });
+        const items = response?.data || [];
+        setEntityOptions((prev) => (isInitial ? items : [...prev, ...items]));
+        setHasMoreEntity(items.length === PAGE_SIZE);
+        setEntityPage(page + 1);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch activities",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingEntity(false);
+      }
+    },
+    [loadingEntity, hasMoreEntity, entityPage]
+  );
+
+  const fetchCourse = useCallback(
+    async (isInitial = false) => {
+      if (loadingCourse || (!hasMoreCourse && !isInitial)) return;
+      setLoadingCourse(true);
+      try {
+        const page = isInitial ? 1 : entityPage;
+        const response = await getCourses({ limit: PAGE_SIZE, page });
+        const items = response?.data || [];
+        setCourseOptions((prev) => (isInitial ? items : [...prev, ...items]));
+        setHasMoreCourse(items.length === PAGE_SIZE);
+        setCoursePage(page + 1);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch activities",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingEntity(false);
+      }
+    },
+    [loadingCourse, hasMoreCourse, coursePage]
+  );
+
+  const fetchCourseRate = useCallback(
+    async (isInitial = false) => {
+      if (loadingCourseRate || (!hasMoreCourseRate && !isInitial)) return;
+      setLoadingCourseRate(true);
+      try {
+        const page = isInitial ? 1 : courseRatePage;
+        const response = await getCourseRates({ limit: PAGE_SIZE, page });
+        const items = response?.data || [];
+        setCourseRateOptions((prev) =>
+          isInitial ? items : [...prev, ...items]
+        );
+        setHasMoreCourseRate(items.length === PAGE_SIZE);
+        setCourseRatePage(page + 1);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch activities",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingCourseRate(false);
+      }
+    },
+    [loadingCourseRate, hasMoreCourseRate, courseRatePage]
+  );
+
+  const WEEK_DAYS = [
+    { label: "Monday", value: 1 },
+    { label: "Tuesday", value: 2 },
+    { label: "Wednesday", value: 3 },
+    { label: "Thursday", value: 4 },
+    { label: "Friday", value: 5 },
+    { label: "Saturday", value: 6 },
+    { label: "Sunday", value: 7 },
+  ];
 
   const daysArrayToNumber = (days: number[]) => {
     return Number(days.sort((a, b) => a - b).join(""));
   };
 
   useEffect(() => {
-    const loadInit = async () => {
-      try {
-        const [mRes, aRes, eRes]: [
-          Response<Member[]>,
-          Response<Activity[]>,
-          Response<Entity[]>
-        ] = await Promise.all([
-          getMembers(),
-          getActivities({ limit: 100 }),
-          getEntities({ limit: 1000 }),
-        ]);
-
-        setMembers(mRes?.data || []);
-        setActivities(aRes?.data || []);
-        setEntities(eRes?.data || []);
-      } catch {
-        setError("Failed to load initial data");
-      }
-    };
-
-    loadInit();
+    fetchMembers(true);
+    fetchActivities(true);
+    fetchAcademyEntity(true);
+    fetchCourse(true);
+    fetchCourseRate;
+    true;
   }, []);
 
   useEffect(() => {
-    if (!values.academyEntityId) return;
+    const { attendingStartDate, permittedDays } = values;
 
-    const loadCourses = async () => {
-      try {
-        const res: Response<Course[]> = await getCourses({
-          activityId: values.activityId,
-          entityId: values.academyEntityId,
-        });
-        setCourses(res?.data || []);
-      } catch {
-        setError("Failed to load courses");
-      }
-    };
+    // Guard clauses – no fake dates
+    if (!attendingStartDate || !permittedDays || permittedDays <= 0) {
+      setValues((prev) => ({
+        ...prev,
+        endDate: undefined,
+      }));
+      return;
+    }
 
-    loadCourses();
-  }, [values.academyEntityId]);
+    const calculatedEndDate = addDays(attendingStartDate, permittedDays);
+    console.log(calculatedEndDate);
 
-  
-
-  useEffect(() => {
-    const loadCourseRate = async () => {
-      const res: Response<CourseRate[]> = await getCourseRates({
-        courseId: values.courseId,
-      });
-      const data = res?.data as CourseRate[];
-      setCourseRateOption(data);
-    };
-    loadCourseRate();
-  }, [values.courseId]);
+    setValues((prev: any) => ({
+      ...prev,
+      endDate: format(calculatedEndDate, "yyyy-MM-dd"),
+    }));
+  }, [values.attendingStartDate, values.permittedDays]);
 
   const onChange = useCallback((field: string, value: any) => {
-    setValues((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setValues((prev: any) => ({ ...prev, [field]: value }));
   }, []);
 
   const handleSubmit = async () => {
-    try {
-      const payload = {
-        ...values,
-        attendingPattern: daysArrayToNumber(values.attendingPattern),
-      };
-
-      const res: Response<Enrollment> = await createEnrollment(payload);
-
-      if (res.success) {
-        toast({
-          title: "Success",
-          description: "Enrollment created successfully",
-          variant: "success",
-        });
-        navigate("/enrollment");
-      } else {
-        setError("Failed to create enrollment");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Enrollment creation failed");
-    }
+    const payload = {
+      ...values,
+      attendingPattern: daysArrayToNumber(values.attendingPattern),
+    };
+    console.log("Submitting values:", payload);
+    toast({ title: "Success", description: "Form submitted" });
   };
 
   const fields = [
     {
-      name: "memberName",
+      name: "memberId",
       label: "Member Name",
-      type: "select"
+      type: "select",
+      required: true,
+      options: memberOptions.map((m) => ({
+        label: `${m.memberFirstName} ${m.memberLastName}`,
+        value: m.memberId,
+      })),
+      onLoadMore: () => fetchMembers(),
+      isLoadingMore: loadingMembers,
+    },
+    {
+      name: "activityId",
+      label: "Activity",
+      type: "select",
+      required: true,
+      options: activityOptions.map((a) => ({
+        label: a.activityName,
+        value: a.activityId,
+      })),
+      onLoadMore: () => fetchActivities(),
+      isLoadingMore: loadingActivities,
     },
     {
       name: "enrollmentDate",
@@ -209,45 +307,15 @@ const EnrollmentFormNew = ({ setRateTableData }: Props) => {
       type: "Date",
       disabled: true,
     },
-    {
-      name: "activityId",
-      label: "Activity",
-      require: true,
-      type: "select",
-      options: activities?.map((a) => ({
-        value: a.activityId,
-        label: a.activityName,
-      })),
-    },
-    {
-      name: "permittedDays",
-      label: "Permited Days",
-      type: "number",
-      require: true,
-    },
-    {
-      name: "attendingStartDate",
-      label: "Attending Start Date",
-      type: "Date",
-      require: true,
-    },
-    {
-      name: "endDate",
-      label: "End Date",
-      type: "Date",
-      require: true,
-      disabled: true,
-    },
-    {
-      name: "membersEnrolled",
-      label: "Members Enrolled",
-      type: "number",
-    },
+    { name: "permittedDays", label: "Permitted Days", type: "number" },
+    { name: "attendingStartDate", label: "Attending Start Date", type: "Date" },
+    { name: "endDate", label: "End Date", type: "Date", disabled: true },
+    { name: "membersEnrolled", label: "Members Enrolled", type: "number" },
     {
       name: "academyEntityId",
       label: "Academy Entity",
       type: "select",
-      options: entities?.map((e) => ({
+      options: entityOptions?.map((e) => ({
         value: e.entityId,
         label: e.entityName,
       })),
@@ -256,7 +324,7 @@ const EnrollmentFormNew = ({ setRateTableData }: Props) => {
       name: "courseId",
       label: "Course",
       type: "select",
-      options: courses?.map((c) => ({
+      options: courseOptions?.map((c) => ({
         value: c.courseId,
         label: c.courseName,
       })),
@@ -283,7 +351,7 @@ const EnrollmentFormNew = ({ setRateTableData }: Props) => {
       name: "courseRateId",
       label: "Course Rate",
       type: "select",
-      options: courseRateOption?.map((c) => ({
+      options: courseRateOptions?.map((c) => ({
         value: c.courseRateId,
         label: c.aboveUnits,
       })),
@@ -396,22 +464,21 @@ const EnrollmentFormNew = ({ setRateTableData }: Props) => {
     },
   ];
 
-
   return (
     <div className="flex flex-col w-full max-h-[90vh] overflow-hidden">
-      <div className="overflow-auto">
-        <h1 className="text-center text-blue-600 font-bold text-2xl py-2">
+      <div className="overflow-auto px-4">
+        <h1 className="text-center text-blue-600 font-bold text-2xl py-4">
           Enrollment Details
         </h1>
 
         <FormContent
           fields={fields as any}
-          values={values as any}
+          values={values}
           errors={{}}
           loading={false}
           error={error}
           isSubmitting={false}
-          onChange={onChange as any}
+          onChange={onChange}
           layout="grid"
         />
       </div>
