@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ExcelUpload from '@/components/ExcelUploader';
-import { createMembership } from '@/api/membership.api';
+import { createMembershipMaster } from '@/api/membershipMaster.api';
 import type { MembershipMaster } from '@/types/memberShipMaster';
 
 interface MembershipExcelUploadProps {
@@ -14,36 +14,38 @@ interface MembershipExcelUploadProps {
 // Interface for raw Excel data (handles flexible types from spreadsheet)
 interface MembershipImportRow {
 	membershipType: string;
-	identityTypeId?: string | number;
-	introductionDate: string | number;
-	suspensionDate: string | number;
+	introductionDate?: string | number;
+	suspensionDate?: string | number;
 	billingEntityOfFamily?: string;
 	membershipDetails: string;
+
 	durationDays: number | string;
 	caDepositPR: number | string;
 	minIssueCharge: number | string;
 	perMemberRegCharge: number | string;
-	commPerMonthPerMember?: number | string;
+	commPerMemberPerMonth?: number | string;
+
 	memberLimit?: number | string;
-	DisOnCaUptoMembers?: number | string;
-	disOnCaPerMember?: number | string;
+	disOnCaUptoMembers?: number | string;
+	descreaseCaByPercentage?: number | string;
+
 	fBalPrInCa?: number | string;
 	cBalPrInCa: number | string;
 	vBalPrInCa?: number | string;
-	bookingDiscount: number | string;
+
 	graceDays: number | string;
 	guestAllowed: string | boolean;
 	clubAccess: string | boolean;
-	birthdayVenueUsage: number | string;
-	anniversaryVenueUsage: number | string;
-	cancelChargesPrOnCa: number | string;
+
+	birthdayVenueUsage?: number | string;
+	anniversaryVenueUsage?: number | string;
+	cancelChargesPrOnCa?: number | string;
 }
 
 export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: MembershipExcelUploadProps) {
 
 	const expectedColumns = useMemo(() => [
 		'membershipType',
-		'identityTypeId',
 		'introductionDate',
 		'suspensionDate',
 		'billingEntityOfFamily',
@@ -52,14 +54,13 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 		'caDepositPR',
 		'minIssueCharge',
 		'perMemberRegCharge',
-		'commPerMonthPerMember',
+		'commPerMemberPerMonth',
 		'memberLimit',
-		'DisOnCaUptoMembers',
-		'disOnCaPerMember',
+		'disOnCaUptoMembers',
+		'descreaseCaByPercentage',
 		'fBalPrInCa',
 		'cBalPrInCa',
 		'vBalPrInCa',
-		'bookingDiscount',
 		'graceDays',
 		'guestAllowed',
 		'clubAccess',
@@ -67,65 +68,60 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 		'anniversaryVenueUsage',
 		'cancelChargesPrOnCa'
 	], []);
-
-	const handleValidateRow = useCallback((row: MembershipImportRow) => {
-		if (!row.membershipType) return "Membership Type is required";
-		if (!row.introductionDate) return "Introduction Date is required";
-		if (!row.durationDays || isNaN(Number(row.durationDays))) return "Valid Duration Days is required";
-
-		// Example of financial validation
-		if (isNaN(Number(row.caDepositPR))) return "CA Deposit must be a number";
-		if (isNaN(Number(row.cBalPrInCa))) return "Current Balance PR must be a number";
-
-		return null;
-	}, []);
-
+	
 	const handleCreateMembership = useCallback(async (row: MembershipImportRow) => {
-		// Helper to handle boolean strings from Excel (e.g., "TRUE", "Yes", 1)
-		const parseBool = (val: any) => {
-			if (typeof val === 'boolean') return val;
-			return String(val).toLowerCase() === 'true' || String(val) === '1' || String(val).toLowerCase() === 'yes';
-		};
+
+		const parseBoolToInt = (val: any): number =>
+			val === true || String(val).toLowerCase() === 'true' || String(val) === '1' ? 1 : 0;
+
+		const parseBool = (val: any): boolean =>
+			val === true || String(val).toLowerCase() === 'true' || String(val) === '1';
 
 		const payload: MembershipMaster = {
 			membershipType: row.membershipType,
-			identityTypeId: row.identityTypeId ? Number(row.identityTypeId) : undefined,
 
-			introductionDate: new Date(row.introductionDate).toISOString(),
-			suspensionDate: new Date(row.suspensionDate).toISOString(),
+			introductionDate: row.introductionDate
+				? new Date(row.introductionDate).toISOString().split('T')[0]
+				: undefined,
+
+			suspensionDate: row.suspensionDate
+				? new Date(row.suspensionDate).toISOString().split('T')[0]
+				: undefined,
 
 			billingEntityOfFamily: row.billingEntityOfFamily,
 			membershipDetails: row.membershipDetails,
 
-			// Numeric Conversions
 			durationDays: Number(row.durationDays),
 			caDepositPR: Number(row.caDepositPR),
 			minIssueCharge: Number(row.minIssueCharge),
 			perMemberRegCharge: Number(row.perMemberRegCharge),
-			commPerMonthPerMember: row.commPerMonthPerMember ? Number(row.commPerMonthPerMember) : 0,
+			commPerMemberPerMonth: Number(row.commPerMemberPerMonth || 0),
+
 			memberLimit: row.memberLimit ? Number(row.memberLimit) : undefined,
-			DisOnCaUptoMembers: Number(row.DisOnCaUptoMembers || 0),
-			disOnCaPerMember: Number(row.disOnCaPerMember || 0),
+			disOnCaUptoMembers: Number(row.disOnCaUptoMembers || 0),
+			descreaseCaByPercentage: Number(row.descreaseCaByPercentage || 0),
+
 			fBalPrInCa: Number(row.fBalPrInCa || 0),
 			cBalPrInCa: Number(row.cBalPrInCa),
 			vBalPrInCa: Number(row.vBalPrInCa || 0),
-			bookingDiscount: Number(row.bookingDiscount),
+
 			graceDays: Number(row.graceDays),
 
-			// Boolean Conversions
-			guestAllowed: parseBool(row.guestAllowed),
+			// 🔑 schema-critical
+			guestAllowed: parseBoolToInt(row.guestAllowed),
 			clubAccess: parseBool(row.clubAccess),
 
-			birthdayVenueUsage: Number(row.birthdayVenueUsage),
-			anniversaryVenueUsage: Number(row.anniversaryVenueUsage),
-			cancelChargesPrOnCa: Number(row.cancelChargesPrOnCa),
+			birthdayVenueUsage: Number(row.birthdayVenueUsage || 0),
+			anniversaryVenueUsage: Number(row.anniversaryVenueUsage || 0),
+			cancelChargesPrOnCa: row.cancelChargesPrOnCa || 0,
 
 			status: "active"
 		};
 
-		await createMembership(payload);
+		await createMembershipMaster(payload);
 		console.log(`✅ Imported Membership: ${payload.membershipType}`);
 	}, []);
+
 
 	return (
 		<AnimatePresence>
@@ -164,7 +160,7 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 								title="Membership Master Sheet"
 								expectedColumns={expectedColumns}
 								createFunction={handleCreateMembership}
-								validateRow={handleValidateRow}
+								validateRow={()=>{}}
 								onUploadComplete={onSuccess}
 							/>
 						</div>
