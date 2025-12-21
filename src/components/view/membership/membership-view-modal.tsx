@@ -18,9 +18,6 @@ const toRs = (v?: number) => `Rs. ${Number(v ?? 0).toFixed(2)}`;
 const dateRender = (v?: Date | string | null) =>
   v ? new Date(v as Date).toLocaleString() : "-";
 
-/**
- * Base fields (NO LOGIC HERE)
- */
 const baseViewFields: FieldConfig<membership | any>[] = [
   {
     key: "addAccount",
@@ -88,9 +85,6 @@ export default function MembershipViewModal({
   const [rowData, setRowData] = useState<membership | null>(null);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
 
-  /**
-   * Fetch membership
-   */
   const fetchFn = useCallback(
     async (id?: number | string): Promise<membership> => {
       const useId = id ?? membershipId;

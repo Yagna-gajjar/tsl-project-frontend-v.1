@@ -36,15 +36,10 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
         sortOrder,
         search: search || undefined,
         membershipMasterId: filters.membershipMasterId as number | undefined,
-        familyId: filters.familyId as number | undefined,
         status: filters.status as string | undefined,
       });
 
-      const rowsRaw = Array.isArray(res)
-        ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as membership[])
-        : [];
+      const rowsRaw = res?.data as membership[];
 
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
@@ -99,19 +94,23 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const columns: Column<membership>[] = [
-    { key: "membershipId", header: "ID", sortable: true },
-
     {
-      key: "membershipMasterId",
-      header: "Membership Master",
+      key: "membershipType",
+      header: "Membership Type",
       sortable: true,
-      filterType: "number",
+      filterType: "text",
     },
     {
-      key: "accountId",
+      key: "accountName",
       header: "Account",
       sortable: true,
-      filterType: "number",
+      filterType: "text",
+    },
+    {
+      key: "entityName",
+      header: "Entity",
+      sortable: true,
+      filterType: "text",
     },
     {
       key: "startDate",
@@ -128,9 +127,17 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
         r.endDate ? new Date(r.endDate).toLocaleDateString() : "-",
     },
     {
+      key: "graceDate",
+      header: "Grace Date",
+      sortable: true,
+      render: (r) =>
+        r.endDate ? new Date(r.endDate).toLocaleDateString() : "-",
+    },
+    {
       key: "members",
       header: "Members",
       sortable: true,
+      render: (r) => r.members,
     },
     {
       key: "totalIssueCharges",
@@ -139,10 +146,93 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => `Rs. ${Number(r.totalIssueCharges ?? 0).toFixed(2)}`,
     },
     {
+      key: "appDiscount",
+      header: "Appicable Discount",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.appDiscount ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "totalFBalance",
+      header: "F Balacne",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.totalFBalance ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "totalCBalance",
+      header: "C Balacne",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.totalCBalance ?? 0).toFixed(2)}`,
+    },
+    {
       key: "totalSpentCa",
       header: "Spent",
       sortable: true,
       render: (r) => `Rs. ${Number(r.totalSpentCa ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "caDepositPRRequiredFBalance",
+      header: "CS deposite (%) required F",
+      sortable: true,
+      render: (r) =>
+        `Rs. ${Number(r.caDepositPRRequiredFBalance ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "caDepositPRRequiredCBalance",
+      header: "CS deposite (%) required C",
+      sortable: true,
+      render: (r) =>
+        `Rs. ${Number(r.caDepositPRRequiredCBalance ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "depositeReq",
+      header: "Deposite required",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.depositeReq ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "qualifyingRecieptNo",
+      header: "Qualifying Reciept No",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.qualifyingRecieptNo ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "refundPaymentNo",
+      header: "Refund Payment No",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.refundPaymentNo ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "vBalPrInCa",
+      header: "V Balance ",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.vBalPrInCa ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "actualFBalance",
+      header: "Actual F Bal ",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.actualFBalance ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "actualCBalance",
+      header: "Actual C Bal ",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.actualCBalance ?? 0).toFixed(2)}`,
+    },
+    {
+      key: "cancelationDate",
+      header: "Cancelation Date",
+      sortable: true,
+      render: (r) =>
+        r.endDate
+          ? new Date(r.cancelationDate as Date).toLocaleDateString()
+          : "-",
+    },
+    {
+      key: "refundedAmount",
+      header: "Refunded Amount",
+      sortable: true,
+      render: (r) => `Rs. ${Number(r.refundedAmount ?? 0).toFixed(2)}`,
     },
     {
       key: "status",

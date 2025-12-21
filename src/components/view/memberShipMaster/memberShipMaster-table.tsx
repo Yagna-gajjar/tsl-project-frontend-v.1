@@ -123,17 +123,16 @@ export default function MembershipMasterTable({
 
   const columns: Column<MembershipMaster>[] = [
     {
-      header: "ID",
-      key: "membershipMasterId",
-      render: (row) => row.membershipMasterId ?? "-",
-      sortable: true,
-    },
-    {
-      header: "Type",
+      header: "Membership Type",
       key: "membershipType",
       render: (row) => row.membershipType || "-",
       sortable: true,
       filterType: "text",
+    },
+    {
+      header: "Entity Name",
+      key: "entityId",
+      render: (row) => row.entityname || "-",
     },
     {
       header: "Introduce Date",
@@ -152,6 +151,13 @@ export default function MembershipMasterTable({
       key: "durationDays",
       render: (row) =>
         typeof row.durationDays === "number" ? row.durationDays : "-",
+      sortable: true,
+      filterType: "number",
+    },
+    {
+      header: "CA Deposit (%)",
+      key: "caDepositPR",
+      render: (row) => `Rs. ${Number(row.caDepositPR ?? 0).toFixed(2)}`,
       sortable: true,
       filterType: "number",
     },
@@ -184,11 +190,44 @@ export default function MembershipMasterTable({
       filterType: "number",
     },
     {
-      header: "Booking Discount (%)",
-      key: "bookingDiscount",
-      render: (row) => `${Number(row.bookingDiscount ?? 0).toFixed(2)}%`,
-      sortable: true,
-      filterType: "number",
+      header: "Reg Charge / member",
+      key: "perMemberRegCharge",
+      render: (row) => Number(row.perMemberRegCharge),
+    },
+    {
+      header: "CA / Member / Month",
+      key: "caPerMemberPerMonth",
+      render: (row) => Number(row.caPerMemberPerMonth),
+    },
+    {
+      header: "Member Limit",
+      key: "memberLimit",
+      render: (row) => Number(row.caPerMemberPerMonth),
+    },
+    {
+      header: "Dis On CA upto Members",
+      key: "disOnCaUptoMembers",
+      render: (row) => Number(row.disOnCaUptoMembers),
+    },
+    {
+      header: "descrease CA (%)",
+      key: "descreaseCaByPercentage",
+      render: (row) => Number(row.descreaseCaByPercentage),
+    },
+    {
+      header: "F Balance In CA",
+      key: "fBalPrInCa",
+      render: (row) => Number(row.fBalPrInCa),
+    },
+    {
+      header: "C Balance In CA",
+      key: "cBalPrInCa",
+      render: (row) => Number(row.cBalPrInCa),
+    },
+    {
+      header: "V Balance In CA",
+      key: "vBalPrInCa",
+      render: (row) => Number(row.vBalPrInCa),
     },
     {
       header: "Grace Days",
@@ -220,6 +259,16 @@ export default function MembershipMasterTable({
       ],
     },
     {
+      header: "BirthdayVenue Usage",
+      key: "birthdayVenueUsage",
+      render: (row) => row.birthdayVenueUsage,
+    },
+    {
+      header: "AnniversaryVenue Usage",
+      key: "anniversaryVenueUsage",
+      render: (row) => row.anniversaryVenueUsage,
+    },
+    {
       header: "Cancellation Charges",
       key: "cancelChargesPrOnCa",
       render: (row) => `Rs. ${Number(row.cancelChargesPrOnCa ?? 0).toFixed(2)}`,
@@ -229,6 +278,16 @@ export default function MembershipMasterTable({
       header: "Details",
       key: "membershipDetails",
       render: (row) => row.membershipDetails || "-",
+    },
+    {
+      header: "status",
+      key: "status",
+      render: (row) => row.status || "-",
+    },
+    {
+      header: "createdBy",
+      key: "createdBy",
+      render: (row) => row.createdBy || "-",
     },
     {
       header: "Created At",

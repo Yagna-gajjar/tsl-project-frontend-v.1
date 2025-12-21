@@ -12,19 +12,21 @@ export interface MembershipMaster {
   perMemberRegCharge: number;
   caPerMemberPerMonth?: number;
   memberLimit?: number;
-  DisOnCaUptoMembers?: number;
-  disOnCaPerMember?: number;
+  disOnCaUptoMembers?: number;
+  descreaseCaByPercentage?: number;
   fBalPrInCa?: number;
   cBalPrInCa: number;
   vBalPrInCa?: number;
-  bookingDiscount: number;
   graceDays: number;
   guestAllowed: boolean;
   clubAccess: boolean;
   birthdayVenueUsage: number;
   anniversaryVenueUsage: number;
   cancelChargesPrOnCa: number;
+  status?: string;
+  createdBy?: number;
   createdAt?: Date;
   updatedAt?: Date;
-  status?: string;
+
+  entityname: string;
 }
