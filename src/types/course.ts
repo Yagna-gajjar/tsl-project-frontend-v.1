@@ -1,8 +1,8 @@
 export interface Course {
   courseId: number;
   courseType?: string | null;
-  classification?: string | null;
   activityId: number;
+  classification?: string | null;
   entityId: number;
   introduceDate: string;
   suspensionDate?: string | null;
@@ -11,7 +11,6 @@ export interface Course {
   sessionMinutes: number;
   noOfDaysInWeek: number;
   daysPattern?: string | null;
-  availabilityPattern: string;
   minEnrollmentUnits: number;
   maxPerson?: number | null;
   batchCapacity: number;
@@ -27,4 +26,7 @@ export interface Course {
   createdBy?: number | null;
   createdAt: string;
   updatedAt: string;
+
+  activityName?: string;
+  entityName?: string;
 }

@@ -90,8 +90,11 @@ const emptyRate: CourseRate = {
   membershipType: "",
   aboveUnits: 0,
   unitRate: 0,
+  enrChangesAllowed: 0,
+  enrFreezingAllowed: 0,
+  minDaysInEnr: 0,
+  discountOnDayReduce: 0,
   introduceDate: format(new Date(), "yyyy-MM-dd"),
-  changable: 0,
   daySelection: false,
   freezing: 0,
   createdAt: "",
@@ -406,7 +409,7 @@ export default function CourseFormModal({
 
       onSave();
       onClose();
-    } catch (err) {
+    } catch {
       toast({
         title: "Failed",
         description: "failed to create course",
@@ -460,7 +463,6 @@ export default function CourseFormModal({
       const shares = [...p.shares];
       const current = shares[index];
 
-      // Non-share fields (entityId, roleInCourse, etc.)
       if (field !== "share") {
         shares[index] = { ...current, [field]: value };
         return { ...p, shares };
@@ -472,10 +474,8 @@ export default function CourseFormModal({
 
       const isTax = TAX_SHARE_TYPES.includes(current.roleInCourse || "");
 
-      // Update current share
       shares[index] = { ...current, share: newValue };
 
-      // 1️⃣ CGST / SGST → mirror to the other tax, DO NOT touch TSL
       if (isTax) {
         const otherTaxIndex = shares.findIndex(
           (s, i) =>
@@ -492,7 +492,6 @@ export default function CourseFormModal({
         return { ...p, shares };
       }
 
-      // 2️⃣ Non-GST share → adjust TSL only
       const tslIndex = shares.findIndex(
         (s) => s.roleInCourse === "TSL Charges"
       );
