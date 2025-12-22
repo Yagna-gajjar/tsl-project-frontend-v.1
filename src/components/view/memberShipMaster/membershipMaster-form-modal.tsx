@@ -25,7 +25,7 @@ type Props = {
 const empty: MembershipMaster = {
   membershipMasterId: 0,
   membershipType: "",
-  entityname: "",
+  entityName: "",
   introductionDate: format(new Date(), "yyyy-MM-dd"),
   suspensionDate: undefined as unknown as Date,
   membershipDetails: "",

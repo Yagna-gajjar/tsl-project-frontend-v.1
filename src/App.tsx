@@ -159,15 +159,15 @@ export default function App() {
                   element={<AreaPage />}
                 />
                 <Route
-                  path="/membership-master"
+                  path="/membership/membership-master"
                   element={<MembershipMasterPage />}
                 />
                 <Route
-                  path="/membership-registration"
+                  path="/membership/membership-registration"
                   element={<MembershipPage />}
                 />
                 <Route
-                  path="/membership-link"
+                  path="/membership/membership-link"
                   element={<MembershipLinkPage />}
                 />
                 <Route path="/payment" element={<PaymentPage />} />

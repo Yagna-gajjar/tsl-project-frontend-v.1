@@ -46,13 +46,13 @@ export function MemberListModal({
     if (!accountId) return;
 
     try {
-      const res: Response<any[]> = await getAuthorities({
+      const res: Response<Authority[]> = await getAuthorities({
         accountId,
         active: true,
       });
 
-      if (res?.success && res.data?.length > 0) {
-        setCurrentMemberId(res.data[0].memberId);
+      if (res?.success) {
+        setCurrentMemberId(res?.data ? res?.data[0].memberId : null);
       }
     } catch (err) {
       console.error("Failed to fetch authority", err);
@@ -240,7 +240,7 @@ type Props = {
   onClose: () => void;
 };
 
-const baseViewFields: FieldConfig<Account>[] = [
+const baseViewFields: FieldConfig<Account | any>[] = [
   {
     key: "addMember",
     label: "Expand Family",

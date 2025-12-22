@@ -55,6 +55,7 @@ const navigationItems: NavigationItem[] = [
   },
   {
     name: "Account",
+    href: "/account",
     icon: User2,
     submenu: [
       { label: "Accounts", href: "/account/accounts", icon: User },
@@ -64,6 +65,7 @@ const navigationItems: NavigationItem[] = [
   { name: "Authority", href: "/authority", icon: CircleSlash },
   {
     name: "Courses",
+    href: "/course",
     icon: BookA,
     submenu: [
       { label: "Courses", href: "/course/courses", icon: BookA },
@@ -151,10 +153,11 @@ const navigationItems: NavigationItem[] = [
   {
     name: "Membership",
     icon: Crown,
+    href: "/membership",
     submenu: [
-      { label: "Membership Master", href: "/membership-master" },
-      { label: "Membership Reg", href: "/membership-registration" },
-      { label: "Membership Link", href: "/membership-link" },
+      { label: "Membership Master", href: "/membership/membership-master" },
+      { label: "Membership Reg", href: "/membership/membership-registration" },
+      { label: "Membership Link", href: "/membership/membership-link" },
     ],
   },
 ];

@@ -27,7 +27,7 @@ const empty: Account = {
   suspensionDate: undefined,
   entityId: 0,
   defineEntity: "Family",
-  name: "",
+  accountName: "",
   addressId: undefined,
   contact: "",
   proffesionalSector: "",
@@ -121,7 +121,7 @@ export default function AccountFormModal({
 
     if (!values.defineEntity?.trim())
       errs.defineEntity = "Entity Type is required";
-    if (!values.name?.trim()) errs.name = "Account name is required";
+    if (!values.accountName?.trim()) errs.name = "Account name is required";
     if (!values.line1?.trim()) errs.line1 = "Address Line 1 is required";
     if (!values.city?.trim()) errs.city = "City is required";
     if (!values.state?.trim()) errs.state = "State is required";
@@ -194,7 +194,12 @@ export default function AccountFormModal({
       disabled: true,
       required: true,
     },
-    { name: "name", label: "Account Name", type: "text", required: true },
+    {
+      name: "accountName",
+      label: "Account Name",
+      type: "text",
+      required: true,
+    },
     { name: "contact", label: "Contact", type: "text" },
     { name: "proffesionalSector", label: "Professional Sector", type: "text" },
     {
