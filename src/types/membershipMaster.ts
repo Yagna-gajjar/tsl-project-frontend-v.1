@@ -28,5 +28,5 @@ export interface MembershipMaster {
   createdAt?: Date;
   updatedAt?: Date;
 
-  entityname: string;
+  entityName: string;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Layers, RefreshCcw, Search } from "lucide-react";
+import { Plus, Layers, RefreshCcw, Search, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -9,6 +9,7 @@ import type { EnumGroup, Enums as EnumItem } from "@/types/enums";
 
 import { EnumCategoryCard } from "./enum-category-card";
 import { EditEnumSheet } from "./edit-enum-sheet";
+import EnumExcelUpload from "./enum-excel-upload";
 
 export default function EnumsPage() {
   const [data, setData] = useState<EnumGroup[]>([]);
@@ -19,6 +20,7 @@ export default function EnumsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [newItemCategory, setNewItemCategory] = useState<string>("");
+  const [excelOpen, setExcelOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -60,7 +62,6 @@ export default function EnumsPage() {
   return (
     <div className="container mx-auto p-6 space-y-8 min-h-screen bg-slate-50/50 dark:bg-zinc-950 transition-colors">
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -69,14 +70,23 @@ export default function EnumsPage() {
           <p className="text-muted-foreground">Manage system constants and lookup values.</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setExcelOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+          >
+            <Upload className="w-5 h-5" />
+            Upload Excel
+          </Button>
           <Button variant="outline" size="icon" onClick={fetchData}><RefreshCcw className={loading ? "animate-spin" : ""} /></Button>
           <Button onClick={() => handleCreate()} className="bg-indigo-600 hover:bg-indigo-700">
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
+
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
         <Input
@@ -87,7 +97,6 @@ export default function EnumsPage() {
         />
       </div>
 
-      {/* Masonry Grid */}
       <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
         <AnimatePresence mode="popLayout">
           {filteredData.map((group) => {
@@ -101,7 +110,6 @@ export default function EnumsPage() {
         </AnimatePresence>
       </motion.div>
 
-      {/* The Sheet that handles ALL Add/Edit logic */}
       <EditEnumSheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
@@ -109,6 +117,13 @@ export default function EnumsPage() {
         initialCategory={newItemCategory}
         onSaved={fetchData}
       />
+
+      <EnumExcelUpload
+        isOpen={excelOpen}
+        onClose={() => setExcelOpen(false)}
+        onSuccess={() => { }}
+      />
+
     </div>
   );
 }

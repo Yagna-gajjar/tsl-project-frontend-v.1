@@ -66,8 +66,8 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
   }, [loadData, refreshKey]);
 
   const columns: Column<Account>[] = [
-    { key: "name", header: "Account Name", sortable: true },
-    { key: "defineEntity", header: "Define Entity" },
+    { key: "accountName", header: "Account Name", sortable: true },
+    { key: "entityType", header: "Define Type" },
     { key: "contact", header: "Contact" },
     { key: "proffesionalSector", header: "Sector" },
     {
