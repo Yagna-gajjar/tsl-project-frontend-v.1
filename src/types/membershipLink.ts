@@ -5,4 +5,8 @@ export interface MembershipLink {
   linkDate: Date | string;
   dLinkDate: Date | string;
   accountId: number;
+
+  membershipType?: string;
+  accountName?: string;
+  membershipName?: string;
 }

@@ -4,7 +4,7 @@ import { getMembershipLinkById } from "@/api/membershipLink.api";
 import type { MembershipLink } from "@/types/membershipLink";
 import type { FieldConfig } from "@/components/view-modal/types";
 import type { Response } from "@/types/response";
-import { Link, User, Hash } from "lucide-react";
+import { Link, User } from "lucide-react";
 
 type Props = {
   isOpen: boolean;
@@ -13,10 +13,11 @@ type Props = {
 };
 
 const fields: FieldConfig<MembershipLink>[] = [
-  { key: "membershipLinkId", label: "ID", icon: Hash },
-  { key: "membershipMasterId", label: "Membership Master", icon: Link },
-  { key: "membershipId", label: "Membership", icon: Link },
+  { key: "membershipType", label: "Membership Master", icon: Link },
+  { key: "membershipName", label: "Membership", icon: Link },
   { key: "accountId", label: "Account", icon: User },
+  { key: "linkDate", label: "Link Date", icon: Link },
+  { key: "dLinkDate", label: "D-Link Date", icon: Link },
 ];
 
 export default function MembershipLinkViewModal({

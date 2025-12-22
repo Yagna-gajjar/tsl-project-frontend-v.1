@@ -5,8 +5,15 @@ import {
 } from "@/components/view-modal/view-modal";
 import type { membership } from "@/types/membership";
 import { getMembershipById } from "@/api/membership.api";
-import { Plus, Hash, Calendar, CreditCard, CheckCircle } from "lucide-react";
+import {
+  Plus,
+  Calendar,
+  CreditCard,
+  CheckCircle,
+  IndianRupee,
+} from "lucide-react";
 import MembershipLinkFormModal from "@/components/view/membershipLink/membership-link-form-modal";
+import type { Response } from "@/types/response";
 
 type Props = {
   isOpen: boolean;
@@ -32,14 +39,20 @@ const baseViewFields: FieldConfig<membership | any>[] = [
     },
   },
 
-  { key: "membershipId", label: "ID", icon: Hash },
-  { key: "membershipMasterId", label: "Membership Master", icon: Hash },
-  { key: "accountId", label: "Account", icon: Hash },
+  { key: "membershipType", label: "Membership Master" },
+  { key: "accountName", label: "Account" },
 
   { key: "startDate", label: "Start Date", icon: Calendar, render: dateRender },
   { key: "endDate", label: "End Date", icon: Calendar, render: dateRender },
   { key: "graceDate", label: "Grace Date", icon: Calendar, render: dateRender },
-
+  {
+    key: "cancelationDate",
+    label: "Cancelation Date",
+  },
+  {
+    key: "members",
+    label: "Members",
+  },
   {
     key: "totalIssueCharges",
     label: "Issue Charges",
@@ -53,8 +66,74 @@ const baseViewFields: FieldConfig<membership | any>[] = [
     render: toRs,
   },
   {
+    key: "totalFBalance",
+    label: "Total F Balance",
+    icon: IndianRupee,
+    render: toRs,
+  },
+  {
+    key: "totalCBalance",
+    label: "Total C Balance",
+    icon: IndianRupee,
+    render: toRs,
+  },
+  {
     key: "totalSpentCa",
     label: "Total Spent",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "caDepositPRRequiredFBalance",
+    label: "CA Deposit (%) Required F",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "caDepositPRRequiredCBalance",
+    label: "CA Deposit (%) Required C",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "depositeReq",
+    label: "Deposite Required",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "qualifyingRecieptNo",
+    label: "Qualifying Reciept No",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "refundPaymentNo",
+    label: "Refund Payment No",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "vBalPrInCa",
+    label: "V Balance (%) CA",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "actualFBalance",
+    label: "Actual F Balance",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "actualCBalance",
+    label: "Actual C Balance",
+    icon: CreditCard,
+    render: toRs,
+  },
+  {
+    key: "refundedAmount",
+    label: "Refunded Amount",
     icon: CreditCard,
     render: toRs,
   },
@@ -90,7 +169,7 @@ export default function MembershipViewModal({
       const useId = id ?? membershipId;
       if (!useId) throw new Error("Membership ID missing");
 
-      const res: any = await getMembershipById(Number(useId));
+      const res: Response<membership> = await getMembershipById(Number(useId));
       const data = res?.data as membership;
 
       setRowData(data);

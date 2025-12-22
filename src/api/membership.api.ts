@@ -32,8 +32,8 @@ export function getMemberships(
   return request<Response<membership[]>>(`${MEMBERSHIP_BASE}${qs}`);
 }
 
-export function getMembershipById(id: number): Promise<Response> {
-  return request<Response>(`${MEMBERSHIP_BASE}/${id}`);
+export function getMembershipById(id: number): Promise<Response<membership>> {
+  return request<Response<membership>>(`${MEMBERSHIP_BASE}/${id}`);
 }
 
 export function createMembership(
