@@ -57,7 +57,10 @@ function SearchableMultiselect({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -72,9 +75,13 @@ function SearchableMultiselect({
       return;
     }
 
-    const isSelected = selectedValues.some((v: any) => String(v) === String(optionValue));
+    const isSelected = selectedValues.some(
+      (v: any) => String(v) === String(optionValue)
+    );
     if (isSelected) {
-      onChange(selectedValues.filter((v: any) => String(v) !== String(optionValue)));
+      onChange(
+        selectedValues.filter((v: any) => String(v) !== String(optionValue))
+      );
     } else {
       onChange([...selectedValues, optionValue]);
     }

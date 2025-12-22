@@ -18,6 +18,7 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
 
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<
@@ -40,6 +41,7 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
       });
 
       const rowsRaw = res?.data as membership[];
+      setTotal(res?.pagination.total);
 
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
@@ -283,7 +285,7 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
         pagination={{
           page,
           limit,
-          total: data.length,
+          total: total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}

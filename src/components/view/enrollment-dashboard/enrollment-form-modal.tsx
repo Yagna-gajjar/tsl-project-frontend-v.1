@@ -302,6 +302,15 @@ const EnrollmentFormNew = () => {
       isLoadingMore: loadingActivities,
     },
     {
+      name: "courseId",
+      label: "Course",
+      type: "select",
+      options: courseOptions?.map((c) => ({
+        value: c.courseId,
+        label: c.courseName,
+      })),
+    },
+    {
       name: "enrollmentDate",
       label: "Enrollment Date",
       type: "Date",
@@ -318,15 +327,6 @@ const EnrollmentFormNew = () => {
       options: entityOptions?.map((e) => ({
         value: e.entityId,
         label: e.entityName,
-      })),
-    },
-    {
-      name: "courseId",
-      label: "Course",
-      type: "select",
-      options: courseOptions?.map((c) => ({
-        value: c.courseId,
-        label: c.courseName,
       })),
     },
     {

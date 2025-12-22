@@ -26,6 +26,7 @@ export default function MembershipMasterTable({
 
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
+  const [total, setTotal] = useState<number>(10);
 
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<
@@ -57,6 +58,8 @@ export default function MembershipMasterTable({
             ? false
             : undefined,
       });
+
+      setTotal(res?.pagination.total);
 
       const rowsRaw = Array.isArray(res)
         ? res
@@ -335,7 +338,7 @@ export default function MembershipMasterTable({
         pagination={{
           page,
           limit,
-          total: data.length,
+          total: total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
