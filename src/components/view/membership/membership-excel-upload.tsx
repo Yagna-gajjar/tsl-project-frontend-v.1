@@ -10,7 +10,6 @@ interface MembershipExcelUploadProps {
 	onSuccess: () => void;
 }
 
-// Interface for raw Excel row data mapping to the SQL "Membership" table
 interface MembershipImportRow {
 	membershipMasterId: number | string;
 	accountId: number | string;
@@ -61,21 +60,17 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 		if (!row.membershipMasterId) return "Membership Master ID is required";
 		if (!row.startDate) return "Start Date is required";
 
-		// Check for numeric validity on mandatory IDs
 		if (isNaN(Number(row.membershipMasterId))) return "Master ID must be a valid number";
-		if (isNaN(Number(row.accountId))) return "Account ID must be a valid number";
 
 		return null;
 	}, []);
 
 	const handleCreateMembership = useCallback(async (row: MembershipImportRow) => {
-		// Construct the payload to match SQL constraints (Handling DEFAULT values and Types)
 		const payload = {
 			membershipMasterId: Number(row.membershipMasterId),
-			accountId: Number(row.accountId),
+			accountId: Number(row.accountId) == 0 ? null : Number(row.accountId),
 			entityId: row.entityId ? Number(row.entityId) : null,
 
-			// Date formatting (using NOW() equivalent if missing)
 			startDate: row.startDate ? new Date(row.startDate).toISOString() : new Date().toISOString(),
 			endDate: row.endDate ? new Date(row.endDate).toISOString() : new Date().toISOString(),
 			graceDate: row.graceDate ? new Date(row.graceDate).toISOString() : new Date().toISOString(),
@@ -83,7 +78,6 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 
 			members: Number(row.members || 1),
 
-			// Numeric and Financial fields (INTEGER and NUMERIC)
 			totalIssueCharges: Number(row.totalIssueCharges || 0),
 			appDiscount: Number(row.appDiscount || 0),
 			totalFBalance: Number(row.totalFBalance || 0),
