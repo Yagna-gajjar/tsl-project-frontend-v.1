@@ -2,6 +2,7 @@ export interface Account {
   accountId?: number;
   regDate: Date | string;
   suspensionDate?: Date | string;
+  accountType?: string;
   entityId: number;
   defineEntity?: string;
   accountName: string;

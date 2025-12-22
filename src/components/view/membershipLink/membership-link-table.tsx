@@ -54,7 +54,7 @@ export default function MembershipLinkTable({
 
   const columns: Column<MembershipLink>[] = [
     { key: "membershipType", header: "Membership Master" },
-    { key: "membershipName", header: "Membership" },
+    { key: "membershipId", header: "Membership" },
     { key: "accountName", header: "Account" },
     {
       key: "linkDate",

@@ -151,6 +151,7 @@ export default function AccountFormModal({
           : undefined,
         entityId: Number(values.entityId),
         addressId: values.addressId ? Number(values.addressId) : undefined,
+        accountType: values.accountType,
       };
 
       const res: Response<Account> = initialData?.accountId
@@ -192,6 +193,12 @@ export default function AccountFormModal({
       label: "Define Entity",
       type: "text",
       disabled: true,
+      required: true,
+    },
+    {
+      name: "accountType",
+      label: "Account Type",
+      type: "text",
       required: true,
     },
     {
