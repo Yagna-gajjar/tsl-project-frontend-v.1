@@ -110,6 +110,13 @@ export default function ActivityTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => r.description ?? "-",
     },
     {
+      key: "status",
+      header: "Status",
+      sortable: false,
+      filterType: null,
+      render: (r) => r.status ?? "-",
+    },
+    {
       key: "createdAt",
       header: "Created",
       sortable: true,

@@ -4,7 +4,7 @@ export interface Account {
   suspensionDate?: Date | string;
   entityId: number;
   defineEntity?: string;
-  name: string;
+  accountName: string;
   addressId?: number;
   contact: string;
   proffesionalSector: string;

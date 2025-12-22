@@ -17,6 +17,7 @@ export interface Activity {
   sgst: number;
   srgst: number;
   availableCoaches: number;
+  status: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
