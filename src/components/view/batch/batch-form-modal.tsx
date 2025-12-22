@@ -152,7 +152,6 @@ export function BatchFormModal({
         page: page,
       });
       const items = response?.data || [];
-      console.log(PAGE_SIZE, page, response.data);
       setActivityOptions((prev) => (isInitial ? items : [...prev, ...items]));
       setHasMoreActivities(items.length === PAGE_SIZE);
       setActivityPage(page + 1);

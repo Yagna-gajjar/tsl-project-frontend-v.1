@@ -107,6 +107,11 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
       header: "Account",
       sortable: true,
       filterType: "text",
+      render: (v) => (
+        <span className={`${!v.accountName ? `text-gray-400` : ``} `}>
+          {v.accountName ? v.accountName : "Billing On Family"}
+        </span>
+      ),
     },
     {
       key: "entityName",

@@ -14,6 +14,8 @@ import type { MembershipMaster } from "@/types/memberShipMaster";
 import type { Response } from "@/types/response";
 import { getEntities } from "@/api/entity.api";
 import type { Entity } from "@/types/entity";
+import { getEnumsByCategory } from "@/api/enums.api";
+import type { Enums } from "@/types/enums";
 
 type Props = {
   isOpen: boolean;
@@ -60,6 +62,9 @@ export default function MembershipMasterFormModal({
   const [entityPage, setEntityPage] = useState(1);
   const [hasMoreEntity, setHasMoreEntity] = useState(true);
   const [loadingEntity, setLoadingEntity] = useState(false);
+
+  const [billingEntityOpt, setBillingEntity] = useState<Enums[]>([]);
+
   const PAGE_SIZE = 20;
 
   const fetchEntity = useCallback(
@@ -88,6 +93,42 @@ export default function MembershipMasterFormModal({
     },
     [loadingEntity, hasMoreEntity, entityPage]
   );
+
+  const fetchBillingEntity = async () => {
+    const res: Response<Enums[]> = await getEnumsByCategory(
+      "BILLINGENTITYOFFAMILY"
+    );
+
+    const data = res?.data as Enums[];
+
+    setBillingEntity(data);
+  };
+
+  // const fetchBillingEntity = useCallback(
+  //   async (isInitial = false) => {
+  //     if (loadingBillingEntity || (!hasMoreBillingEntity && !isInitial)) return;
+  //     setLoadingBillingEntity(true);
+  //     try {
+  //       const page = isInitial ? 1 : entityPage;
+  //       const response: Response<Entity[]> = await getEnumsByCategory(
+  //         "BILLINGENTITYOFFAMILY"
+  //       );
+  //       const items = response?.data || ([] as Entity[]);
+  //       setEntityOpt((prev) => (isInitial ? items : [...prev, ...items]));
+  //       setHasMoreEntity(items.length === PAGE_SIZE);
+  //       setEntityPage(page + 1);
+  //     } catch {
+  //       toast({
+  //         title: "Error",
+  //         description: "Failed to fetch members",
+  //         variant: "destructive",
+  //       });
+  //     } finally {
+  //       setLoadingEntity(false);
+  //     }
+  //   },
+  //   [loadingEntity, hasMoreEntity, entityPage]
+  // );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -124,6 +165,7 @@ export default function MembershipMasterFormModal({
     fetchEntity();
     setFieldErrors({});
     setError(null);
+    fetchBillingEntity();
   }, [initialData, isOpen]);
 
   const onChange = (
@@ -281,8 +323,11 @@ export default function MembershipMasterFormModal({
     {
       name: "billingEntityOfFamily",
       label: "Billing Entity Of Family",
-      type: "text",
-      required: false,
+      type: "select",
+      options: billingEntityOpt?.map((b) => ({
+        value: b.value,
+        label: b.value,
+      })),
     },
     {
       name: "membershipDetails",

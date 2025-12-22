@@ -8,7 +8,6 @@ import type { Authority } from "@/types/authority";
 import type { Account } from "@/types/account";
 import type { AccountMember } from "@/types/accountMember";
 import type { FormFieldConfig } from "@/components/form-modal/types";
-import type { Response } from "@/types/response";
 
 import { getAccounts } from "@/api/account.api";
 import { getAccountMembers } from "@/api/accountMember.api";
@@ -38,49 +37,83 @@ export default function AuthorityFormModal({
   onSave,
 }: Props) {
   const [values, setValues] = useState<Authority>(empty);
+
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountPage, setAccountPage] = useState(1);
+  const [hasMoreAccount, setHasMoreAccount] = useState(true);
+  const [loadingAccount, setLoadingAccount] = useState(false);
+
   const [members, setMembers] = useState<AccountMember[]>([]);
+  const [accountMemberPage, setAccountMemberPage] = useState(1);
+  const [hasMoreAccountMember, setHasMoreAccountMember] = useState(true);
+  const [loadingAccountMember, setLoadingAccountMember] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     if (initialData) setValues(initialData);
     else setValues(empty);
   }, [initialData, isOpen]);
 
+  const fetchAccount = async (isInitial = false) => {
+    if (loadingAccount || (!hasMoreAccount && !isInitial)) return;
+    setLoadingAccount(true);
+    try {
+      const page = isInitial ? 1 : accountPage;
+      const response = await getAccounts({
+        limit: PAGE_SIZE,
+        page: page,
+      });
+
+      const items = response?.data || [];
+      setAccounts((prev) => (isInitial ? items : [...prev, ...items]));
+      setHasMoreAccount(items.length === PAGE_SIZE);
+      setAccountPage(page + 1);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to fetch activities",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAccount(false);
+    }
+  };
+
+  const fetchAccountMembers = async (isInitial = false) => {
+    if (loadingAccountMember || (!hasMoreAccountMember && !isInitial)) return;
+    setLoadingAccountMember(true);
+    try {
+      const page = isInitial ? 1 : accountMemberPage;
+      const response = await getAccountMembers({
+        limit: PAGE_SIZE,
+        page: page,
+      });
+      const items = response?.data || [];
+      setMembers((prev) => (isInitial ? items : [...prev, ...items]));
+      setHasMoreAccountMember(items.length === PAGE_SIZE);
+      setAccountMemberPage(page + 1);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to fetch activities",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAccountMember(false);
+    }
+  };
+
   useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        const res: Response<Account[]> = await getAccounts({ limit: 500 });
-        setAccounts(res.data ?? []);
-      } catch {
-        setAccounts([]);
-      }
-    };
-    loadAccounts();
+    fetchAccount();
   }, []);
 
   useEffect(() => {
-    const loadMembers = async () => {
-      if (!values.accountId) {
-        setMembers([]);
-        return;
-      }
-
-      try {
-        const res: Response<AccountMember[]> = await getAccountMembers({
-          accountId: Number(values.accountId),
-          limit: 500,
-        });
-
-        setMembers(res.data ?? []);
-      } catch {
-        setMembers([]);
-      }
-    };
-
-    loadMembers();
+    fetchAccountMembers();
   }, [values.accountId]);
 
   const validate = useCallback(() => {
@@ -140,7 +173,7 @@ export default function AuthorityFormModal({
       type: "select",
       required: true,
       options: accounts.map((a) => ({
-        label: a.name,
+        label: a.accountName,
         value: a.accountId,
       })),
     },

@@ -63,6 +63,7 @@ export default function MembershipFormModal({
 
   const [selectedMembership, setSelectedMembership] =
     useState<MembershipMaster>();
+  const [isBillingOnAccount, setIsBillingOnAccount] = useState(false);
 
   const [debouncedMembers, setDebouncedMembers] = useState<number>(
     initialData?.members || 1
@@ -347,7 +348,6 @@ export default function MembershipFormModal({
       });
       return;
     }
-
     setValues((prev) => ({
       ...prev,
       [field]: field === "accountId" ? Number(value) : value,
@@ -360,6 +360,14 @@ export default function MembershipFormModal({
       return copy;
     });
   };
+
+  useEffect(() => {
+    if (selectedMembership?.billingEntityOfFamily === "Members") {
+      setIsBillingOnAccount(true);
+    } else {
+      setIsBillingOnAccount(false);
+    }
+  }, [selectedMembership]);
 
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
@@ -442,11 +450,13 @@ export default function MembershipFormModal({
     {
       name: "accountId",
       label: "Account",
-      type: "select",
+      type: isBillingOnAccount ? "text" : "select",
+      placeholder: isBillingOnAccount ? "Billing On Family" : "",
       options: accountOptions.map((a) => ({
         value: a.accountId,
         label: a.accountName,
       })),
+      disabled: isBillingOnAccount,
       required: true,
     },
     { name: "startDate", label: "Start Date", type: "Date", required: true },

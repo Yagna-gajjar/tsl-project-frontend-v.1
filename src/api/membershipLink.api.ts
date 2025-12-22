@@ -9,7 +9,11 @@ export interface MembershipLinkQuery {
   sortOrder?: SortOrder;
   membershipMasterId?: number;
   membershipId?: number;
+  membershipType?: string;
+  entityType?: string;
+  entityId?: number;
   accountId?: number;
+  hideDeLinked?: boolean;
 }
 
 const BASE = import.meta.env.VITE_APP_API_URL + "/membership-link";
@@ -24,7 +28,11 @@ export function getMembershipLinks(
     sortOrder: params.sortOrder ?? "ASC",
     membershipMasterId: params.membershipMasterId,
     membershipId: params.membershipId,
+    membershipType: params.membershipType,
+    entityType: params.entityType,
+    hideDeLinked: params.hideDeLinked,
     accountId: params.accountId,
+    entityId: params.entityId,
   });
 
   return request<Response<MembershipLink[]>>(`${BASE}${qs}`);

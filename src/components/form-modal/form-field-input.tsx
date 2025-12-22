@@ -29,7 +29,7 @@ interface SearchableMultiselectProps {
   isSingle?: boolean;
 }
 
-function SearchableMultiselect({
+export function SearchableMultiselect({
   options = [],
   value = [],
   onChange,
@@ -231,7 +231,9 @@ export default function FormFieldInput(props: any) {
     isLoadingMore,
   } = props;
 
-  const baseInputClass = error ? "border-destructive focus-visible:ring-destructive" : "";
+  const baseInputClass = error
+    ? "border-destructive focus-visible:ring-destructive"
+    : "";
 
   const renderField = () => {
     switch (type) {
@@ -324,6 +326,7 @@ export default function FormFieldInput(props: any) {
             disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
             className={baseInputClass}
+            placeholder={placeholder}
           />
         );
     }
@@ -340,7 +343,9 @@ export default function FormFieldInput(props: any) {
         </Label>
       )}
       {renderField()}
-      {error && <p className="text-[0.75rem] font-medium text-destructive">{error}</p>}
+      {error && (
+        <p className="text-[0.75rem] font-medium text-destructive">{error}</p>
+      )}
     </div>
   );
 }

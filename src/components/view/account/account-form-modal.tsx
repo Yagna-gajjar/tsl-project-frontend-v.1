@@ -52,6 +52,7 @@ export default function AccountFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [adminInstructionOpt, setAdminInstructionOpt] = useState<Enums[]>([]);
+  const [aaccountTypeOpt, setAccountTypeOpt] = useState<Enums[]>([]);
   useEffect(() => {
     const loadEntities = async () => {
       const res: Response<Entity[]> = await getEntities({ limit: 500 });
@@ -108,12 +109,18 @@ export default function AccountFormModal({
 
     const fetchAdminInstructionOpt = async () => {
       const res: Response<Enums[]> = await getEnumsByCategory(
-        "adminInstruction"
+        "ADMITINSTRUCTIONS"
       );
       setAdminInstructionOpt(res.data ?? []);
     };
 
+    const fetchAccountType = async () => {
+      const res: Response<Enums[]> = await getEnumsByCategory("ACCOUNTTYPE");
+      setAccountTypeOpt(res.data ?? []);
+    };
+
     fetchAdminInstructionOpt();
+    fetchAccountType();
   }, [initialData, isOpen]);
 
   const validate = useCallback(() => {
@@ -198,8 +205,11 @@ export default function AccountFormModal({
     {
       name: "accountType",
       label: "Account Type",
-      type: "text",
-      required: true,
+      type: "select",
+      options: aaccountTypeOpt?.map((a) => ({
+        value: a.value,
+        label: a.value,
+      })),
     },
     {
       name: "accountName",
