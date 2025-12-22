@@ -77,7 +77,7 @@ export default function AccountExcelUpload({ isOpen, onClose, onSuccess }: Accou
 			status: row.status || 'active'
 		};
 
-		await createAccount(payload);
+		await createAccount(payload as any);
 		console.log(`✅ Imported Account: ${payload.accountName}`);
 	}, []);
 

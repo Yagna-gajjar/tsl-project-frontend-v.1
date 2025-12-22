@@ -9,7 +9,6 @@ import type { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
-import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -184,7 +183,7 @@ export function ActivityFormModal({
           />
           <div className="flex-1 overflow-y-auto">
             <FormContent
-              fields={fields}
+              fields={fields as any}
               values={values}
               errors={fieldErrors}
               loading={false}

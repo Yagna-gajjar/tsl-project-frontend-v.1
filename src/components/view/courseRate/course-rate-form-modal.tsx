@@ -12,7 +12,7 @@ import type { Course } from "@/types/course";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { format } from "date-fns";
 import { getMemberships } from "@/api/membership.api";
-import type { MembershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/membershipMaster";
 
 const emptyRate: CourseRate | any = {
   courseRateId: 0,

@@ -32,11 +32,10 @@ export function FormContent<T extends Record<string, any>>({
   if (loading) {
     return (
       <div
-        className={`p-6 space-y-6 ${
-          layout === "grid"
+        className={`p-6 space-y-6 ${layout === "grid"
             ? "grid grid-cols-1 sm:grid-cols-2 gap-6"
             : "space-y-4"
-        }`}
+          }`}
       >
         {Array.from({ length: Math.min(fields.length, 4) }).map((_, i) => (
           <div key={i} className="space-y-2">
@@ -83,7 +82,7 @@ export function FormContent<T extends Record<string, any>>({
             name={String(field.name)}
             label={field.label}
             value={values[field.name] || ""}
-            onChange={(val) => onChange(field.name, val)}
+            onChange={(val: any) => onChange(field.name, val)}
             placeholder={field.placeholder}
             description={field.description}
             required={field.required}

@@ -1,4 +1,4 @@
-import type { membershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/membershipMaster";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";
 
@@ -18,7 +18,7 @@ const MEMBERSHIP_BASE = import.meta.env.VITE_APP_API_URL + "/membership-master";
 
 export function getMembershipMasters(
   params: MembershipMasterQuery = {}
-): Promise<Response<membershipMaster[]>> {
+): Promise<Response<MembershipMaster[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
     limit: params.limit ?? 10,
@@ -34,18 +34,18 @@ export function getMembershipMasters(
       typeof params.clubAccess === "boolean" ? String(params.clubAccess) : undefined,
   });
 
-  return request<Response<membershipMaster[]>>(`${MEMBERSHIP_BASE}${qs}`);
+  return request<Response<MembershipMaster[]>>(`${MEMBERSHIP_BASE}${qs}`);
 }
 
-export function getMembershipMasterById(id: number): Promise<Response<membershipMaster>> {
-  return request < Response<membershipMaster>>(`${MEMBERSHIP_BASE}/${id}`);
+export function getMembershipMasterById(id: number): Promise<Response<MembershipMaster>> {
+  return request<Response<MembershipMaster>>(`${MEMBERSHIP_BASE}/${id}`);
 }
 
 export function createMembershipMaster(
-  payload: Omit<membershipMaster, "membershipMasterId" | "createdAt" | "updatedAt">
-): Promise<membershipMaster> {
+  payload: Omit<MembershipMaster, "membershipMasterId" | "createdAt" | "updatedAt">
+): Promise<MembershipMaster> {
   
-  return request<membershipMaster>(MEMBERSHIP_BASE, {
+  return request<MembershipMaster>(MEMBERSHIP_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -53,16 +53,16 @@ export function createMembershipMaster(
 
 export function updateMembershipMaster(
   id: number,
-  payload: Partial<Omit<membershipMaster, "membershipMasterId" | "createdAt" | "updatedAt">>
-): Promise<membershipMaster> {
-  return request<membershipMaster>(`${MEMBERSHIP_BASE}/${id}`, {
+  payload: Partial<Omit<MembershipMaster, "membershipMasterId" | "createdAt" | "updatedAt">>
+): Promise<MembershipMaster> {
+  return request<MembershipMaster>(`${MEMBERSHIP_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteMembershipMaster(id: number): Promise<membershipMaster> {
-  return request<membershipMaster>(`${MEMBERSHIP_BASE}/${id}`, {
+export function deleteMembershipMaster(id: number): Promise<MembershipMaster> {
+  return request<MembershipMaster>(`${MEMBERSHIP_BASE}/${id}`, {
     method: "DELETE",
   });
 }

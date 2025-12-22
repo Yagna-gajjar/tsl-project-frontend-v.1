@@ -24,15 +24,15 @@ const fields: FieldConfig<FamilyType>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: FamilyType["createdAt"]) =>
-      v ? new Date(v).toLocaleString() : "-",
+    render: (v) =>
+      v ? new Date(v as string).toLocaleString() : "-",
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: FamilyType["updatedAt"]) =>
-      v ? new Date(v).toLocaleString() : "-",
+    render: (v) =>
+      v ? new Date(v as string).toLocaleString() : "-",
   },
 ];
 

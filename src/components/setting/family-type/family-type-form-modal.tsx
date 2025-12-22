@@ -104,7 +104,7 @@ export function FamilyTypeFormModal({
 
       const ok =
         typeof res?.success !== "undefined" ? Boolean(res.success) : true;
-      const row: FamilyType = res && (res.data ?? res) ? res.data ?? res : res;
+      const row: FamilyType | any = res && (res.data ?? res) ? res.data ?? res : res;
 
       if (!ok) {
         const msg = res?.message ?? "failed to submit";

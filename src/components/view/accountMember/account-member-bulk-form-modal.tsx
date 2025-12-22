@@ -355,7 +355,7 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose }: Props) {
                         key={acc.accountId}
                         value={String(acc.accountId)}
                       >
-                        {acc.name}
+                        {acc.accountName}
                       </SelectItem>
                     ))}
                   </SelectContent>
