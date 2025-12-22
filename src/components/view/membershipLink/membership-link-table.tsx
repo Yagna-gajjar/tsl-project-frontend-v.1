@@ -54,10 +54,17 @@ export default function MembershipLinkTable({
   }, [loadData, refreshKey]);
 
   const columns: Column<MembershipLink>[] = [
-    { key: "membershipLinkId", header: "ID", sortable: true },
-    { key: "membershipMasterId", header: "Membership Master" },
-    { key: "membershipId", header: "Membership" },
-    { key: "accountId", header: "Account" },
+    { key: "membershipType", header: "Membership Master" },
+    { key: "membershipName", header: "Membership" },
+    { key: "accountName", header: "Account" },
+    {
+      key: "linkDate",
+      header: "Link Date",
+    },
+    {
+      key: "dLinkDate",
+      header: "D-Link Date",
+    },
   ];
 
   const [deleteOpen, setDeleteOpen] = useState(false);
