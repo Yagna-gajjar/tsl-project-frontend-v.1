@@ -45,9 +45,6 @@ export default function MembershipLinkExcelUpload({ isOpen, onClose, onSuccess }
 			membershipMasterId: Number(row.membershipMasterId),
 			membershipId: row.membershipId ? Number(row.membershipId) : undefined,
 			accountId: Number(row.accountId),
-
-			linkDate: new Date(row.linkDate).toISOString(),
-			dLinkDate: new Date(row.dLinkDate).toISOString(),
 		};
 
 		await createMembershipLink(payload);
