@@ -35,7 +35,6 @@ export default function MembershipLinkTable({
         page,
         limit,
       });
-
       setTotal(res.pagination.total);
       setData(res.data || []);
     } catch {

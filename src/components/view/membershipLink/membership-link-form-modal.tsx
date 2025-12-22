@@ -24,22 +24,9 @@ import { getAccounts } from "@/api/account.api";
 import { getMembershipMasters } from "@/api/membershipMaster.api";
 import type { MembershipLink } from "@/types/membershipLink";
 import type { Response } from "@/types/response";
-
-export type Account = {
-  accountId: number;
-  name: string;
-  phone?: string;
-};
-
-export type Membership = {
-  membershipId: number;
-  name: string;
-};
-
-export type MembershipMaster = {
-  membershipMasterId: number;
-  name: string;
-};
+import type { Account } from "@/types/account";
+import type { MembershipMaster } from "@/types/memberShipMaster";
+import type { membership } from "@/types/membership";
 
 type LinkType = "account" | "membership" | "both";
 
@@ -76,8 +63,8 @@ export default function MembershipLinkFormModal({
   const [isSearchingAccounts, setIsSearchingAccounts] = useState(false);
 
   const [membershipSearch, setMembershipSearch] = useState("");
-  const [membershipResults, setMembershipResults] = useState<Membership[]>([]);
-  const [selectedMemberships, setSelectedMemberships] = useState<Membership[]>(
+  const [membershipResults, setMembershipResults] = useState<membership[]>([]);
+  const [selectedMemberships, setSelectedMemberships] = useState<membership[]>(
     []
   );
   const [isSearchingMemberships, setIsSearchingMemberships] = useState(false);
@@ -115,7 +102,7 @@ export default function MembershipLinkFormModal({
     try {
       setIsSearchingAccounts(true);
       const res: Response<Account[]> = await getAccounts({
-        name: accountSearch,
+        accountName: accountSearch,
       });
       setAccountResults(res.data || []);
     } catch {
@@ -137,8 +124,8 @@ export default function MembershipLinkFormModal({
 
     try {
       setIsSearchingMemberships(true);
-      const res: Response<Membership[]> = await getMembershipMasters({
-        name: membershipSearch,
+      const res: Response<membership[]> = await getMembershipMasters({
+        search: membershipSearch,
       });
       setMembershipResults(res.data || []);
     } catch {
@@ -161,7 +148,7 @@ export default function MembershipLinkFormModal({
     setSelectedAccounts((p) => p.filter((a) => a.accountId !== id));
   };
 
-  const addMembership = (membership: Membership) => {
+  const addMembership = (membership: membership) => {
     if (
       selectedMemberships.some(
         (m) => m.membershipId === membership.membershipId
@@ -227,7 +214,7 @@ export default function MembershipLinkFormModal({
           const payload: MembershipLink = {
             membershipMasterId: selectedMembershipMaster!,
             accountId: acc.accountId,
-            membershipId: null,
+            membershipId: undefined,
           };
           await createMembershipLink(payload);
         }
@@ -242,7 +229,7 @@ export default function MembershipLinkFormModal({
         for (const membership of selectedMemberships) {
           const payload: MembershipLink = {
             membershipMasterId: selectedMembershipMaster!,
-            accountId: null,
+            accountId: undefined,
             membershipId: membership.membershipId,
           };
           await createMembershipLink(payload);
@@ -355,7 +342,11 @@ export default function MembershipLinkFormModal({
                         membershipMasters.map((master) => (
                           <SelectItem
                             key={master.membershipMasterId}
-                            value={master.membershipMasterId.toString()}
+                            value={
+                              master.membershipMasterId
+                                ? master.membershipMasterId.toString()
+                                : ""
+                            }
                           >
                             {master.membershipType}
                           </SelectItem>

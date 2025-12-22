@@ -445,7 +445,7 @@ export default function MembershipFormModal({
       type: "select",
       options: accountOptions.map((a) => ({
         value: a.accountId,
-        label: a.name,
+        label: a.accountName,
       })),
       required: true,
     },

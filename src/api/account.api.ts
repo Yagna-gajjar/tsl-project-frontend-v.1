@@ -8,7 +8,7 @@ export interface AccountQuery {
   sortBy?: string;
   sortOrder?: SortOrder;
   search?: string;
-  name?: string;
+  accountName?: string;
   entityId?: number;
 }
 
@@ -22,8 +22,8 @@ export function getAccounts(
     limit: params.limit ?? 10,
     sortBy: params.sortBy ?? "accountId",
     sortOrder: params.sortOrder ?? "ASC",
-    search: params.search ?? params.name,
-    name: params.name ?? undefined,
+    search: params.search ?? params.accountName,
+    accountName: params.accountName ?? undefined,
     entityId: params.entityId ?? undefined,
   });
 

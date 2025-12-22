@@ -7,12 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import type { Activity } from "@/types/activity";
 import type { CoursePackage } from "@/types/coursePackage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
-import axios from "axios";
 import { getAuthorities } from "@/api/authority.api";
 import type { Response } from "@/types/response";
 
@@ -34,7 +32,6 @@ interface PackagesListProps {
 export const PackagesList = ({
   packages,
   activityOptions,
-  errors,
   onChange,
   onRemove,
 }: PackagesListProps) => {

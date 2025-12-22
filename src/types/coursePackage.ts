@@ -3,7 +3,7 @@ export interface CoursePackage {
   courseId: number;
   linkType: string;
   activityId?: number;
-  approvalAuthorityId: number;
+  approvalAuthorityId?: number;
   createdAt: string;
   updatedAt: string;
 

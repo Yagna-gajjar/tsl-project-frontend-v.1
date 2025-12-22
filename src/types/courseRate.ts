@@ -5,15 +5,14 @@ export interface CourseRate {
   aboveUnits: number;
   unitRate: number;
   introduceDate: string;
-  changable: number;
+  suspensionDate?: Date | string;
   daySelection: boolean;
   enrChangesAllowed: number;
   enrFreezingAllowed: number;
   minDaysInEnr: number;
   discountOnDayReduce: number;
-  status: string;
+  status?: string;
   freezing: number;
-  suspensionDate: Date | string;
   createdAt: string;
   updatedAt: string;
 

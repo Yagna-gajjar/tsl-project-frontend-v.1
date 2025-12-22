@@ -7,8 +7,13 @@ export interface CourseShare {
   cgst?: number;
   sgst?: number;
   approvalAuthorityId?: number;
+  tsl?: number;
+  facility?: number;
+  main?: number;
+  joint?: number;
   createdAt: Date;
   updatedAt: Date;
 
-  academyName?: string;
+  entityName?: string;
+  courseName?: string;
 }
