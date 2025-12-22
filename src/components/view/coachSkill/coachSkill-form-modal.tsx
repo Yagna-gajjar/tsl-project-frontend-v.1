@@ -8,7 +8,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import { getActivities } from "@/api/activity.api";
-import { getCoaches } from "@/api/coach.api";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { getMembers } from "@/api/member.api";
 import type { Member } from "@/types/member";

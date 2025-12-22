@@ -19,6 +19,7 @@ import { addDays } from "@/helpers/helper";
 const EnrollmentFormNew = ({
   setRateTableData
 }: { setRateTableData: any }) => {
+  console.log(setRateTableData);
   const [error, _] = useState("");
   const [values, setValues] = useState<Enrollment>({
     enrollmentId: 0,

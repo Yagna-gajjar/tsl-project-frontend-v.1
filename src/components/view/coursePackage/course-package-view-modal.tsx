@@ -16,19 +16,18 @@ type Props = {
 const fields: FieldConfig<CoursePackage>[] = [
   { key: "coursePackageId", label: "Package ID", icon: Hash },
   { key: "courseName", label: "Course", icon: BookOpen },
-  { key: "activityType", label: "Activity Type", icon: Info },
   { key: "linkType", label: "Link Type", icon: Info },
   {
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    render: (v) => new Date(v).toLocaleString(),
+    render: (v) => new Date(v as string).toLocaleString(),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v) => new Date(v).toLocaleString(),
+    render: (v) => new Date(v as string).toLocaleString(),
   },
 ];
 
@@ -48,7 +47,7 @@ export default function CoursePackageViewModal({
     <ViewModal<CoursePackage>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={coursePackageId}
+      itemId={Number(coursePackageId)}
       fetchFn={fetchFn}
       fields={fields}
       title="Course Package Details"

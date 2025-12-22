@@ -169,7 +169,7 @@ export default function AccountMemberFormModal({
       type: "select",
       options: accountOptions?.map((a) => ({
         value: a.accountId,
-        label: a.name ?? `Account ${a.accountId}`,
+        label: a.accountName ?? `Account ${a.accountId}`,
       })),
       required: true,
     },

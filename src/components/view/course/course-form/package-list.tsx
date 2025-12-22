@@ -44,7 +44,7 @@ export const PackagesList = ({
       try {
         setLoadingAuthorities(true);
 
-        const res: Response<Authority[]> = await getAuthorities();
+        const res: Response<Authority[]>|any = await getAuthorities();
         setAuthorityOptions(res?.data || []);
       } catch (err) {
         console.error("Failed to fetch authorities", err);

@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { AcceptRequest, updateBatchMember } from "@/api/enrollmentActions.api";
 import { getEnrollmentById } from "@/api/enrollment.api";
 import type { Response } from "@/types/response";
-import type { BatchMember } from "@/api/batchMember.api";
+import type { BatchMember } from "@/types/batchMember";
 
 type Props = {
   isOpen: boolean;
@@ -78,7 +78,7 @@ export default function AcceptBatchRequest({
         if (startDateObj < todayDate) {
           computedOldBatchEndDate = yesterday;
         } else {
-          const minusOne = subtractOneDayIso(item.startDate);
+          const minusOne = subtractOneDayIso(item.startDate as any);
           if (minusOne) computedOldBatchEndDate = minusOne;
         }
       }
@@ -169,7 +169,7 @@ export default function AcceptBatchRequest({
     setRejectingIds((s) => ({ ...s, [id]: true }));
 
     try {
-      const oldReason = item.reason || "";
+      const oldReason =  "";
       const parts = [];
       if (String(oldReason).trim()) parts.push(String(oldReason).trim());
       if (String(reason).trim())
@@ -289,13 +289,13 @@ export default function AcceptBatchRequest({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <div className="rounded-full bg-blue-600/10 w-9 h-9 flex items-center justify-center text-blue-600 font-semibold">
-                                {String(item.memberName || item.memberId)
+                                {String(item.memberFirstName || item.memberId)
                                   .slice(0, 2)
                                   .toUpperCase()}
                               </div>
                               <div className="truncate">
                                 <div className="font-medium text-sm">
-                                  {item.memberName || `Member ${item.memberId}`}
+                                  {item.memberFirstName || `Member ${item.memberId}`}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
                                   {item.batchName || `Batch ${item.batchId}`}
@@ -307,15 +307,15 @@ export default function AcceptBatchRequest({
                               <div>
                                 <strong>Dates:</strong> {start} — {end}
                               </div>
-                              {item.reason && (
+                              {/* {item.reason && (
                                 <div>
                                   <strong>Reason:</strong> {item.reason}
                                 </div>
-                              )}
-                              <div className="text-xs">
+                              )} */}
+                              {/* <div className="text-xs">
                                 Requested:{" "}
-                                {new Date(item.createdAt).toLocaleString()}
-                              </div>
+                                {new Date(item.createdAt as string).toLocaleString()}
+                              </div> */}
                             </div>
                           </div>
 

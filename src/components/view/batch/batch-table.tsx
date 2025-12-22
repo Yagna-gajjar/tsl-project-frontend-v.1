@@ -225,17 +225,6 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       ),
     },
     {
-      key: "academyName",
-      header: "Academy Name",
-      sortable: true,
-      filterType: "text",
-      render: (r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{r.academyName}</span>
-        </div>
-      ),
-    },
-    {
       key: "courseName",
       header: "Course Name",
       sortable: true,
@@ -315,7 +304,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       render: (r) => (
         <div className="flex flex-col">
-          <span className="font-medium">{weekCodeToNames(r.weekDays)}</span>
+          <span className="font-medium">{weekCodeToNames(r.daysPerWeek)}</span>
         </div>
       ),
     },

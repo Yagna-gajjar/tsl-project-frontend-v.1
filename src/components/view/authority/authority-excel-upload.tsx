@@ -50,7 +50,7 @@ export default function AuthorityExcelUpload({ isOpen, onClose, onSuccess }: Aut
 			status: row.status || 'active',
 		};
 
-		await createAuthority(payload);
+		await createAuthority(payload as any);
 		console.log(`✅ Linked Member ${payload.memberId} to Account ${payload.accountId} at Level ${payload.level}`);
 	}, []);
 

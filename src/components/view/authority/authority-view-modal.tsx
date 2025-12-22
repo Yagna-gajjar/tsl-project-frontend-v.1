@@ -27,8 +27,8 @@ export default function AuthorityViewModal({
     <ViewModal<Authority>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={authorityId}
-      fetchFn={(id) => getAuthorityById(id).then((r) => r.data!)}
+      itemId={Number(authorityId)}
+      fetchFn={(id) => getAuthorityById(Number(id)).then((r) => r.data!)}
       fields={fields}
       title="View Authority"
     />

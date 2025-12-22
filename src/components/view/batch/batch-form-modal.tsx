@@ -9,7 +9,6 @@ import { getCourses } from "@/api/course.api";
 import type { Batch } from "@/types/batch";
 import { toast } from "@/hooks/use-toast";
 import { format as dfFormat } from "date-fns";
-import type { Response } from "@/types/response";
 import { getActivities } from "@/api/activity.api";
 import type { Activity } from "@/types/activity";
 import { getEnumsByCategory } from "@/api/enums.api";
@@ -174,7 +173,7 @@ export function BatchFormModal({
       const page = isInitial ? 1 : membershipPage;
       const res = await getMemberships({
         limit: PAGE_SIZE,
-        offset: (page - 1) * PAGE_SIZE,
+        page: (page - 1) * PAGE_SIZE,
       });
       const items = res?.data || [];
       setMembershipOptions((prev) => (isInitial ? items : [...prev, ...items]));
@@ -198,7 +197,7 @@ export function BatchFormModal({
       const page = isInitial ? 1 : entityPage;
       const res = await getEntities({
         limit: PAGE_SIZE,
-        offset: (page - 1) * PAGE_SIZE,
+        page: (page - 1) * PAGE_SIZE,
       });
       const items = res?.data || [];
       setEntityOptions((prev) => (isInitial ? items : [...prev, ...items]));
@@ -507,7 +506,7 @@ export function BatchFormModal({
           />
           <div className="flex-1 overflow-y-auto">
             <FormContent
-              fields={fields}
+              fields={fields as any}
               values={values}
               errors={fieldErrors}
               loading={false}

@@ -115,13 +115,7 @@ export default function CourseRateTable({
       key: "introduceDate",
       render: (r) => new Date(r.introduceDate).toLocaleDateString(),
       sortable: true,
-    },
-    {
-      header: "Changable",
-      key: "changable",
-      render: (r) => (r.changable ? "Yes" : "No"),
-      sortable: true,
-    },
+    }
   ];
 
   return (

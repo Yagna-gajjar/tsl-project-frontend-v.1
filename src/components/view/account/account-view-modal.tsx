@@ -363,16 +363,16 @@ export default function AccountViewModal({
       <ViewModal<Account>
         isOpen={isOpen}
         onClose={onClose}
-        itemId={accountId}
-        fetchFn={fetchFn}
-        fields={fields}
+        itemId={Number(accountId)}
+        fetchFn={fetchFn as any}
+        fields={fields as any}
         title="View Account"
         layout="grid"
       />
 
       <MemberFormModal
         isOpen={memberFormOpen}
-        initialData={memberInitialData}
+        initialData={memberInitialData as any}
         onClose={() => {
           setMemberFormOpen(false);
           setMemberInitialData(null);

@@ -17,8 +17,8 @@ const fields: FieldConfig<AccountMember>[] = [
   },
   { key: "linkDate", label: "Link Date", icon: Calendar },
   { key: "dlinkDate", label: "Delink Date", icon: Calendar },
-  { key: "createdAt", label: "Created", icon: Calendar },
-  { key: "updatedAt", label: "Updated", icon: Calendar },
+  // { key: "createdAt", label: "Created", icon: Calendar },
+  // { key: "updatedAt", label: "Updated", icon: Calendar },
 ];
 
 export default function AccountMemberViewModal({
@@ -42,8 +42,8 @@ export default function AccountMemberViewModal({
     <ViewModal<AccountMember>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={accountMemberId}
-      fetchFn={fetchFn}
+      itemId={Number(accountMemberId)}
+      fetchFn={fetchFn as any}
       fields={fields}
       title="Account Member Details"
       layout="grid"

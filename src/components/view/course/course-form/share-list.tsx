@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { CourseShare } from "@/types/courseShare";
 import type { Entity } from "@/types/entity";
 import type { Authority } from "@/types/authority";
-import { getAuthorities, getAuthorityByEntity } from "@/api/authority.api";
+import { getAuthorityByEntity } from "@/api/authority.api";
 import type { Response } from "@/types/response";
 
 import {

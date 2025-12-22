@@ -140,7 +140,7 @@ export default function AuthorityFormModal({
       type: "select",
       required: true,
       options: accounts.map((a) => ({
-        label: a.name,
+        label: a.accountName,
         value: a.accountId,
       })),
     },

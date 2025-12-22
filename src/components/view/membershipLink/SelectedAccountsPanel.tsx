@@ -38,7 +38,7 @@ export default function SelectedAccountsPanel({
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => removeAccount(acc?.accountId)}
+                  onClick={() => removeAccount(acc?.accountId as any)}
                   className="h-8 w-8 p-0"
                   title={`Remove ${acc.accountName}`}
                 >

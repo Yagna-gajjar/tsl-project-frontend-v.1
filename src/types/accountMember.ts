@@ -6,8 +6,8 @@ export interface AccountMember {
   dlinkDate?: Date | string | null;
   relationship: string;
   linkBilling: boolean;
-
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
   memberFirstName?: string;
   memberLastName?: string;
 }
- 

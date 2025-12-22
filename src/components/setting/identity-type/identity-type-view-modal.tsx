@@ -23,13 +23,13 @@ const fields: FieldConfig<IdentityType>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: IdentityType["createdAt"]) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: IdentityType["updatedAt"]) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
 ];
 
