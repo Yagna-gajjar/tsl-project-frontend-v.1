@@ -18,12 +18,14 @@ export default function AccountMemberTable({ onView, onEdit }: Props) {
   const [data, setData] = useState<AccountMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1); 
+  const [total, setTotal] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getAccountMembers({ page, limit: 10 });
       setData(res?.data ?? []);
+      setTotal(res.pagination.total);
     } catch {
       setData([]);
     } finally {
@@ -36,9 +38,13 @@ export default function AccountMemberTable({ onView, onEdit }: Props) {
   }, [load]);
 
   const columns: Column<AccountMember>[] = [
-    { key: "accountMemberId", header: "ID", sortable: true },
-    { key: "memberId", header: "Member", sortable: true },
-    { key: "accountId", header: "Account", sortable: true },
+    {
+      key: "memberFirstName",
+      header: "Member",
+      sortable: true,
+      render: (v) => v.memberFirstName + " " + v.memberLastName,
+    },
+    { key: "accountName", header: "Account", sortable: true },
     {
       key: "relationship",
       header: "Relationship",
@@ -72,7 +78,7 @@ export default function AccountMemberTable({ onView, onEdit }: Props) {
         pagination={{
           page,
           limit: 10,
-          total: data.length,
+          total: total,
           onPageChange: setPage,
         }}
         onView={onView}
