@@ -207,7 +207,7 @@ export default function MembershipViewModal({
         onClose={onClose}
         itemId={Number(membershipId)}
         fetchFn={fetchFn}
-        fields={fields}
+        fields={fields as any}
         title="Membership Details"
         layout="grid"
       />
@@ -215,8 +215,6 @@ export default function MembershipViewModal({
       {rowData && (
         <MembershipLinkFormModal
           isOpen={addAccountOpen}
-          membershipId={rowData.membershipId}
-          membershipMasterId={rowData.membershipMasterId}
           onClose={() => setAddAccountOpen(false)}
           onSave={() => {
             setAddAccountOpen(false);

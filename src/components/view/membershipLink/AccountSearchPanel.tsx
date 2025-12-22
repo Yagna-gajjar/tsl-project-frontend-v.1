@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Account } from "@/types/account";
 import { Search, Plus, Loader2 } from "lucide-react";
-import type { Account } from "./membership-link-form-modal";
 
 type Props = {
   search: string;
@@ -67,10 +67,10 @@ export default function AccountSearchPanel({
               >
                 <div className="text-sm">
                   <span className="font-semibold text-foreground block">
-                    {acc.name}
+                    {acc.accountName}
                   </span>
-                  {acc.phone && (
-                    <span className="text-muted-foreground text-xs">{`Phone: ${acc.phone}`}</span>
+                  {acc.contact && (
+                    <span className="text-muted-foreground text-xs">{`Phone: ${acc.contact}`}</span>
                   )}
                 </div>
                 <Button

@@ -3,7 +3,7 @@ export interface MembershipMaster {
   membershipType: string;
   entityId?: number;
   introductionDate: Date | string;
-  suspensionDate: Date | string;
+  suspensionDate?: Date | string;
   billingEntityOfFamily?: string;
   membershipDetails: string;
   durationDays: number;

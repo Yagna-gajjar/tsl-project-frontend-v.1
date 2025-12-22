@@ -6,8 +6,8 @@ import {
   BookOpen,
   DollarSign,
   CheckCircle,
-  FileText,
-  Settings2,
+  // FileText,
+  // Settings2,
 } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Enrollment } from "@/types/enrollment";
@@ -23,8 +23,8 @@ type Props = {
 
 const fields: FieldConfig<Enrollment>[] = [
   { key: "enrollmentId", label: "Enrollment ID", icon: Hash },
-  { key: "academyId", label: "Academy ID", icon: Hash },
-  { key: "academyName", label: "Academy Name", icon: BookOpen },
+  // { key: "academyId", label: "Academy ID", icon: Hash },
+  // { key: "academyName", label: "Academy Name", icon: BookOpen },
   { key: "courseId", label: "Course ID", icon: BookOpen },
   { key: "courseName", label: "Course Name", icon: BookOpen },
   { key: "memberId", label: "Member ID", icon: Users },
@@ -34,19 +34,19 @@ const fields: FieldConfig<Enrollment>[] = [
     key: "enrollmentDate",
     label: "Enrollment Date",
     icon: Calendar,
-    render: (v) => (v ? new Date(v as Date).toLocaleDateString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleDateString() : "-"),
   },
   {
-    key: "startDate",
-    label: "Start Date",
+    key: "attendingStartDate",
+    label: "Attending Date",
     icon: Calendar,
-    render: (v) => (v ? new Date(v as Date).toLocaleDateString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleDateString() : "-"),
   },
   {
     key: "endDate",
     label: "End Date",
     icon: Calendar,
-    render: (v) => (v ? new Date(v as Date).toLocaleDateString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleDateString() : "-"),
   },
   {
     key: "status",
@@ -62,27 +62,26 @@ const fields: FieldConfig<Enrollment>[] = [
       return <span className={statusColor}>{(v as string) || "unknown"}</span>;
     },
   },
-  { key: "freeDays", label: "Free Days", icon: Hash },
-  { key: "sessionUnits", label: "Session Units", icon: Hash },
-  { key: "numberOfDays", label: "Number Of Days", icon: Hash },
-  {
-    key: "discountedAmount",
-    label: "Discounted Amount",
-    icon: DollarSign,
-    render: (v) => {
-      const amount = v as number;
-      return `Rs. ${Number(amount)?.toFixed(2) || "0.00"}`;
-    },
-  },
-  {
-    key: "commitedAmount",
-    label: "Commited Amount",
-    icon: DollarSign,
-    render: (v) => {
-      const amount = v as number;
-      return `Rs. ${Number(amount)?.toFixed(2) || "0.00"}`;
-    },
-  },
+  // { key: "sessionUnits", label: "Session Units", icon: Hash },
+  // { key: "numberOfDays", label: "Number Of Days", icon: Hash },
+  // {
+  //   key: "discountedAmount",
+  //   label: "Discounted Amount",
+  //   icon: DollarSign,
+  //   render: (v) => {
+  //     const amount = v as number;
+  //     return `Rs. ${Number(amount)?.toFixed(2) || "0.00"}`;
+  //   },
+  // },
+  // {
+  //   key: "commitedAmount",
+  //   label: "Commited Amount",
+  //   icon: DollarSign,
+  //   render: (v) => {
+  //     const amount = v as number;
+  //     return `Rs. ${Number(amount)?.toFixed(2) || "0.00"}`;
+  //   },
+  // },
   {
     key: "billingAmount",
     label: "Billing Amount",
@@ -102,35 +101,35 @@ const fields: FieldConfig<Enrollment>[] = [
     },
   },
   {
-    key: "cndn",
+    key: "dnOrDiscount",
     label: "CNDN",
     icon: Hash,
     render: (v) => (v === undefined || v === null ? "-" : String(v)),
   },
-  {
-    key: "adjustment",
-    label: "Adjustment",
-    icon: Settings2,
-    render: (v) => (v === undefined || v === null ? "-" : String(v)),
-  },
+  // {
+  //   key: "adjust",
+  //   label: "Adjustment",
+  //   icon: Settings2,
+  //   render: (v) => (v === undefined || v === null ? "-" : String(v)),
+  // },
   {
     key: "openEnrollment",
     label: "Open Enrollment",
     icon: CheckCircle,
     render: (v) => (v ? "Yes" : "No"),
   },
-  { key: "remarks", label: "Remarks", icon: FileText },
+  // { key: "remarks", label: "Remarks", icon: FileText },
   {
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v) => (v ? new Date(v as Date).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Calendar,
-    render: (v) => (v ? new Date(v as Date).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
 ];
 

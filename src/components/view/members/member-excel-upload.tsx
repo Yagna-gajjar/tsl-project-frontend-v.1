@@ -105,7 +105,7 @@ export default function MemberExcelUpload({ isOpen, onClose, onSuccess }: Member
 			addressId: Number(row.addressId) ? row.addressId : null,
 		};
 
-		await createMember(payload);
+		await createMember(payload as any);
 		console.log(`✅ Imported Member: ${payload.memberFirstName} ${payload.memberLastName}`);
 	}, []);
 

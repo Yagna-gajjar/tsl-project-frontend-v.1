@@ -16,8 +16,10 @@ import type { CourseRate } from "@/types/courseRate";
 import { getCourseRates } from "@/api/courseRate.api";
 import { addDays } from "@/helpers/helper";
 
-const EnrollmentFormNew = () => {
-  const [error, setError] = useState("");
+const EnrollmentFormNew = ({
+  setRateTableData
+}: { setRateTableData: any }) => {
+  const [error, _] = useState("");
   const [values, setValues] = useState<Enrollment>({
     enrollmentId: 0,
     firstEnrollmentId: 0,
@@ -27,7 +29,7 @@ const EnrollmentFormNew = () => {
     membershipId: 0,
     accountId: 0,
     memberId: 0,
-    memberName: "",
+    memberFirstName: "",
     activityId: 0,
     permittedDays: 0,
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
@@ -270,7 +272,7 @@ const EnrollmentFormNew = () => {
   const handleSubmit = async () => {
     const payload = {
       ...values,
-      attendingPattern: daysArrayToNumber(values.attendingPattern),
+      attendingPattern: daysArrayToNumber(values.attendingPattern as any),
     };
     console.log("Submitting values:", payload);
     toast({ title: "Success", description: "Form submitted" });

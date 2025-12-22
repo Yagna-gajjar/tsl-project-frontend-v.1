@@ -304,7 +304,6 @@ export default function MemberTable({
       limit: total,
       sortBy,
       sortOrder,
-      search: search || undefined,
       ...filters,
     });
 

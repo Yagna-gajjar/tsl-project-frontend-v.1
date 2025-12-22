@@ -15,13 +15,13 @@ export function exportToExcel<T extends Record<string, any>>(
 			columns.map((col) => {
 				let value = row[col.key];
 
-				if (value instanceof Date) {
+				if (value) {
 					value = value.toLocaleDateString();
 				} else if (
 					typeof value === "string" &&
 					!isNaN(Date.parse(value))
 				) {
-					value = new Date(value).toLocaleDateString();
+					value = new Date(value).toLocaleDateString() as any;
 				}
 
 				return [col.header || prettifyKey(String(col.key)), value ?? "-"];

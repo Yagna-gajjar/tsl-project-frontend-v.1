@@ -2,11 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { membership } from "@/types/membership";
 import { CreditCard, Trash2 } from "lucide-react";
-import type { Membership } from "./membership-link-form-modal";
 
 type Props = {
-  selectedMemberships: Membership[];
+  selectedMemberships: membership[];
   removeMembership: (id: number) => void;
 };
 
@@ -33,7 +33,7 @@ export default function SelectedMembershipsPanel({
               >
                 <div className="text-sm">
                   <span className="font-semibold text-foreground block">
-                    {membership.name}
+                    {membership.accountName}
                   </span>
                   <span className="text-muted-foreground text-xs">{`ID: ${membership.membershipId}`}</span>
                 </div>
@@ -42,7 +42,7 @@ export default function SelectedMembershipsPanel({
                   variant="destructive"
                   onClick={() => removeMembership(membership.membershipId)}
                   className="h-8 w-8 p-0"
-                  title={`Remove ${membership.name}`}
+                  title={`Remove ${membership.accountName}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

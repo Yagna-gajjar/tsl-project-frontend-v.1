@@ -61,7 +61,7 @@ export default function CoursePage() {
 
       <CourseFormModal
         isOpen={formOpen}
-        initialData={editRow}
+        initialData={editRow as any}
         onClose={() => {
           setFormOpen(false);
           setEditRow(undefined);

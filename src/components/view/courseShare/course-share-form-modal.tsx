@@ -6,11 +6,9 @@ import { FormContent } from "@/components/form-modal/form-content";
 
 import { createCourseShare, updateCourseShare } from "@/api/courseShare.api";
 import { getCourses } from "@/api/course.api";
-import { getAcademies } from "@/api/academy.api";
 
 import type { CourseShare } from "@/types/courseShare";
 import type { Course } from "@/types/course";
-import type { Academy } from "@/types/academy";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import type { Response } from "@/types/response";
 
@@ -21,10 +19,8 @@ type Props = {
   onSave: () => void;
 };
 
-const empty: CourseShare = {
+const empty: CourseShare|any = {
   courseShareId: 0,
-  academyId: 0,
-  shareType: "",
   share: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -43,22 +39,18 @@ export default function CourseShareFormModal({
   const [loading, setLoading] = useState(false);
 
   const [courses, setCourses] = useState<Course[]>([]);
-  const [academies, setAcademies] = useState<Academy[]>([]);
 
-  /* ---------- LOAD DROPDOWNS ---------- */
   useEffect(() => {
     if (!isOpen) return;
 
     const loadOptions = async () => {
       try {
         setLoading(true);
-        const [courseRes, academyRes] = await Promise.all([
+        const [courseRes] = await Promise.all([
           getCourses({ limit: 500 }),
-          getAcademies({ limit: 500 }),
         ]);
 
         setCourses((courseRes as Response<Course[]>)?.data ?? []);
-        setAcademies((academyRes as Response<Academy[]>)?.data ?? []);
       } catch {
         setError("Failed to load dropdown data");
       } finally {
@@ -95,12 +87,6 @@ export default function CourseShareFormModal({
   const validate = () => {
     const e: Record<string, string> = {};
 
-    if (!values.academyId || Number(values.academyId) <= 0) {
-      e.academyId = "Academy is required";
-    }
-    if (!values.shareType) {
-      e.shareType = "Share type is required";
-    }
     if (
       values.share === undefined ||
       values.share === null ||
@@ -141,7 +127,6 @@ export default function CourseShareFormModal({
     }
   }, [values, initialData, onSave, onClose]);
 
-  /* ---------- FIELDS ---------- */
   const fields: FormFieldConfig<CourseShare>[] = [
     {
       name: "courseId",
@@ -152,22 +137,6 @@ export default function CourseShareFormModal({
         value: c.courseId,
         label: c.courseName,
       })),
-    },
-    {
-      name: "academyId",
-      label: "Academy",
-      type: "select",
-      required: true,
-      options: academies.map((a) => ({
-        label: a.academyName,
-        value: String(a.academyId),
-      })),
-    },
-    {
-      name: "shareType",
-      label: "Share Type",
-      type: "text",
-      required: true,
     },
     {
       name: "share",

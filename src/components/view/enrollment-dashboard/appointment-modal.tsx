@@ -4,8 +4,6 @@ import { Calendar, Check, X, AlertCircle, Loader2, Edit2 } from "lucide-react";
 import { getBatchMember, makeAppointment } from "@/api/batchMember.api";
 import type { BatchMember } from "@/types/batchMember";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { getBatch } from "@/api/batch.api";
-import type { Response } from "@/types/response";
 import type { Batch } from "@/types/batch";
 import { format } from "date-fns";
 
@@ -72,8 +70,8 @@ export default function AppointmentModal({
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [batchOptions, setBatchOptions] = useState<Batch[] | null>(null);
-  const [loadingBatches, setLoadingBatches] = useState(false);
+  const [batchOptions] = useState<Batch[] | null>(null);
+  const [loadingBatches] = useState(false);
 
   const sessionUnits = selectedEnrollment?.sessionUnits;
   const rowCount = Array.isArray(sessionUnits)
@@ -112,21 +110,6 @@ export default function AppointmentModal({
     }
   }, [selectedEnrollment]);
 
-  const loadBatches = useCallback(async (academyId?: number) => {
-    setLoadingBatches(true);
-    try {
-      const opts: Response<Batch[]> = await getBatch({
-        academyId: academyId,
-      });
-      setBatchOptions(opts?.data);
-    } catch (e) {
-      console.error("failed to load batches", e);
-      setBatchOptions([]);
-    } finally {
-      setLoadingBatches(false);
-    }
-  }, []);
-
   useEffect(() => {
     const base: Row[] = Array.from({ length: rowCount }).map(() => ({
       batchId: null,
@@ -152,7 +135,6 @@ export default function AppointmentModal({
   useEffect(() => {
     if (open && selectedEnrollment?.enrollmentId) {
       void fetchBatchMembers();
-      void loadBatches(selectedEnrollment?.academyId);
     } else {
       setBatchMembers([]);
       setRows([]);
@@ -265,7 +247,7 @@ export default function AppointmentModal({
     };
 
     try {
-      const res = await makeAppointment([payloadAppt]);
+      const res = await makeAppointment([payloadAppt] as any);
       const created =
         Array.isArray(res?.data) && res.data.length > 0 ? res.data[0] : null;
 
@@ -424,9 +406,8 @@ export default function AppointmentModal({
                                     )} - ${format(
                                       new Date(`2023-01-01T${b.endTime}`),
                                       "hh:mm a"
-                                    )} | Seats: ${b.activeMemberCount} / ${
-                                      b.maxCapacity
-                                    }`}
+                                    )} | Seats: ${b.activeMemberCount} / ${b.maxCapacity
+                                      }`}
                                   </option>
                                 ))}
                               </motion.select>

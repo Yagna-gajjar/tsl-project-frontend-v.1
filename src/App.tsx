@@ -28,12 +28,8 @@ import CoursePage from "@/pages/course";
 import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
 import EnrollmentPage from "./pages/enrollment";
-import CourseChange from "./components/view/enrollment-actions/CourseChange";
-import BatchChange from "./components/view/enrollment-actions/BatchChange";
-import FreezeEnrollment from "./components/view/enrollment-actions/FreezeEnrollment";
 import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
 import AttendanceSheet from "./components/view/batch/attendance-sheet";
-import DefreezeEnrollment from "./components/view/enrollment-actions/DefreezeEnrollment";
 import DebitNote from "./pages/debitNote";
 import PaymentPage from "./pages/payment";
 import Billing from "./pages/billing";
@@ -41,7 +37,6 @@ import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
 import MembershipPage from "./pages/membership";
 import StaffAttendance from "./pages/staff-attendance";
-import MedicalBreak from "./components/view/enrollment-actions/MedicalBreak";
 import BatchConnectionsPage from "./pages/batchConnection";
 import CoachAssignmentsPage from "./pages/coachAssignment";
 import FacilityAllotmentsPage from "./pages/facilityAllotment";
@@ -52,7 +47,6 @@ import MembershipLinkPage from "./pages/membership-link";
 import CoursePackagePage from "./pages/course-package";
 import CourseSharePage from "./pages/courseShare";
 import CourseRatePage from "./pages/course-rate";
-import ExcelUploader from "./components/ExcelUploader";
 import AuthorityPage from "./pages/authority";
 
 export default function App() {
@@ -79,7 +73,7 @@ export default function App() {
                   path="/account/account-member"
                   element={<AccountMemberPage />}
                 />
-                <Route
+                {/* <Route
                   path="/enrollment/:id/course-change"
                   element={<CourseChange />}
                 />
@@ -98,7 +92,7 @@ export default function App() {
                 <Route
                   path="/enrollment/:id/defreeze-enrollment"
                   element={<DefreezeEnrollment />}
-                />
+                /> */}
                 <Route
                   path="/enrollment/:id/refund"
                   element={<RefundFormModal />}
@@ -194,7 +188,6 @@ export default function App() {
                 <Route path="/setting/*" element={<NotFound />} />
               </Route>
               <Route path="/login" element={<LoginForm />} />
-              <Route path="/excel" element={<ExcelUploader />} />
               <Route path="/signup" element={<Signup />} />
             </Routes>
           </Router>

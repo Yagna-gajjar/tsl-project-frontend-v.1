@@ -46,8 +46,8 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
 
       const rowsRaw = Array.isArray(res)
         ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Discount[])
+        : Array.isArray(res?.data)
+        ? (res.data as Discount[])
         : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
@@ -112,8 +112,8 @@ export default function DiscountTable({ onView, onEdit, refreshKey }: Props) {
 
     const rowsRaw = Array.isArray(res)
       ? res
-      : Array.isArray((res as Record<string, unknown>)?.data)
-      ? ((res as Record<string, unknown>).data as Discount[])
+      : Array.isArray(res?.data)
+      ? (res.data as Discount[])
       : [];
     return Array.isArray(rowsRaw) ? rowsRaw : [];
   };

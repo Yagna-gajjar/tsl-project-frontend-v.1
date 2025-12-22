@@ -360,8 +360,8 @@ export function MemberFormModal({
     }
 
     try {
-      const payload: Member = {
-        regDate: new Date(values.regDate) as Date,
+      const payload: Member | any = {
+        regDate: new Date(values?.regDate as any),
         suspensionDate: values.suspensionDate ?? "",
         memberFirstName: String(values.memberFirstName ?? "").trim(),
         memberMiddleName: values.memberMiddleName ?? "",

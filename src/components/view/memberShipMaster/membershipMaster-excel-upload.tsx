@@ -11,7 +11,6 @@ interface MembershipExcelUploadProps {
 	onSuccess: () => void;
 }
 
-// Interface for raw Excel data (handles flexible types from spreadsheet)
 interface MembershipImportRow {
 	membershipType: string;
 	introductionDate?: string | number;
@@ -73,21 +72,21 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 
 	const handleCreateMembership = useCallback(async (row: MembershipImportRow) => {
 
-		const parseBoolToInt = (val: any): number =>
-			val === true || String(val).toLowerCase() === 'true' || String(val) === '1' ? 1 : 0;
+		// const parseBoolToInt = (val: any): number =>
+		// 	val === true || String(val).toLowerCase() === 'true' || String(val) === '1' ? 1 : 0;
 
 		const parseBool = (val: any): boolean =>
 			val === true || String(val).toLowerCase() === 'true' || String(val) === '1';
 
-		const payload: MembershipMaster = {
+		const payload: MembershipMaster | any = {
 			membershipType: row.membershipType,
 
 			introductionDate: row.introductionDate
-				? new Date(row.introductionDate).toISOString().split('T')[0]
+				? new Date(row.introductionDate).toISOString().split('T')[0] as any
 				: undefined,
 
 			suspensionDate: row.suspensionDate
-				? new Date(row.suspensionDate).toISOString().split('T')[0]
+				? new Date(row.suspensionDate).toISOString().split('T')[0] as any
 				: undefined,
 
 			billingEntityOfFamily: row.billingEntityOfFamily,
@@ -97,7 +96,6 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 			caDepositPR: Number(row.caDepositPR),
 			minIssueCharge: Number(row.minIssueCharge),
 			perMemberRegCharge: Number(row.perMemberRegCharge),
-			commPerMemberPerMonth: Number(row.commPerMemberPerMonth || 0),
 
 			memberLimit: row.memberLimit ? Number(row.memberLimit) : undefined,
 			disOnCaUptoMembers: Number(row.disOnCaUptoMembers || 0),
@@ -109,13 +107,12 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 
 			graceDays: Number(row.graceDays),
 
-			// 🔑 schema-critical
-			guestAllowed: parseBoolToInt(row.guestAllowed),
+			guestAllowed: row.guestAllowed as any,
 			clubAccess: parseBool(row.clubAccess),
 
 			birthdayVenueUsage: Number(row.birthdayVenueUsage || 0),
 			anniversaryVenueUsage: Number(row.anniversaryVenueUsage || 0),
-			cancelChargesPrOnCa: row.cancelChargesPrOnCa || 0,
+			cancelChargesPrOnCa: row.cancelChargesPrOnCa as any || 0,
 			entityId: row.entityId,
 			status: "active"
 		};
@@ -162,7 +159,6 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 								title="Membership Master Sheet"
 								expectedColumns={expectedColumns}
 								createFunction={handleCreateMembership}
-								validateRow={() => { }}
 								onUploadComplete={onSuccess}
 							/>
 						</div>

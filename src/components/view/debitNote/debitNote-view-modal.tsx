@@ -28,21 +28,21 @@ const fields: FieldConfig<DebitNote>[] = [
     key: "coachId",
     label: "Coach ID",
     icon: User,
-    render: (v) => v ?? "N/A",
+    render: (v:any) => v ?? "N/A",
   },
 
   {
     key: "enrollmentId",
     label: "Enrollment ID",
     icon: FileText,
-    render: (v) => v ?? "N/A",
+    render: (v:any) => v ?? "N/A",
   },
 
   {
     key: "debitNoteAmount",
     label: "Amount",
     icon: CreditCard,
-    render: (v) =>
+    render: (v:any) =>
       typeof v === "number" ? `₹${v.toLocaleString("en-IN")}` : v ?? "-",
   },
 

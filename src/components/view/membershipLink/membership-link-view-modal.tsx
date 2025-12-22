@@ -37,7 +37,7 @@ export default function MembershipLinkViewModal({
       isOpen={isOpen}
       onClose={onClose}
       itemId={Number(membershipLinkId)}
-      fetchFn={fetchFn}
+      fetchFn={fetchFn as any}
       fields={fields}
       title="View Membership Link"
     />

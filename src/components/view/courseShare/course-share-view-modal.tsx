@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Hash, Info, Percent, Clock, Building2 } from "lucide-react";
+import { Hash, Percent, Clock } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 
 import { getCourseShareById } from "@/api/courseShare.api";
@@ -15,8 +15,6 @@ type Props = {
 
 const fields: FieldConfig<CourseShare>[] = [
   { key: "courseShareId", label: "Share ID", icon: Hash },
-  { key: "academyName", label: "Academy", icon: Building2 },
-  { key: "shareType", label: "Share Type", icon: Info },
   {
     key: "share",
     label: "Share (%)",
@@ -27,13 +25,13 @@ const fields: FieldConfig<CourseShare>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    render: (v) => new Date(v).toLocaleString(),
+    render: (v) => new Date(v as string).toLocaleString(),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v) => new Date(v).toLocaleString(),
+    render: (v) => new Date(v as string).toLocaleString(),
   },
 ];
 
@@ -53,7 +51,7 @@ export default function CourseShareViewModal({
     <ViewModal<CourseShare>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={courseShareId}
+      itemId={Number(courseShareId)}
       fetchFn={fetchFn}
       fields={fields}
       title="Course Share Details"
