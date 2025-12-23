@@ -57,11 +57,12 @@ export default function AccountFormModal({
       const res: Response<Entity[]> = await getEntities({ limit: 500 });
       setEntities(res.data ?? []);
     };
-    loadEntities();
+    if(isOpen){
+      loadEntities();
+    }
   }, []);
 
   useEffect(() => {
-    console.log(values.entityId);
     if (!values.entityId || values.entityId == 0) {
       setValues((p) => ({
         ...p,
@@ -113,7 +114,9 @@ export default function AccountFormModal({
       setAdminInstructionOpt(res.data ?? []);
     };
 
-    fetchAdminInstructionOpt();
+    if(isOpen){
+      fetchAdminInstructionOpt();
+    }
   }, [initialData, isOpen]);
 
   const validate = useCallback(() => {
