@@ -8,20 +8,19 @@ import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import AccountSearchPanel from "./account-search-panel";
 import SelectedAccountsPanel from "./selected-accounts-panel";
-import {
-  createMembershipLink,
-  getMembershipLinks,
-} from "@/api/membershipLink.api";
+import { createMembershipLink, getMembershipLinks, updateMembershipLink } from "@/api/membershipLink.api";
 import { getAccounts } from "@/api/account.api";
 import type { MembershipLink } from "@/types/membershipLink";
 import type { Response } from "@/types/response";
 import type { Account } from "@/types/account";
+import { format } from "date-fns";
 
 type AccountWithLinkData = Account & {
   linkDate?: string;
   membershipLinkId?: number;
   isExisting?: boolean;
   contact?: string;
+  authorityId?: number;
 };
 
 type MembershipData = {
@@ -46,7 +45,11 @@ export default function MembershipLinkFormModal({
   isOpen,
   onClose,
   onSave,
-  membershipData,
+  membershipData = {
+    membershipId: 6,
+    membershipMasterId: 10,
+    membershipTypeName: "Sdf"
+  },
 }: Props) {
   const { membershipId, membershipMasterId, membershipTypeName } =
     membershipData || {};
@@ -151,8 +154,31 @@ export default function MembershipLinkFormModal({
     setSelectedAccounts(selectedAccounts.filter((acc) => acc.accountId !== id));
   };
 
+  const onUnlink = async (data: AccountWithLinkData) => {
+    try {
+      const payload = {
+        membershipId: membershipData.membershipId,
+        membershipMasterId: membershipData.membershipMasterId,
+        linkDate: data.linkDate,
+        dLinkDate: format(Date.now(), "yyyy-MM-dd"),
+        membershipLinkId: data.membershipLinkId,
+        accountId: data.accountId,
+        authorityId: data.authorityId,
+        status: "unlinked"
+      }
+
+      const res: Response<MembershipLink> = await updateMembershipLink(Number(data.membershipLinkId), payload);
+      if (!res.success) {
+        throw new Error("Failed to dlink account.");
+      }
+      toast({ title: "Success", description: "Account Unlinked.", variant: "success" });
+    } catch {
+      toast({ title: "Error", description: "Failed to unlink account.", variant: "destructive" });
+    }
+  }
+
   const handleSubmit = async () => {
-    const newAccounts = selectedAccounts.filter((acc) => !acc.isExisting);
+    const newAccounts = selectedAccounts.filter(acc => !acc.isExisting);
 
     if (newAccounts.length === 0) {
       toast({ title: "Info", description: "No new accounts to link." });
@@ -210,7 +236,6 @@ export default function MembershipLinkFormModal({
           />
 
           <div className="flex-grow overflow-y-auto p-6 space-y-6">
-            {/* Header Info */}
             <div className="bg-muted/40 border border-border/50 rounded-lg p-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-2 bg-primary/10 rounded-full">
@@ -246,9 +271,11 @@ export default function MembershipLinkFormModal({
                   addAccount={addAccount}
                   selectedAccounts={selectedAccounts}
                 />
+
                 <SelectedAccountsPanel
                   selectedAccounts={selectedAccounts}
                   removeAccount={removeAccount}
+                  onUnlink={onUnlink}
                 />
               </div>
             </div>

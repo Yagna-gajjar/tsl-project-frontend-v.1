@@ -11,12 +11,14 @@ type AccountWithLinkData = Account & {
   linkDate?: string;
   dLinkDate?: string | null;
   isExisting?: boolean;
+  membershipLinkId?: number;
+  accountId?: number;
 };
 
 type Props = {
   selectedAccounts: AccountWithLinkData[];
   removeAccount: (id: number) => void;
-  onUnlink?: (id: number) => void; // Optional: if you want a separate API call for unlinking
+  onUnlink?: (data: AccountWithLinkData) => void; // Optional: if you want a separate API call for unlinking
 };
 
 export default function SelectedAccountsPanel({
@@ -85,7 +87,7 @@ export default function SelectedAccountsPanel({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onUnlink ? onUnlink(acc.accountId) : removeAccount(acc.accountId)}
+                        onClick={() => onUnlink ? onUnlink(acc) : removeAccount(acc.accountId)}
                         className="h-8 w-8 p-0 border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                         title="Unlink Account"
                       >
