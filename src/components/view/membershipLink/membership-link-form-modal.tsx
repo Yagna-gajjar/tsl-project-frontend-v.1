@@ -5,27 +5,35 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { toast } from "@/hooks/use-toast";
-import { Link2 } from "lucide-react";
+import { Link2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import AccountSearchPanel from "./account-search-panel";
 import SelectedAccountsPanel from "./selected-accounts-panel";
-import { createMembershipLink } from "@/api/membershipLink.api";
+import { createMembershipLink, getMembershipLinks } from "@/api/membershipLink.api";
 import { getAccounts } from "@/api/account.api";
-import { getMembershipMasters } from "@/api/membershipMaster.api";
 import type { MembershipLink } from "@/types/membershipLink";
 import type { Response } from "@/types/response";
 import type { Account } from "@/types/account";
-import type { MembershipMaster } from "@/types/membershipMaster";
-import type { membership } from "@/types/membership";
-import { SearchableMultiselect } from "@/components/form-modal/form-field-input";
-import { getMembers } from "@/api/member.api";
-import { getMemberships } from "@/api/membership.api";
+
+type AccountWithLinkData = Account & {
+  linkDate?: string;
+  membershipLinkId?: number;
+  isExisting?: boolean;
+  contact?: string;
+};
+
+type MembershipData = {
+  membershipMasterId: number;
+  membershipTypeName: string;
+  membershipId: number;
+};
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  membershipData: MembershipData;
 };
 
 const dialogContentVariants = {
@@ -37,273 +45,170 @@ export default function MembershipLinkFormModal({
   isOpen,
   onClose,
   onSave,
+  membershipData,
 }: Props) {
-  const [membershipMasters, setMembershipMasters] = useState<
-    MembershipMaster[]
-  >([]);
-  const [selectedMembershipMaster, setSelectedMembershipMaster] = useState<
-    number | null
-  >(null);
-  const [loadingMasters, setLoadingMasters] = useState(false);
-
-  const [selectedMembership, setSelectedMembership] = useState<number | null>(
-    null
-  );
-  const [membershipOptions, setMembershipOptions] = useState<membership[]>([]);
-  const [loadingMemberships, setLoadingMemberships] = useState(false);
+  const { membershipId, membershipMasterId, membershipTypeName } = membershipData || {};
 
   const [allAccounts, setAllAccounts] = useState<Account[]>([]);
-  const [selectedAccounts, setSelectedAccounts] = useState<Account[]>([]);
+  const [selectedAccounts, setSelectedAccounts] = useState<AccountWithLinkData[]>([]);
   const [accountSearch, setAccountSearch] = useState("");
   const [filteredAccounts, setFilteredAccounts] = useState<Account[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const loadMembershipMasters = useCallback(async () => {
-    try {
-      setLoadingMasters(true);
-      const res: Response<MembershipMaster[]> = await getMembershipMasters();
-      setMembershipMasters(res?.data || []);
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to load membership masters",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingMasters(false);
-    }
-  }, []);
-
-  const loadMemberships = useCallback(async (masterId: number) => {
-    try {
-      setLoadingMemberships(true);
-      const res: Response<membership[]> = await getMemberships();
-
-      setMembershipOptions(res?.data as membership[]);
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to load memberships",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingMemberships(false);
-    }
-  }, []);
 
   const loadAllAccounts = useCallback(async () => {
     try {
       setIsSearching(true);
-      const res: Response<Account[]> = await getAccounts({});
+      const res: Response<Account[]> = await getAccounts({ accountType: "Transactions" });
       const accounts = res.data || [];
       setAllAccounts(accounts);
       setFilteredAccounts(accounts);
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to load accounts",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to load accounts", variant: "destructive" });
     } finally {
       setIsSearching(false);
     }
   }, []);
 
+  const getAllLinkedAccount = useCallback(async () => {
+    if (!membershipId || !membershipMasterId) return;
+
+    try {
+      const res: Response<MembershipLink[]> = await getMembershipLinks({
+        membershipMasterId,
+        membershipId,
+      });
+
+      const links = res.data || [];
+      const alreadyLinked: AccountWithLinkData[] = links.map((link) => ({
+        accountId: link.accountId,
+        accountName: link.accountName || "Unknown Account",
+        contact: link.contact,
+        linkDate: link.linkDate,
+        membershipLinkId: link.membershipLinkId,
+        isExisting: true,
+        dLinkDate: link.dLinkDate
+      }));
+      console.log(alreadyLinked," dhcbs");  
+
+      setSelectedAccounts(alreadyLinked);
+    } catch {
+      toast({ title: "Error", description: "Failed to load linked accounts", variant: "destructive" });
+    }
+  }, [membershipId, membershipMasterId]);
+
   useEffect(() => {
     if (isOpen) {
-      loadMembershipMasters();
       loadAllAccounts();
+      getAllLinkedAccount();
     }
-  }, [isOpen, loadMembershipMasters, loadAllAccounts]);
+  }, [isOpen, loadAllAccounts, getAllLinkedAccount]);
 
   useEffect(() => {
-    if (selectedMembershipMaster) {
-      loadMemberships(selectedMembershipMaster);
-    }
-  }, [selectedMembershipMaster, loadMemberships]);
-
-  useEffect(() => {
-    if (!accountSearch.trim()) {
-      setFilteredAccounts(allAccounts);
-    } else {
-      const searchLower = accountSearch.toLowerCase();
-      const filtered = allAccounts.filter(
-        (acc) =>
-          acc.accountName?.toLowerCase().includes(searchLower) ||
-          acc.contact?.toLowerCase().includes(searchLower) ||
-          acc.email?.toLowerCase().includes(searchLower)
-      );
-      setFilteredAccounts(filtered);
-    }
+    const searchLower = accountSearch.toLowerCase();
+    const filtered = allAccounts.filter((acc) =>
+      acc.accountName?.toLowerCase().includes(searchLower) ||
+      acc.contact?.toLowerCase().includes(searchLower)
+    );
+    setFilteredAccounts(filtered);
   }, [accountSearch, allAccounts]);
-
-  const searchAccount = async () => {
-    // Already filtered in useEffect above
-  };
 
   const addAccount = (acc: Account) => {
     if (!selectedAccounts.some((a) => a.accountId === acc.accountId)) {
-      setSelectedAccounts([...selectedAccounts, acc]);
+      setSelectedAccounts([...selectedAccounts, { ...acc, isExisting: false }]);
     }
   };
 
   const removeAccount = (id: number) => {
+    // Logic: If it's a new addition, just remove from state. 
+    // If it's an existing link, you might want to call an 'Unlink' API here or mark it for deletion.
     setSelectedAccounts(selectedAccounts.filter((acc) => acc.accountId !== id));
   };
 
   const handleSubmit = async () => {
-    if (!selectedMembershipMaster) {
-      toast({
-        title: "Validation Error",
-        description: "Please select a membership master.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Only submit accounts that aren't already linked (isExisting: false)
+    const newAccounts = selectedAccounts.filter(acc => !acc.isExisting);
 
-    if (!selectedMembership) {
-      toast({
-        title: "Validation Error",
-        description: "Please select a membership.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (selectedAccounts.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please select at least one account.",
-        variant: "destructive",
-      });
+    if (newAccounts.length === 0) {
+      toast({ title: "Info", description: "No new accounts to link." });
       return;
     }
 
     try {
       setIsSubmitting(true);
-
-      let linksCreated = 0;
-      for (const account of selectedAccounts) {
-        const payload: MembershipLink = {
-          membershipMasterId: selectedMembershipMaster,
+      for (const account of newAccounts) {
+        await createMembershipLink({
+          membershipMasterId: membershipMasterId,
           accountId: account.accountId,
-          membershipId: selectedMembership,
-        };
-        await createMembershipLink(payload);
-        linksCreated++;
+          membershipId: membershipId,
+        });
       }
 
       toast({
         title: "Success",
-        description: `Successfully linked ${linksCreated} account(s) to the membership.`,
+        description: `Successfully updated links for ${membershipTypeName}.`,
         variant: "success",
       });
 
       onSave();
       handleClose();
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to create links. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to create links.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    setSelectedMembershipMaster(null);
-    setSelectedMembership(null);
     setSelectedAccounts([]);
     setAccountSearch("");
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent
-        className="max-w-6xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden"
-        onPointerDownOutside={(e) => isSubmitting && e.preventDefault()}
-        onInteractOutside={(e) => isSubmitting && e.preventDefault()}
-      >
-        <motion.div
-          variants={dialogContentVariants}
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-          className="flex flex-col max-h-[90vh] overflow-hidden"
-        >
-          <FormHeader
-            title="Link Membership Type to Accounts"
-            icon={<Link2 className="w-5 h-5 text-primary" />}
-            onClose={handleClose}
-          />
+      <DialogContent className="max-w-6xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden">
+        <motion.div variants={dialogContentVariants} initial="hidden" animate="visible" className="flex flex-col max-h-[90vh] overflow-hidden">
+          <FormHeader title="Manage Membership Links" icon={<Link2 className="w-5 h-5 text-primary" />} onClose={handleClose} />
 
-          <div className="flex-grow overflow-y-auto">
-            <div className="p-6 space-y-6">
-              {/* Form Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Membership Master Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="membership" className="text-sm font-semibold">
-                    Membership Master
-                  </Label>
-                  <SearchableMultiselect
-                    options={membershipMasters?.map((m) => ({
-                      value: m.membershipMasterId,
-                      label: m.membershipType,
-                    }))}
-                    value={selectedMembershipMaster}
-                    onChange={setSelectedMembershipMaster}
-                    placeholder="Search and select a membership master..."
-                    isSingle={true}
-                  />
-                </div>
-
-                {/* Membership Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="membership" className="text-sm font-semibold">
-                    Membership
-                  </Label>
-                  <SearchableMultiselect
-                    options={membershipOptions
-                      ?.filter((m) => m.accountId !== null)
-                      .map((m) => ({
-                        value: m.membershipId,
-                        label: m.accountName,
-                      }))}
-                    value={selectedMembership}
-                    onChange={setSelectedMembership}
-                    placeholder="Search and select a membership..."
-                    disabled={loadingMemberships || !selectedMembershipMaster}
-                    isSingle={true}
-                  />
+          <div className="flex-grow overflow-y-auto p-6 space-y-6">
+            {/* Header Info */}
+            <div className="bg-muted/40 border border-border/50 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-primary/10 rounded-full"><ShieldCheck className="w-5 h-5 text-primary" /></div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Target Membership</p>
+                  <p className="text-lg font-bold text-foreground">{membershipTypeName}</p>
                 </div>
               </div>
+              <div className="text-right">
+                <span className="text-xs bg-background px-2 py-1 rounded border border-border font-mono">
+                  ID: {membershipId}
+                </span>
+              </div>
+            </div>
 
-              {/* Account Selection Panels */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Select Accounts</Label>
-                <div className="grid grid-cols-2 gap-6">
-                  <AccountSearchPanel
-                    search={accountSearch}
-                    setSearch={setAccountSearch}
-                    results={filteredAccounts}
-                    isSearching={isSearching}
-                    searchAccount={searchAccount}
-                    addAccount={addAccount}
-                    selectedAccounts={selectedAccounts}
-                  />
-                  <SelectedAccountsPanel
-                    selectedAccounts={selectedAccounts}
-                    removeAccount={removeAccount}
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Account Management</Label>
+              <div className="grid grid-cols-2 gap-6">
+                <AccountSearchPanel
+                  search={accountSearch}
+                  setSearch={setAccountSearch}
+                  results={filteredAccounts}
+                  isSearching={isSearching}
+                  searchAccount={async () => { }}
+                  addAccount={addAccount}
+                  selectedAccounts={selectedAccounts}
+                />
+
+                {/* Note: You will need to update SelectedAccountsPanel to 
+                   handle the display of linkDate and the Unlink icon.
+                */}
+                <SelectedAccountsPanel
+                  selectedAccounts={selectedAccounts}
+                  removeAccount={removeAccount}
+                // Pass custom render or props if your component supports it
+                />
               </div>
             </div>
           </div>
@@ -311,13 +216,9 @@ export default function MembershipLinkFormModal({
           <FormFooter
             onClose={handleClose}
             onSubmit={handleSubmit}
-            submitLabel="Create Link"
+            submitLabel="Save Changes"
             isSubmitting={isSubmitting}
-            disabled={
-              !selectedMembershipMaster ||
-              !selectedMembership ||
-              selectedAccounts.length === 0
-            }
+            disabled={isSubmitting}
           />
         </motion.div>
       </DialogContent>
