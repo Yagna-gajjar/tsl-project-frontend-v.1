@@ -8,12 +8,13 @@ import {
 } from "@/api/membershipLink.api";
 import { getMembershipMasters } from "@/api/membershipMaster.api";
 import { getEnumsByCategory } from "@/api/enums.api";
-import { getEntities } from "@/api/entity.api";
+import { getMemberships } from "@/api/membership.api";
 
 import type { MembershipLink } from "@/types/membershipLink";
 import type { MembershipMaster } from "@/types/memberShipMaster";
 import type { Enums } from "@/types/enums";
-import type { Entity } from "@/types/entity";
+import type { membership } from "@/types/membership";
+import type { Response } from "@/types/response";
 
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
@@ -21,7 +22,6 @@ import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SearchableMultiselect } from "@/components/form-modal/form-field-input";
-import type { Response } from "@/types/response";
 
 type Props = {
   onView?: (row: MembershipLink) => void;
@@ -47,49 +47,54 @@ export default function MembershipLinkTable({
   const [entityId, setEntityId] = useState<string>("all");
   const [hideDeLinked, setHideDeLinked] = useState(false);
 
-  const [entities, setEntities] = useState<Entity[]>([]);
-
+  const [entities, setEntities] = useState<membership[]>([]);
   const [entitiesPage, setEntitiesPage] = useState(1);
   const [hasMoreEntities, setHasMoreEntities] = useState(true);
   const [loadingEntities, setLoadingEntities] = useState(false);
+
   const [membershipMasters, setMembershipMasters] = useState<
     MembershipMaster[]
   >([]);
-
   const [membershipMastersPage, setMembershipMastersPage] = useState(1);
   const [hasMoreMembershipMasters, setHasMoreMembershipMasters] =
     useState(true);
   const [loadingMembershipMasters, setLoadingMembershipMasters] =
     useState(false);
+
   const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
 
   const PAGE_SIZE = 20;
 
+  /* ---------------- FETCH MEMBERSHIP MASTERS ---------------- */
+
   const fetchMasters = useCallback(
     async (isInitial = false) => {
-      if (loadingMembershipMasters || (!hasMoreMembershipMasters && !isInitial))
-        return;
+      if (loadingMembershipMasters) return;
+      if (!isInitial && !hasMoreMembershipMasters) return;
+
       setLoadingMembershipMasters(true);
       try {
-        const page = isInitial ? 1 : membershipMastersPage;
+        const pageToLoad = isInitial ? 1 : membershipMastersPage;
 
         const response: Response<MembershipMaster[]> =
           await getMembershipMasters({
             limit: PAGE_SIZE,
-            page,
+            page: pageToLoad,
             entityType:
-              entityType.toLocaleLowerCase() !== "all" ? entityType : undefined,
+              entityType.toLowerCase() !== "all" ? entityType : undefined,
           });
-        const items = response?.data || ([] as MembershipMaster[]);
+
+        const items = response?.data || [];
+
         setMembershipMasters((prev) =>
           isInitial ? items : [...prev, ...items]
         );
         setHasMoreMembershipMasters(items.length === PAGE_SIZE);
-        setMembershipMastersPage(page + 1);
+        setMembershipMastersPage(pageToLoad + 1);
       } catch {
         toast({
           title: "Error",
-          description: "Failed to fetch members",
+          description: "Failed to fetch membership masters",
           variant: "destructive",
         });
       } finally {
@@ -104,34 +109,46 @@ export default function MembershipLinkTable({
     ]
   );
 
+  /* ---------------- FETCH ENTITIES ---------------- */
+
   const fetchEntities = useCallback(
     async (isInitial = false) => {
-      if (loadingEntities || (!hasMoreEntities && !isInitial)) return;
+      if (loadingEntities) return;
+      if (!isInitial && !hasMoreEntities) return;
+
       setLoadingEntities(true);
       try {
-        const page = isInitial ? 1 : entitiesPage;
-        const response: Response<Entity[]> = await getEntities({
+        const pageToLoad = isInitial ? 1 : entitiesPage;
+
+        const response: Response<membership[]> = await getMemberships({
           limit: PAGE_SIZE,
-          page,
-          entityType:
-            entityType.toLocaleLowerCase() !== "all" ? entityType : undefined,
+          page: pageToLoad,
+          membershipMasterId:
+            membershipMasterId !== "all"
+              ? Number(membershipMasterId)
+              : undefined,
+          billingEntityOfFamily: "Members",
         });
-        const items = response?.data || ([] as Entity[]);
+
+        const items = response?.data || [];
+
         setEntities((prev) => (isInitial ? items : [...prev, ...items]));
         setHasMoreEntities(items.length === PAGE_SIZE);
-        setEntitiesPage(page + 1);
+        setEntitiesPage(pageToLoad + 1);
       } catch {
         toast({
           title: "Error",
-          description: "Failed to fetch members",
+          description: "Failed to fetch entities",
           variant: "destructive",
         });
       } finally {
         setLoadingEntities(false);
       }
     },
-    [loadingEntities, hasMoreEntities, entitiesPage, entityType]
+    [loadingEntities, hasMoreEntities, entitiesPage, membershipMasterId]
   );
+
+  /* ---------------- INITIAL LOAD ---------------- */
 
   useEffect(() => {
     const fetchEntityTypes = async () => {
@@ -139,10 +156,30 @@ export default function MembershipLinkTable({
       setEntityTypeEnums(res.data || []);
     };
 
-    fetchMasters();
+    fetchMasters(true);
+    fetchEntities(true);
     fetchEntityTypes();
-    fetchEntities();
   }, []);
+
+  /* ---------------- REFRESH ON FILTER CHANGE ---------------- */
+
+  useEffect(() => {
+    // reset masters
+    setMembershipMasters([]);
+    setMembershipMastersPage(1);
+    setHasMoreMembershipMasters(true);
+    fetchMasters(true);
+
+    // reset entities (THIS WAS MISSING)
+    setEntities([]);
+    setEntitiesPage(1);
+    setHasMoreEntities(true);
+    fetchEntities(true);
+
+    setPage(1);
+  }, [entityType, membershipMasterId]);
+
+  /* ---------------- TABLE DATA ---------------- */
 
   const loadData = useCallback(async () => {
     try {
@@ -184,21 +221,7 @@ export default function MembershipLinkTable({
     loadData();
   }, [loadData, refreshKey]);
 
-  useEffect(() => {
-    setMembershipMasters([]);
-    setMembershipMastersPage(1);
-    setHasMoreMembershipMasters(true);
-    fetchMasters(true);
-    fetchEntities(true)
-  }, [entityType]);
-
-  const columns: Column<MembershipLink>[] = [
-    { key: "membershipType", header: "Membership Master" },
-    { key: "membershipId", header: "Membership" },
-    { key: "accountName", header: "Account" },
-    { key: "linkDate", header: "Link Date" },
-    { key: "dLinkDate", header: "D-Link Date" },
-  ];
+  /* ---------------- DELETE ---------------- */
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number>();
@@ -225,6 +248,18 @@ export default function MembershipLinkTable({
     }
   };
 
+  /* ---------------- COLUMNS ---------------- */
+
+  const columns: Column<MembershipLink>[] = [
+    { key: "membershipType", header: "Membership Master" },
+    { key: "membershipId", header: "Membership" },
+    { key: "accountName", header: "Account" },
+    { key: "linkDate", header: "Link Date" },
+    { key: "dLinkDate", header: "D-Link Date" },
+  ];
+
+  /* ---------------- UI ---------------- */
+
   return (
     <>
       <div className="mb-4 flex flex-wrap gap-3 items-center">
@@ -235,15 +270,14 @@ export default function MembershipLinkTable({
             value={entityType === "all" ? null : entityType}
             options={[
               { label: "All", value: "all" },
-              ...entityTypeEnums.map((e) => ({
-                label: e.value,
-                value: e.value,
-              })),
+              ...entityTypeEnums
+                .filter((e) => ![2, 5, 6].includes(e.enumCase))
+                .map((e) => ({
+                  label: e.value,
+                  value: e.value,
+                })),
             ]}
-            onChange={(val) => {
-              setEntityType(val ?? "all");
-              setPage(1);
-            }}
+            onChange={(val) => setEntityType(val ?? "all")}
           />
 
           <SearchableMultiselect
@@ -257,10 +291,7 @@ export default function MembershipLinkTable({
                 value: Number(m.membershipMasterId),
               })),
             ]}
-            onChange={(val) => {
-              setMembershipMasterId(val ?? "all");
-              setPage(1);
-            }}
+            onChange={(val) => setMembershipMasterId(val ?? "all")}
           />
 
           <SearchableMultiselect
@@ -274,20 +305,14 @@ export default function MembershipLinkTable({
                 value: Number(e.entityId),
               })),
             ]}
-            onChange={(val) => {
-              setEntityId(val ?? "all");
-              setPage(1);
-            }}
+            onChange={(val) => setEntityId(val ?? "all")}
           />
         </div>
 
         <div className="flex items-center gap-2 pt-2">
           <Checkbox
             checked={hideDeLinked}
-            onCheckedChange={(v) => {
-              setHideDeLinked(!!v);
-              setPage(1);
-            }}
+            onCheckedChange={(v) => setHideDeLinked(!!v)}
           />
           <Label>Hide De-Linked</Label>
         </div>

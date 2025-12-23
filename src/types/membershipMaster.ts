@@ -18,7 +18,7 @@ export interface MembershipMaster {
   cBalPrInCa: number;
   vBalPrInCa?: number;
   graceDays: number;
-  guestAllowed: boolean;
+  guestAllowed: number;
   clubAccess: boolean;
   birthdayVenueUsage: number;
   anniversaryVenueUsage: number;

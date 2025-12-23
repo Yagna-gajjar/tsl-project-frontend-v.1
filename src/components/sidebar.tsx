@@ -156,7 +156,10 @@ const navigationItems: NavigationItem[] = [
     href: "/membership",
     submenu: [
       { label: "Membership Master", href: "/membership/membership-master" },
-      { label: "Membership Reg", href: "/membership/membership-registration" },
+      {
+        label: "Membership issue",
+        href: "/membership/membership-registration",
+      },
       { label: "Membership Link", href: "/membership/membership-link" },
     ],
   },

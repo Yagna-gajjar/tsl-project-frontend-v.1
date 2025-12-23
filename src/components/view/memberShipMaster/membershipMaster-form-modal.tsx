@@ -239,7 +239,7 @@ export default function MembershipMasterFormModal({
         cBalPrInCa: Number(values.cBalPrInCa),
         vBalPrInCa: Number(values.vBalPrInCa),
         graceDays: Number(values.graceDays),
-        guestAllowed: Boolean(values.guestAllowed),
+        guestAllowed: Number(values.guestAllowed),
         clubAccess: Boolean(values.clubAccess),
         birthdayVenueUsage: Number(values.birthdayVenueUsage),
         anniversaryVenueUsage: Number(values.anniversaryVenueUsage),
@@ -410,11 +410,7 @@ export default function MembershipMasterFormModal({
     {
       name: "guestAllowed",
       label: "Guest Allowed",
-      type: "select",
-      options: [
-        { label: "Yes", value: true },
-        { label: "No", value: false },
-      ],
+      type: "number",
       required: false,
     },
     {

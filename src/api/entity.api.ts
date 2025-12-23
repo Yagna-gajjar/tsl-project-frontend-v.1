@@ -11,6 +11,7 @@ export interface EntityQuery {
   entityName?: string;
   entityType?: string;
   legalStatus?: string;
+  membershipMasterId?: number;
 }
 
 const ENTITY_BASE = import.meta.env.VITE_APP_API_URL + "/entity";
@@ -27,6 +28,7 @@ export function getEntities(
     entityName: params.entityName ?? undefined,
     entityType: params.entityType ?? undefined,
     legalStatus: params.legalStatus ?? undefined,
+    membershipMasterId: params.membershipMasterId,
   });
 
   return request<Response<Entity[]>>(`${ENTITY_BASE}${qs}`);

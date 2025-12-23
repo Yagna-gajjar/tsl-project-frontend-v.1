@@ -9,6 +9,8 @@ export interface MembershipQuery {
   sortOrder?: SortOrder;
   search?: string;
   membershipMasterId?: number;
+  billingEntityOfFamily?: string;
+  suspensionDate?: boolean;
   accountId?: number;
   status?: string;
 }
@@ -27,7 +29,11 @@ export function getMemberships(
     membershipMasterId: params.membershipMasterId ?? undefined,
     accountId: params.accountId ?? undefined,
     status: params.status ?? undefined,
+    billingEntityOfFamily: params.billingEntityOfFamily ?? undefined,
+    suspensionDate: true,
   });
+
+  console.log(qs, " shqddd");
 
   return request<Response<membership[]>>(`${MEMBERSHIP_BASE}${qs}`);
 }

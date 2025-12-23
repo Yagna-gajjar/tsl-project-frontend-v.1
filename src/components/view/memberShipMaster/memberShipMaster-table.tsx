@@ -137,6 +137,13 @@ export default function MembershipMasterTable({
       key: "entityId",
       render: (row) => row.entityName || "-",
     },
+
+    {
+      key: "billingEntityOfFamily",
+      header: "billing Entity Of Family",
+      sortable: true,
+      filterType: "text",
+    },
     {
       header: "Introduce Date",
       key: "introductionDate",
@@ -205,7 +212,7 @@ export default function MembershipMasterTable({
     {
       header: "Member Limit",
       key: "memberLimit",
-      render: (row) => Number(row.caPerMemberPerMonth),
+      render: (row) => Number(row.memberLimit),
     },
     {
       header: "Dis On CA upto Members",
