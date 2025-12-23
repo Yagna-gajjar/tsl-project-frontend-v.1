@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import type { CourseRate } from "@/types/courseRate";
 import type { Course } from "@/types/course";
 import CourseRateTable from "@/components/view/courseRate/course-rate-table";
@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { getCourses } from "@/api/course.api";
+import CourseRateExcelUpload from "@/components/view/courseRate/course-rate-excel-upload";
 
 export default function CourseRatePage() {
 	const [viewOpen, setViewOpen] = useState(false);
@@ -22,20 +23,19 @@ export default function CourseRatePage() {
 	const [viewData, setViewData] = useState<number>();
 	const [refreshKey, setRefreshKey] = useState(0);
 
-	// Filter State
 	const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
 	const [courses, setCourses] = useState<Course[]>([]);
+	const [excelOpen, setExcelOpen] = useState(false);
+	const bumpRefresh = () => {
+		setRefreshKey((prev) => prev + 1);
+	};
 
-	// Load Courses for Filter
 	useEffect(() => {
 		getCourses({ limit: 100 }).then((res) => {
 			setCourses(res.data ?? []);
 		});
 	}, []);
 
-	const bumpRefresh = () => {
-		setRefreshKey((prev) => prev + 1);
-	};
 
 	const openView = (row: CourseRate) => {
 		setViewData(row.courseRateId);
@@ -79,15 +79,25 @@ export default function CourseRatePage() {
 							))}
 						</SelectContent>
 					</Select>
-
-					<Button
-						size="lg"
-						onClick={() => openForm()}
-						className="flex items-center gap-2 px-4 py-2"
-					>
-						<Plus className="w-5 h-5" />
-						Add Rate
-					</Button>
+					<div className="flex items-center gap-3">
+						<Button
+							variant="outline"
+							size="lg"
+							onClick={() => setExcelOpen(true)}
+							className="flex items-center gap-2 px-4 py-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+						>
+							<Upload className="w-5 h-5" />
+							Upload Excel
+						</Button>
+						<Button
+							size="lg"
+							onClick={() => openForm()}
+							className="flex items-center gap-2 px-4 py-2"
+						>
+							<Plus className="w-5 h-5" />
+							Add Rate
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -117,6 +127,14 @@ export default function CourseRatePage() {
 				onClose={() => {
 					setViewOpen(false);
 					setViewData(undefined);
+				}}
+			/>
+
+			<CourseRateExcelUpload
+				isOpen={excelOpen}
+				onClose={() => setExcelOpen(false)}
+				onSuccess={() => {
+					handleSaved();
 				}}
 			/>
 		</div>

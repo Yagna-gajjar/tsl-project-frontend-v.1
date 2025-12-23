@@ -1,5 +1,5 @@
 export interface CourseShare {
-  courseShareId: number;
+  courseShareId?: number;
   courseId: number;
   entityId: number;
   roleInCourse?: string;
@@ -11,8 +11,10 @@ export interface CourseShare {
   facility?: number;
   main?: number;
   joint?: number;
-  createdAt: Date;
-  updatedAt: Date;
+  status?: string;
+  craetedBy?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 
   entityName?: string;
   courseName?: string;

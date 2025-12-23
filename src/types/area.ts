@@ -1,5 +1,5 @@
 export interface Area {
-  areaId: number;
+  areaId?: number;
   facilityId: number;
   areaName: string;
   areaDimension?: string;

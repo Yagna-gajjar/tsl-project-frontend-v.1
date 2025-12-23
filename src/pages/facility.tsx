@@ -4,7 +4,8 @@ import FacilityFormModal from "@/components/view/facility/facility-form-modal";
 import FacilityViewModal from "@/components/view/facility/facility-view-modal";
 import type { Facility } from "@/types/facility";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
+import FacilityExcelUpload from "@/components/view/facility/facility-excel-upload";
 
 export default function FacilityPage() {
   const [viewOpen, setViewOpen] = useState(false);
@@ -14,6 +15,7 @@ export default function FacilityPage() {
   const [editRow, setEditRow] = useState<Facility | null>(null);
 
   const [refreshKey, setRefreshKey] = useState<number>(0);
+  const [excelOpen, setExcelOpen] = useState(false);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
   const openView = (row: Facility) => {
@@ -26,6 +28,10 @@ export default function FacilityPage() {
     setFormOpen(true);
   };
 
+  const handleSaved = () => {
+    bumpRefresh();
+  };
+
   return (
     <div className="container mx-auto px-4 space-y-8">
       <div className="flex items-center justify-between gap-2">
@@ -36,14 +42,20 @@ export default function FacilityPage() {
           </p>
         </div>
 
-        <Button
-          size="lg"
-          onClick={() => openForm()}
-          className="flex items-center gap-2 px-4 py-2"
-        >
-          <Plus className="w-5 h-5" />
-          Add Facility
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setExcelOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+          >
+            <Upload className="w-5 h-5" />
+            Upload Excel
+          </Button>
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Add Facility
+          </Button>
+        </div>
       </div>
 
       <FacilityTable
@@ -69,6 +81,14 @@ export default function FacilityPage() {
           bumpRefresh();
         }}
       />
+
+      <FacilityExcelUpload
+              isOpen={excelOpen}
+              onClose={() => setExcelOpen(false)}
+              onSuccess={() => {
+                handleSaved();
+              }}
+            />
     </div>
   );
 }

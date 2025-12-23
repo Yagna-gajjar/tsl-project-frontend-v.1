@@ -1,11 +1,13 @@
 export interface CoursePackage {
-  coursePackageId: number;
+  coursePackageId?: number;
   courseId: number;
   linkType: string;
   activityId?: number;
   approvalAuthorityId?: number;
-  createdAt: string;
-  updatedAt: string;
+  status?: string;
+  createdBy?: number;
+  createdAt?: string;
+  updatedAt?: string;
 
   courseName?: string;
 }
