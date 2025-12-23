@@ -3,40 +3,53 @@ import { request, toQueryString, type SortOrder } from './helper';
 import type { Response } from '@/types/response';
 
 export interface EnumsQuery {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    sorting?: SortOrder;
-    search?: string;
-    filters?: Object;
-    sortOrder?: "ASC" | "DESC";
-    pagination?: Object;
-    enumCase?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sorting?: SortOrder;
+  search?: string;
+  filters?: Object;
+  sortOrder?: "ASC" | "DESC";
+  pagination?: Object;
+  enumCase?: string;
 }
 
-const ENUMS_BASE = import.meta.env.VITE_APP_API_URL + '/enum';
+const ENUMS_BASE = import.meta.env.VITE_APP_API_URL + "/enum";
 
 export function getAllEnumByGroup() {
-    return request(`${ENUMS_BASE}/group`);
+  return request(`${ENUMS_BASE}/group`);
 }
 
-export function getAllEnums(params: EnumsQuery = {}): Promise<Response<Enums[]>> {
-    const qs = toQueryString({
-        page: params.page ?? 1,
-        limit: params.limit ?? 10,
-        sortBy: params.sortBy ?? 'id',
-        sorting: params.sorting ?? 'ASC',
-        search: params.search,
-        enumCase: params.enumCase
-    });
+export function getAllEnums(
+  params: EnumsQuery = {}
+): Promise<Response<Enums[]>> {
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 10,
+    sortBy: params.sortBy ?? "id",
+    sorting: params.sorting ?? "ASC",
+    search: params.search,
+    enumCase: params.enumCase,
+  });
 
-    return request<Response<Enums[]>>(`${ENUMS_BASE}${qs}`);
+  return request<Response<Enums[]>>(`${ENUMS_BASE}${qs}`);
 }
 
 export function getEnumsByCategory(
-    categoryName: string
+  categoryName: string,
+  params: EnumsQuery = {}
 ): Promise<Response<Enums[]>> {
-    return request<Response<Enums[]>>(`${ENUMS_BASE}/${categoryName}`);
+  const qs = toQueryString({
+    page: params.page ?? 1,
+    limit: params.limit ?? 10,
+    sortBy: params.sortBy ?? "id",
+    sorting: params.sorting ?? "ASC",
+    search: params.search,
+    enumCase: params.enumCase,
+  });
+  console.log(qs);
+
+  return request<Response<Enums[]>>(`${ENUMS_BASE}/${categoryName}${qs}`);
 }
 
 export function createEnum(payload: Enums): Promise<Response<Enums>> {

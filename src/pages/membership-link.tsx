@@ -56,7 +56,9 @@ export default function MembershipLinkPage() {
 
   useEffect(() => {
     const fetchEntityTypes = async () => {
-      const res: Response<Enums[]> = await getEnumsByCategory("ENTITY TYPE");
+      const res: Response<Enums[]> = await getEnumsByCategory("ENTITY TYPE", {
+        enumCase: "2,5,6",
+      });
       setEntityTypeEnums(res.data || []);
     };
 
