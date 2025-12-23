@@ -1,12 +1,11 @@
 {
-  "name": "TSL-app",
+  "name": "tsl-project-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "last_build": "tsc -b && vite build",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
