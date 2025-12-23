@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ExcelUpload from '@/components/ExcelUploader';
 import { createMembershipMaster } from '@/api/membershipMaster.api';
-import type { MembershipMaster } from '@/types/memberShipMaster';
+import type { MembershipMaster } from '@/types/membershipMaster';
 
 interface MembershipExcelUploadProps {
 	isOpen: boolean;
@@ -97,7 +97,7 @@ export default function MembershipExcelUpload({ isOpen, onClose, onSuccess }: Me
 			minIssueCharge: Number(row.minIssueCharge),
 			perMemberRegCharge: Number(row.perMemberRegCharge),
 
-			memberLimit: row.memberLimit ? Number(row.memberLimit) : undefined,
+			memberLimit: row.memberLimit ? Number(row.memberLimit) : 0,
 			disOnCaUptoMembers: Number(row.disOnCaUptoMembers || 0),
 			descreaseCaByPercentage: Number(row.descreaseCaByPercentage || 0),
 
