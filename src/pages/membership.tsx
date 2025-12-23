@@ -104,7 +104,7 @@ export default function MembershipPage() {
           res = await getEntityByFilter(entityType);
         }
         if (res.success) {
-          const data = res?.data || [];
+          const data = res?.data || [] as any;
           setEntities(data);
         }
         else {
@@ -232,7 +232,7 @@ export default function MembershipPage() {
         refreshKey={refreshKey}
         entityType={entityType}
         expire={hideExpire}
-        membershipMaster={membershipMasterId}
+        membershipMasterId={selectedMembershipMasterId}
         entityId={selectedEntityId}
       />
 

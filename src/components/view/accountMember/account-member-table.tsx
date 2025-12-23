@@ -12,18 +12,19 @@ import { toast } from "@/hooks/use-toast";
 type Props = {
   onView?: (row: AccountMember) => void;
   onEdit?: (row: AccountMember) => void;
+  accountId?: number | undefined;
 };
 
-export default function AccountMemberTable({ onView, onEdit }: Props) {
+export default function AccountMemberTable({ onView, onEdit, accountId }: Props) {
   const [data, setData] = useState<AccountMember[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1); 
+  const [page, setPage] = useState(1);
   const [total, setTotal] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAccountMembers({ page, limit: 10 });
+      const res = await getAccountMembers({ page, limit: 10, accountId: accountId });
       setData(res?.data ?? []);
       setTotal(res.pagination.total);
     } catch {
@@ -31,7 +32,7 @@ export default function AccountMemberTable({ onView, onEdit }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, accountId]);
 
   useEffect(() => {
     load();

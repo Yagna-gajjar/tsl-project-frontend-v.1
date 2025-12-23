@@ -31,6 +31,14 @@ export function getAccountMemberById(
   });
 }
 
+export function isMemberAlreadyLinked(
+  id: number
+): Promise<Response<AccountMember>> {
+  return request<Response<AccountMember>>(`${BASE_URL}/linked/${id}`, {
+    method: "GET",
+  });
+}
+
 export function createAccountMember(
   payload: Omit<AccountMember, "accountMemberId" | "createdAt" | "updatedAt">
 ): Promise<Response<AccountMember>> {

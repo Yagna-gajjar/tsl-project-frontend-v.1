@@ -1,55 +1,42 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { format } from "date-fns";
+import { Loader2, Search, X, ChevronDown, ChevronUp, Users, CheckCircle2, Layers, Unlink, History } from "lucide-react";
+
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { getAccounts } from "@/api/account.api";
 import { getMembers } from "@/api/member.api";
-import { bulkAccountMember } from "@/api/accountMember.api";
+import { bulkAccountMember, isMemberAlreadyLinked, updateAccountMember, getAccountMembers } from "@/api/accountMember.api";
 
 import type { Account } from "@/types/account";
 import type { Member } from "@/types/member";
 import type { Response } from "@/types/response";
 import type { AccountMember } from "@/types/accountMember";
-import { toast } from "@/hooks/use-toast";
-import {
-  Search,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Users,
-  ArrowRight,
-  ArrowLeft,
-  CheckCircle2,
-  Layers,
-} from "lucide-react";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
+import { toast } from "@/hooks/use-toast";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  accountId?: number;
+  onSaved?: () => void;
+  entityType?: string;
 };
 
 type MemberSearchParams = {
   name: string;
-  address: string;
   contactNumber: string;
-  ageGroup: string;
-  maratialStatus: string;
   idProofNumber: string;
   includeCasual: boolean;
 };
@@ -60,666 +47,370 @@ type SelectedMemberConfig = {
   linkBilling: boolean;
 };
 
-type ViewMode = "search" | "review";
-
-export default function AccountMemberBulkFormModal({ isOpen, onClose }: Props) {
-  const [viewMode, setViewMode] = useState<ViewMode>("search");
-  const [accountId, setAccountId] = useState<string>("");
-  const [selectedMembers, setSelectedMembers] = useState<
-    Record<number, SelectedMemberConfig>
-  >({});
-
-  const [bulkRel, setBulkRel] = useState("");
-
-  const [showFilters, setShowFilters] = useState(true);
-  const [searchParams, setSearchParams] = useState<MemberSearchParams>({
-    name: "",
-    address: "",
-    contactNumber: "",
-    ageGroup: "",
-    maratialStatus: "",
-    idProofNumber: "",
-    includeCasual: false,
-  });
+export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId, onSaved, entityType }: Props) {
+  const [existingMembers, setExistingMembers] = useState<AccountMember[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<Record<number, SelectedMemberConfig>>({});
   const [relationshipEnums, setRelationshipEnums] = useState<Enums[]>([]);
-
-  const [debouncedParams, setDebouncedParams] =
-    useState<MemberSearchParams>(searchParams);
-
   const [accountOptions, setAccountOptions] = useState<Account[]>([]);
   const [memberOptions, setMemberOptions] = useState<Member[]>([]);
 
-  const [visibleCount, setVisibleCount] = useState(50);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [bulkRel, setBulkRel] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [initLoading, setInitLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const firstRender = useRef(true);
+  const [unlinkingIds, setUnlinkingIds] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const loadAccounts = async () => {
-      try {
-        const accRes: Response<Account[]> = await getAccounts({
-          page: 1,
-          limit: 1000,
-        });
-        setAccountOptions(accRes.data as Account[]);
-      } catch (error) {
-        console.error("Failed to load accounts", error);
-      }
-    };
-    loadAccounts();
+  const [searchParams, setSearchParams] = useState<MemberSearchParams>({
+    name: "", contactNumber: "", idProofNumber: "", includeCasual: false,
+  });
 
-    setAccountId("");
-    setSelectedMembers({});
-    setVisibleCount(50);
-    setViewMode("search");
-    setBulkRel("");
+  // Count active members (only those without a dlinkDate)
+  const activeCount = useMemo(() =>
+    existingMembers.filter(m => !m.dlinkDate).length,
+    [existingMembers]);
 
-    const initialParams = {
-      name: "",
-      address: "",
-      contactNumber: "",
-      ageGroup: "",
-      maratialStatus: "",
-      idProofNumber: "",
-      includeCasual: false,
-    };
-
-    const loadRelationshipEnums = async () => {
-      try {
-        const res: Response<Enums[]> = await getEnumsByCategory("Relationship");
-        setRelationshipEnums(res.data ?? []);
-      } catch (e) {
-        console.error("Failed to load Relationship enums", e);
-      }
-    };
-
-    loadRelationshipEnums();
-
-    setSearchParams(initialParams);
-    setDebouncedParams(initialParams);
-    fetchMembers(initialParams);
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
+  const fetchExistingLinkedMembers = async () => {
+    if (!accountId) return;
+    try {
+      const res: Response<AccountMember[]> = await getAccountMembers({ accountId, limit: 1000 });
+      setExistingMembers(res.data || []);
+    } catch (e) {
+      console.error(e);
     }
-    const handler = setTimeout(() => {
-      setDebouncedParams(searchParams);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setVisibleCount(50);
-    if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
-    fetchMembers(debouncedParams);
-  }, [debouncedParams]);
+  };
 
   const fetchMembers = async (params: MemberSearchParams) => {
-    setIsLoadingMembers(true);
+    setSearchLoading(true);
     try {
-      const memRes: Response<Member[]> = await getMembers({
-        page: 1,
-        limit: 1000,
-        memberFirstName: params.name,
-        maratialStatus: params.maratialStatus,
-        age: params.ageGroup,
-        contactNumber: params.contactNumber,
-        address: params.address,
-        idProofNumber: params.idProofNumber,
+      const memRes = await getMembers({
+        page: 1, limit: 50, memberFirstName: params.name,
+        contactNumber: params.contactNumber, idProofNumber: params.idProofNumber,
         includeCasual: params.includeCasual,
       });
       setMemberOptions(memRes.data as Member[]);
     } catch (error) {
       console.error(error);
     } finally {
-      setIsLoadingMembers(false);
+      setSearchLoading(false);
     }
   };
 
-  const handleScroll = () => {
-    if (!scrollContainerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } =
-      scrollContainerRef.current;
-    if (scrollTop + clientHeight >= scrollHeight - 100) {
-      if (visibleCount < memberOptions.length) {
-        setVisibleCount((prev) => Math.min(prev + 50, memberOptions.length));
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const init = async () => {
+      setInitLoading(true);
+      try {
+        const [relRes, accRes] = await Promise.all([
+          getEnumsByCategory("RELATION"),
+          getAccounts({ limit: 1000 }),
+        ]);
+
+        const relations = relRes.data ?? [];
+
+        const filteredRelations =
+          entityType === "Family"
+            ? relations.filter((r) => r.enumCase === 1)
+            : relations.filter((r) => r.enumCase === 2);
+
+        setRelationshipEnums(filteredRelations);
+        setAccountOptions(accRes.data ?? []);
+
+        await fetchExistingLinkedMembers();
+        await fetchMembers(searchParams);
+      } finally {
+        setInitLoading(false);
+      }
+    };
+
+    init();
+    setSelectedMembers({});
+  }, [isOpen, accountId, entityType]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = setTimeout(() => fetchMembers(searchParams), 400);
+    return () => clearTimeout(handler);
+  }, [searchParams]);
+
+  const handleMemberToggle = async (member: Member) => {
+    if (entityType == "Family") {
+      try {
+        console.log(member.memberId, " memberId")
+        const res: Response<any> = await isMemberAlreadyLinked(member.memberId);
+        if (res.success) {
+          if ((res as any)?.isLinked) {
+            toast({
+              title: "Error",
+              description: "Member is already Linked with another family account",
+              variant: "destructive"
+            })
+            return;
+          }
+        }
+        else {
+          throw new Error("Failed to fetch");
+        }
+      }
+      catch {
+        toast({
+          title: "Error",
+          description: "Failed to fetch memebrs status.",
+          variant: "destructive"
+        })
       }
     }
-  };
 
-  const handleSearchChange = (
-    field: keyof MemberSearchParams,
-    value: string | boolean
-  ) => {
-    setSearchParams((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleMemberToggle = (member: Member) => {
     setSelectedMembers((prev) => {
       const copy = { ...prev };
-      if (copy[member.memberId]) {
-        delete copy[member.memberId];
-      } else {
-        copy[member.memberId] = {
-          memberData: member,
-          relationship: "",
-          linkBilling: false,
-        };
-      }
+      if (copy[member.memberId]) delete copy[member.memberId];
+      else copy[member.memberId] = { memberData: member, relationship: "", linkBilling: false };
       return copy;
     });
   };
 
-  const updateSelectedMember = (
-    id: number,
-    field: keyof SelectedMemberConfig,
-    value: any
-  ) => {
-    setSelectedMembers((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value },
-    }));
-  };
-
-  const applyBulkRelationship = () => {
-    if (!bulkRel) return;
-    setSelectedMembers((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((key) => {
-        next[Number(key)].relationship = bulkRel;
-      });
-      return next;
-    });
-    toast({
-      title: "Applied",
-      description: `Relationship set to '${bulkRel}' for all users.`,
-    });
-  };
-
-  const applyBulkBilling = (val: boolean) => {
-    setSelectedMembers((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((key) => {
-        next[Number(key)].linkBilling = val;
-      });
-      return next;
-    });
-    toast({
-      title: "Applied",
-      description: `Billing ${val ? "enabled" : "disabled"} for all users.`,
-    });
-  };
-
-  const selectedCount = Object.keys(selectedMembers).length;
-  const selectedList = Object.values(selectedMembers);
-
-  const visibleMembers = useMemo(() => {
-    return memberOptions.slice(0, visibleCount);
-  }, [memberOptions, visibleCount]);
-
-  const handleSubmit = async () => {
-    if (!accountId) {
-      toast({
-        title: "Validation",
-        description: "Please select an Account",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (selectedCount === 0) {
-      toast({
-        title: "Validation",
-        description: "Please select at least one Member",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    const membersPayload = selectedList.map((item) => ({
-      memberId: item.memberData.memberId,
-      relationship: item.relationship,
-      linkBilling: item.linkBilling,
-    }));
-
-    const finalPayload = {
-      accountId: Number(accountId),
-      members: membersPayload,
-    };
-
+  const handleDlink = async (am: AccountMember) => {
+    setUnlinkingIds(prev => new Set(prev).add(am.accountMemberId));
     try {
-      const res: Response<AccountMember> = await bulkAccountMember(
-        finalPayload as any
-      );
-      if (res?.success) {
-        toast({
-          title: "Success",
-          description: "Members Linked Successfully.",
-          variant: "success",
-        });
-        onClose();
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to link Members.",
-          variant: "destructive",
-        });
+      const res = await updateAccountMember(am.accountMemberId, {
+        ...am,
+        dlinkDate: format(new Date(), "yyyy-MM-dd"),
+        status: "unlinked",
+      });
+      if (res.success) {
+        toast({ title: "Unlinked", description: "Member unlinked successfully", variant: "success" });
+        await fetchExistingLinkedMembers();
+        onSaved?.();
       }
     } catch (e) {
-      toast({
-        title: "Error",
-        description: "Network error occurred.",
-        variant: "destructive",
+      toast({ title: "Error", description: "Failed to unlink", variant: "destructive" });
+    } finally {
+      setUnlinkingIds(prev => {
+        const next = new Set(prev);
+        next.delete(am.accountMemberId);
+        return next;
       });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!accountId || Object.keys(selectedMembers).length === 0) return;
+    setIsSubmitting(true);
+    try {
+      const res = await bulkAccountMember({
+        accountId: Number(accountId),
+        members: Object.values(selectedMembers).map(m => ({
+          memberId: m.memberData.memberId,
+          relationship: m.relationship,
+          linkBilling: m.linkBilling
+        }))
+      } as any);
+      if (res.success) {
+        toast({ title: "Success", description: "Members linked successfully", variant: "success" });
+        onSaved?.();
+        onClose();
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[1200px] p-0 gap-0 bg-background overflow-hidden h-[90vh] flex flex-col rounded-xl border shadow-xl">
+      <DialogContent className="max-w-[1400px] w-[95vw] p-0 bg-background h-[90vh] flex flex-col overflow-hidden">
         <FormHeader
-          title={
-            viewMode === "search"
-              ? "Step 1: Select Members"
-              : "Step 2: Configure & Link"
-          }
+          title={`Manage Account Members: ${accountOptions.find(a => a.accountId === accountId)?.accountName || accountId}`}
           onClose={onClose}
         />
 
-        {viewMode === "search" && (
-          <div className="flex flex-col h-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-4 border-b bg-muted/5 space-y-4">
-              <div className="max-w-md">
-                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
-                  Target Account
-                </Label>
-                <Select value={accountId} onValueChange={setAccountId}>
-                  <SelectTrigger className="bg-background h-9">
-                    <SelectValue placeholder="Select Account to Link" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accountOptions.map((acc) => (
-                      <SelectItem
-                        key={acc.accountId}
-                        value={String(acc.accountId)}
-                      >
-                        {acc.accountName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Panel: Search & Selection */}
+          <div className="w-full md:w-1/2 border-r flex flex-col bg-muted/5">
+            <div className="p-4 border-b space-y-3 bg-background">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search members to add..."
+                  className="h-9"
+                  value={searchParams.name}
+                  onChange={(e) => setSearchParams(p => ({ ...p, name: e.target.value }))}
+                />
+                <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
+                  {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              {showFilters && (
+                <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1">
                   <Input
-                    placeholder="Search by name..."
-                    className="pl-9 bg-background h-9"
-                    value={searchParams.name}
-                    onChange={(e) => handleSearchChange("name", e.target.value)}
+                    placeholder="Mobile"
+                    className="h-8 text-xs"
+                    onChange={(e) => setSearchParams(p => ({ ...p, contactNumber: e.target.value }))}
+                  />
+                  <Input
+                    placeholder="ID Proof"
+                    className="h-8 text-xs"
+                    onChange={(e) => setSearchParams(p => ({ ...p, idProofNumber: e.target.value }))}
                   />
                 </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="w-fit text-xs h-6 px-0 text-muted-foreground hover:text-primary flex items-center gap-1"
-                >
-                  {showFilters ? (
-                    <ChevronUp className="h-3 w-3" />
-                  ) : (
-                    <ChevronDown className="h-3 w-3" />
-                  )}
-                  {showFilters ? "Hide Filters" : "Show Advanced Filters"}
-                </Button>
-
-                {showFilters && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1 p-2 bg-muted/20 rounded-md border border-border/40">
-                    <Input
-                      placeholder="Address / City"
-                      className="h-8 text-xs bg-background"
-                      value={searchParams.address}
-                      onChange={(e) =>
-                        handleSearchChange("address", e.target.value)
-                      }
-                    />
-                    <Input
-                      placeholder="Mobile"
-                      className="h-8 text-xs bg-background"
-                      value={searchParams.contactNumber}
-                      onChange={(e) =>
-                        handleSearchChange("contactNumber", e.target.value)
-                      }
-                    />
-                    <Input
-                      placeholder="ID Proof"
-                      className="h-8 text-xs bg-background"
-                      value={searchParams.idProofNumber}
-                      onChange={(e) =>
-                        handleSearchChange("idProofNumber", e.target.value)
-                      }
-                    />
-                    <div className="flex items-center justify-center border rounded-md h-8 bg-background px-2">
-                      <Checkbox
-                        id="casual"
-                        checked={searchParams.includeCasual}
-                        onCheckedChange={(c) =>
-                          handleSearchChange("includeCasual", c as boolean)
-                        }
-                      />
-                      <Label
-                        htmlFor="casual"
-                        className="ml-2 text-[10px] cursor-pointer"
-                      >
-                        Include Casual
-                      </Label>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
-            <div
-              ref={scrollContainerRef}
-              onScroll={handleScroll}
-              className="flex-1 overflow-y-auto p-4 bg-muted/10"
-            >
-              {isLoadingMembers && visibleCount === 50 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {[...Array(9)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-24 bg-muted/20 animate-pulse rounded-lg border"
-                    />
-                  ))}
-                </div>
-              ) : memberOptions.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                  <Users className="h-12 w-12 mb-2" />
-                  <p>No members found matching criteria.</p>
+            <ScrollArea className="flex-1 p-4">
+              {searchLoading || initLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pb-8">
-                  {visibleMembers.map((member) => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {memberOptions.map((member) => {
                     const isSelected = !!selectedMembers[member.memberId];
+                    const isCurrentlyActive = existingMembers.some(am => am.memberId === member.memberId && !am.dlinkDate);
+
                     return (
                       <div
                         key={member.memberId}
-                        onClick={() => handleMemberToggle(member)}
-                        className={`
-                                            relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all duration-200 select-none
-                                            ${
-                                              isSelected
-                                                ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/20"
-                                                : "bg-background hover:border-primary/50 hover:shadow-sm"
-                                            }
-                                        `}
+                        onClick={() => !isCurrentlyActive && handleMemberToggle(member)}
+                        className={`p-3 rounded-lg border transition-all select-none flex flex-col gap-1 ${isCurrentlyActive ? "opacity-50 cursor-not-allowed bg-muted" : "cursor-pointer hover:border-primary"
+                          } ${isSelected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background"}`}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`h-4 w-4 rounded border flex items-center justify-center ${
-                                isSelected
-                                  ? "bg-primary border-primary"
-                                  : "border-muted-foreground"
-                              }`}
-                            >
-                              {isSelected && (
-                                <CheckCircle2 className="h-3 w-3 text-white" />
-                              )}
-                            </div>
-                            <span className="font-semibold text-sm truncate max-w-[140px]">
-                              {member.memberFirstName} {member.memberLastName}
-                            </span>
-                          </div>
-                          {member.maratialStatus && (
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] px-1.5 h-5 font-normal"
-                            >
-                              {member.maratialStatus}
-                            </Badge>
-                          )}
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-sm truncate">{member.memberFirstName} {member.memberLastName}</span>
+                          {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                          {isCurrentlyActive && <Badge variant="secondary" className="text-[9px]">Active</Badge>}
                         </div>
-
-                        <div className="text-xs text-muted-foreground space-y-1 ml-6">
-                          <div className="truncate">
-                            {member.contactNumber || "No Contact"}
-                          </div>
-                          <div className="truncate opacity-80">
-                            {member.address || member.city || "No Address"}
-                          </div>
-                        </div>
+                        <span className="text-[11px] text-muted-foreground">{member.contactNumber || 'No contact'}</span>
                       </div>
                     );
                   })}
                 </div>
               )}
-            </div>
-
-            <div className="p-4 border-t bg-background flex justify-between items-center z-10 shadow-[0_-5px_10px_rgba(0,0,0,0.03)]">
-              <div className="text-sm text-muted-foreground">
-                <span className="font-semibold text-primary">
-                  {selectedCount}
-                </span>{" "}
-                members selected
-              </div>
-              <Button
-                disabled={selectedCount === 0}
-                onClick={() => setViewMode("review")}
-                className="gap-2"
-              >
-                Review & Configure <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+            </ScrollArea>
           </div>
-        )}
 
-        {viewMode === "review" && (
-          <div className="flex flex-col h-full overflow-hidden animate-in slide-in-from-right-10 duration-300">
-            <div className="p-4 border-b bg-muted/10 space-y-3">
-              <div className="flex items-center gap-2 mb-2">
+          {/* Right Panel: Configuration & Linked List */}
+          <div className="w-full md:w-1/2 flex flex-col bg-background">
+            <div className="p-4 border-b bg-muted/10">
+              <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                <Users className="h-4 w-4" /> Final Configuration
+              </h3>
+
+              <div className="flex items-center gap-2 bg-background p-2 rounded border border-dashed">
+                <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+                <Select value={bulkRel} onValueChange={setBulkRel}>
+                  <SelectTrigger className="h-7 text-[11px] w-[180px]">
+                    <SelectValue placeholder="Bulk Relationship" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {relationshipEnums.map(r => <SelectItem key={r.value} value={r.value}>{r.value}</SelectItem>)}
+                  </SelectContent>
+                </Select>
                 <Button
-                  variant="ghost"
                   size="sm"
-                  onClick={() => setViewMode("search")}
-                  className="h-7 px-2 -ml-2 text-muted-foreground"
+                  variant="outline"
+                  className="h-7 text-[11px]"
+                  disabled={!bulkRel || Object.keys(selectedMembers).length === 0}
+                  onClick={() => {
+                    const next = { ...selectedMembers };
+                    Object.keys(next).forEach(k => next[Number(k)].relationship = bulkRel);
+                    setSelectedMembers(next);
+                  }}
                 >
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Back to Selection
+                  Apply All
                 </Button>
-                <Separator orientation="vertical" className="h-4" />
-                <span className="text-sm font-medium">Bulk Configuration</span>
-              </div>
-
-              <div className="flex flex-col md:flex-row gap-4 items-end md:items-center bg-background p-3 rounded-lg border shadow-sm">
-                <div className="flex-1 w-full flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />
-                  <Select value={bulkRel} onValueChange={setBulkRel}>
-                    <SelectTrigger className="h-8 text-sm">
-                      <SelectValue placeholder="Set Relationship for ALL..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {relationshipEnums.map((r) => (
-                        <SelectItem key={r.value} value={r.value}>
-                          {r.value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={applyBulkRelationship}
-                    disabled={!bulkRel}
-                    className="h-8 whitespace-nowrap"
-                  >
-                    Apply All
-                  </Button>
-                </div>
-
-                <Separator
-                  orientation="vertical"
-                  className="hidden md:block h-6"
-                />
-
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    Billing for ALL:
-                  </span>
-                  <div className="flex border rounded-md overflow-hidden">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => applyBulkBilling(true)}
-                      className="h-8 rounded-none hover:bg-green-50 hover:text-green-600 text-xs"
-                    >
-                      Enable
-                    </Button>
-                    <Separator orientation="vertical" className="h-8" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => applyBulkBilling(false)}
-                      className="h-8 rounded-none hover:bg-red-50 hover:text-red-600 text-xs"
-                    >
-                      Disable
-                    </Button>
-                  </div>
-                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-12 gap-4 px-6 py-2 bg-muted/5 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              <div className="col-span-4 md:col-span-3">Member Name</div>
-              <div className="col-span-4 md:col-span-3">Contact</div>
-              <div className="col-span-4 md:col-span-4">Relationship</div>
-              <div className="col-span-12 md:col-span-2 text-right md:text-center mt-1 md:mt-0">
-                Billing
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto bg-background">
-              {selectedList.map((item, index) => (
-                <div
-                  key={item.memberData.memberId}
-                  className={`
-                                grid grid-cols-12 gap-4 px-6 py-3 items-center border-b hover:bg-muted/5 transition-colors
-                                ${
-                                  index % 2 === 0
-                                    ? "bg-white"
-                                    : "bg-slate-50/30"
-                                }
-                            `}
-                >
-                  <div className="col-span-4 md:col-span-3 font-medium text-sm truncate flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5 text-muted-foreground hover:text-destructive -ml-2 mr-1"
-                      onClick={() => handleMemberToggle(item.memberData)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                    <span className="truncate">
-                      {item.memberData.memberFirstName}{" "}
-                      {item.memberData.memberLastName}
-                    </span>
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-6">
+                {/* New Selection List */}
+                {Object.keys(selectedMembers).length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-xs uppercase text-primary font-bold">New Links to Add</Label>
+                    {Object.values(selectedMembers).map((item) => (
+                      <div key={item.memberData.memberId} className="p-3 border rounded-lg bg-primary/5 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{item.memberData.memberFirstName} {item.memberData.memberLastName}</span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMemberToggle(item.memberData)}><X className="h-4 w-4" /></Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Select
+                            value={item.relationship}
+                            onValueChange={(v) => setSelectedMembers(prev => ({
+                              ...prev, [item.memberData.memberId]: { ...prev[item.memberData.memberId], relationship: v }
+                            }))}
+                          >
+                            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Rel." /></SelectTrigger>
+                            <SelectContent>{relationshipEnums.map(r => <SelectItem key={r.value} value={r.value}>{r.value}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <div className="flex items-center gap-2 border rounded px-2 h-8 bg-background">
+                            <Checkbox
+                              checked={item.linkBilling}
+                              onCheckedChange={(v) => setSelectedMembers(prev => ({
+                                ...prev, [item.memberData.memberId]: { ...prev[item.memberData.memberId], linkBilling: !!v }
+                              }))}
+                            />
+                            <span className="text-[10px]">Billing</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                )}
 
-                  <div className="col-span-4 md:col-span-3 text-xs text-muted-foreground truncate">
-                    {item.memberData.contactNumber || "-"}
-                    <span className="block opacity-70 text-[10px]">
-                      {item.memberData.maratialStatus}
-                    </span>
-                  </div>
-
-                  <div className="col-span-4 md:col-span-4">
-                    <Select
-                      value={item.relationship}
-                      onValueChange={(val) =>
-                        updateSelectedMember(
-                          item.memberData.memberId,
-                          "relationship",
-                          val
-                        )
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs bg-white">
-                        <SelectValue placeholder="Relationship..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {relationshipEnums.map((r) => (
-                          <SelectItem key={r.value} value={r.value}>
-                            {r.value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="col-span-12 md:col-span-2 flex justify-end md:justify-center mt-1 md:mt-0">
-                    <div
-                      className={`
-                                        flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer border transition-all select-none
-                                        ${
-                                          item.linkBilling
-                                            ? "bg-green-50 border-green-200 text-green-700"
-                                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
-                                        }
-                                    `}
-                      onClick={() =>
-                        updateSelectedMember(
-                          item.memberData.memberId,
-                          "linkBilling",
-                          !item.linkBilling
-                        )
-                      }
-                    >
-                      <span className="text-[10px] font-semibold">
-                        {item.linkBilling ? "Linked" : "Unlinked"}
-                      </span>
-                      <Checkbox
-                        checked={item.linkBilling}
-                        className="h-3.5 w-3.5 pointer-events-none data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                      />
+                {/* Combined Linked List (Active & History) */}
+                <div className="space-y-3">
+                  <Label className="text-xs uppercase text-muted-foreground font-bold">Linked Members (Active: {activeCount})</Label>
+                  {initLoading ? (
+                    <div className="space-y-2">
+                      {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
                     </div>
-                  </div>
-                </div>
-              ))}
+                  ) : existingMembers.map((am) => (
+                    <div
+                      key={am.accountMemberId}
+                      className={`flex items-center justify-between p-3 border rounded-lg ${am.dlinkDate ? 'bg-muted/30 border-dashed opacity-70' : 'hover:bg-muted/30'}`}
+                    >
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{am.memberFirstName} {am.memberLastName}</span>
+                          {am.dlinkDate && (
+                            <Badge variant="outline" className="text-[8px] h-4 gap-1 text-muted-foreground border-muted-foreground/30">
+                              <History className="h-2 w-2" /> Unlinked {format(new Date(am.dlinkDate), "dd MMM")}
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{am.relationship} • {am.linkBilling ? 'Billing' : 'No Billing'}</span>
+                      </div>
 
-              {selectedList.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-                  <p>No members selected.</p>
-                  <Button variant="link" onClick={() => setViewMode("search")}>
-                    Go back to select members
-                  </Button>
+                      {/* Button only shown if the member is active (dlinkDate is null) */}
+                      {!am.dlinkDate && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={unlinkingIds.has(am.accountMemberId)}
+                          className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10 gap-2"
+                          onClick={() => handleDlink(am)}
+                        >
+                          {unlinkingIds.has(am.accountMemberId) ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unlink className="h-3 w-3" />}
+                          D-Link
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-
-            <FormFooter
-              onClose={onClose}
-              onSubmit={handleSubmit}
-              submitLabel={`Confirm Link (${selectedCount})`}
-              isSubmitting={isSubmitting}
-            />
+              </div>
+            </ScrollArea>
           </div>
-        )}
+        </div>
+
+        <FormFooter
+          onClose={onClose}
+          onSubmit={handleSubmit}
+          submitLabel={`Confirm Link (${Object.keys(selectedMembers).length})`}
+          isSubmitting={isSubmitting}
+          disabled={Object.keys(selectedMembers).length === 0}
+        />
       </DialogContent>
     </Dialog>
   );
