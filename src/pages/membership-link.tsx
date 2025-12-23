@@ -33,25 +33,27 @@ export default function MembershipLinkPage() {
 
   const PAGE_SIZE = 20;
 
-  /* ---------------- FILTER STATE (UI ONLY) ---------------- */
   const [entityType, setEntityType] = useState<string>("all");
   const [membershipMasterId, setMembershipMasterId] = useState<string>("all");
   const [entityId, setEntityId] = useState<string>("all");
   const [hideDeLinked, setHideDeLinked] = useState(false);
 
-  /* ---------------- DROPDOWN DATA ---------------- */
   const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
   const [membershipMasters, setMembershipMasters] = useState<
     MembershipMaster[]
   >([]);
 
-  /* ---------------- ENTITIES (PAGED) ---------------- */
   const [entities, setEntities] = useState<membership[]>([]);
   const [entitiesPage, setEntitiesPage] = useState(1);
   const [hasMoreEntities, setHasMoreEntities] = useState(true);
   const [loadingEntities, setLoadingEntities] = useState(false);
 
-  /* ---------------- FETCH ENTITY TYPES ---------------- */
+  const [membershipData, setMembershipData] = useState<{
+    membershipId: number;
+    membershipMasterId: number;
+    membershipTypeName: string;
+  }>();
+
   useEffect(() => {
     const fetchEntityTypes = async () => {
       const res: Response<Enums[]> = await getEnumsByCategory("ENTITY TYPE");
@@ -61,10 +63,7 @@ export default function MembershipLinkPage() {
     fetchEntityTypes();
   }, []);
 
-  /* ---------------- FETCH MEMBERSHIP MASTERS ---------------- */
   useEffect(() => {
-    console.log(entityType);
-
     const fetchMasters = async () => {
       const res: Response<MembershipMaster[]> = await getMembershipMasters({
         entityType: entityType !== "all" ? entityType : undefined,
@@ -76,7 +75,6 @@ export default function MembershipLinkPage() {
     fetchMasters();
   }, [entityType]);
 
-  /* ---------------- FETCH ENTITIES (EXACT LOGIC FROM TABLE) ---------------- */
   const fetchEntities = useCallback(
     async (isInitial = false) => {
       if (loadingEntities) return;
@@ -114,12 +112,10 @@ export default function MembershipLinkPage() {
     [loadingEntities, hasMoreEntities, entitiesPage, membershipMasterId]
   );
 
-  /* ---------------- INITIAL ENTITY LOAD ---------------- */
   useEffect(() => {
     fetchEntities(true);
   }, []);
 
-  /* ---------------- RESET ENTITIES WHEN MASTER CHANGES ---------------- */
   useEffect(() => {
     setEntities([]);
     setEntitiesPage(1);
@@ -149,51 +145,81 @@ export default function MembershipLinkPage() {
         </div>
       </div>
 
-      {/* ---------- FILTER BAR (UI ONLY) ---------- */}
       <div className="mb-4 flex flex-wrap gap-3 items-center">
-        <SearchableMultiselect
-          isSingle
-          placeholder="Entity Type"
-          value={entityType === "all" ? null : entityType}
-          options={[
-            { label: "All", value: "all" },
-            ...entityTypeEnums.map((e) => ({
-              label: e.value,
-              value: e.value,
-            })),
-          ]}
-          onChange={(v) => setEntityType(v ?? "all")}
-        />
+        <div className="w-1/4">
+          <SearchableMultiselect
+            isSingle
+            placeholder="Entity Type"
+            value={entityType === "all" ? null : entityType}
+            options={[
+              { label: "All", value: "all" },
+              ...entityTypeEnums.map((e) => ({
+                label: e.value,
+                value: e.value,
+              })),
+            ]}
+            onChange={(v) => setEntityType(v ?? "all")}
+          />
+        </div>
 
-        <SearchableMultiselect
-          isSingle
-          placeholder="Membership Master"
-          value={membershipMasterId === "all" ? null : membershipMasterId}
-          options={[
-            { label: "All", value: "all" },
-            ...membershipMasters.map((m) => ({
-              label: m.membershipType,
-              value: Number(m.membershipMasterId),
-            })),
-          ]}
-          onChange={(v) => setMembershipMasterId(v ?? "all")}
-        />
+        <div className="w-1/4">
+          <SearchableMultiselect
+            isSingle
+            placeholder="Membership Master"
+            value={membershipMasterId === "all" ? null : membershipMasterId}
+            options={[
+              { label: "All", value: "all" },
+              ...membershipMasters.map((m) => ({
+                label: m.membershipType,
+                value: Number(m.membershipMasterId),
+              })),
+            ]}
+            onChange={(v) => {
+              setMembershipMasterId(v ?? "all");
 
-        <SearchableMultiselect
-          isSingle
-          placeholder="Entity Name"
-          value={entityId === "all" ? null : entityId}
-          options={[
-            { label: "All", value: "all" },
-            ...entities.map((e) => ({
-              label: e.entityName,
-              value: e.entityId,
-            })),
-          ]}
-          onChange={(v) => setEntityId(v ?? "all")}
-          onLoadMore={() => fetchEntities()}
-          isLoadingMore={loadingEntities}
-        />
+              const selected = membershipMasters.find(
+                (m) => m.membershipMasterId === Number(v)
+              );
+
+              if (selected) {
+                setMembershipData((prev) => ({
+                  membershipId: prev?.membershipId ?? 0,
+                  membershipMasterId: Number(selected.membershipMasterId),
+                  membershipTypeName: selected.membershipType,
+                }));
+              }
+            }}
+          />
+        </div>
+        <div className="w-1/4">
+          <SearchableMultiselect
+            isSingle
+            placeholder="Entity Name"
+            value={entityId === "all" ? null : entityId}
+            options={[
+              { label: "All", value: "all" },
+              ...entities.map((e) => ({
+                label: e.entityName,
+                value: e.entityId,
+              })),
+            ]}
+            onChange={(v) => {
+              setEntityId(v ?? "all");
+
+              const selected = entities.find((e) => e.entityId === Number(v));
+
+              if (selected) {
+                setMembershipData((prev) => ({
+                  membershipId: selected.membershipId,
+                  membershipMasterId: prev?.membershipMasterId ?? 0,
+                  membershipTypeName: prev?.membershipTypeName ?? "",
+                }));
+              }
+            }}
+            onLoadMore={() => fetchEntities()}
+            isLoadingMore={loadingEntities}
+          />
+        </div>
 
         <div className="flex items-center gap-2">
           <Checkbox
@@ -221,7 +247,9 @@ export default function MembershipLinkPage() {
         onClose={() => {
           setFormOpen(false);
           setEditRow(undefined);
+          setMembershipData(undefined);
         }}
+        membershipData={membershipData}
         onSave={() => setRefreshKey((p) => p + 1)}
       />
 
