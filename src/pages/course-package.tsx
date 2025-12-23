@@ -4,6 +4,8 @@ import CoursePackageFormModal from "@/components/view/coursePackage/course-packa
 import CoursePackageViewModal from "@/components/view/coursePackage/course-package-view-modal";
 import type { CoursePackage } from "@/types/coursePackage";
 import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
+import CoursePackageExcelUpload from "@/components/view/coursePackage/course-package-excel-upload";
 
 export default function CoursePackagePage() {
   const [formOpen, setFormOpen] = useState(false);
@@ -11,6 +13,12 @@ export default function CoursePackagePage() {
   const [editRow, setEditRow] = useState<CoursePackage | null>(null);
   const [viewId, setViewId] = useState<number | undefined>();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [excelOpen, setExcelOpen] = useState(false);
+  const bumpRefresh = () => setRefreshKey((s) => s + 1);
+
+  const handleSaved = () => {
+    bumpRefresh();
+  };
 
   return (
     <>
@@ -19,14 +27,25 @@ export default function CoursePackagePage() {
           <h1 className="text-3xl font-bold text-foreground">Course Package</h1>
           <p className="text-gray-500 mt-2">Manage Course Package</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditRow(null);
-            setFormOpen(true);
-          }}
-        >
-          Add Course Package
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setExcelOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+          >
+            <Upload className="w-5 h-5" />
+            Upload Excel
+          </Button>
+          <Button
+            onClick={() => {
+              setEditRow(null);
+              setFormOpen(true);
+            }}
+          >
+            Add Course Package
+          </Button>
+        </div>
       </div>
 
       <CoursePackageTable
@@ -52,6 +71,14 @@ export default function CoursePackagePage() {
         isOpen={viewOpen}
         coursePackageId={viewId}
         onClose={() => setViewOpen(false)}
+      />
+
+      <CoursePackageExcelUpload
+        isOpen={excelOpen}
+        onClose={() => setExcelOpen(false)}
+        onSuccess={() => {
+          handleSaved();
+        }}
       />
     </>
   );
