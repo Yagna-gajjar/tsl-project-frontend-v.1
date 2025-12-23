@@ -10,17 +10,19 @@ import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import AccountSearchPanel from "./account-search-panel";
 import SelectedAccountsPanel from "./selected-accounts-panel";
-import { createMembershipLink, getMembershipLinks } from "@/api/membershipLink.api";
+import { createMembershipLink, getMembershipLinks, updateMembershipLink } from "@/api/membershipLink.api";
 import { getAccounts } from "@/api/account.api";
 import type { MembershipLink } from "@/types/membershipLink";
 import type { Response } from "@/types/response";
 import type { Account } from "@/types/account";
+import { format } from "date-fns";
 
 type AccountWithLinkData = Account & {
   linkDate?: string;
   membershipLinkId?: number;
   isExisting?: boolean;
   contact?: string;
+  authorityId?: number;
 };
 
 type MembershipData = {
@@ -45,7 +47,11 @@ export default function MembershipLinkFormModal({
   isOpen,
   onClose,
   onSave,
-  membershipData,
+  membershipData = {
+    membershipId: 6,
+    membershipMasterId: 10,
+    membershipTypeName: "Sdf"
+  },
 }: Props) {
   const { membershipId, membershipMasterId, membershipTypeName } = membershipData || {};
 
@@ -89,7 +95,7 @@ export default function MembershipLinkFormModal({
         isExisting: true,
         dLinkDate: link.dLinkDate
       }));
-      console.log(alreadyLinked," dhcbs");  
+      console.log(alreadyLinked, " dhcbs");
 
       setSelectedAccounts(alreadyLinked);
     } catch {
@@ -120,13 +126,33 @@ export default function MembershipLinkFormModal({
   };
 
   const removeAccount = (id: number) => {
-    // Logic: If it's a new addition, just remove from state. 
-    // If it's an existing link, you might want to call an 'Unlink' API here or mark it for deletion.
     setSelectedAccounts(selectedAccounts.filter((acc) => acc.accountId !== id));
   };
 
+  const onUnlink = async (data: AccountWithLinkData) => {
+    try {
+      const payload = {
+        membershipId: membershipData.membershipId,
+        membershipMasterId: membershipData.membershipMasterId,
+        linkDate: data.linkDate,
+        dLinkDate: format(Date.now(), "yyyy-MM-dd"),
+        membershipLinkId: data.membershipLinkId,
+        accountId: data.accountId,
+        authorityId: data.authorityId,
+        status: "unlinked"
+      }
+
+      const res: Response<MembershipLink> = await updateMembershipLink(Number(data.membershipLinkId), payload);
+      if (!res.success) {
+        throw new Error("Failed to dlink account.");
+      }
+      toast({ title: "Success", description: "Account Unlinked.", variant: "success" });
+    } catch {
+      toast({ title: "Error", description: "Failed to unlink account.", variant: "destructive" });
+    }
+  }
+
   const handleSubmit = async () => {
-    // Only submit accounts that aren't already linked (isExisting: false)
     const newAccounts = selectedAccounts.filter(acc => !acc.isExisting);
 
     if (newAccounts.length === 0) {
@@ -172,7 +198,6 @@ export default function MembershipLinkFormModal({
           <FormHeader title="Manage Membership Links" icon={<Link2 className="w-5 h-5 text-primary" />} onClose={handleClose} />
 
           <div className="flex-grow overflow-y-auto p-6 space-y-6">
-            {/* Header Info */}
             <div className="bg-muted/40 border border-border/50 rounded-lg p-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-2 bg-primary/10 rounded-full"><ShieldCheck className="w-5 h-5 text-primary" /></div>
@@ -201,13 +226,10 @@ export default function MembershipLinkFormModal({
                   selectedAccounts={selectedAccounts}
                 />
 
-                {/* Note: You will need to update SelectedAccountsPanel to 
-                   handle the display of linkDate and the Unlink icon.
-                */}
                 <SelectedAccountsPanel
                   selectedAccounts={selectedAccounts}
                   removeAccount={removeAccount}
-                // Pass custom render or props if your component supports it
+                  onUnlink={onUnlink}
                 />
               </div>
             </div>
