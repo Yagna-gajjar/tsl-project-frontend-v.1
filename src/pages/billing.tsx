@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -16,9 +16,6 @@ import {
   type LucideIcon
 } from "lucide-react";
 import BillingPage from "@/components/view/billing/BillingPage";
-import type { Academy } from "@/types/academy";
-import { getAcademies } from "@/api/academy.api";
-import type { Response } from "@/types/response";
 
 const getAcademyTheme = (type: string) => {
   const normalizedType = type.toLowerCase();
@@ -42,29 +39,10 @@ const getAcademyTheme = (type: string) => {
 };
 
 export default function Billing() {
-  const [selectedAcademy, setSelectedAcademy] = useState<Academy | null>(null);
-  const [academies, setAcademies] = useState<Academy[]>([]);
+  const [selectedAcademy, setSelectedAcademy] = useState<any | null>(null);
+  const [academies] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response: Response<Academy[]> = await getAcademies({
-          limit: 500,
-        });
-        setTimeout(() => {
-          setAcademies((response.data as Academy[]) || []);
-          setLoading(false);
-        }, 600);
-      } catch (error) {
-        console.error("Failed to fetch", error);
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const [loading] = useState(true);
 
   const filteredAcademies = academies.filter(
     (academy) =>
@@ -188,13 +166,13 @@ function AcademyCard({
   onClick,
   index,
 }: {
-  academy: Academy;
+  academy: any;
   onClick: () => void;
   index: number;
 }) {
   const theme = getAcademyTheme(academy?.academyType ?? "unknown");
   const Icon = theme.icon;
-  const isDiscontinued = academy.discontinuedDate !== null;
+  const isDiscontinued = false;
 
   return (
     <motion.div

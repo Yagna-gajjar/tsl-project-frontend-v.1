@@ -78,8 +78,8 @@ export default function BatchRequestedForm({
   tomorrow.setDate(tomorrow.getDate() + 1);
   const initialData: Partial<RequestPayload> = {
     status: "requested",
-    memberName: enrollment?.memberName
-      ? enrollment?.memberName
+    memberName: enrollment?.memberFirstName
+      ? enrollment?.memberFirstName
       : `${enrollment?.memberFirstName} ${enrollment?.memberLastName}`,
     memberId: enrollment?.memberId,
     enrollmentId: enrollment?.enrollmentId,
@@ -105,7 +105,7 @@ export default function BatchRequestedForm({
       };
 
       try {
-        const res: Response = await createBatchMemberRequests(body);
+        const res: any = await createBatchMemberRequests(body);
 
         if (!res.success) {
           throw new Error("Request failed");
@@ -130,7 +130,7 @@ export default function BatchRequestedForm({
   );
 
   return (
-    <FormModal<RequestPayload>
+    <FormModal<any>
       isOpen={isOpen}
       onClose={onClose}
       title={`Request spot in ${batchName}`}

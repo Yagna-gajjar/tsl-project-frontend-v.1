@@ -28,7 +28,6 @@ const empty: CoursePackage = {
   coursePackageId: 0,
   courseId: 0,
   linkType: "",
-  activityType: "",
   createdAt: "",
   updatedAt: "",
 };
@@ -46,9 +45,8 @@ export default function CoursePackageFormModal({
   const [loading, setLoading] = useState(false);
 
   const [courses, setCourses] = useState<Course[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [_, setActivities] = useState<Activity[]>([]);
 
-  /* ---------------- LOAD DROPDOWNS ---------------- */
   useEffect(() => {
     if (!isOpen) return;
 
@@ -104,9 +102,9 @@ export default function CoursePackageFormModal({
     if (!values.courseId || Number(values.courseId) <= 0) {
       e.courseId = "Course is required";
     }
-    if (!values.activityType) {
-      e.activityType = "Activity is required";
-    }
+    // if (!values.activityType) {
+    //   e.activityType = "Activity is required";
+    // }
     if (!values.linkType?.trim()) {
       e.linkType = "Link type is required";
     }
@@ -154,16 +152,16 @@ export default function CoursePackageFormModal({
         value: String(c.courseId),
       })),
     },
-    {
-      name: "activityType",
-      label: "Activity",
-      type: "select",
-      required: true,
-      options: activities.map((a) => ({
-        label: a.activityName,
-        value: a.activityId,
-      })),
-    },
+    // {
+    //   name: "activityType",
+    //   label: "Activity",
+    //   type: "select",
+    //   required: true,
+    //   options: activities.map((a) => ({
+    //     label: a.activityName,
+    //     value: a.activityId,
+    //   })),
+    // },
     {
       name: "linkType",
       label: "Link Type",

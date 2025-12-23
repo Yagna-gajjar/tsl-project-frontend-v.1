@@ -11,7 +11,7 @@ import MembershipLinkExcelUpload from "@/components/view/membershipLink/membersh
 export default function MembershipLinkPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
-  const [editRow, setEditRow] = useState<MembershipLink>();
+  const [_, setEditRow] = useState<MembershipLink>();
   const [viewId, setViewId] = useState<number>();
   const [excelOpen, setExcelOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -59,7 +59,6 @@ export default function MembershipLinkPage() {
 
       <MembershipLinkFormModal
         isOpen={formOpen}
-        initialData={editRow}
         onClose={() => {
           setFormOpen(false);
           setEditRow(undefined);

@@ -1,9 +1,7 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Account } from "@/types/account";
 import { Users, Trash2 } from "lucide-react";
-import type { Account } from "./membership-link-form-modal";
 
 type Props = {
   selectedAccounts: Account[];
@@ -33,16 +31,16 @@ export default function SelectedAccountsPanel({
               >
                 <div className="text-sm">
                   <span className="font-semibold text-foreground block">
-                    {acc.name}
+                    {acc.accountName}
                   </span>
                   <span className="text-muted-foreground text-xs">{`ID: ${acc.accountId}`}</span>
                 </div>
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => removeAccount(acc.accountId)}
+                  onClick={() => removeAccount(acc?.accountId as any)}
                   className="h-8 w-8 p-0"
-                  title={`Remove ${acc.name}`}
+                  title={`Remove ${acc.accountName}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

@@ -25,7 +25,7 @@ import { getMembershipMasters } from "@/api/membershipMaster.api";
 import type { MembershipLink } from "@/types/membershipLink";
 import type { Response } from "@/types/response";
 import type { Account } from "@/types/account";
-import type { MembershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/membershipMaster";
 import type { membership } from "@/types/membership";
 
 type LinkType = "account" | "membership" | "both";
@@ -63,7 +63,7 @@ export default function MembershipLinkFormModal({
   const [isSearchingAccounts, setIsSearchingAccounts] = useState(false);
 
   const [membershipSearch, setMembershipSearch] = useState("");
-  const [membershipResults, setMembershipResults] = useState<membership[]>([]);
+  const [membershipResults, setMembershipResults] = useState<MembershipMaster[]>([]);
   const [selectedMemberships, setSelectedMemberships] = useState<membership[]>(
     []
   );
@@ -124,7 +124,7 @@ export default function MembershipLinkFormModal({
 
     try {
       setIsSearchingMemberships(true);
-      const res: Response<membership[]> = await getMembershipMasters({
+      const res: Response<MembershipMaster[]> = await getMembershipMasters({
         search: membershipSearch,
       });
       setMembershipResults(res.data || []);

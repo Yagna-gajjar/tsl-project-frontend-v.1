@@ -63,7 +63,7 @@ export default function AuthorityPage() {
 
       <AuthorityViewModal
         isOpen={viewOpen}
-        authorityId={viewId}
+        authorityId={Number(viewId)}
         onClose={() => setViewOpen(false)}
       />
 

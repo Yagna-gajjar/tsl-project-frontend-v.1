@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Hash, BookOpen, Clock, Info, CheckCircle } from "lucide-react";
+import { Hash, BookOpen, Clock, Info } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Course } from "@/types/course";
 import { getCourseById } from "@/api/course.api";
@@ -40,16 +40,6 @@ const fields: FieldConfig<Course>[] = [
   { key: "minAge", label: "Min Age", icon: Hash },
   { key: "maxAge", label: "Max Age", icon: Hash },
   { key: "gender", label: "Gender", icon: Info },
-
-  {
-    key: "changable",
-    label: "Changable",
-    icon: CheckCircle,
-    render: (v) => (v ? "Yes" : "No"),
-  },
-
-  { key: "freezingAllowed", label: "Freezing Allowed", icon: Hash },
-
   {
     key: "createdAt",
     label: "Created At",
@@ -74,7 +64,7 @@ export default function CourseViewModal({ isOpen, courseId, onClose }: Props) {
     <ViewModal<Course>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={courseId}
+      itemId={Number(courseId)}
       fetchFn={fetchFn}
       fields={fields}
       title="Course Details"

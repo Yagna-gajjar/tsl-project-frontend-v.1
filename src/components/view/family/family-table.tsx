@@ -122,15 +122,15 @@ export default function FamilyTable({
         createdTo: filters.createdTo,
       });
 
-      const rows = (res && (res.data ?? res.rows ?? res)) as
+      const rows = (res && (res.data ?? res)) as
         | Family[]
         | undefined;
       const pagination =
-        (res && (res.pagination ?? res.meta ?? res.pagination)) ?? null;
+        (res && (res.pagination ?? res.pagination)) ?? null;
 
       setData(Array.isArray(rows) ? rows : []);
       if (pagination) {
-        setTotal(Number(pagination.total ?? pagination.totalItems ?? 0));
+        setTotal(Number(pagination.total ?? pagination.total ?? 0));
       } else {
         setTotal(rows && rows.length ? (page - 1) * pageSize + rows.length : 0);
       }
@@ -247,11 +247,11 @@ export default function FamilyTable({
       familyTypeId: filters.familyTypeId,
       teamCategoryId: filters.teamCategoryId,
       preferredLanguage: filters.preferredLanguage,
-      createdFrom: filters.createdFrom,
+      createdFrom: filters?.createdFrom,
       createdTo: filters.createdTo,
     });
 
-    const rows = (res && (res.data ?? res.rows ?? res)) as Family[] | undefined;
+    const rows = (res && (res.data ?? res)) as Family[] | undefined;
     return Array.isArray(rows) ? rows : [];
   };
 

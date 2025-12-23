@@ -59,7 +59,7 @@ export default function CoachAssignmentViewModal({
       isOpen={isOpen}
       onClose={onClose}
       itemId={Number(coachAssignmentId)}
-      fetchFn={fetchFn}
+      fetchFn={fetchFn as any}
       fields={fields}
       title="View Coach Assignment"
       layout="grid"

@@ -1,5 +1,5 @@
 import type { Response } from "@/types/response";
-import { request, toQueryString } from "./helper";
+import { request, toQueryString, type SortOrder } from "./helper";
 import type { Authority } from "@/types/authority";
 
 const AUTHORITY_BASE = import.meta.env.VITE_APP_API_URL + "/authority";
@@ -12,6 +12,7 @@ export interface AuthorityQuery {
   search?: string;
   memberId?: number;
   accountId?: number;
+  active?: boolean;
 }
 
 interface changeauthority {
@@ -41,6 +42,7 @@ export function getAuthorities(
     search: params.search,
     memberId: params.memberId,
     accountId: params.accountId,
+    active: params.active
   });
 
   return request<Response<Authority[]>>(`${AUTHORITY_BASE}${qs}`);

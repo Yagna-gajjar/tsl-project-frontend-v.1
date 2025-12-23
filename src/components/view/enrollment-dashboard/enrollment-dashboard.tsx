@@ -8,7 +8,7 @@ import BottomSection from "./bottom-section";
 import { Button } from "@/components/ui/button";
 
 export default function EnrollmentDashboard() {
-  const [middleview, setMiddleview] = useState<any>(null);
+  const [middleview, _] = useState<any>(null);
   const [topHeight, setTopHeight] = useState(100);
   const [isDragging, setIsDragging] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);

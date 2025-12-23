@@ -49,7 +49,7 @@ const fields: FieldConfig<Batch>[] = [
     icon: Calendar,
     render: (v) => (v ? new Date(v as number).toLocaleDateString() : "-"),
   },
-  { key: "weekDays", label: "Week Days", icon: Hash },
+  { key: "daysPattern", label: "Days Pattern", icon: Hash },
   {
     key: "status",
     label: "Status",

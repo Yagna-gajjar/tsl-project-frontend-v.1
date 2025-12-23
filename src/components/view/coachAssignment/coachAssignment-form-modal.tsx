@@ -49,7 +49,7 @@ export default function CoachAssignmentFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const [academyOptions, setAcademyOptions] = useState<AccountMember[]>();
+  const [_, setAcademyOptions] = useState<AccountMember[]>();
   const [coachOptions, setCoachOptions] = useState<Member[]>();
   const [batchOptions, setBatchOptions] = useState<Batch[]>();
 
@@ -208,16 +208,16 @@ export default function CoachAssignmentFormModal({
   }, [validate, values, initialData, onSave, onClose]);
 
   const fields: FormFieldConfig<CoachAssignment>[] = [
-    {
-      name: "academyCoachesId",
-      label: "Academy",
-      type: "select",
-      options: academyOptions?.map((a) => ({
-        label: a.accountName,
-        value: a.accountMemberId,
-      })),
-      required: true,
-    },
+    // {
+    //   name: "academyCoachesId",
+    //   label: "Academy",
+    //   type: "select",
+    //   options: academyOptions?.map((a) => ({
+    //     label: a.memberFirstName,
+    //     value: a.accountMemberId,
+    //   })),
+    //   required: true,
+    // },
     {
       name: "coachId",
       label: "Coach",

@@ -141,8 +141,6 @@ export function MemberFormModal({
       }
     };
 
-    fetchDefaultAccount();
-
     const fetchEnumByCategory = async (
       category: string,
       setState: React.Dispatch<React.SetStateAction<Enums[]>>
@@ -155,13 +153,18 @@ export function MemberFormModal({
         setState([]);
       }
     };
-    fetchEnumByCategory("personalStatus", setPersonalStatusEnum);
-    fetchEnumByCategory("personalStatusSector", setPersonalStatusSectorEnum);
-    fetchEnumByCategory("qualification", setqualificationEnum);
-    fetchEnumByCategory("idProofType", setIdProofTypeEnum);
-    fetchEnumByCategory("TransportMode", setTransportModeEnum);
-    fetchEnumByCategory("maratialStatus", setMaratialStatusEnum);
-    fetchEnumByCategory("adminInstruction", setAdmitInstructionEnum);
+
+    if (isOpen) {
+
+      fetchDefaultAccount();
+      fetchEnumByCategory("PERSONALSTATUS", setPersonalStatusEnum);
+      fetchEnumByCategory("personalStatusSector", setPersonalStatusSectorEnum);
+      fetchEnumByCategory("QUALIFICATION", setqualificationEnum);
+      fetchEnumByCategory("IDPROOFTYPE", setIdProofTypeEnum);
+      fetchEnumByCategory("TRANSPORTMODE", setTransportModeEnum);
+      fetchEnumByCategory("MARATIALSTATUS", setMaratialStatusEnum);
+      fetchEnumByCategory("ADMITINSTRUCTIONS", setAdmitInstructionEnum);
+    }
   }, [initialData, isOpen]);
 
   const onChange = (field: keyof MemberFormState, val: any) => {
@@ -360,8 +363,8 @@ export function MemberFormModal({
     }
 
     try {
-      const payload: Member = {
-        regDate: new Date(values.regDate) as Date,
+      const payload: Member | any = {
+        regDate: new Date(values?.regDate as any),
         suspensionDate: values.suspensionDate ?? "",
         memberFirstName: String(values.memberFirstName ?? "").trim(),
         memberMiddleName: values.memberMiddleName ?? "",

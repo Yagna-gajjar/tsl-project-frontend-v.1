@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Hash, Calendar, DollarSign, User, CheckCircle, Snowflake } from "lucide-react";
+import { Hash, Calendar, DollarSign, Snowflake } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { CourseRate } from "@/types/courseRate";
 import { getCourseRateById } from "@/api/courseRate.api";
@@ -15,7 +15,6 @@ type Props = {
 const fields: FieldConfig<CourseRate>[] = [
 	{ key: "courseRateId", label: "Rate ID", icon: Hash },
 	{ key: "courseId", label: "Course ID", icon: Hash },
-	{ key: "entityType", label: "Entity Type", icon: User },
 	{
 		key: "unitRate",
 		label: "Unit Rate",
@@ -30,12 +29,6 @@ const fields: FieldConfig<CourseRate>[] = [
 		label: "Introduce Date",
 		icon: Calendar,
 		render: (v) => new Date(v as any).toLocaleDateString(),
-	},
-	{
-		key: "changable",
-		label: "Changable",
-		icon: CheckCircle,
-		render: (v) => (v ? "Yes" : "No"),
 	},
 	{
 		key: "createdAt",

@@ -47,8 +47,8 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
 
       const rowsRaw = Array.isArray(res)
         ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as Enrollment[])
+        : Array.isArray(res?.data)
+        ? (res.data as Enrollment[])
         : [];
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,
@@ -121,8 +121,8 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
 
     const rowsRaw = Array.isArray(res)
       ? res
-      : Array.isArray((res as Record<string, unknown>)?.data)
-      ? ((res as Record<string, unknown>).data as Enrollment[])
+      : Array.isArray(res?.data)
+      ? (res.data as Enrollment[])
       : [];
     const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
       ...r,
@@ -150,7 +150,7 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
       header: "Start Date",
       key: "startDate",
       render: (row: Enrollment) =>
-        row.startDate ? format(new Date(row.startDate), "dd MMM yyyy") : "-",
+        row.attendingStartDate ? format(new Date(row.attendingStartDate), "dd MMM yyyy") : "-",
       sortable: true,
     },
     {
@@ -160,13 +160,13 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
         row.endDate ? format(new Date(row.endDate), "dd MMM yyyy") : "-",
       sortable: true,
     },
-    {
-      header: "Academy Name",
-      key: "academyName",
-      render: (row: Enrollment) => row.academyName || "-",
-      sortable: true,
-      filterType: "text",
-    },
+    // {
+    //   header: "Academy Name",
+    //   key: "academyName",
+    //   render: (row: Enrollment) => row.academyName || "-",
+    //   sortable: true,
+    //   filterType: "text",
+    // },
     {
       header: "Course Name",
       key: "courseName",
@@ -183,30 +183,30 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
       sortable: true,
       filterType: "text",
     },
-    {
-      header: "Discount ID",
-      key: "discountId",
-      render: (row: Enrollment) => row.discountId ?? "-",
-      sortable: true,
-    },
-    {
-      header: "Free Days",
-      key: "freeDays",
-      render: (row: Enrollment) => row.freeDays ?? 0,
-      sortable: true,
-    },
-    {
-      header: "Session Units",
-      key: "sessionUnits",
-      render: (row: Enrollment) => row.sessionUnits ?? 0,
-      sortable: true,
-    },
-    {
-      header: "Number Of Days",
-      key: "numberOfDays",
-      render: (row: Enrollment) => row.numberOfDays ?? 0,
-      sortable: true,
-    },
+    // {
+    //   header: "Discount ID",
+    //   key: "discountId",
+    //   render: (row: Enrollment) => row.discountId ?? "-",
+    //   sortable: true,
+    // },
+    // {
+    //   header: "Free Days",
+    //   key: "freeDays",
+    //   render: (row: Enrollment) => row.freeDays ?? 0,
+    //   sortable: true,
+    // },
+    // {
+    //   header: "Session Units",
+    //   key: "sessionUnits",
+    //   render: (row: Enrollment) => row.sessionUnits ?? 0,
+    //   sortable: true,
+    // },
+    // {
+    //   header: "Number Of Days",
+    //   key: "numberOfDays",
+    //   render: (row: Enrollment) => row.numberOfDays ?? 0,
+    //   sortable: true,
+    // },
     {
       header: "Discounted Amount",
       key: "discountedAmount",
@@ -265,7 +265,7 @@ export default function EnrollmentTable({ onView, refreshKey }: Props) {
     {
       header: "Remarks",
       key: "remarks",
-      render: (row: Enrollment) => row.remarks || "-",
+      render: (row: Enrollment) => row.printRemarks || "-",
     },
     {
       header: "Status",

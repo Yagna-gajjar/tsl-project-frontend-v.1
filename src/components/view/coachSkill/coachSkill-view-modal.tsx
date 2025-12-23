@@ -42,13 +42,13 @@ const fields: FieldConfig<CoachSkill>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Clock,
-    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
 ];
 

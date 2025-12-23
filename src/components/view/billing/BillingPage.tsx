@@ -1,11 +1,8 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
 	Calendar, Download, Loader2, MinusCircle, FileText, TrendingDown, TrendingUp, Wallet, PieChart, Users, Briefcase, Building2, Receipt
 } from "lucide-react";
-import { getBills } from "@/api/billing.api";
-import { getDebitNotes } from "@/api/debitNote.api";
-import type { Academy } from "@/types/academy";
 import type { DebitNote } from "@/types/debitNote";
 
 interface MonthSlice {
@@ -39,7 +36,7 @@ interface BillingResponse {
 	};
 }
 
-interface AcademyWithShares extends Academy {
+interface AcademyWithShares {
 	share_main?: number | null;
 	share_tanna?: number | null;
 	share_tsl?: number | null;
@@ -47,42 +44,42 @@ interface AcademyWithShares extends Academy {
 }
 
 const BillingPage = ({ academy }: { academy: AcademyWithShares | null }) => {
-	const [loading, setLoading] = useState(false);
-	const [billingData, setBillingData] = useState<BillingResponse | null>(null);
-	const [debitNotes, setDebitNotes] = useState<DebitNote[]>([]);
+	const [loading] = useState(false);
+	const [billingData] = useState<BillingResponse | null>(null);
+	const [debitNotes] = useState<DebitNote[]>([]);
 
 	const [startDate, setStartDate] = useState("2026-01-01");
 	const [endDate, setEndDate] = useState("2026-01-31");
 
-	useEffect(() => {
-		if (!academy?.academyId || !startDate || !endDate) return;
+	// useEffect(() => {
+	// 	if (!academy?.academyId || !startDate || !endDate) return;
 
-		const fetchData = async () => {
-			setLoading(true);
-			try {
-				const [billsResponse, notesResponse] = await Promise.all([
-					getBills({
-						academyId: academy.academyId,
-						startDate,
-						endDate,
-					}),
-					getDebitNotes({
-						dateFrom: startDate,
-						dateTo: endDate,
-						limit: 1000,
-						debitNoteAcademyId: academy.academyId
-					})
-				]);
-				setBillingData(billsResponse);
-				setDebitNotes(notesResponse.data || []);
-			} catch (error) {
-				console.error("Error fetching financial data:", error);
-			} finally {
-				setLoading(false);
-			}
-		};
-		fetchData();
-	}, [academy, startDate, endDate]);
+	// 	const fetchData = async () => {
+	// 		setLoading(true);
+	// 		try {
+	// 			const [billsResponse, notesResponse] = await Promise.all([
+	// 				getBills({
+	// 					academyId: academy.academyId,
+	// 					startDate,
+	// 					endDate,
+	// 				}),
+	// 				getDebitNotes({
+	// 					dateFrom: startDate,
+	// 					dateTo: endDate,
+	// 					limit: 1000,
+	// 					debitNoteAcademyId: academy.academyId
+	// 				})
+	// 			]);
+	// 			setBillingData(billsResponse);
+	// 			setDebitNotes(notesResponse.data || []);
+	// 		} catch (error) {
+	// 			console.error("Error fetching financial data:", error);
+	// 		} finally {
+	// 			setLoading(false);
+	// 		}
+	// 	};
+	// 	fetchData();
+	// }, [academy, startDate, endDate]);
 
 	const financials = useMemo(() => {
 		const grossEarnings = billingData?.total || 0;
@@ -142,17 +139,6 @@ const BillingPage = ({ academy }: { academy: AcademyWithShares | null }) => {
               Financial Statement
             </h1>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                {billingData?.data[0]?.academyName ||
-                  (academy
-                    ? `Academy #${academy.academyId}`
-                    : "Select Academy")}
-              </p>
-              {academy?.academyType && (
-                <span className="text-xs bg-slate-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-slate-500 border border-slate-200 dark:border-neutral-700">
-                  {academy.academyType}
-                </span>
-              )}
             </div>
           </div>
 

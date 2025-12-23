@@ -3,17 +3,17 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { membership } from "@/types/membership";
 import { Search, Plus, Loader2 } from "lucide-react";
-import type { Membership } from "./membership-link-form-modal";
 
 type Props = {
   search: string;
   setSearch: (value: string) => void;
-  results: Membership[];
+  results: membership[];
   isSearching: boolean;
   searchMembership: () => Promise<void>;
-  addMembership: (membership: Membership) => void;
-  selectedMemberships: Membership[];
+  addMembership: (membership: membership) => void;
+  selectedMemberships: membership[];
 };
 
 export default function MembershipSearchPanel({
@@ -67,7 +67,7 @@ export default function MembershipSearchPanel({
               >
                 <div className="text-sm">
                   <span className="font-semibold text-foreground block">
-                    {membership.name}
+                    {membership.accountName}
                   </span>
                   <span className="text-muted-foreground text-xs">{`ID: ${membership.membershipId}`}</span>
                 </div>

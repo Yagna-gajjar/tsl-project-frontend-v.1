@@ -26,13 +26,13 @@ const fields: FieldConfig<TeamCategory>[] = [
     key: "createdAt",
     label: "Created At",
     icon: Calendar,
-    render: (v: TeamCategory["createdAt"]) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
   {
     key: "updatedAt",
     label: "Updated At",
     icon: Clock,
-    render: (v: TeamCategory["updatedAt"]) => (v ? new Date(v).toLocaleString() : "-"),
+    render: (v) => (v ? new Date(v as string).toLocaleString() : "-"),
   },
 ];
 

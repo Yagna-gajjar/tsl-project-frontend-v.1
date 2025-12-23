@@ -302,8 +302,7 @@ export default function EnrollmentHistory({
       memberId: selectedMemberId,
       courseName: item.courseName,
       academyName: item.academyName,
-      sessionUnits: item.sessionUnits,
-      academyId: item.academyId,
+      sessionUnits: item.sessionUnits
     });
     setAppointmentDialogOpen(true);
   };
@@ -355,13 +354,12 @@ export default function EnrollmentHistory({
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                           <div className="space-y-2 flex-1">
                             <span
-                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
-                                item.status === "active"
+                              className={`inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${item.status === "active"
                                   ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700"
                                   : item.changeType === "course-change"
-                                  ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
-                                  : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                              }`}
+                                    ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
+                                    : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                }`}
                             >
                               {item.changeType
                                 ? item.changeType.replace("-", " ")
@@ -461,9 +459,8 @@ export default function EnrollmentHistory({
                                     links
                                   </span>
                                   <ChevronDown
-                                    className={`h-4 w-4 transition-transform ${
-                                      isExpanded ? "rotate-180" : ""
-                                    }`}
+                                    className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
+                                      }`}
                                   />
                                 </button>
                               )}

@@ -41,7 +41,7 @@ import { CourseForm } from "./course-form/course-list";
 import CourseFooter from "./course-form/course-footer";
 
 interface CourseFormState {
-  course: Partial<Course>;
+  course: Partial<Course> | any;
   packages: CoursePackage[];
   rates: CourseRate[];
   shares: CourseShare[];
@@ -384,7 +384,7 @@ export default function CourseFormModal({
 
     try {
       const availabilityCode = weekArrayToNumber(
-        formState.course.daysPattern as string[]
+        formState.course.daysPattern as any
       );
       const updatedFormState = {
         ...formState,
@@ -510,15 +510,15 @@ export default function CourseFormModal({
   const handleArrayChange = <T extends keyof CourseFormState>(
     key: T,
     index: number,
-    field: keyof CourseFormState[T][number],
+    field: any,
     value: any
   ) => {
     setFormState((p) => {
-      const updatedArray = [...p[key]];
+      const updatedArray: any = [...p[key] as any];
       updatedArray[index] = {
         ...updatedArray[index],
         [field]: value,
-      } as CourseFormState[T][number];
+      };
       return { ...p, [key]: updatedArray };
     });
   };
@@ -540,7 +540,7 @@ export default function CourseFormModal({
     }
 
     if (newItem) {
-      setFormState((p) => ({
+      setFormState((p: any) => ({
         ...p,
         [key]: [...p[key], newItem],
       }));
@@ -548,9 +548,9 @@ export default function CourseFormModal({
   };
 
   const removeArrayItem = (key: keyof CourseFormState, index: number) => {
-    setFormState((p) => ({
+    setFormState((p: any) => ({
       ...p,
-      [key]: p[key].filter((_, i) => i !== index),
+      [key]: p[key].filter((_: any, i: number) => i !== index),
     }));
   };
 
@@ -589,25 +589,25 @@ export default function CourseFormModal({
                 errors.rates ||
                 errors.shares ||
                 errors.sharesTotal) && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mx-6 mt-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-start gap-3"
-                >
-                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium">
-                      {globalError || "Please review errors below"}
-                    </p>
-                    {errors.rates && <p className="mt-1">• {errors.rates}</p>}
-                    {errors.shares && <p className="mt-1">• {errors.shares}</p>}
-                    {errors.sharesTotal && (
-                      <p className="mt-1">• {errors.sharesTotal}</p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mx-6 mt-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-start gap-3"
+                  >
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {globalError || "Please review errors below"}
+                      </p>
+                      {errors.rates && <p className="mt-1">• {errors.rates}</p>}
+                      {errors.shares && <p className="mt-1">• {errors.shares}</p>}
+                      {errors.sharesTotal && (
+                        <p className="mt-1">• {errors.sharesTotal}</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
             </AnimatePresence>
 
             <Tabs

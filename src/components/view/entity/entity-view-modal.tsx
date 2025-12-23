@@ -43,8 +43,8 @@ export default function EntityViewModal({ isOpen, entityId, onClose }: Props) {
     <ViewModal<Entity>
       isOpen={isOpen}
       onClose={onClose}
-      itemId={entityId}
-      fetchFn={fetchFn}
+      itemId={Number(entityId)}
+      fetchFn={fetchFn as any}
       fields={fields}
       title="View Entity"
       layout="grid"

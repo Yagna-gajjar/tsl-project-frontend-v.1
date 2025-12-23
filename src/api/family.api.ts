@@ -16,6 +16,8 @@ export interface FamiliesQuery {
   familyTypeId?: number | string;
   teamCategoryId?: number | string;
   preferredLanguage?: string;
+  createdFrom?: Date|string;
+  createdTo?: Date|string;
 }
 
 const FAMILY_BASE = import.meta.env.VITE_APP_API_URL + "/family";
@@ -36,7 +38,7 @@ export function getFamilies(
     identityTypeId: params.identityTypeId,
     familyTypeId: params.familyTypeId,
     teamCategoryId: params.teamCategoryId,
-    preferredLanguage: params.preferredLanguage,
+    preferredLanguage: params.preferredLanguage
   });
 
   return request<Response<Family[]>>(`${FAMILY_BASE}${qs}`);

@@ -49,7 +49,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 		async function fetchAccounts(searchTerm: string) {
 			try {
 				const res: Response<Account[]> = await getAccounts({
-					name: searchTerm
+					accountName: searchTerm
 				});
 
 				if (res.success) {
@@ -198,7 +198,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
                         key={acc.accountId}
                         value={String(acc.accountId)}
                       >
-                        {acc.name || `Account ${acc.accountId}`}
+                        {acc.accountName || `Account ${acc.accountId}`}
                       </SelectItem>
                     ))
                   ) : (

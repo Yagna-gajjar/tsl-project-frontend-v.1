@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format, differenceInCalendarDays, parseISO, isDate } from "date-fns";
+import { format } from "date-fns";
 
 import { motion } from "framer-motion";
 import {
@@ -25,12 +25,10 @@ import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 
 import { getEnrollmentById } from "@/api/enrollment.api";
-import { getCourseById } from "@/api/course.api";
 import { createPayment } from "@/api/payment.api";
 
 import type { Response } from "@/types/response";
 import type { Enrollment } from "@/types/enrollment";
-import type { Course } from "@/types/course";
 
 const RefundEnrollment = () => {
   const { id }: any = useParams();
@@ -40,7 +38,6 @@ const RefundEnrollment = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const [oldEnrollment, setOldEnrollment] = useState<Enrollment | null>(null);
-  const [course, setCourse] = useState<Course | null>(null);
 
   const [values, setValues] = useState<any>({
     enrollmentId: Number(id),
@@ -51,7 +48,7 @@ const RefundEnrollment = () => {
     remarks: "",
   });
 
-  const [computed, setComputed] = useState({
+  const [computed, _] = useState({
     totalDays: 0,
     usedDays: 0,
     remainingDays: 0,
@@ -62,24 +59,24 @@ const RefundEnrollment = () => {
     originalDiscountApplied: 0,
   });
 
-  function parseDateOnly(val?: string | Date | null) {
-    if (!val) return null;
-    if (isDate(val)) return val as Date;
-    const s = String(val).slice(0, 10);
-    try {
-      return parseISO(s);
-    } catch {
-      return null;
-    }
-  }
+  // function parseDateOnly(val?: string | Date | null) {
+  //   if (!val) return null;
+  //   if (isDate(val)) return val as Date;
+  //   const s = String(val).slice(0, 10);
+  //   try {
+  //     return parseISO(s);
+  //   } catch {
+  //     return null;
+  //   }
+  // }
 
-  function calculateDays(startISO?: any, endISO?: any) {
-    const start = parseDateOnly(startISO);
-    const end = parseDateOnly(endISO);
-    if (!start || !end) return 0;
-    const diff = differenceInCalendarDays(end, start);
-    return diff >= 0 ? diff + 1 : 0;
-  }
+  // function calculateDays(startISO?: any, endISO?: any) {
+  //   const start = parseDateOnly(startISO);
+  //   const end = parseDateOnly(endISO);
+  //   if (!start || !end) return 0;
+  //   const diff = differenceInCalendarDays(end, start);
+  //   return diff >= 0 ? diff + 1 : 0;
+  // }
 
   useEffect(() => {
     const fetchEnrollment = async () => {
@@ -113,72 +110,72 @@ const RefundEnrollment = () => {
     if (id) fetchEnrollment();
   }, [id]);
 
-  useEffect(() => {
-    const fetchCourse = async () => {
-      if (!oldEnrollment?.courseId) return;
-      try {
-        const res: Response<Course> = await getCourseById(
-          Number(oldEnrollment.courseId)
-        );
-        const c = res?.data;
-        if (!c) return;
-        setCourse(c);
-      } catch (err) {
-        console.error("fetch course error", err);
-        setError("Failed to fetch course data");
-      }
-    };
-    fetchCourse();
-  }, [oldEnrollment?.courseId]);
+  // useEffect(() => {
+  //   const fetchCourse = async () => {
+  //     if (!oldEnrollment?.courseId) return;
+  //     try {
+  //       const res: Response<Course> = await getCourseById(
+  //         Number(oldEnrollment.courseId)
+  //       );
+  //       const c = res?.data;
+  //       if (!c) return;
+  //       setCourse(c);
+  //     } catch (err) {
+  //       console.error("fetch course error", err);
+  //       setError("Failed to fetch course data");
+  //     }
+  //   };
+  //   fetchCourse();
+  // }, [oldEnrollment?.courseId]);
 
-  useEffect(() => {
-    if (!oldEnrollment || !course) return;
+  // useEffect(() => {
+  //   if (!oldEnrollment || !course) return;
 
-    const totalDays =
-      Number(oldEnrollment.numberOfDays ?? 0) +
-      Number(oldEnrollment.freeDays ?? 0);
-    const refundDate = values.refundDate || format(new Date(), "yyyy-MM-dd");
-    const usedDays = calculateDays(oldEnrollment.startDate, refundDate);
-    const remainingDays = Math.max(0, totalDays - usedDays);
-    const fullDailyRate = Number(course.unitRate ?? 0);
-    const refundBeforeProcessing: number | any = Number(
-      oldEnrollment.commitedAmount - usedDays * fullDailyRate
-    ).toFixed(2);
-    const fullTotalAtFullRate = totalDays * fullDailyRate;
-    const originalCommittedAmount = Number(oldEnrollment.commitedAmount ?? 0);
-    const discountApplied = Math.max(
-      0,
-      fullTotalAtFullRate - originalCommittedAmount
-    );
-    const processingCharge = Number(values.processingCharge ?? 0);
-    const finalRefundAmount = Math.max(
-      0,
-      Number(refundBeforeProcessing) - processingCharge
-    );
+  //   const totalDays =
+  //     Number(oldEnrollment.numberOfDays ?? 0) +
+  //     Number(oldEnrollment.freeDays ?? 0);
+  //   const refundDate = values.refundDate || format(new Date(), "yyyy-MM-dd");
+  //   const usedDays = calculateDays(oldEnrollment.startDate, refundDate);
+  //   const remainingDays = Math.max(0, totalDays - usedDays);
+  //   const fullDailyRate = Number(course.unitRate ?? 0);
+  //   const refundBeforeProcessing: number | any = Number(
+  //     oldEnrollment.commitedAmount - usedDays * fullDailyRate
+  //   ).toFixed(2);
+  //   const fullTotalAtFullRate = totalDays * fullDailyRate;
+  //   const originalCommittedAmount = Number(oldEnrollment.commitedAmount ?? 0);
+  //   const discountApplied = Math.max(
+  //     0,
+  //     fullTotalAtFullRate - originalCommittedAmount
+  //   );
+  //   const processingCharge = Number(values.processingCharge ?? 0);
+  //   const finalRefundAmount = Math.max(
+  //     0,
+  //     Number(refundBeforeProcessing) - processingCharge
+  //   );
 
-    setComputed({
-      totalDays,
-      usedDays,
-      remainingDays,
-      fullDailyRate,
-      refundBeforeProcessing,
-      finalRefundAmount,
-      originalCommittedAmount,
-      originalDiscountApplied: discountApplied,
-    });
+  //   setComputed({
+  //     totalDays,
+  //     usedDays,
+  //     remainingDays,
+  //     fullDailyRate,
+  //     refundBeforeProcessing,
+  //     finalRefundAmount,
+  //     originalCommittedAmount,
+  //     originalDiscountApplied: discountApplied,
+  //   });
 
-    setValues((prev: any) => ({
-      ...prev,
-      totalDays,
-      usedDays,
-      remainingDays,
-      fullDailyRate,
-      refundBeforeProcessing,
-      finalRefundAmount,
-      originalCommittedAmount,
-      originalDiscountApplied: discountApplied,
-    }));
-  }, [oldEnrollment, course, values.refundDate, values.processingCharge]);
+  //   setValues((prev: any) => ({
+  //     ...prev,
+  //     totalDays,
+  //     usedDays,
+  //     remainingDays,
+  //     fullDailyRate,
+  //     refundBeforeProcessing,
+  //     finalRefundAmount,
+  //     originalCommittedAmount,
+  //     originalDiscountApplied: discountApplied,
+  //   }));
+  // }, [oldEnrollment, course, values.refundDate, values.processingCharge]);
 
   const onChange = (field: string, value: any) => {
     if (field === "processingCharge") value = Number(value || 0);
@@ -209,9 +206,8 @@ const RefundEnrollment = () => {
         paid: refundAmount,
         remaining: 0,
         paymentRemarks: values.remarks || null,
-        academyName: oldEnrollment?.academyName || null,
         courseName: oldEnrollment?.courseName || null,
-        memberName: oldEnrollment?.memberName || null,
+        memberName: oldEnrollment?.memberFirstName || null,
       };
 
       await createPayment(paymentPayload);

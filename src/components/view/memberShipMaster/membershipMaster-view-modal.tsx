@@ -40,7 +40,7 @@ const dateRender = (v?: Date | string | null) =>
 const fields: FieldConfig<MembershipMaster>[] = [
   { key: "membershipType", label: "Membership Type", icon: Users },
   {
-    key: "entityname",
+    key: "entityName",
     label: "Entity Name",
     icon: Users,
   },

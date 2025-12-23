@@ -71,7 +71,7 @@ export default function AreaViewModal({ isOpen, areaId, onClose }: Props) {
       isOpen={isOpen}
       onClose={onClose}
       itemId={Number(areaId)}
-      fetchFn={fetchFn}
+      fetchFn={fetchFn as any}
       fields={fields}
       title="View Area"
       layout="grid"

@@ -110,7 +110,7 @@ export function IdentityTypeFormModal({
         const res: Response<IdentityType> = await getIdentityTypesByID(
           Number(initialData.identityTypeId)
         );
-        const row = res && (res.data ?? res) ? res.data ?? res : res;
+        const row:any = res && (res.data ?? res) ? res.data ?? res : res;
         if (row) setValues({ ...row });
       } catch (e) {
         console.warn("Failed to fetch identity type", e);
@@ -201,7 +201,7 @@ export function IdentityTypeFormModal({
       toast({
         title: isEdit ? "Identity type updated" : "Identity type created",
         description: `${String(
-          row?.identityTypeName ?? payload.identityTypeName
+          payload.identityTypeName
         )} saved successfully.`,
         variant: "success",
       });

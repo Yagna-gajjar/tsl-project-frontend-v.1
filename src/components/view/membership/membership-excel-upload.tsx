@@ -121,7 +121,7 @@ export default function MembershipExcelUpload({
           : null,
       };
 
-      await createMembership(payload);
+      await createMembership(payload as any);
       console.log(
         `✅ Imported Membership for Account ID: ${payload.accountId}`
       );

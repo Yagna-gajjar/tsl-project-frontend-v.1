@@ -50,7 +50,7 @@ function DebitNoteTable({ onView, onEdit }: Props) {
         rowsRaw = res;
         serverTotal = rowsRaw.length;
       } else if (res && typeof res === "object") {
-        const maybeData = res.data;
+        const maybeData:any = res.data;
         if (Array.isArray(maybeData)) {
           rowsRaw = maybeData;
           serverTotal = rowsRaw.length;

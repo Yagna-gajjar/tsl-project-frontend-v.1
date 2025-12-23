@@ -6,17 +6,15 @@ import { FormContent } from "@/components/form-modal/form-content";
 
 import { createCourseRate, updateCourseRate } from "@/api/courseRate.api";
 import { getCourses } from "@/api/course.api";
-import { getEnumsByCategory } from "@/api/enums.api";
 
 import type { CourseRate } from "@/types/courseRate";
 import type { Course } from "@/types/course";
-import type { Enums } from "@/types/enums";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { format } from "date-fns";
 import { getMemberships } from "@/api/membership.api";
-import type { MembershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/membershipMaster";
 
-const emptyRate: CourseRate = {
+const emptyRate: CourseRate | any = {
   courseRateId: 0,
   courseId: 0,
   membershipMasterId: 0,
@@ -24,7 +22,6 @@ const emptyRate: CourseRate = {
   aboveUnits: 0,
   unitRate: 0,
   introduceDate: "",
-  changable: false,
   freezing: 0,
   createdAt: "",
   updatedAt: "",
@@ -68,7 +65,7 @@ export default function CourseRateFormModal({
         setCourses(cRes?.data ?? []);
         console.log(eRes?.data);
 
-        setMembershipMaster(eRes?.data ?? []);
+        setMembershipMaster(eRes?.data ?? [] as any);
       } catch (e) {
         console.error("Failed to load master data", e);
       } finally {
@@ -172,12 +169,7 @@ export default function CourseRateFormModal({
       label: "Introduce Date",
       type: "Date",
       required: true,
-    },
-    {
-      name: "changable",
-      label: "Changable",
-      type: "checkbox",
-    },
+    }
   ];
 
   if (!isOpen) return null;
@@ -191,6 +183,7 @@ export default function CourseRateFormModal({
         />
         <div className="max-h-[75vh] overflow-auto">
           <FormContent
+            error={""}
             fields={fields}
             values={rate}
             errors={errors}
