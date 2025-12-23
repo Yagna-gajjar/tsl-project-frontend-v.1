@@ -12,6 +12,7 @@ export interface MembershipMasterQuery {
   guardianEntry?: boolean;
   guestAllowed?: boolean;
   clubAccess?: boolean;
+  entityType?: string;
 }
 
 const MEMBERSHIP_BASE = import.meta.env.VITE_APP_API_URL + "/membership-master";
@@ -27,11 +28,18 @@ export function getMembershipMasters(
     search: params.search ?? undefined,
     membershipType: params.membershipType ?? undefined,
     guardianEntry:
-      typeof params.guardianEntry === "boolean" ? String(params.guardianEntry) : undefined,
+      typeof params.guardianEntry === "boolean"
+        ? String(params.guardianEntry)
+        : undefined,
     guestAllowed:
-      typeof params.guestAllowed === "boolean" ? String(params.guestAllowed) : undefined,
+      typeof params.guestAllowed === "boolean"
+        ? String(params.guestAllowed)
+        : undefined,
     clubAccess:
-      typeof params.clubAccess === "boolean" ? String(params.clubAccess) : undefined,
+      typeof params.clubAccess === "boolean"
+        ? String(params.clubAccess)
+        : undefined,
+    entityType: params.entityType,
   });
 
   return request<Response<membershipMaster[]>>(`${MEMBERSHIP_BASE}${qs}`);
