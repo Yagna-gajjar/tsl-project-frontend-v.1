@@ -58,12 +58,11 @@ export default function AccountFormModal({
       const res: Response<Entity[]> = await getEntities({ limit: 500 });
       setEntities(res.data ?? []);
     };
-    if(isOpen){
-      loadEntities();
-    }
+    loadEntities();
   }, []);
 
   useEffect(() => {
+    console.log(values.entityId);
     if (!values.entityId || values.entityId == 0) {
       setValues((p) => ({
         ...p,
@@ -115,8 +114,13 @@ export default function AccountFormModal({
       setAdminInstructionOpt(res.data ?? []);
     };
 
-    if(isOpen){
+    const fetchAccountType = async () => {
+      const res: Response<Enums[]> = await getEnumsByCategory("ACCOUNTTYPE");
+      setAccountTypeOpt(res.data ?? []);
+    };
+    if (isOpen) {
       fetchAdminInstructionOpt();
+      fetchAccountType();
     }
   }, [initialData, isOpen]);
 
