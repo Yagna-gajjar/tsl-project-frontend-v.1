@@ -4,7 +4,7 @@ import CourseShareFormModal from "@/components/view/courseShare/course-share-for
 import CourseShareViewModal from "@/components/view/courseShare/course-share-view-modal";
 import type { CourseShare } from "@/types/courseShare";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import CourseShareExcelUpload from "@/components/view/courseShare/course-share-excel-upload";
 
 export default function CourseSharePage() {
@@ -42,7 +42,10 @@ export default function CourseSharePage() {
               setEditRow(null);
               setFormOpen(true);
             }}
+            className="flex items-center gap-2 px-4 py-2"
+            size={"lg"}
           >
+            <Plus className="w-5 h-5" />
             Add Course Share
           </Button>
         </div>

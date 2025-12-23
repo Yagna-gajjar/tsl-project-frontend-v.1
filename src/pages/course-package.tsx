@@ -4,7 +4,7 @@ import CoursePackageFormModal from "@/components/view/coursePackage/course-packa
 import CoursePackageViewModal from "@/components/view/coursePackage/course-package-view-modal";
 import type { CoursePackage } from "@/types/coursePackage";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import CoursePackageExcelUpload from "@/components/view/coursePackage/course-package-excel-upload";
 
 export default function CoursePackagePage() {
@@ -38,11 +38,14 @@ export default function CoursePackagePage() {
             Upload Excel
           </Button>
           <Button
+          size={"lg"}
             onClick={() => {
               setEditRow(null);
               setFormOpen(true);
             }}
+            className="flex items-center gap-2 px-4 py-2"
           >
+            <Plus className="w-5 h-5" />
             Add Course Package
           </Button>
         </div>
