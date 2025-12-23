@@ -47,7 +47,6 @@ export function getEnumsByCategory(
     search: params.search,
     enumCase: params.enumCase,
   });
-  console.log(qs);
 
   return request<Response<Enums[]>>(`${ENUMS_BASE}/${categoryName}${qs}`);
 }

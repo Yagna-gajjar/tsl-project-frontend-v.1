@@ -19,7 +19,7 @@ type Props = {
 export default function MembershipMasterTable({
   onView,
   onEdit,
-  refreshKey,
+  refreshKey
 }: Props) {
   const [data, setData] = useState<MembershipMaster[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -49,23 +49,22 @@ export default function MembershipMasterTable({
           filters.guestAllowed === "true"
             ? true
             : filters.guestAllowed === "false"
-            ? false
-            : undefined,
+              ? false
+              : undefined,
         clubAccess:
           filters.clubAccess === "true"
             ? true
             : filters.clubAccess === "false"
-            ? false
-            : undefined,
+              ? false
+              : undefined,
       });
-
       setTotal(res?.pagination.total);
 
       const rowsRaw = Array.isArray(res)
         ? res
         : Array.isArray(res?.data)
-        ? (res.data as MembershipMaster[])
-        : [];
+          ? (res.data as MembershipMaster[])
+          : [];
 
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
         ...r,

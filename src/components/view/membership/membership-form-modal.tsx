@@ -22,6 +22,9 @@ type Props = {
   initialData?: membership;
   onClose: () => void;
   onSaved: () => void;
+  membershipMasterId?: number;
+  entityId?: number;
+  entityType?: string;
 };
 
 const empty: membership = {
@@ -55,6 +58,9 @@ export default function MembershipFormModal({
   initialData,
   onClose,
   onSaved,
+  entityId,
+  entityType,
+  membershipMasterId
 }: Props) {
   const [values, setValues] = useState<membership>(empty);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +69,8 @@ export default function MembershipFormModal({
 
   const [selectedMembership, setSelectedMembership] =
     useState<MembershipMaster>();
+  const [selectedAccount, setSelectedAccount] =
+    useState<Account>();
   const [isBillingOnAccount, setIsBillingOnAccount] = useState(false);
 
   const [debouncedMembers, setDebouncedMembers] = useState<number>(
@@ -157,6 +165,9 @@ export default function MembershipFormModal({
         const response: Response<Account[]> = await getAccounts({
           limit: PAGE_SIZE,
           page,
+          accountType: "Transactions",
+          entityId: entityId,
+          entityType: entityType?.toLowerCase() == 'all' ? undefined : entityType
         });
         const items = response?.data || ([] as Account[]);
         setAccountOptions((prev) => (isInitial ? items : [...prev, ...items]));
@@ -172,7 +183,7 @@ export default function MembershipFormModal({
         setLoadingAccount(false);
       }
     },
-    [loadingAccount, hasMoreAccount, accountPage]
+    [loadingAccount, hasMoreAccount, accountPage, entityId, entityType]
   );
 
   useEffect(() => {
@@ -180,7 +191,34 @@ export default function MembershipFormModal({
 
     fetchMembershipMaster();
     fetchAccount();
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, entityId, entityType]);
+
+  useEffect(() => {
+    if (isOpen && !initialData && membershipMasterId && membershipMasterOptions.length > 0) {
+      const autoSelected = membershipMasterOptions.find(
+        (m) => m.membershipMasterId === Number(membershipMasterId)
+      );
+
+      if (autoSelected) {
+        setSelectedMembership(autoSelected);
+        setValues((prev) => ({
+          ...prev,
+          membershipMasterId: Number(membershipMasterId),
+          endDate: format(
+            addDays(new Date(prev.startDate), Number(autoSelected.durationDays || 0)),
+            "yyyy-MM-dd"
+          ),
+          graceDate: format(
+            addDays(
+              new Date(prev.startDate),
+              Number(autoSelected.durationDays || 0) + Number(autoSelected.graceDays || 0)
+            ),
+            "yyyy-MM-dd"
+          ),
+        }));
+      }
+    }
+  }, [isOpen, membershipMasterId, membershipMasterOptions, initialData]);
 
   // 3. Debounce Effect for Members Input
   useEffect(() => {
@@ -304,7 +342,7 @@ export default function MembershipFormModal({
           addDays(
             prev.startDate,
             Number(selected?.durationDays || 0) +
-              Number(selected?.graceDays || 0)
+            Number(selected?.graceDays || 0)
           ),
           "yyyy-MM-dd"
         ),
@@ -326,19 +364,20 @@ export default function MembershipFormModal({
 
         if (selectedMembership) {
           updates.endDate = format(
-            addDays(newStartDate, Number(selectedMembership.durationDays || 0)),
+            addDays(new Date(newStartDate), Number(selectedMembership.durationDays || 0)),
             "yyyy-MM-dd"
           );
           updates.graceDate = format(
             addDays(
               newStartDate,
               Number(selectedMembership.durationDays || 0) +
-                Number(selectedMembership.graceDays || 0)
+              Number(selectedMembership.graceDays || 0)
             ),
             "yyyy-MM-dd"
           );
         }
         return { ...prev, ...updates };
+
       });
 
       setFieldErrors((prev) => {
@@ -347,6 +386,39 @@ export default function MembershipFormModal({
         return copy;
       });
       return;
+    }
+
+    if (field === "members") {
+      console.log(selectedMembership?.memberLimit, " limits");
+      if (Number(value) > Number(selectedMembership?.memberLimit)) {
+        toast({
+          title: "Error",
+          description: `Please select members lower then ${selectedMembership?.memberLimit}`,
+          variant: "default"
+        });
+        setValues((prev) => ({
+          ...prev,
+          "members": Number(selectedMembership?.memberLimit),
+        }));
+        return;
+      }
+      if (Number(value) < Number(selectedAccount?.activeMembers)) {
+        toast({
+          title: "Error",
+          description: `Please select members higher then ${selectedAccount?.activeMembers}`,
+          variant: "default"
+        });
+        setValues((prev) => ({
+          ...prev,
+          "members": Number(selectedAccount?.activeMembers),
+        }));
+        return;
+      }
+    }
+
+    if (field === "accountId") {
+      const selected = accountOptions.find((a) => a.accountId === Number(value));
+      setSelectedAccount(selected);
     }
     setValues((prev) => ({
       ...prev,
@@ -362,7 +434,7 @@ export default function MembershipFormModal({
   };
 
   useEffect(() => {
-    if (selectedMembership?.billingEntityOfFamily === "Members") {
+    if (selectedMembership?.billingEntityOfFamily?.toLocaleLowerCase() !== "self") {
       setIsBillingOnAccount(true);
     } else {
       setIsBillingOnAccount(false);
@@ -454,7 +526,7 @@ export default function MembershipFormModal({
       placeholder: isBillingOnAccount ? "Billing On Family" : "",
       options: accountOptions.map((a) => ({
         value: a.accountId,
-        label: a.accountName,
+        label: a.accountName + `(${a.activeMembers})`,
       })),
       disabled: isBillingOnAccount,
       required: true,

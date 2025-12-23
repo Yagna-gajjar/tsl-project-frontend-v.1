@@ -12,10 +12,8 @@ export default function MembershipMasterPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [viewId, setViewId] = useState<number | null>(null);
   const [excelOpen, setExcelOpen] = useState(false);
-
   const [formOpen, setFormOpen] = useState(false);
   const [editRow, setEditRow] = useState<MembershipMaster | null>(null);
-
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
@@ -68,7 +66,6 @@ export default function MembershipMasterPage() {
       <MembershipMasterTable
         onView={openView}
         onEdit={openForm}
-        refreshKey={refreshKey}
       />
 
       <MembershipMasterViewModal

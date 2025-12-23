@@ -13,6 +13,8 @@ export interface MembershipQuery {
   suspensionDate?: boolean;
   accountId?: number;
   status?: string;
+  entityType?: string;
+  entityId?: number;
 }
 
 const MEMBERSHIP_BASE = import.meta.env.VITE_APP_API_URL + "/membership";
@@ -31,6 +33,8 @@ export function getMemberships(
     status: params.status ?? undefined,
     billingEntityOfFamily: params.billingEntityOfFamily ?? undefined,
     suspensionDate: true,
+    entityType: params.entityType ?? undefined,
+    entityId: params.entityId ?? undefined
   });
 
   return request<Response<membership[]>>(`${MEMBERSHIP_BASE}${qs}`);

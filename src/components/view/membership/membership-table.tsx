@@ -10,9 +10,21 @@ type Props = {
   onView?: (row: membership) => void;
   onEdit?: (row: membership) => void;
   refreshKey?: number;
+  entityType?: string,
+  expire?: boolean;
+  membershipMasterId?: number;
+  entityId?: number;
 };
 
-export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
+export default function MembershipTable({
+  onView,
+  onEdit,
+  refreshKey,
+  entityType,
+  expire,
+  membershipMasterId,
+  entityId
+}: Props) {
   const [data, setData] = useState<membership[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -38,6 +50,8 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
         search: search || undefined,
         membershipMasterId: filters.membershipMasterId as number | undefined,
         status: filters.status as string | undefined,
+        entityType: entityType?.toLowerCase() == 'all' ? undefined : entityType,
+        entityId: entityId
       });
 
       const rowsRaw = res?.data as membership[];
@@ -62,11 +76,11 @@ export default function MembershipTable({ onView, onEdit, refreshKey }: Props) {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, sortBy, sortOrder, search, filters]);
+  }, [page, limit, sortBy, sortOrder, search, filters, entityId, entityType]);
 
   useEffect(() => {
     loadData();
-  }, [loadData, refreshKey]);
+  }, [loadData, refreshKey, entityId, entityType]);
 
   const handleSearchChange = (q: string) => {
     setSearch(q);

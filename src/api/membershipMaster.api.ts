@@ -13,6 +13,7 @@ export interface MembershipMasterQuery {
   guestAllowed?: boolean;
   clubAccess?: boolean;
   entityType?: string;
+  suspensionDate?: boolean;
 }
 
 const MEMBERSHIP_BASE = import.meta.env.VITE_APP_API_URL + "/membership-master";
@@ -26,7 +27,9 @@ export function getMembershipMasters(
     sortBy: params.sortBy ?? "membershipMasterId",
     sortOrder: params.sortOrder ?? "ASC",
     search: params.search ?? undefined,
+    entityType: params.entityType ?? undefined,
     membershipType: params.membershipType ?? undefined,
+    suspensionDate: params.suspensionDate ?? false,
     guardianEntry:
       typeof params.guardianEntry === "boolean"
         ? String(params.guardianEntry)
@@ -39,7 +42,6 @@ export function getMembershipMasters(
       typeof params.clubAccess === "boolean"
         ? String(params.clubAccess)
         : undefined,
-    entityType: params.entityType,
   });
 
   return request<Response<MembershipMaster[]>>(`${MEMBERSHIP_BASE}${qs}`);
@@ -52,7 +54,7 @@ export function getMembershipMasterById(id: number): Promise<Response<Membership
 export function createMembershipMaster(
   payload: Omit<MembershipMaster, "membershipMasterId" | "createdAt" | "updatedAt">
 ): Promise<MembershipMaster> {
-  
+
   return request<MembershipMaster>(MEMBERSHIP_BASE, {
     method: "POST",
     body: JSON.stringify(payload),

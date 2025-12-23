@@ -38,6 +38,10 @@ export function getEntityById(id: number): Promise<Response<Entity>> {
   return request<Response<Entity>>(`${ENTITY_BASE}/${id}`);
 }
 
+export function getEntityByFilter(entityType: string): Promise<Response<Entity>> {
+  return request<Response<Entity>>(`${ENTITY_BASE}/filtered?entityType=${entityType}`);
+}
+
 export function createEntity(
   payload: Omit<Entity, "entityId" | "createdAt" | "updatedAt">
 ): Promise<Response<Entity>> {

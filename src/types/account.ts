@@ -17,4 +17,5 @@ export interface Account {
   state?: string;
   country?: string;
   pinCode?: string;
+  activeMembers?: number;
 }
