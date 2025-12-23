@@ -133,9 +133,9 @@ export default function MembershipMasterTable({
       filterType: "text",
     },
     {
-      header: "Entity Name",
+      header: "Entity Type",
       key: "entityId",
-      render: (row) => row.entityName || "-",
+      render: (row) => row.entityType || "-",
     },
 
     {

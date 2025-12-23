@@ -33,8 +33,6 @@ export function getMemberships(
     suspensionDate: true,
   });
 
-  console.log(qs, " shqddd");
-
   return request<Response<membership[]>>(`${MEMBERSHIP_BASE}${qs}`);
 }
 
