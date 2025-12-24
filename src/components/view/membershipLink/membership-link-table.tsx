@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
 
 type MembershipData = {
   membershipMasterId?: number;
@@ -112,8 +113,15 @@ export default function MembershipLinkTable({
     { key: "membershipType", header: "Membership Master" },
     { key: "membershipId", header: "Membership" },
     { key: "accountName", header: "Account" },
-    { key: "linkDate", header: "Link Date" },
-    { key: "dLinkDate", header: "D-Link Date" },
+    {
+      key: "linkDate", header: "Link Date", render: (r) =>
+        r.linkDate ? format(new Date(r.linkDate).toLocaleDateString(), "dd-MMM-yyyy") : "-",
+    },
+    {
+      key: "dLinkDate", header: "D-Link Date",
+      render: (r) =>
+        r.dLinkDate ? format(new Date(r.dLinkDate).toLocaleDateString(), "dd-MMM-yyyy") : "-",
+    },
   ];
 
   return (
