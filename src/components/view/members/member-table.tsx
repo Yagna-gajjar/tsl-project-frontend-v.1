@@ -118,14 +118,17 @@ const AvatarCell = ({
 type Props = {
   onOpenForm: (row?: Member | null) => void;
   onOpenView?: (row: Member) => void;
+  onCopy?: (row: Member) => void;
   refreshKey?: number;
   initialFamilyId?: number | undefined;
+  filters?: Record<string, any>;
 };
 
 export default function MemberTable({
   onOpenForm,
   onOpenView,
   refreshKey,
+  onCopy,
   initialFamilyId,
   filters: externalFilters
 }: Props & { filters?: Record<string, any> }) {
@@ -147,7 +150,6 @@ export default function MemberTable({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  console.log(externalFilters)
   const fetchMembers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -430,6 +432,7 @@ export default function MemberTable({
         }}
         onEdit={(row) => onOpenForm(row)}
         onDelete={(id) => handleDelete(Number(id))}
+        onCopy={onCopy}
         idKey="memberId"
         exportFileName="Member"
         onExport={handleExport}

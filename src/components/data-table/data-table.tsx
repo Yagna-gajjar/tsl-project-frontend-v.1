@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Copy, Eye, Pencil, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { DynamicTableProps } from "./types";
@@ -30,6 +30,7 @@ export function DataTable<T>({
   onView,
   onEdit,
   onDelete,
+  onCopy,
   idKey = "id" as keyof T,
   exportFileName,
   onExport,
@@ -336,7 +337,7 @@ export function DataTable<T>({
                           </TableCell>
                         );
                       })}
-                      {(onView || onEdit || onDelete) && (
+                      {(onView || onEdit || onDelete || onCopy) && ( // Update condition
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             {onView && (
@@ -350,6 +351,20 @@ export function DataTable<T>({
                                 <Eye className="h-4 w-4" />
                               </Button>
                             )}
+
+                            {/* NEW COPY BUTTON */}
+                            {onCopy && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100"
+                                onClick={() => onCopy(row)}
+                                title="Copy to New Member"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            )}
+
                             {onEdit && (
                               <Button
                                 variant="ghost"
@@ -361,6 +376,7 @@ export function DataTable<T>({
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             )}
+
                             {onDelete && (
                               <Button
                                 variant="ghost"

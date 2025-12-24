@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Upload, Search, Loader2 } from "lucide-react";
+import { Plus, Upload, Search, Loader2, Copy } from "lucide-react";
 import MemberTable from "@/components/view/members/member-table";
 import MemberFormModal from "@/components/view/members/member-form-modal";
 import MemberViewModal from "@/components/view/members/member-view-modal";
@@ -45,6 +45,24 @@ export default function MemberPage() {
   const handleInputChange = (key: string, value: string) => {
     setInputs((prev) => ({ ...prev, [key]: value }));
     setIsCleared(false);
+  };
+
+  const handleCopyMember = (row: Member) => {
+    const {
+      memberId,
+      createdAt,
+      updatedAt,
+      avatar,
+      ...memberDataWithoutId
+    } = row;
+
+    setEditRow(memberDataWithoutId as Member);
+    setFormOpen(true);
+
+    toast({
+      title: "Data Copied",
+      description: `Ready to add a new member based on ${row.memberFirstName}'s details.`,
+    });
   };
 
   const handleRunProcess = async () => {
@@ -142,20 +160,37 @@ export default function MemberPage() {
             <label className="text-[10px] font-bold uppercase text-muted-foreground">ID Type</label>
             <SearchableMultiselect isSingle value={inputs.idProofType} options={idProofEnums.map(e => ({ label: e.value, value: e.value }))} onChange={v => handleInputChange("idProofType", v ?? "")} />
           </div>
-          <InputGroup label="ID Number" value={inputs.idProofNumber} onChange={v => handleInputChange("idProofNumber", v)} />
+          <InputGroup label="ID Number" value={inputs.idProofNumber} onChange={(v: string) => handleInputChange("idProofNumber", v)} />
         </div>
       </div>
 
       <MemberTable
-        onOpenForm={(row) => { setEditRow(row ?? null); setFormOpen(true); }}
-        onOpenView={(row) => { setViewData(row); setViewOpen(true); }}
+        onOpenForm={(row) => {
+          setEditRow(row ?? null);
+          setFormOpen(true);
+        }}
+        onOpenView={(row) => {
+          setViewData(row);
+          setViewOpen(true);
+        }}
+        onCopy={handleCopyMember}
         refreshKey={refreshKey}
         initialFamilyId={initialFamilyId}
         filters={activeFilters}
       />
 
-      <MemberFormModal isOpen={formOpen} onClose={() => { setFormOpen(false); setEditRow(null); }} initialData={editRow || {}} onSaved={() => { setRefreshKey(k => k + 1); setIsCleared(false); }} />
-      <MemberViewModal isOpen={viewOpen} onClose={() => setViewOpen(false)} item={viewData} />
+      <MemberFormModal
+        isOpen={formOpen}
+        onClose={() => {
+          setFormOpen(false);
+          setEditRow(null);
+        }}
+        initialData={editRow || {}}
+        onSaved={() => {
+          setRefreshKey(k => k + 1);
+          setIsCleared(false);
+        }}
+      />      <MemberViewModal isOpen={viewOpen} onClose={() => setViewOpen(false)} item={viewData} />
       <MemberExcelUpload isOpen={excelOpen} onClose={() => setExcelOpen(false)} onSuccess={() => setRefreshKey(k => k + 1)} />
     </div>
   );

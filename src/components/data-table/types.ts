@@ -34,6 +34,7 @@ export interface DynamicTableProps<T> {
 
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
+  onCopy?: (row: T) => void;
   onDelete?: (id: any) => void;
 
   idKey?: keyof T;
