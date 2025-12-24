@@ -1,32 +1,41 @@
+"use client";
+
 import { useCallback, useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { toast } from "@/hooks/use-toast";
-import { Link2, ShieldCheck } from "lucide-react";
+import { Link2, ShieldCheck, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import AccountSearchPanel from "./account-search-panel";
 import SelectedAccountsPanel from "./selected-accounts-panel";
-import { createMembershipLink, getMembershipLinks, updateMembershipLink } from "@/api/membershipLink.api";
+import {
+  createMembershipLink,
+  getMembershipLinks,
+  deleteMembershipLink,
+  updateMembershipLink,
+} from "@/api/membershipLink.api";
 import { getAccounts } from "@/api/account.api";
 import type { MembershipLink } from "@/types/membershipLink";
 import type { Response } from "@/types/response";
 import type { Account } from "@/types/account";
-import { format } from "date-fns";
 
 type AccountWithLinkData = Account & {
   linkDate?: string;
+  dLinkDate?: string | null;
   membershipLinkId?: number;
   isExisting?: boolean;
   contact?: string;
-  authorityId?: number;
 };
 
 type MembershipData = {
   membershipMasterId: number;
   membershipTypeName: string;
   membershipId: number;
+  members?: number;
+  entityName?: string;
 };
 
 type Props = {
@@ -45,14 +54,15 @@ export default function MembershipLinkFormModal({
   isOpen,
   onClose,
   onSave,
-  membershipData = {
-    membershipId: 6,
-    membershipMasterId: 10,
-    membershipTypeName: "Sdf"
-  },
+  membershipData,
 }: Props) {
-  const { membershipId, membershipMasterId, membershipTypeName } =
-    membershipData || {};
+  const {
+    membershipId,
+    membershipMasterId,
+    membershipTypeName,
+    members,
+    entityName,
+  } = membershipData || {};
 
   const [selectedAccounts, setSelectedAccounts] = useState<
     AccountWithLinkData[]
@@ -78,6 +88,7 @@ export default function MembershipLinkFormModal({
           limit: PAGE_SIZE,
           page,
           accountType: "Transactions",
+          entityType: "Family",
         });
         const items = response?.data || ([] as Account[]);
         setAllAccounts((prev) => (isInitial ? items : [...prev, ...items]));
@@ -97,12 +108,12 @@ export default function MembershipLinkFormModal({
   );
 
   const getAllLinkedAccount = useCallback(async () => {
-    if (!membershipId || !membershipMasterId) return;
+    if (!membershipMasterId) return;
 
     try {
       const res: Response<MembershipLink[]> = await getMembershipLinks({
         membershipMasterId,
-        membershipId,
+        membershipId: membershipId ? membershipId : undefined,
       });
 
       const links = res.data || [];
@@ -111,11 +122,10 @@ export default function MembershipLinkFormModal({
         accountName: link.accountName || "Unknown Account",
         contact: link.contact,
         linkDate: link.linkDate,
+        dLinkDate: link.dLinkDate,
         membershipLinkId: link.membershipLinkId,
         isExisting: true,
-        dLinkDate: link.dLinkDate,
       }));
-      console.log(alreadyLinked, " dhcbs");
 
       setSelectedAccounts(alreadyLinked);
     } catch {
@@ -144,9 +154,26 @@ export default function MembershipLinkFormModal({
     setFilteredAccounts(filtered);
   }, [accountSearch, allAccounts]);
 
+  const calculateValidation = () => {
+    const currentLinked = selectedAccounts.filter(
+      (acc) => acc.isExisting && !acc.dLinkDate
+    ).length;
+    const toUnlink = selectedAccounts.filter((acc) => acc.dLinkDate).length;
+    const newLinked = selectedAccounts.filter((acc) => !acc.isExisting).length;
+
+    const newTotal = currentLinked + newLinked;
+
+    const exceeded = members ? newTotal - members : 0;
+    const isValid = members ? newTotal <= members : true;
+
+    return { newTotal, exceeded, isValid, currentLinked, toUnlink, newLinked };
+  };
+
+  const validation = calculateValidation();
+
   const addAccount = (acc: Account) => {
     if (!selectedAccounts.some((a) => a.accountId === acc.accountId)) {
-      setSelectedAccounts([...selectedAccounts, { ...acc, isExisting: false }]);
+      setSelectedAccounts([{ ...acc, isExisting: false }, ...selectedAccounts]);
     }
   };
 
@@ -154,39 +181,63 @@ export default function MembershipLinkFormModal({
     setSelectedAccounts(selectedAccounts.filter((acc) => acc.accountId !== id));
   };
 
-  const onUnlink = async (data: AccountWithLinkData) => {
-    try {
-      const payload = {
-        membershipId: membershipData.membershipId,
-        membershipMasterId: membershipData.membershipMasterId,
-        linkDate: data.linkDate,
-        dLinkDate: format(Date.now(), "yyyy-MM-dd"),
-        membershipLinkId: data.membershipLinkId,
-        accountId: data.accountId,
-        authorityId: data.authorityId,
-        status: "unlinked"
-      }
+  const toggleLinkStatus = async (account: AccountWithLinkData) => {
+    if (account.isExisting && !account.dLinkDate) {
+      await updateMembershipLink(Number(account.membershipLinkId), {
+        dLinkDate: new Date().toISOString(),
+      });
 
-      const res: Response<MembershipLink> = await updateMembershipLink(Number(data.membershipLinkId), payload);
-      if (!res.success) {
-        throw new Error("Failed to dlink account.");
-      }
-      toast({ title: "Success", description: "Account Unlinked.", variant: "success" });
-    } catch {
-      toast({ title: "Error", description: "Failed to unlink account.", variant: "destructive" });
+      setSelectedAccounts(
+        selectedAccounts.map((acc) =>
+          acc.accountId === account.accountId
+            ? { ...acc, dLinkDate: new Date().toISOString() }
+            : acc
+        )
+      );
+    } else if (account.isExisting && account.dLinkDate) {
+      await updateMembershipLink(Number(account.membershipLinkId), {
+        dLinkDate: undefined,
+      });
+
+      setSelectedAccounts(
+        selectedAccounts.map((acc) =>
+          acc.accountId === account.accountId
+            ? { ...acc, dLinkDate: null }
+            : acc
+        )
+      );
+    } else {
+      removeAccount(account.accountId!);
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    const newAccounts = selectedAccounts.filter(acc => !acc.isExisting);
+    const newAccounts = selectedAccounts.filter((acc) => !acc.isExisting);
+    const unlinkedAccounts = selectedAccounts.filter((acc) => acc.dLinkDate);
 
-    if (newAccounts.length === 0) {
-      toast({ title: "Info", description: "No new accounts to link." });
+    // Check validation for new accounts
+    if (newAccounts.length > 0) {
+      if (!validation.isValid) {
+        toast({
+          title: "Limit Exceeded",
+          description: `${validation.exceeded} account${
+            validation.exceeded > 1 ? "s" : ""
+          } exceed the limit of ${members} accounts.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (newAccounts.length === 0 && unlinkedAccounts.length === 0) {
+      toast({ title: "Info", description: "No changes to save." });
       return;
     }
 
     try {
       setIsSubmitting(true);
+
+      // Link new accounts
       for (const account of newAccounts) {
         await createMembershipLink({
           membershipMasterId: membershipMasterId,
@@ -195,9 +246,22 @@ export default function MembershipLinkFormModal({
         });
       }
 
+      // Unlink accounts
+      for (const account of unlinkedAccounts) {
+        if (account.membershipLinkId) {
+          await deleteMembershipLink({
+            membershipLinkId: account.membershipLinkId,
+            membershipMasterId,
+          });
+        }
+      }
+
+      const totalChanges = newAccounts.length + unlinkedAccounts.length;
       toast({
         title: "Success",
-        description: `Successfully updated links for ${membershipTypeName}.`,
+        description: `Successfully updated ${totalChanges} account${
+          totalChanges > 1 ? "s" : ""
+        }.`,
         variant: "success",
       });
 
@@ -206,7 +270,7 @@ export default function MembershipLinkFormModal({
     } catch {
       toast({
         title: "Error",
-        description: "Failed to create links.",
+        description: "Failed to update links.",
         variant: "destructive",
       });
     } finally {
@@ -222,7 +286,7 @@ export default function MembershipLinkFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-6xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden">
+      <DialogContent className="max-w-6xl p-0 border-border/50 shadow-2xl bg-background backdrop-blur-sm rounded-xl overflow-hidden">
         <motion.div
           variants={dialogContentVariants}
           initial="hidden"
@@ -235,30 +299,50 @@ export default function MembershipLinkFormModal({
             onClose={handleClose}
           />
 
-          <div className="flex-grow overflow-y-auto p-6 space-y-6">
-            <div className="bg-muted/40 border border-border/50 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex-grow overflow-y-auto px-8 pt-4 space-y-4">
+            {/* Header Info */}
+            <div className="bg-gradient-to-r from-primary/8 to-primary/4 border border-primary/20 rounded-lg px-5 py-3 flex items-center justify-between hover:border-primary/40 transition-colors">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-primary/10 rounded-full">
+                <div className="p-3 bg-primary/15 rounded-full">
                   <ShieldCheck className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Target Membership
-                  </p>
-                  <p className="text-lg font-bold text-foreground">
+                  <p className="text-xl font-bold text-foreground">
                     {membershipTypeName}
                   </p>
+                  {membershipId !== 0 && (
+                    <p className="text-xs font-mono text-muted-foreground hover:bg-background transition-colors">
+                      {entityName}
+                    </p>
+                  )}
                 </div>
-              </div>
-              <div className="text-right">
-                <span className="text-xs bg-background px-2 py-1 rounded border border-border font-mono">
-                  ID: {membershipId}
-                </span>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">
+            {!validation.isValid &&
+              selectedAccounts.some((acc) => !acc.isExisting) && (
+                <Alert
+                  variant="destructive"
+                  className="border-destructive/50 bg-destructive/5"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <span className="font-semibold">
+                      {validation.exceeded} account
+                      {validation.exceeded > 1 ? "s" : ""} exceed the limit of{" "}
+                      {members} accounts.
+                    </span>
+                    <p className="text-xs mt-1 text-destructive/80">
+                      Current: {validation.currentLinked}, Unlinking:{" "}
+                      {validation.toUnlink}, New: {validation.newLinked} =
+                      Total: {validation.newTotal}
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-foreground">
                 Account Management
               </Label>
               <div className="grid grid-cols-2 gap-6">
@@ -271,11 +355,11 @@ export default function MembershipLinkFormModal({
                   addAccount={addAccount}
                   selectedAccounts={selectedAccounts}
                 />
-
                 <SelectedAccountsPanel
                   selectedAccounts={selectedAccounts}
+                  memberLimit={members}
                   removeAccount={removeAccount}
-                  onUnlink={onUnlink}
+                  toggleLinkStatus={toggleLinkStatus}
                 />
               </div>
             </div>
@@ -286,7 +370,11 @@ export default function MembershipLinkFormModal({
             onSubmit={handleSubmit}
             submitLabel="Save Changes"
             isSubmitting={isSubmitting}
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting ||
+              (!validation.isValid &&
+                selectedAccounts.some((acc) => !acc.isExisting))
+            }
           />
         </motion.div>
       </DialogContent>

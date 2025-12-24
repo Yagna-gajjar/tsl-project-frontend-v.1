@@ -8,8 +8,6 @@ import MembershipLinkViewModal from "@/components/view/membershipLink/membership
 import type { MembershipLink } from "@/types/membershipLink";
 import MembershipLinkExcelUpload from "@/components/view/membershipLink/membershipLink-excel-upload";
 import { SearchableMultiselect } from "@/components/form-modal/form-field-input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import type { Response } from "@/types/response";
 import type { membership } from "@/types/membership";
 import type { MembershipMaster } from "@/types/membershipMaster";
@@ -35,23 +33,32 @@ export default function MembershipLinkPage() {
 
   const [entityType, setEntityType] = useState<string>("all");
   const [membershipMasterId, setMembershipMasterId] = useState<string>("all");
+  const [membershipMasterEnumCase, setMembershipMasterEnumCase] =
+    useState<number>();
   const [entityId, setEntityId] = useState<string>("all");
-  const [hideDeLinked, setHideDeLinked] = useState(false);
 
   const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
-  const [membershipMasters, setMembershipMasters] = useState<
-    MembershipMaster[]
-  >([]);
 
   const [entities, setEntities] = useState<membership[]>([]);
   const [entitiesPage, setEntitiesPage] = useState(1);
   const [hasMoreEntities, setHasMoreEntities] = useState(true);
   const [loadingEntities, setLoadingEntities] = useState(false);
 
+  const [membershipMasters, setMembershipMasters] = useState<
+    MembershipMaster[]
+  >([]);
+  const [membershipMastersPage, setMembershipMastersPage] = useState(1);
+  const [hasMoreMembershipMasters, setHasMoreMembershipMasters] =
+    useState(true);
+  const [loadingMembershipMasters, setLoadingMembershipMasters] =
+    useState(false);
+
   const [membershipData, setMembershipData] = useState<{
     membershipId: number;
     membershipMasterId: number;
     membershipTypeName: string;
+    entityName: string;
+    members: number;
   }>();
 
   useEffect(() => {
@@ -65,16 +72,46 @@ export default function MembershipLinkPage() {
     fetchEntityTypes();
   }, []);
 
+  const fetchMasters = useCallback(
+    async (isInitial = false) => {
+      if (loadingMembershipMasters) return;
+      if (!isInitial && !hasMoreMembershipMasters) return;
+
+      setLoadingMembershipMasters(true);
+      try {
+        const pageToLoad = isInitial ? 1 : membershipMastersPage;
+
+        const res: Response<MembershipMaster[]> = await getMembershipMasters({
+          entityType: entityType !== "all" ? entityType : undefined,
+          enumCase: "2,5,6",
+        });
+        const items = res?.data || [];
+
+        setMembershipMasters((prev) =>
+          isInitial ? items : [...prev, ...items]
+        );
+        setHasMoreMembershipMasters(items.length === PAGE_SIZE);
+        setMembershipMastersPage(pageToLoad + 1);
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to fetch membership master",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingMembershipMasters(false);
+      }
+    },
+    [
+      loadingMembershipMasters,
+      hasMoreMembershipMasters,
+      membershipMastersPage,
+      entityType,
+    ]
+  );
+
   useEffect(() => {
-    const fetchMasters = async () => {
-      const res: Response<MembershipMaster[]> = await getMembershipMasters({
-        entityType: entityType !== "all" ? entityType : undefined,
-      });
-
-      setMembershipMasters(res.data || []);
-    };
-
-    fetchMasters();
+    fetchMasters(true);
   }, [entityType]);
 
   const fetchEntities = useCallback(
@@ -125,6 +162,8 @@ export default function MembershipLinkPage() {
     fetchEntities(true);
   }, [membershipMasterId]);
 
+  
+
   return (
     <div>
       <div className="flex justify-between mb-6">
@@ -168,6 +207,7 @@ export default function MembershipLinkPage() {
           <SearchableMultiselect
             isSingle
             placeholder="Membership Master"
+            isLoadingMore={loadingMembershipMasters}
             value={membershipMasterId === "all" ? null : membershipMasterId}
             options={[
               { label: "All", value: "all" },
@@ -178,16 +218,32 @@ export default function MembershipLinkPage() {
             ]}
             onChange={(v) => {
               setMembershipMasterId(v ?? "all");
-
               const selected = membershipMasters.find(
                 (m) => m.membershipMasterId === Number(v)
               );
 
+              if (v === "all" || v == null) {
+                setMembershipMasterEnumCase(undefined);
+
+                setMembershipData({
+                  membershipMasterId: 0,
+                  membershipId: 0,
+                  members: 0,
+                  membershipTypeName: "",
+                  entityName: "",
+                });
+
+                return;
+              }
+
               if (selected) {
+                setMembershipMasterEnumCase(selected.enumCase);
                 setMembershipData((prev) => ({
                   membershipId: prev?.membershipId ?? 0,
                   membershipMasterId: Number(selected.membershipMasterId),
-                  membershipTypeName: selected.membershipType,
+                  members: Number(prev?.members),
+                  entityName: String(prev?.entityName),
+                  membershipTypeName: String(selected.membershipType),
                 }));
               }
             }}
@@ -214,21 +270,16 @@ export default function MembershipLinkPage() {
                 setMembershipData((prev) => ({
                   membershipId: selected.membershipId,
                   membershipMasterId: prev?.membershipMasterId ?? 0,
+                  members: Number(selected.members),
+                  entityName: String(selected.entityName),
                   membershipTypeName: prev?.membershipTypeName ?? "",
                 }));
               }
             }}
+            disabled={membershipMasterEnumCase == 3}
             onLoadMore={() => fetchEntities()}
             isLoadingMore={loadingEntities}
           />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Checkbox
-            checked={hideDeLinked}
-            onCheckedChange={(v) => setHideDeLinked(!!v)}
-          />
-          <Label>Hide De-Linked</Label>
         </div>
       </div>
 
@@ -238,6 +289,7 @@ export default function MembershipLinkPage() {
           setEditRow(r);
           setFormOpen(true);
         }}
+        membershipData={membershipData}
         onView={(r) => {
           setViewId(r.membershipLinkId);
           setViewOpen(true);
@@ -249,7 +301,6 @@ export default function MembershipLinkPage() {
         onClose={() => {
           setFormOpen(false);
           setEditRow(undefined);
-          setMembershipData(undefined);
         }}
         membershipData={membershipData}
         onSave={() => setRefreshKey((p) => p + 1)}

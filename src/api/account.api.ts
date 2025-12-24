@@ -10,8 +10,8 @@ export interface AccountQuery {
   search?: string;
   accountName?: string;
   entityId?: number;
-  accountType?: string;
   entityType?: string;
+  accountType?: string;
 }
 
 const ACCOUNT_BASE = import.meta.env.VITE_APP_API_URL + "/account";
@@ -27,8 +27,8 @@ export function getAccounts(
     search: params.search ?? params.accountName,
     accountName: params.accountName ?? undefined,
     entityId: params.entityId ?? undefined,
-    accountType: params.accountType ?? undefined,
     entityType: params.entityType ?? undefined,
+    accountType: params.accountType ?? undefined,
   });
 
   return request<Response<Account[]>>(`${ACCOUNT_BASE}${qs}`);

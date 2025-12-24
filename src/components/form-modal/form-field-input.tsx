@@ -153,7 +153,11 @@ export function SearchableMultiselect({
             />
           </div>
           <div>
-            {filteredOptions.length === 0 && !isLoadingMore ? (
+            {isLoadingMore ? (
+              <div className="flex justify-center items-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-t-transparent"></div>
+              </div>
+            ) : filteredOptions.length === 0 ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
                 No results found.
               </div>

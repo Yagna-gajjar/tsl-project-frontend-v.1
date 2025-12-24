@@ -132,7 +132,7 @@ export function MemberFormModal({
         }
 
         setDefaultAccount(Number(defaultAccount));
-      } catch (error) {
+      } catch  {
         toast({
           title: "Error",
           description: "Failed to fetch default account",
@@ -178,18 +178,7 @@ export function MemberFormModal({
   };
 
   const fields: FormFieldConfig<Member>[] = [
-    {
-      name: "regDate",
-      label: "Registration Date",
-      type: "Date",
-      required: true,
-    },
-    {
-      name: "suspensionDate",
-      label: "suspension Date",
-      type: "Date",
-      required: true,
-    },
+
     {
       name: "memberFirstName",
       label: "First Name",
@@ -309,6 +298,18 @@ export function MemberFormModal({
         value: m.value,
         label: m.value,
       })),
+    },
+    {
+      name: "regDate",
+      label: "Registration Date",
+      type: "Date",
+      required: true,
+    },
+    {
+      name: "suspensionDate",
+      label: "suspension Date",
+      type: "Date",
+      required: true,
     },
     {
       name: "status",
