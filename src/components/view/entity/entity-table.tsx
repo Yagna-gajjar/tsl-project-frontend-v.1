@@ -6,6 +6,8 @@ import type { Entity } from "@/types/entity";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 type Props = {
   onView?: (row: Entity) => void;
@@ -28,6 +30,9 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
   const [sortBy, setSortBy] = useState("entityId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
+  const [hideSuspensionDate, setHideSuspensionDate] = useState(false);
+
+
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -40,6 +45,7 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
         entityName: filters.entityName,
         entityType: filters.entityType,
         legalStatus: filters.legalStatus,
+        hideSuspensionDate: hideSuspensionDate
       });
 
       setTotal(res.pagination.total);
@@ -65,7 +71,7 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, sortBy, sortOrder, search, filters]);
+  }, [page, limit, sortBy, sortOrder, search, filters, hideSuspensionDate]);
 
   useEffect(() => {
     loadData();
@@ -97,6 +103,13 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) =>
         r.regDate ? new Date(r.regDate).toLocaleDateString() : "-",
     },
+    {
+      key: "suspensionDate",
+      header: "Suspension Date",
+      sortable: true,
+      render: (r) =>
+        r.suspensionDate ? new Date(r.suspensionDate).toLocaleDateString() : "-",
+    },
   ];
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -118,6 +131,14 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
 
   return (
     <>
+       <div className="flex items-center gap-2 mb-2">
+        <Checkbox
+          id="hide-delinked"
+          checked={hideSuspensionDate}
+          onCheckedChange={(v) => setHideSuspensionDate(Boolean(v))}
+        />
+        <Label htmlFor="hide-delinked">Hide De-Linked</Label>
+      </div>
       <DataTable<Entity>
         data={data}
         columns={columns}

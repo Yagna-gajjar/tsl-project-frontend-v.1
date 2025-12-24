@@ -15,7 +15,8 @@ type Props = {
   isOpen: boolean;
   initialData?: Entity;
   onClose: () => void;
-  onSave: () => void;
+  onSave: () => void; 
+  entityType: string;
 };
 
 const empty: Entity = {
@@ -48,6 +49,7 @@ export default function EntityFormModal({
   initialData,
   onClose,
   onSave,
+  entityType
 }: Props) {
   const [values, setValues] = useState<Entity>(empty);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,6 +60,8 @@ export default function EntityFormModal({
   const [entityNatureEnum, setEntityNatureEnum] = useState<Enums[]>([]);
   const [entityRoleEnum, setEntityRoleEnum] = useState<Enums[]>([]);
   const [entityStatusEnum, setEntityStatusEnum] = useState<Enums[]>([]);
+  console.log(entityType);
+  
 
   useEffect(() => {
     if (initialData) {
@@ -69,11 +73,15 @@ export default function EntityFormModal({
           : undefined,
       });
     } else {
-      setValues(empty);
+      if (entityType.toLocaleLowerCase() !== "all") {
+        setValues({...empty, entityType: entityType});
+      } else {
+        setValues(empty);
+      }
     }
 
     const fetchEntityType = async () => {
-      const res = await getEnumsByCategory("EntityType");
+      const res = await getEnumsByCategory("ENTITY TYPE");
       const data = res?.data as Enums[];
       setEntityTypeOpt(data);
     };

@@ -12,6 +12,7 @@ export interface EntityQuery {
   entityType?: string;
   legalStatus?: string;
   membershipMasterId?: number;
+  hideSuspensionDate?: boolean;
 }
 
 const ENTITY_BASE = import.meta.env.VITE_APP_API_URL + "/entity";
@@ -29,6 +30,7 @@ export function getEntities(
     entityType: params.entityType ?? undefined,
     legalStatus: params.legalStatus ?? undefined,
     membershipMasterId: params.membershipMasterId,
+    hideSuspensionDate: params.hideSuspensionDate
   });
 
   return request<Response<Entity[]>>(`${ENTITY_BASE}${qs}`);
