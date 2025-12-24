@@ -10,6 +10,7 @@ export interface AccountQuery {
   search?: string;
   accountName?: string;
   entityId?: number;
+  entityType?: string;
   accountType?: string;
 }
 
@@ -26,7 +27,8 @@ export function getAccounts(
     search: params.search ?? params.accountName,
     accountName: params.accountName ?? undefined,
     entityId: params.entityId ?? undefined,
-    accountType: params.accountType ?? undefined
+    entityType: params.entityType ?? undefined,
+    accountType: params.accountType ?? undefined,
   });
 
   return request<Response<Account[]>>(`${ACCOUNT_BASE}${qs}`);

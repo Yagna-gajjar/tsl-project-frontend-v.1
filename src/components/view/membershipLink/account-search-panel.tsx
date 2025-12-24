@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Account } from "@/types/account";
-import { Search, Plus, Loader2 } from "lucide-react";
+import { Search, Plus, Loader2, Check } from "lucide-react";
 
 type Props = {
   search: string;
@@ -27,84 +27,98 @@ export default function AccountSearchPanel({
 }: Props) {
   return (
     <div className="space-y-4">
-      <h3 className="font-extrabold text-xl text-primary border-b pb-2 tracking-wide">
-        <span className="flex items-center gap-2">
-          <Search className="w-5 h-5" />
-          Find Accounts
-        </span>
-      </h3>
+      <div className="flex items-center gap-2.5 border-b border-border/50 pb-3">
+        <Search className="w-5 h-5 text-primary" />
+        <h3 className="font-semibold text-lg text-foreground">Find Accounts</h3>
+      </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <Input
           placeholder="Search by Name, Phone, or Email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && searchAccount()}
-          className="flex-grow text-base p-2.5"
+          className="flex-grow text-sm bg-background/50 border-border/50 placeholder:text-muted-foreground/60"
           disabled={isSearching}
         />
         <Button
           onClick={searchAccount}
           disabled={isSearching}
-          className="font-semibold px-4"
+          className="font-semibold px-5 h-10"
+          size="sm"
         >
           {isSearching ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Search className="w-4 h-4" />
           )}
-          Search
         </Button>
       </div>
 
-      <div className="border border-border/70 rounded-lg bg-background shadow-inner h-80 transition-shadow duration-300">
+      <div className="border border-border/40 rounded-lg bg-background/30 shadow-sm h-80 transition-all duration-200 hover:border-border/60 hover:shadow-md overflow-hidden">
         <ScrollArea className="h-full">
           {results.length > 0 ? (
-            results.map((acc) => (
-              <div
-                key={acc.accountId}
-                className="flex justify-between items-center p-3 border-b border-border/50 last:border-b-0 hover:bg-accent/50 transition-colors"
-              >
-                <div className="text-sm">
-                  <span className="font-semibold text-foreground block">
-                    {acc.accountName}
-                  </span>
-                  {acc.contact && (
-                    <span className="text-muted-foreground text-xs">{`Phone: ${acc.contact}`}</span>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => addAccount(acc)}
-                  variant={
-                    selectedAccounts.some((a) => a.accountId === acc.accountId)
-                      ? "secondary"
-                      : "default"
-                  }
-                  disabled={selectedAccounts.some(
-                    (a) => a.accountId === acc.accountId
-                  )}
-                  className="h-8 text-sm"
-                >
-                  {selectedAccounts.some(
-                    (a) => a.accountId === acc.accountId
-                  ) ? (
-                    "Added"
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-            ))
+            <div className="divide-y divide-border/30">
+              {results.map((acc) => {
+                // Check if account is already in the selected list
+                const isSelected = selectedAccounts.some(
+                  (a) => a.accountId === acc.accountId
+                );
+
+                if (isSelected) return
+
+                return (
+                  <div
+                    key={acc.accountId}
+                    className="flex justify-between items-center p-3.5 hover:bg-accent/40 transition-colors group"
+                  >
+                    <div className="text-sm space-y-1 flex-1">
+                      <span className="font-semibold text-foreground block group-hover:text-primary transition-colors">
+                        {acc.accountName}
+                      </span>
+                      {acc.contact && (
+                        <span className="text-muted-foreground text-xs">
+                          {acc.contact}
+                        </span>
+                      )}
+                    </div>
+
+                    <Button
+                      size="sm"
+                      onClick={() => !isSelected && addAccount(acc)}
+                      variant={isSelected ? "secondary" : "default"}
+                      disabled={isSelected}
+                      className="h-8 text-xs px-3 ml-3 whitespace-nowrap"
+                    >
+                      {isSelected ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 mr-1" />
+                          Added
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3.5 h-3.5 mr-1" />
+                          Add
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
           ) : isSearching ? (
-            <p className="p-4 text-center font-medium text-sm text-primary/70">
-              <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
-              Searching...
-            </p>
+            <div className="p-12 flex flex-col items-center justify-center space-y-3">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <p className="text-sm font-medium text-muted-foreground">
+                Searching accounts...
+              </p>
+            </div>
           ) : (
-            <p className="p-4 text-center text-base text-muted-foreground pt-12">
-              Start typing and click search to find accounts to link.
-            </p>
+            <div className="p-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                Type to search for accounts
+              </p>
+            </div>
           )}
         </ScrollArea>
       </div>

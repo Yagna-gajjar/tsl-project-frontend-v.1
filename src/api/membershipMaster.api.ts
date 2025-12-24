@@ -13,6 +13,7 @@ export interface MembershipMasterQuery {
   guestAllowed?: boolean;
   clubAccess?: boolean;
   entityType?: string;
+  enumCase?: string;
 }
 
 const MEMBERSHIP_BASE = import.meta.env.VITE_APP_API_URL + "/membership-master";
@@ -40,6 +41,7 @@ export function getMembershipMasters(
         ? String(params.clubAccess)
         : undefined,
     entityType: params.entityType,
+    enumCase: params.enumCase,
   });
 
   return request<Response<MembershipMaster[]>>(`${MEMBERSHIP_BASE}${qs}`);

@@ -12,24 +12,42 @@ import type { Response } from "@/types/response";
 
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+
+type MembershipData = {
+  membershipMasterId?: number;
+  membershipTypeName: string;
+  membershipId?: number;
+};
 
 type Props = {
   onView?: (row: MembershipLink) => void;
   onEdit?: (row: MembershipLink) => void;
   refreshKey?: number;
+  membershipData: MembershipData;
 };
 
 export default function MembershipLinkTable({
   onView,
   onEdit,
   refreshKey,
+  membershipData = {
+    membershipMasterId: 0,
+    membershipTypeName: "",
+    membershipId: 0,
+  },
 }: Props) {
+  const { membershipMasterId, membershipId } = membershipData;
+
   const [data, setData] = useState<MembershipLink[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const limit = 10;
   const [total, setTotal] = useState(0);
+
+  const [hideDeLinked, setHideDeLinked] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -38,10 +56,13 @@ export default function MembershipLinkTable({
       const res: Response<MembershipLink[]> = await getMembershipLinks({
         page,
         limit,
+        hideDeLinked,
+        membershipMasterId: membershipMasterId ? membershipMasterId : undefined,
+        membershipId: membershipId ? membershipId : undefined,
       });
 
-      setData(res.data || []);
-      setTotal(res.pagination.total);
+      setData(res.data ?? []);
+      setTotal(res.pagination?.total ?? 0);
     } catch {
       toast({
         title: "Error",
@@ -51,17 +72,21 @@ export default function MembershipLinkTable({
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit]);
+  }, [page, hideDeLinked, membershipMasterId, membershipId]);
+
+  useEffect(() => {
+    setPage(1); // reset page on filter change
+  }, [hideDeLinked, membershipMasterId, membershipId]);
 
   useEffect(() => {
     loadData();
   }, [loadData, refreshKey]);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<number>();
+  const [deleteId, setDeleteId] = useState<number | undefined>();
 
   const handleDelete = async () => {
-    if (!deleteId) return;
+    if (deleteId === undefined) return;
 
     try {
       await deleteMembershipLink(deleteId);
@@ -79,6 +104,7 @@ export default function MembershipLinkTable({
       });
     } finally {
       setDeleteOpen(false);
+      setDeleteId(undefined);
     }
   };
 
@@ -92,6 +118,15 @@ export default function MembershipLinkTable({
 
   return (
     <>
+      <div className="flex items-center gap-2 mb-2">
+        <Checkbox
+          id="hide-delinked"
+          checked={hideDeLinked}
+          onCheckedChange={(v) => setHideDeLinked(Boolean(v))}
+        />
+        <Label htmlFor="hide-delinked">Hide De-Linked</Label>
+      </div>
+
       <DataTable
         data={data}
         columns={columns}
