@@ -1,10 +1,10 @@
+// account-search-panel.tsx
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Account } from "@/types/account";
-import { Search, Plus, Loader2, Check } from "lucide-react";
+import { Search, Loader2, Plus } from "lucide-react";
 
 type Props = {
   search: string;
@@ -21,103 +21,68 @@ export default function AccountSearchPanel({
   setSearch,
   results,
   isSearching,
-  searchAccount,
   addAccount,
   selectedAccounts,
 }: Props) {
+  // Handle keyboard events for the badges
+  const handleKeyDown = (e: React.KeyboardEvent, acc: Account) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault(); // Prevent page scroll on space
+      addAccount(acc);
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2.5 border-b border-border/50 pb-3">
-        <Search className="w-5 h-5 text-primary" />
-        <h3 className="font-semibold text-lg text-foreground">Find Accounts</h3>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 border-b pb-2">
+        <Search className="w-4 h-4 text-primary" />
+        <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Find Accounts</h3>
       </div>
 
-      <div className="flex gap-2.5">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/50" />
         <Input
-          placeholder="Search by Name, Phone, or Email..."
+          placeholder="Search & Tab to select..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && searchAccount()}
-          className="flex-grow text-sm bg-background/50 border-border/50 placeholder:text-muted-foreground/60"
+          className="pl-9 h-9 text-sm bg-background/50 focus-visible:ring-1"
           disabled={isSearching}
         />
-        <Button
-          onClick={searchAccount}
-          disabled={isSearching}
-          className="font-semibold px-5 h-10"
-          size="sm"
-        >
-          {isSearching ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Search className="w-4 h-4" />
-          )}
-        </Button>
       </div>
 
-      <div className="border border-border/40 rounded-lg bg-background/30 shadow-sm h-80 transition-all duration-200 hover:border-border/60 hover:shadow-md overflow-hidden">
-        <ScrollArea className="h-full">
-          {results.length > 0 ? (
-            <div className="divide-y divide-border/30">
-              {results.map((acc) => {
-                // Check if account is already in the selected list
-                const isSelected = selectedAccounts.some(
-                  (a) => a.accountId === acc.accountId
-                );
-
-                if (isSelected) return
-
-                return (
-                  <div
-                    key={acc.accountId}
-                    className="flex justify-between items-center p-3.5 hover:bg-accent/40 transition-colors group"
-                  >
-                    <div className="text-sm space-y-1 flex-1">
-                      <span className="font-semibold text-foreground block group-hover:text-primary transition-colors">
-                        {acc.accountName}
-                      </span>
-                      {acc.contact && (
-                        <span className="text-muted-foreground text-xs">
-                          {acc.contact}
-                        </span>
-                      )}
-                    </div>
-
-                    <Button
-                      size="sm"
-                      onClick={() => !isSelected && addAccount(acc)}
-                      variant={isSelected ? "secondary" : "default"}
-                      disabled={isSelected}
-                      className="h-8 text-xs px-3 ml-3 whitespace-nowrap"
-                    >
-                      {isSelected ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 mr-1" />
-                          Added
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-3.5 h-3.5 mr-1" />
-                          Add
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          ) : isSearching ? (
-            <div className="p-12 flex flex-col items-center justify-center space-y-3">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <p className="text-sm font-medium text-muted-foreground">
-                Searching accounts...
-              </p>
+      <div className="border rounded-md bg-background/20 h-[280px]">
+        <ScrollArea className="h-full p-2">
+          {isSearching ? (
+            <div className="flex items-center justify-center h-full py-10">
+              <Loader2 className="animate-spin text-primary" />
             </div>
           ) : (
-            <div className="p-12 text-center">
-              <p className="text-sm text-muted-foreground">
-                Type to search for accounts
-              </p>
+            <div className="flex flex-wrap gap-1.5">
+              {results.map((acc) => {
+                const isSelected = selectedAccounts.some((a) => a.accountId === acc.accountId);
+                if (isSelected) return null;
+
+                return (
+                  <button
+                    key={acc.accountId}
+                    type="button"
+                    onClick={() => addAccount(acc)}
+                    onKeyDown={(e) => handleKeyDown(e, acc)}
+                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all 
+                             bg-secondary text-secondary-foreground rounded-full border border-border/50
+                             hover:bg-primary hover:text-primary-foreground 
+                             focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {acc.accountName}
+                  </button>
+                );
+              })}
+              {results.length === 0 && !isSearching && (
+                <p className="text-[11px] text-muted-foreground w-full text-center py-10">
+                  No accounts found
+                </p>
+              )}
             </div>
           )}
         </ScrollArea>

@@ -91,6 +91,8 @@ export default function AccountFormModal({
   }, [values.entityId, entities]);
 
   useEffect(() => {
+    console.log(initialData);
+    
     if (initialData) {
       setValues({
         ...initialData,
