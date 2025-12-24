@@ -88,9 +88,8 @@ const AvatarCell = ({
             loading="lazy"
             onLoad={() => setIsLoaded(true)}
             onError={() => setHasError(true)}
-            className={`h-full w-full object-cover transition-opacity duration-500 ${
-              isLoaded ? "opacity-100" : "opacity-0"
-            }`}
+            className={`h-full w-full object-cover transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"
+              }`}
           />
         )}
 
@@ -128,7 +127,8 @@ export default function MemberTable({
   onOpenView,
   refreshKey,
   initialFamilyId,
-}: Props) {
+  filters: externalFilters
+}: Props & { filters?: Record<string, any> }) {
   const [data, setData] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -147,7 +147,7 @@ export default function MemberTable({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  console.log(externalFilters)
   const fetchMembers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -157,6 +157,7 @@ export default function MemberTable({
         sortBy,
         sortOrder,
         ...filters,
+        ...(externalFilters && externalFilters),
       });
 
       const rows = res?.data ?? res ?? [];
@@ -175,7 +176,7 @@ export default function MemberTable({
     } finally {
       setIsLoading(false);
     }
-  }, [page, sortBy, sortOrder, filters]);
+  }, [page, sortBy, sortOrder, filters, externalFilters]);
 
   useEffect(() => {
     fetchMembers();
@@ -305,6 +306,7 @@ export default function MemberTable({
       sortBy,
       sortOrder,
       ...filters,
+      ...(externalFilters && externalFilters),
     });
 
     return Array.isArray(res?.data) ? res.data : [];
@@ -356,10 +358,11 @@ export default function MemberTable({
       render: (row) => row.gender,
     },
     {
-      key: "familyId",
-      header: "Family",
+      key: "email",
+      header: "Email",
       sortable: true,
-      render: (row: any) => row.familyName ?? `-`,
+      filterType: "text",
+      render: (row: any) => (row.email ? `${row.email}` : `-`),
     },
     {
       key: "city",
@@ -384,8 +387,8 @@ export default function MemberTable({
             row.status === "active"
               ? "default"
               : row.status === "inactive"
-              ? "secondary"
-              : "destructive"
+                ? "secondary"
+                : "destructive"
           }
         >
           {row.status}

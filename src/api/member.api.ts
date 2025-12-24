@@ -29,6 +29,7 @@ export interface MembersQuery {
 	contactNumber?: string;
 	address?: string;
 	idProofNumber?: string;
+	idProofType?: string;
 	includeCasual?: boolean;
 }
 
@@ -54,6 +55,7 @@ export function getMembers(
 		contactNumber: params.contactNumber,
 		address: params.address,
 		idProofNumber: params.idProofNumber,
+		idProofType: params.idProofType,
 		includeCasual: params.includeCasual,
 	});
 
@@ -62,6 +64,40 @@ export function getMembers(
 
 export function getMemberById(id: number): Promise<Response<Member>> {
 	return request<Response<Member>>(`${MEMBER_BASE}/${id}`)
+}
+
+export function checkDuplicateEmail(email: string): Promise<Response<boolean>> {
+	return request<Response<boolean>>(`${MEMBER_BASE}/duplicate-email`, {
+		method: 'POST',
+		body: JSON.stringify({ email })
+	})
+}
+
+export function checkDuplicateContact(contact: string): Promise<Response<boolean>> {
+	return request<Response<boolean>>(`${MEMBER_BASE}/duplicate-contact`, {
+		method: 'POST',
+		body: JSON.stringify({ contactNumber: contact })
+	})
+}
+
+export function checkDuplicateIdProof(
+	idProofType: string,
+	idProofNumber: string
+): Promise<Response<boolean>> {
+	return request<Response<boolean>>(`${MEMBER_BASE}/duplicate-id`, {
+		method: 'POST',
+		body: JSON.stringify({ idProofType, idProofNumber })
+	})
+}
+
+export function checkDuplicateMemberByName(
+	memberFirstName: string,
+	memberLastName: string
+): Promise<Response<boolean>> {
+	return request<Response<boolean>>(`${MEMBER_BASE}/duplicate-name`, {
+		method: 'POST',
+		body: JSON.stringify({ memberFirstName, memberLastName })
+	})
 }
 
 export function createMember(payload: Member): Promise<Response<Member>> {
