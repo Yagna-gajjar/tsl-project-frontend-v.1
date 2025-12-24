@@ -5,7 +5,6 @@ import { FormFooter } from "@/components/form-modal/form-footer";
 import { toast } from "@/hooks/use-toast";
 import { Link2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Label } from "@/components/ui/label";
 
 import AccountSearchPanel from "./account-search-panel";
 import SelectedAccountsPanel from "./selected-accounts-panel";
@@ -203,7 +202,6 @@ export default function MembershipLinkFormModal({
   
 
   const handleSubmit = async () => {
-    // -------- LIMIT VALIDATION --------
     const activeExisting = selectedAccounts.filter(
       (a) => a.isExisting && !a.dLinkDate
     ).length;
@@ -221,7 +219,7 @@ export default function MembershipLinkFormModal({
         description: `You can link only ${members} accounts. You are trying to link ${effectiveCount}.`,
         variant: "destructive",
       });
-      return; // ❌ STOP SUBMIT
+      return;
     }
   
     try {
@@ -270,7 +268,6 @@ export default function MembershipLinkFormModal({
     onClose();
   };
 
-  /* ---------------- UI ---------------- */
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && handleClose()}>
@@ -300,7 +297,7 @@ export default function MembershipLinkFormModal({
 
               <SelectedAccountsPanel
                 selectedAccounts={selectedAccounts}
-                memberLimit={members}
+                memberLimit={Number(members)}
                 unlinkPreview={unlinkPreview}
                 setUnlinkPreview={setUnlinkPreview}
                 removeAccount={removeAccount}
