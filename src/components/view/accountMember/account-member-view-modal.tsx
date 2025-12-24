@@ -7,8 +7,8 @@ import type { FieldConfig } from "@/components/view-modal/types";
 
 const fields: FieldConfig<AccountMember>[] = [
   { key: "accountMemberId", label: "ID", icon: Hash },
-  { key: "memberId", label: "Member", icon: Users },
-  { key: "accountId", label: "Account", icon: Users },
+  { key: "memberFirstName", label: "Member", icon: Users },
+  { key: "accountName", label: "Account", icon: Users },
   { key: "relationship", label: "Relationship" },
   {
     key: "linkBilling",

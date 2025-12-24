@@ -8,6 +8,7 @@ import {
 import type { AccountMember } from "@/types/accountMember";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 type Props = {
   onView?: (row: AccountMember) => void;
@@ -15,7 +16,7 @@ type Props = {
   accountId?: number | undefined;
 };
 
-export default function AccountMemberTable({ onView, onEdit, accountId }: Props) {
+export default function AccountMemberTable({ onView, accountId }: Props) {
   const [data, setData] = useState<AccountMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -59,7 +60,13 @@ export default function AccountMemberTable({ onView, onEdit, accountId }: Props)
       key: "linkDate",
       header: "Linked On",
       render: (r) =>
-        r.linkDate ? new Date(r.linkDate).toLocaleDateString() : "-",
+        r.linkDate ? format(new Date(r.linkDate).toLocaleDateString(), "dd-MMM-yyyy") : "-",
+    },
+    {
+      key: "dlinkDate",
+      header: "DeLinked On",
+      render: (r) =>
+        r.dlinkDate ? format(new Date(r.dlinkDate).toLocaleDateString(), "dd-MMM-yyyy") : <i>Linked</i>,
     },
   ];
 
@@ -83,7 +90,7 @@ export default function AccountMemberTable({ onView, onEdit, accountId }: Props)
           onPageChange: setPage,
         }}
         onView={onView}
-        onEdit={onEdit}
+        // onEdit={onEdit}
         onDelete={(id) => setDelId(id ?? null)}
         idKey="accountMemberId"
         exportFileName="AccountMember"

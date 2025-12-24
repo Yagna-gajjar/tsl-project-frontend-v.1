@@ -2,6 +2,7 @@ export interface AccountMember {
   accountMemberId: number;
   memberId: number;
   accountId: number;
+  accountName?: string;
   linkDate: Date | string;
   dlinkDate?: Date | string | null;
   relationship: string;
