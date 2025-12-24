@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Upload, Search, Loader2, Copy } from "lucide-react";
+import { Plus, Upload, Search, Loader2 } from "lucide-react";
 import MemberTable from "@/components/view/members/member-table";
 import MemberFormModal from "@/components/view/members/member-form-modal";
 import MemberViewModal from "@/components/view/members/member-view-modal";

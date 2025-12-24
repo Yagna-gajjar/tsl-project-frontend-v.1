@@ -26,6 +26,12 @@ export interface Member {
   status: "active" | "inactive" | "block";
   createdAt?: Date;
   updatedAt?: Date;
+  guardianMemberId?: number;
+  introduceMemberId?: number;
+  guarantorId?: number;
+  guardianInfo?: string;
+  indemnityInfo?: string;
+
 
   line1?: string;
   line2?: string;

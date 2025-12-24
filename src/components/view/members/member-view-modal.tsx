@@ -21,6 +21,8 @@ import {
   BadgeInfo,
   StickyNote,
   Clock,
+  Info,
+  Siren,
 } from "lucide-react";
 
 const defaultFields = [
@@ -42,7 +44,10 @@ const defaultFields = [
   { key: "transportMode", label: "Transport Mode", icon: Car },
   { key: "status", label: "Status", icon: BadgeInfo },
   { key: "remarks", label: "Remarks", icon: StickyNote },
-
+  { key: "guardian_firstName", label: "Guardian Info", icon: Siren },
+  { key: "guarantor_firstName", label: "Guarantor Info", icon: Siren },
+  { key: "introducer_firstName", label: "Introduce By", icon: Siren },
+  { key: "indemnityInfo", label: "Indemnity Info", icon: Info },
   {
     key: "createdAt",
     label: "Created At",
@@ -65,6 +70,7 @@ export default function MemberViewModal({ isOpen, onClose, item }: Props) {
     },
     [item]
   );
+  console.log(item);
 
   return (
     <ViewModal<Member>
