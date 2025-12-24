@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { getCourses, deleteCourse } from "@/api/course.api";
-import type { Course } from "@/types/course";
+import { getCoursePackages, deleteCoursePackage } from "@/api/coursePackage.api";
+import type { CoursePackage } from "@/types/coursePackage";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 
 type Props = {
-  onView?: (row: Course) => void;
-  onEdit?: (row: Course) => void;
+  onView?: (row: CoursePackage) => void;
+  onEdit?: (row: CoursePackage) => void;
   refreshKey?: number;
 };
 
-export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
-  const [data, setData] = useState<Course[]>([]);
+export default function CoursePackageTable({ onView, onEdit, refreshKey }: Props) {
+  const [data, setData] = useState<CoursePackage[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -22,7 +22,7 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const [total, setTotal] = useState(0);
 
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<keyof Course>("courseId");
+  const [sortBy, setSortBy] = useState<keyof CoursePackage>("coursePackageId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -31,7 +31,7 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const res: Response<Course[]> = await getCourses({
+      const res: Response<CoursePackage[]> = await getCoursePackages({
         page,
         limit,
         search: search || undefined,
@@ -42,7 +42,7 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
       setData(res.data ?? []);
       setTotal(res.pagination?.total ?? 0);
     } catch {
-      toast({ title: "Failed to load courses", variant: "destructive" });
+      toast({ title: "Failed to load course packages", variant: "destructive" });
       setData([]);
     } finally {
       setLoading(false);
@@ -53,8 +53,8 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
     loadData();
   }, [loadData, refreshKey]);
 
-  const handleExport = async (): Promise<Course[]> => {
-    const res: Response<Course[]> = await getCourses({
+  const handleExport = async (): Promise<CoursePackage[]> => {
+    const res: Response<CoursePackage[]> = await getCoursePackages({
       page: 1,
       limit: total,
       search: search || undefined,
@@ -65,31 +65,38 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
     return Array.isArray(res?.data) ? res.data : [];
   };
 
-  const columns: Column<Course>[] = [
+  const columns: Column<CoursePackage>[] = [
+    { header: "ID", key: "coursePackageId", sortable: true },
     { header: "Course Name", key: "courseName", sortable: true },
-    { header: "Activity", key: "activityName" },
-    { header: "Course Type", key: "courseType" },
+    { header: "Batch Name", key: "batchName", sortable: true },
+    { header: "Link Type", key: "linkType", sortable: true },
     {
-      header: "Introduce Date",
-      key: "introduceDate",
-      render: (r) => new Date(r.introduceDate).toLocaleDateString(),
+      header: "Status",
+      key: "status",
+      render: (r) => (
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 capitalize">
+          {r.status}
+        </span>
+      )
+    },
+    {
+      header: "Approval Authority",
+      key: "authorityFirstName",
+      render: (r) => r.memberFirstName
+        ? `${r.memberFirstName} ${r.memberLastName || ""}`
+        : "N/A"
+    },
+    {
+      header: "Created At",
+      key: "createdAt",
+      render: (r) => new Date(r.createdAt as string).toLocaleDateString(),
       sortable: true,
     },
-    { header: "Session (min)", key: "sessionMinutes" },
-    { header: "Days / Week", key: "noOfDaysInWeek" },
-    { header: "Batch Capacity", key: "batchCapacity" },
-    {
-      header: "Age Range",
-      key: "minAge",
-      render: (r) => `${r.minAge} - ${r.maxAge}`,
-    },
-    { header: "Gender", key: "gender" },
-    { header: "Freezing Allowed", key: "freezingAllowed" },
   ];
 
   return (
     <>
-      <DataTable<Course>
+      <DataTable<CoursePackage>
         data={data}
         columns={columns}
         isLoading={loading}
@@ -104,7 +111,7 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
           setPage(1);
         }}
         onSortChange={(c, d) => {
-          setSortBy(c as keyof Course);
+          setSortBy(c as keyof CoursePackage);
           setSortOrder(d);
         }}
         onView={onView}
@@ -113,24 +120,28 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
           setDeleteId(id ?? null);
           setDeleteOpen(true);
         }}
-        idKey="courseId"
-        exportFileName="Courses"
+        idKey="coursePackageId"
+        exportFileName="CoursePackages"
         onExport={handleExport}
       />
 
       <ConfirmDialog
         isOpen={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title="Delete Course?"
-        description="This action cannot be undone."
+        title="Delete Course Package?"
+        description="This action will remove the link between this course and batch. It cannot be undone."
         confirmText="Delete"
         variant="destructive"
         onConfirm={async () => {
           if (!deleteId) return;
-          await deleteCourse(deleteId);
-          toast({ title: "Course deleted" });
-          setDeleteOpen(false);
-          loadData();
+          try {
+            await deleteCoursePackage(deleteId);
+            toast({ title: "Course package deleted" });
+            setDeleteOpen(false);
+            loadData();
+          } catch (err: any) {
+            toast({ title: "Deletion failed", description: err.message, variant: "destructive" });
+          }
         }}
       />
     </>

@@ -43,10 +43,10 @@ export default function CoursePackageTable({
 
       setData(res.data ?? []);
       setTotal(res.pagination?.total ?? 0);
-    } catch {
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to load course packages",
+        description: err.message || "Failed to load course packages",
         variant: "destructive",
       });
       setData([]);
@@ -61,9 +61,25 @@ export default function CoursePackageTable({
 
   const columns: Column<CoursePackage>[] = [
     { header: "Package ID", key: "coursePackageId" },
-    { header: "Course", key: "courseName" },
-    { header: "Activity Type", key: "activityType" },
+    { header: "Course Name", key: "courseName" },
+    { header: "Batch Name", key: "batchName" }, // Changed from activityType
     { header: "Link Type", key: "linkType" },
+    {
+      header: "Status",
+      key: "status",
+      render: (r) => (
+        <span className="capitalize px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+          {r.status || 'Active'}
+        </span>
+      )
+    },
+    {
+      header: "Approval Authority",
+      key: "authorityFirstName",
+      render: (r) => r.memberFirstName
+        ? `${r.memberFirstName} ${r.memberLastName || ""}`.trim()
+        : "N/A"
+    },
   ];
 
   const handleExport = async (): Promise<CoursePackage[]> => {
@@ -94,7 +110,7 @@ export default function CoursePackageTable({
           setDeleteOpen(true);
         }}
         idKey="coursePackageId"
-        exportFileName="CoursePackage"
+        exportFileName="CoursePackages_Export"
         onExport={handleExport}
       />
 
@@ -102,15 +118,23 @@ export default function CoursePackageTable({
         isOpen={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         title="Delete Course Package?"
-        description="This action cannot be undone."
+        description="Are you sure you want to delete this mapping? This action cannot be undone."
         confirmText="Delete"
         variant="destructive"
         onConfirm={async () => {
           if (!deleteId) return;
-          await deleteCoursePackage(deleteId);
-          toast({ title: "Deleted successfully" });
-          setDeleteOpen(false);
-          loadData();
+          try {
+            await deleteCoursePackage(deleteId);
+            toast({ title: "Deleted successfully" });
+            setDeleteOpen(false);
+            loadData();
+          } catch (err: any) {
+            toast({
+              title: "Delete Failed",
+              description: err.message,
+              variant: "destructive"
+            });
+          }
         }}
       />
     </>

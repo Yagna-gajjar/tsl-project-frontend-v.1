@@ -2,12 +2,15 @@ export interface CoursePackage {
   coursePackageId?: number;
   courseId: number;
   linkType: string;
-  activityId?: number;
+  batchId?: number|null;
   approvalAuthorityId?: number;
   status?: string;
+  memberFirstName?: string;
+  memberLastName?: string;
   createdBy?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 
   courseName?: string;
+  batchName?: string;
 }

@@ -14,24 +14,23 @@ interface CoursePackageExcelUploadProps {
 interface CoursePackageImportRow {
 	courseId: number | string;
 	linkType: string;
-	activityId: number | string;
+	batchId: number;
 	approvalAuthorityId?: number | string;
 	status?: string;
 }
 
 export default function CoursePackageExcelUpload({ isOpen, onClose, onSuccess }: CoursePackageExcelUploadProps) {
-
 	const expectedColumns = useMemo(() => [
 		'courseId',
 		'linkType',
-		'activityId',
+		'batchId',
 		'approvalAuthorityId',
 		'status'
 	], []);
 
 	const handleValidateRow = useCallback((row: CoursePackageImportRow) => {
 		if (!row.courseId || isNaN(Number(row.courseId))) return "Valid Course ID is required";
-		if (!row.activityId || isNaN(Number(row.activityId))) return "Valid Activity ID is required";
+		// if (!row.batchId || isNaN(Number(row.batchId))) return "Valid Batch ID is required";
 		if (!row.linkType) return "Link Type (e.g., 'Primary', 'Optional') is required";
 
 		if (row.approvalAuthorityId && isNaN(Number(row.approvalAuthorityId))) {
@@ -45,13 +44,13 @@ export default function CoursePackageExcelUpload({ isOpen, onClose, onSuccess }:
 		const payload: CoursePackage = {
 			courseId: Number(row.courseId),
 			linkType: row.linkType,
-			activityId: Number(row.activityId),
-			approvalAuthorityId: row.approvalAuthorityId ? Number(row.approvalAuthorityId) : 0,
+			batchId: row.batchId ? Number(row.batchId) : null,
+			approvalAuthorityId: row.approvalAuthorityId ? Number(row.approvalAuthorityId) : undefined,
 			status: row.status || 'active',
 		};
 
 		await createCoursePackage(payload);
-		console.log(`✅ Linked Course ${payload.courseId} to Activity ${payload.activityId} as ${payload.linkType}`);
+		console.log(`✅ Linked Course ${payload.courseId} to Batch ${payload.batchId} as ${payload.linkType}`);
 	}, []);
 
 	return (
@@ -82,7 +81,7 @@ export default function CoursePackageExcelUpload({ isOpen, onClose, onSuccess }:
 									Bulk Import Course Packages
 								</h2>
 								<p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-									Map courses to activities and assign approval authorities.
+									Map courses to batches and assign approval authorities.
 								</p>
 							</div>
 							<button
