@@ -58,13 +58,21 @@ export default function CourseShareTable({
 
   const columns: Column<CourseShare>[] = [
     { header: "Share ID", key: "courseShareId" },
-    { header: "Academy", key: "academyName" },
-    { header: "Share Type", key: "shareType" },
+    { header: "Role", key: "roleInCourse" },
+    { header: "Course", key: "courseName" }, // populated from Course table
+    { header: "Account", key: "accountName" }, // populated from Account table
     {
-      header: "Share (%)",
-      key: "share",
-      render: (r) => `${r.share}%`,
+      header: "Approval Authority",
+      key: "approvalAuthorityId",
+      render: (_:  any, r: any) =>
+        r?.memberFirstName
+          ? `${r?.memberFirstName ?? "-"} ${r?.memberLastName ?? ""}`
+          : "-",
     },
+    { header: "Share (%)", key: "share", render: (r) => `${r.share}%` },
+    { header: "CGST (%)", key: "cgst", render: (r) => `${r.cgst}%` },
+    { header: "SGST (%)", key: "sgst", render: (r) => `${r.sgst}%` },
+    { header: "Status", key: "status" },
   ];
 
   const handleExport = async (): Promise<CourseShare[]> => {

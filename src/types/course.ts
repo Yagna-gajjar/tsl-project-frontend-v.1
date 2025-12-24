@@ -1,5 +1,6 @@
 export interface Course {
-  courseId: number;
+  courseId?: number;
+  accountId?: number;
   courseType?: string | null;
   activityId: number;
   classification?: string | null;
@@ -11,21 +12,23 @@ export interface Course {
   sessionMinutes: number;
   noOfDaysInWeek: number;
   daysPattern?: string | null;
-  minEnrollmentUnits: number;
   maxPerson?: number | null;
+  unitsMultipleOf?: number;
   batchCapacity: number;
   totalParallelBatches: number;
   minAge: number;
   maxAge: number;
   gender?: "Male" | "Female" | "Any" | null;
-  balanceUsable?: string;
+  balanceUsable?: string | null;
   enrApprovalRequired?: boolean;
-  CGSTRate?: number;
-  SGSTRate?: number;
+  cgstRate?: number;
+  sgstRate?: number;
   status?: string | null;
+  avbFrom?: string | null;
+  avbTo?: string | null;
   createdBy?: number | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 
   activityName?: string;
   entityName?: string;

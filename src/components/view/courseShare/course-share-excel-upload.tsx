@@ -14,12 +14,13 @@ interface CourseShareExcelUploadProps {
 interface CourseShareImportRow {
 	roleInCourse?: string;
 	courseId: number | string;
-	entityId: number | string;
+	accountId: number | string; // changed from entityId
 	share: number | string;
 	cgst: number | string;
 	sgst: number | string;
 	approvalAuthorityId?: number | string;
 	status?: string;
+	createdBy?: number | string;
 }
 
 export default function CourseShareExcelUpload({ isOpen, onClose, onSuccess }: CourseShareExcelUploadProps) {
@@ -27,21 +28,22 @@ export default function CourseShareExcelUpload({ isOpen, onClose, onSuccess }: C
 	const expectedColumns = useMemo(() => [
 		'roleInCourse',
 		'courseId',
-		'academyEntityId',
+		'accountId', // updated
 		'share',
 		'cgst',
 		'sgst',
 		'approvalAuthorityId',
-		'status'
+		'status',
+		'createdBy'
 	], []);
 
 	const handleValidateRow = useCallback((row: CourseShareImportRow) => {
 		if (!row.courseId || isNaN(Number(row.courseId))) return "Valid Course ID is required";
-		if (!row.entityId || isNaN(Number(row.entityId))) return "Valid Academy Entity ID is required";
+		if (!row.accountId || isNaN(Number(row.accountId))) return "Valid Account ID is required";
 
-		if (row.share === undefined || isNaN(Number(row.share))) return "Share percentage is required";
-		if (row.cgst === undefined || isNaN(Number(row.cgst))) return "CGST is required";
-		if (row.sgst === undefined || isNaN(Number(row.sgst))) return "SGST is required";
+		// if (row.share === undefined || isNaN(Number(row.share))) return "Share percentage is required";
+		// if (row.cgst === undefined || isNaN(Number(row.cgst))) return "CGST is required";
+		// if (row.sgst === undefined || isNaN(Number(row.sgst))) return "SGST is required";
 
 		return null;
 	}, []);
@@ -50,18 +52,19 @@ export default function CourseShareExcelUpload({ isOpen, onClose, onSuccess }: C
 		const payload: CourseShare = {
 			roleInCourse: row.roleInCourse || 'Partner',
 			courseId: Number(row.courseId),
-			entityId: Number(row.entityId),
+			accountId: Number(row.accountId),
 
-			share: Math.floor(Number(row.share)),
-			cgst: Math.floor(Number(row.cgst)),
-			sgst: Math.floor(Number(row.sgst)),
+			share: Number(row.share),
+			cgst: Number(row.cgst),
+			sgst: Number(row.sgst),
 
 			approvalAuthorityId: row.approvalAuthorityId ? Number(row.approvalAuthorityId) : undefined,
 			status: row.status || 'active',
+			createdBy: row.createdBy ? Number(row.createdBy) : undefined
 		};
 
 		await createCourseShare(payload);
-		console.log(`✅ Imported Share for Academy ${payload.entityId} on Course ${payload.courseId}`);
+		console.log(`✅ Imported Share for Account ${payload.accountId} on Course ${payload.courseId}`);
 	}, []);
 
 	return (
@@ -92,7 +95,7 @@ export default function CourseShareExcelUpload({ isOpen, onClose, onSuccess }: C
 									Bulk Import Course Shares
 								</h2>
 								<p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-									Define revenue split and tax configurations between academies and courses.
+									Define revenue split and tax configurations between accounts and courses.
 								</p>
 							</div>
 							<button

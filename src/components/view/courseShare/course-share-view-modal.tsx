@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Hash, Percent, Clock } from "lucide-react";
+import { Hash, Percent, Clock, Users, BookOpen } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 
 import { getCourseShareById } from "@/api/courseShare.api";
@@ -15,12 +15,24 @@ type Props = {
 
 const fields: FieldConfig<CourseShare>[] = [
   { key: "courseShareId", label: "Share ID", icon: Hash },
+  { key: "roleInCourse", label: "Role in Course", icon: Users },
+  { key: "courseId", label: "Course ID", icon: BookOpen },
+  { key: "courseName", label: "Course Name", icon: BookOpen },
+  { key: "accountId", label: "Account ID", icon: Hash },
+  { key: "accountName", label: "Account Name", icon: Users },
   {
-    key: "share",
-    label: "Share (%)",
-    icon: Percent,
-    render: (v) => `${v}%`,
+    key: "approvalAuthorityId",
+    label: "Approval Authority (Member Name)",
+    icon: Users,
+    render: (_, item:any) =>
+      item.memberFirstName && item.memberLastName
+        ? `${item.memberFirstName} ${item.memberLastName}`
+        : "-",
   },
+  { key: "share", label: "Share (%)", icon: Percent, render: (v) => `${v}%` },
+  { key: "cgst", label: "CGST (%)", icon: Percent, render: (v) => `${v}%` },
+  { key: "sgst", label: "SGST (%)", icon: Percent, render: (v) => `${v}%` },
+  { key: "status", label: "Status", icon: Hash },
   {
     key: "createdAt",
     label: "Created At",

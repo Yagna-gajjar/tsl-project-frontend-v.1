@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ExcelUpload from '@/components/ExcelUploader';
 import { createCourse } from '@/api/course.api';
+import type { Course } from '@/types/course';
 
 interface CourseExcelUploadProps {
 	isOpen: boolean;
@@ -11,54 +12,82 @@ interface CourseExcelUploadProps {
 }
 
 interface CourseImportRow {
+	// Basic Info
 	courseName: string;
 	courseType: string;
 	classification: string;
-	entityId: number | string;
-	activityId: number | string;
+	status: string;
+
+	// Dates & Times
 	introduceDate?: string | number;
 	suspensionDate?: string | number;
+	avbFrom?: string; // TIME
+	avbTo?: string;   // TIME
+
+	// Pattern & Logic
 	chargingPattern: string;
 	sessionMinutes: number | string;
 	noOfDaysInWeek: number | string;
 	daysPattern: string;
 	unitsMultipleOf?: number | string;
-	minEnrollmentUnits: number | string;
+
+	// Capacity & Restrictions
 	batchCapacity: number | string;
 	totalParallelBatches: number | string;
+	maxPerson?: number | string;
 	minAge: number | string;
 	maxAge: number | string;
 	gender: 'Male' | 'Female' | 'Any';
+
+	// Financials & IDs
+	entityId: number | string;
+	activityId: number | string;
+	balanceUsable?: string;
 	enrApprovalRequired?: string | boolean | number;
 	cgstRate?: number | string;
 	sgstRate?: number | string;
-	status: string;
+	createdBy?: number | string;
 }
 
 export default function CourseExcelUpload({ isOpen, onClose, onSuccess }: CourseExcelUploadProps) {
 
-	// Columns based on SQL Table structure, focusing on mandatory and functional fields
+	// Strictly aligned with your SQL Schema columns
 	const expectedColumns = useMemo(() => [
-		'courseName', 'courseType', 'classification', 'entityId', 'activityId',
-		'chargingPattern', 'sessionMinutes', 'noOfDaysInWeek', 'daysPattern',
-		'minEnrollmentUnits', 'batchCapacity', 'totalParallelBatches',
-		'minAge', 'maxAge', 'gender', 'enrApprovalRequired', 'status'
+		'courseName', 'courseType', 'classification', 'introduceDate', 'suspensionDate',
+		'chargingPattern', 'avbFrom', 'avbTo', 'sessionMinutes', 'noOfDaysInWeek',
+		'daysPattern', 'unitsMultipleOf', 'batchCapacity', 'totalParallelBatches',
+		'maxPerson', 'minAge', 'maxAge', 'gender', 'balanceUsable', 'entityId',
+		'activityId', 'enrApprovalRequired', 'sgstRate', 'cgstRate', 'status', 'createdBy'
 	], []);
 
 	const handleValidateRow = useCallback((row: CourseImportRow) => {
+		// Mandatory Fields per Schema (NOT NULL)
 		if (!row.courseName) return "Course Name is required";
-		if (!row.entityId || isNaN(Number(row.entityId))) return "Entity ID must be a number";
-		if (!row.activityId || isNaN(Number(row.activityId))) return "Activity ID must be a number";
+		if (!row.daysPattern) return "Days Pattern is required";
+		if (!row.entityId || isNaN(Number(row.entityId))) return "Entity ID must be a valid number";
+		if (!row.activityId || isNaN(Number(row.activityId))) return "Activity ID must be a valid number";
 
-		if (Number(row.sessionMinutes) <= 0) return "Session Minutes must be greater than 0";
+		// CHECK Constraints
+		// const sessionMins = Number(row.sessionMinutes);
+		// if (isNaN(sessionMins) || sessionMins <= 0) return "Session Minutes must be > 0";
 
 		const days = Number(row.noOfDaysInWeek);
-		if (days < 1 || days > 7) return "Days in week must be between 1 and 7";
+		if (isNaN(days) || days < 1 || days > 7) return "Days in week must be between 1 and 7";
 
-		const validGenders = ['Male', 'Female', 'Any'];
-		if (!validGenders.includes(row.gender)) return "Gender must be 'Male', 'Female', or 'Any'";
+		// const bCap = Number(row.batchCapacity);
+		// if (isNaN(bCap) || bCap < 1) return "Batch Capacity must be >= 1";
 
-		if (Number(row.maxAge) < Number(row.minAge)) return "Max Age cannot be less than Min Age";
+		// const pBatches = Number(row.totalParallelBatches);
+		// if (isNaN(pBatches) || pBatches < 1) return "Parallel Batches must be >= 1";
+
+		// const minA = Number(row.minAge);
+		// if (isNaN(minA) || minA < 1) return "Min Age must be >= 1";
+
+		// const maxA = Number(row.maxAge);
+		// if (isNaN(maxA) || maxA < minA) return "Max Age cannot be less than Min Age";
+
+		// const validGenders = ['Male', 'Female', 'Any'];
+		// if (row.gender && !validGenders.includes(row.gender)) return "Gender must be 'Male', 'Female', or 'Any'";
 
 		return null;
 	}, []);
@@ -70,34 +99,41 @@ export default function CourseExcelUpload({ isOpen, onClose, onSuccess }: Course
 			return s === 'true' || s === '1' || s === 'yes';
 		};
 
-		const payload = {
+		const payload: Course = {
 			courseName: row.courseName,
 			courseType: row.courseType,
 			classification: row.classification,
-			entityId: Number(row.entityId),
-			activityId: Number(row.activityId),
 
-			introduceDate: row.introduceDate ? new Date(row.introduceDate).toISOString() : new Date().toISOString(),
-			suspensionDate: row.suspensionDate ? new Date(row.suspensionDate).toISOString() : null,
+			introduceDate: row.introduceDate ? new Date(row.introduceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+			suspensionDate: row.suspensionDate ? new Date(row.suspensionDate).toISOString().split('T')[0] : null,
 
 			chargingPattern: row.chargingPattern,
+			avbFrom: row.avbFrom || null,
+			avbTo: row.avbTo || null,
+
 			sessionMinutes: Math.floor(Number(row.sessionMinutes)),
 			noOfDaysInWeek: Math.floor(Number(row.noOfDaysInWeek)),
 			daysPattern: row.daysPattern,
-
 			unitsMultipleOf: row.unitsMultipleOf ? Number(row.unitsMultipleOf) : 1,
-			minEnrollmentUnits: Number(row.minEnrollmentUnits || 1),
+
 			batchCapacity: Number(row.batchCapacity || 1),
 			totalParallelBatches: Number(row.totalParallelBatches || 1),
+			maxPerson: row.maxPerson ? Number(row.maxPerson) : null,
 
 			minAge: Number(row.minAge || 1),
 			maxAge: Number(row.maxAge || 150),
-			gender: row.gender,
+			gender: row.gender || 'Any',
+			balanceUsable: row.balanceUsable || null,
+
+			entityId: Number(row.entityId),
+			activityId: Number(row.activityId),
 
 			enrApprovalRequired: parseBool(row.enrApprovalRequired),
 			cgstRate: row.cgstRate ? Number(row.cgstRate) : 0,
 			sgstRate: row.sgstRate ? Number(row.sgstRate) : 0,
-			status: row.status || 'active'
+
+			status: row.status || 'active',
+			createdBy: row.createdBy ? Number(row.createdBy) : null
 		};
 
 		await createCourse(payload);
@@ -128,7 +164,7 @@ export default function CourseExcelUpload({ isOpen, onClose, onSuccess }: Course
 									Bulk Import Courses
 								</h2>
 								<p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-									Define new training programs, capacity limits, and age restrictions.
+									Sync your course catalog with the database schema.
 								</p>
 							</div>
 							<button onClick={onClose} className="p-2 -mr-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors">

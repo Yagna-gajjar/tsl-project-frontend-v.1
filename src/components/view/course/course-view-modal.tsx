@@ -35,7 +35,7 @@ const fields: FieldConfig<Course>[] = [
   { key: "sessionMinutes", label: "Session Minutes", icon: Clock },
   { key: "noOfDaysInWeek", label: "Days / Week", icon: Hash },
   { key: "batchCapacity", label: "Batch Capacity", icon: Hash },
-  { key: "minEnrollmentUnits", label: "Min Enrollment Units", icon: Hash },
+  { key: "unitsMultipleOf", label: "Units Of Multiple", icon: Hash },
 
   { key: "minAge", label: "Min Age", icon: Hash },
   { key: "maxAge", label: "Max Age", icon: Hash },
