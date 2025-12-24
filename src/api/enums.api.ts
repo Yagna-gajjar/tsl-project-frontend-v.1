@@ -12,6 +12,7 @@ export interface EnumsQuery {
   sortOrder?: "ASC" | "DESC";
   pagination?: Object;
   enumCase?: string;
+  includeEnumCase?: string
 }
 
 const ENUMS_BASE = import.meta.env.VITE_APP_API_URL + "/enum";
@@ -30,6 +31,7 @@ export function getAllEnums(
     sorting: params.sorting ?? "ASC",
     search: params.search,
     enumCase: params.enumCase,
+    includeEnumCase: params.includeEnumCase
   });
 
   return request<Response<Enums[]>>(`${ENUMS_BASE}${qs}`);
@@ -46,6 +48,7 @@ export function getEnumsByCategory(
     sorting: params.sorting ?? "ASC",
     search: params.search,
     enumCase: params.enumCase,
+    includeEnumCase: params.includeEnumCase
   });
 
   return request<Response<Enums[]>>(`${ENUMS_BASE}/${categoryName}${qs}`);

@@ -23,7 +23,7 @@ export function getMembershipLinks(
 ): Promise<Response<MembershipLink[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
-    limit: params.limit ?? 10,
+    limit: params.limit ?? 1000,
     sortBy: params.sortBy ?? "membershipLinkId",
     sortOrder: params.sortOrder ?? "ASC",
     membershipMasterId: params.membershipMasterId,
@@ -66,6 +66,8 @@ export function updateMembershipLink(
 }       
 
 export function deleteMembershipLink(id: number): Promise<Response> {
+  console.log(id);
+  
   return request<Response>(`${BASE}/${id}`, {
     method: "DELETE",
   });

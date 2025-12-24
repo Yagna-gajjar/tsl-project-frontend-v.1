@@ -6,6 +6,8 @@ import type { Account } from "@/types/account";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 type Props = {
   onView?: (row: Account) => void;
@@ -16,6 +18,8 @@ type Props = {
 export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [hideDeLinked, setHideDeLinked] = useState(false);
 
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -68,6 +72,8 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
   const columns: Column<Account>[] = [
     { key: "accountName", header: "Account Name", sortable: true },
     { key: "entityType", header: "Define Type" },
+    {key: "regDate", header: "Registration Date"},
+    {key: "suspensionDate", header: "Suspension Date"},
     { key: "entityName", header: "Entity Name" },
     { key: "accountType", header: "Account Type" },
     { key: "contact", header: "Contact" },
@@ -118,6 +124,14 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
 
   return (
     <>
+      <div className="flex items-center gap-2 mb-2">
+        <Checkbox
+          id="hide-delinked"
+          checked={hideDeLinked}
+          onCheckedChange={(v) => setHideDeLinked(Boolean(v))}
+        />
+        <Label htmlFor="hide-delinked">Hide De-Linked</Label>
+      </div>
       <DataTable<Account>
         data={data}
         columns={columns}

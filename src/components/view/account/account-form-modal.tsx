@@ -14,12 +14,19 @@ import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
 import { format } from "date-fns";
 
+type AccountData = {
+  entityId?: number;
+  entityType?: string;
+};
+
 type Props = {
   isOpen: boolean;
   initialData?: Account;
+  accountData?: AccountData;
   onClose: () => void;
   onSave: () => void;
 };
+
 
 const empty: Account = {
   accountId: 0,
@@ -45,7 +52,9 @@ export default function AccountFormModal({
   initialData,
   onClose,
   onSave,
-}: Props) {
+  accountData,
+}: Props) {  
+
   const [values, setValues] = useState<Account>(empty);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +62,10 @@ export default function AccountFormModal({
   const [error, setError] = useState<string | null>(null);
   const [adminInstructionOpt, setAdminInstructionOpt] = useState<Enums[]>([]);
   const [aaccountTypeOpt, setAccountTypeOpt] = useState<Enums[]>([]);
+
+  const [entityPrefix, setEntityPrefix] = useState<string>("");
+
+
   useEffect(() => {
     const loadEntities = async () => {
       const res: Response<Entity[]> = await getEntities({ limit: 500 });
@@ -62,35 +75,7 @@ export default function AccountFormModal({
   }, []);
 
   useEffect(() => {
-    console.log(values.entityId);
-    if (!values.entityId || values.entityId == 0) {
-      setValues((p) => ({
-        ...p,
-        defineEntity: "Family",
-      }));
-      return;
-    }
-
-    const selectedEntity = entities.find(
-      (e) => e.entityId === Number(values.entityId)
-    );
-
-    if (selectedEntity?.entityType) {
-      if (values.entityId === null) {
-        setValues((p) => ({
-          ...p,
-          defineEntity: "Family",
-        }));
-      } else {
-        setValues((p) => ({
-          ...p,
-          defineEntity: selectedEntity.entityType,
-        }));
-      }
-    }
-  }, [values.entityId, entities]);
-
-  useEffect(() => {
+    
     if (initialData) {
       setValues({
         ...initialData,
@@ -123,6 +108,38 @@ export default function AccountFormModal({
       fetchAccountType();
     }
   }, [initialData, isOpen]);
+
+  useEffect(() => {
+    if (!initialData && accountData) {
+      setValues((prev) => ({
+        ...prev,
+        entityId: accountData.entityId ?? prev.entityId,
+        defineEntity: accountData.entityType ?? prev.defineEntity,
+      }));
+    }
+  }, [accountData, initialData]);
+  
+  useEffect(() => {
+    if (!values.entityId || values.entityId === 0) {
+      setEntityPrefix("");
+      setValues((p) => ({ ...p, defineEntity: "Family" }));
+      return;
+    }
+  
+    const selectedEntity = entities.find(
+      (e) => e.entityId === Number(values.entityId)
+    );
+  
+    if (selectedEntity) {
+      setEntityPrefix(selectedEntity.entityName);
+  
+      setValues((p) => ({
+        ...p,
+        defineEntity: selectedEntity.entityType,
+      }));
+    }
+  }, [values.entityId, entities]);
+  
 
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
@@ -179,7 +196,7 @@ export default function AccountFormModal({
       setError("Failed to save account");
       toast({ title: "Save failed", variant: "destructive" });
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); 
     }
   }, [values, initialData, validate, onSave, onClose]);
 
@@ -257,7 +274,30 @@ export default function AccountFormModal({
             error={error}
             isSubmitting={isSubmitting}
             onChange={(f, v) => {
-              setValues((p) => ({ ...p, [f]: v }));
+              setValues((prev) => {
+                // Only auto-prefix for accountName
+                if (f === "accountName" && entityPrefix) {
+                  const prefix = `${entityPrefix} - `;
+            
+                  // If prefix already exists, don't add again
+                  if (v.startsWith(prefix)) {
+                    return { ...prev, accountName: v };
+                  }
+            
+                  // Remove old prefix if entity changed
+                  const cleanedValue = prev.accountName?.startsWith(prefix)
+                    ? v.replace(prefix, "")
+                    : v;
+            
+                  return {
+                    ...prev,
+                    accountName: `${prefix}${cleanedValue}`,
+                  };
+                }
+            
+                return { ...prev, [f]: v };
+              });
+            
               setFieldErrors((e) => {
                 if (!e[f as string]) return e;
                 const c = { ...e };
@@ -265,6 +305,7 @@ export default function AccountFormModal({
                 return c;
               });
             }}
+            
             layout="grid"
           />
         </div>
