@@ -49,11 +49,16 @@ export default function AccountPage() {
       });
 
       setEntityType(res?.data ?? []);
-    } catch (err) {
-      console.error("Failed to fetch entity type", err);
+    } catch {
       setEntityType([]);
     }
   };
+
+  const accountData = {
+    entityId: selectedEntityId === "all" ? undefined : selectedEntityId,
+    entityType: selectedEntityType === "all" ? undefined : selectedEntityType,
+  };
+  
 
   useEffect(() => {
     fetchEntityType(entityClassification);
@@ -77,10 +82,7 @@ export default function AccountPage() {
             selectedEntityType === "all" ? undefined : selectedEntityType,
         });
 
-        const items = res?.data ?? [];
-
-        console.log(res, "1234567890");
-        
+        const items = res?.data ?? [];        
 
         setEntities((prev) => (isInitial ? items : [...prev, ...items]));
         setHasMoreEntities(items.length === PAGE_SIZE);
@@ -124,9 +126,15 @@ export default function AccountPage() {
             Upload Excel
           </Button>
 
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Add Account
-          </Button>
+          <Button
+           onClick={() => {
+              setEditRow(undefined);
+              setFormOpen(true);
+            }}
+          >
+          <Plus className="w-4 h-4 mr-2" /> Add Account
+        </Button>
+
         </div>
       </div>
 
@@ -184,7 +192,6 @@ export default function AccountPage() {
       <AccountTable
         refreshKey={refreshKey}
         onEdit={(r) => {
-          console.log(r, "from table");
           
           setEditRow(r);
           setFormOpen(true);
@@ -198,12 +205,14 @@ export default function AccountPage() {
       <AccountFormModal
         isOpen={formOpen}
         initialData={editRow}
+        accountData={accountData}
         onClose={() => {
           setFormOpen(false);
           setEditRow(undefined);
         }}
         onSave={bumpRefresh}
       />
+
 
       <AccountViewModal
         isOpen={viewOpen}
