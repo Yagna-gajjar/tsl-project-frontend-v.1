@@ -31,7 +31,7 @@ import EnrollmentPage from "./pages/enrollment";
 import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
 import AttendanceSheet from "./components/view/batch/attendance-sheet";
 import DebitNote from "./pages/debitNote";
-import PaymentPage from "./pages/payment";
+// import PaymentPage from "./pages/payment";
 import Billing from "./pages/billing";
 import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
@@ -48,6 +48,7 @@ import CoursePackagePage from "./pages/course-package";
 import CourseSharePage from "./pages/courseShare";
 import CourseRatePage from "./pages/course-rate";
 import AuthorityPage from "./pages/authority";
+import TransactionPage from "./pages/transaction";
 
 export default function App() {
   return (
@@ -164,7 +165,7 @@ export default function App() {
                   path="/membership/membership-link"
                   element={<MembershipLinkPage />}
                 />
-                <Route path="/payment" element={<PaymentPage />} />
+                <Route path="/transaction" element={<TransactionPage />} />
                 <Route path="/billing" element={<Billing />} />
                 <Route path="/debit-note" element={<DebitNote />} />
                 <Route path="*" element={<NotFound />} />

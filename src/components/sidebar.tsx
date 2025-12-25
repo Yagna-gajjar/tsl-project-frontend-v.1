@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  BarChart3,
   CreditCard,
   ChevronLeft,
   ChevronRight,
@@ -25,6 +24,7 @@ import {
   Share2,
   Package,
   CircleSlash,
+  Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -148,7 +148,7 @@ const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  { name: "payment", href: "/payment", icon: BarChart3 },
+  { name: "Transaction", href: "/transaction", icon: Banknote },
   { name: "Debit Note", href: "/debit-note", icon: CreditCard },
   {
     name: "Membership",
