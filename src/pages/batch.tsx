@@ -1,6 +1,6 @@
 import { useState } from "react";
 import BatchTable from "@/components/view/batch/batch-table";
-import BatchFormModal from "@/components/view/batch/batch-form-modal";
+import { BatchFormModal } from "@/components/view/batch/batch-form-modal";
 import BatchViewModal from "@/components/view/batch/batch-view-modal";
 import type { Batch } from "@/types/batch";
 import { Plus, Upload } from "lucide-react";
@@ -28,8 +28,9 @@ export default function BatchPage() {
     setFormOpen(true);
   };
 
-  const handleSaved = () => {
-    bumpRefresh();
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditRow(null);
   };
 
   return (
@@ -52,7 +53,8 @@ export default function BatchPage() {
             <Upload className="w-5 h-5" />
             Upload Excel
           </Button>
-          <Button onClick={() => setFormOpen(true)}>
+
+          <Button onClick={() => openForm(null)}>
             <Plus className="w-4 h-4 mr-2" /> Add Batch
           </Button>
         </div>
@@ -71,19 +73,15 @@ export default function BatchPage() {
 
       <BatchFormModal
         isOpen={formOpen}
-        onClose={() => setFormOpen(false)}
+        onClose={closeForm}
         initialData={editRow}
-        onSaved={() => {
-          bumpRefresh();
-        }}
+        onSaved={bumpRefresh}
       />
 
       <BatchExcelUpload
         isOpen={excelOpen}
         onClose={() => setExcelOpen(false)}
-        onSuccess={() => {
-          handleSaved();
-        }}
+        onSuccess={bumpRefresh}
       />
     </div>
   );

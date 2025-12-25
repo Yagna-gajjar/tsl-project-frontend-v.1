@@ -57,7 +57,7 @@ export function createBatch(payload: Batch): Promise<Response<Batch>> {
   });
 }
 
-export function editBatch(id: number, payload: Partial<Batch>): Promise<Response<Batch>> {
+export function editBatch(id: number, payload: Batch): Promise<Response<Batch>> {
   return request<Response<Batch>>(`${BATCH_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),

@@ -3,14 +3,14 @@ export interface Batch {
   batchType: string | null;
   entityId: number | null;
   activityId: number | null;
-  membershipMasterId: number | null;
-  courseId: number | null;
+  membershipMasterId?: number | null;
+  courseId?: number | null;
   batchName: string;
   startTime: string;
   endTime: string;
   sessionMinutes: number;
   daysPerWeek: number;
-  daysPattern: string | null;
+  daysPattern: number | string | null;
   maxCapacity: number;
   admissionCriteria?: string | null;
   introduceDate: Date | string;

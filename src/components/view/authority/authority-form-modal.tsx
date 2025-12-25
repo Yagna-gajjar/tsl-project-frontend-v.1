@@ -54,6 +54,8 @@ export default function AuthorityFormModal({
 
   const PAGE_SIZE = 20;
 
+  const isEdit = !!values.authorityId;
+
   useEffect(() => {
     if (initialData) setValues(initialData);
     else setValues(empty);
@@ -76,7 +78,7 @@ export default function AuthorityFormModal({
     } catch {
       toast({
         title: "Error",
-        description: "Failed to fetch activities",
+        description: "Failed to fetch accounts",
         variant: "destructive",
       });
     } finally {
@@ -100,7 +102,7 @@ export default function AuthorityFormModal({
     } catch {
       toast({
         title: "Error",
-        description: "Failed to fetch activities",
+        description: "Failed to fetch members",
         variant: "destructive",
       });
     } finally {
@@ -113,7 +115,9 @@ export default function AuthorityFormModal({
   }, []);
 
   useEffect(() => {
-    fetchAccountMembers();
+    if (values.accountId) {
+      fetchAccountMembers(true);
+    }
   }, [values.accountId]);
 
   const validate = useCallback(() => {
@@ -140,38 +144,39 @@ export default function AuthorityFormModal({
         ...values,
         memberId: Number(values.memberId),
         accountId: Number(values.accountId),
-        linkingDate: values.linkingDate
-          ? new Date(values.linkingDate)
-          : undefined,
+        linkingDate: values.linkingDate ? new Date(values.linkingDate) : undefined,
+        dlinkDate: values.dlinkDate ? new Date(values.dlinkDate) : undefined,
       };
 
-      const res = values.authorityId
-        ? await updateAuthority(values.authorityId, payload)
+      const res = isEdit
+        ? await updateAuthority(values.authorityId!, payload)
         : await createAuthority(payload);
 
       if (!res.success) throw new Error();
 
       toast({
-        title: values.authorityId ? "Authority updated" : "Authority created",
+        title: isEdit ? "Authority updated" : "Authority created",
         variant: "success",
       });
 
       onSave();
       onClose();
     } catch {
-      setError("Failed to save account");
+      setError("Failed to save authority");
       toast({ title: "Save failed", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Base fields configuration
   const fields: FormFieldConfig<Authority>[] = [
     {
       name: "accountId",
       label: "Account",
       type: "select",
       required: true,
+      disabled: isEdit, // Only editable in 'Add' mode
       options: accounts.map((a) => ({
         label: a.accountName,
         value: a.accountId,
@@ -182,14 +187,34 @@ export default function AuthorityFormModal({
       label: "Member",
       type: "select",
       required: true,
+      disabled: isEdit, // Only editable in 'Add' mode
       options: members.map((m) => ({
         label: `${m.memberFirstName} ${m.memberLastName}`,
         value: m.memberId,
       })),
     },
-    { name: "linkingDate", label: "Link Date", type: "Date" },
-    { name: "level", label: "Level", type: "number" },
+    {
+      name: "linkingDate",
+      label: "Link Date",
+      type: "Date",
+      disabled: isEdit
+    },
+    {
+      name: "level",
+      label: "Level",
+      type: "number"
+    },
   ];
+
+  // Dynamically add de-link date ONLY if we are in Edit mode
+  if (isEdit) {
+    fields.push({
+      name: "dlinkDate",
+      label: "De-link Date",
+      type: "Date",
+      // This field remains editable during Edit
+    });
+  }
 
   if (!isOpen) return null;
 
@@ -198,7 +223,7 @@ export default function AuthorityFormModal({
       <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
         <div className="flex flex-col max-h-[70vh] overflow-hidden">
           <FormHeader
-            title={values.authorityId ? "Edit Authority" : "Add Authority"}
+            title={isEdit ? "Edit Authority" : "Add Authority"}
             onClose={onClose}
           />
 

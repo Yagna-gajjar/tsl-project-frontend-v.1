@@ -189,7 +189,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       render: (r) => (
         <span className="text-xs text-muted-foreground">
-          {weekCodeToNames(r.daysPattern)}
+          {weekCodeToNames(r.daysPattern as string)}
         </span>
       ),
     },
@@ -220,8 +220,8 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => (
         <span
           className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${r.status === "active"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700"
             }`}
         >
           {r.status}
