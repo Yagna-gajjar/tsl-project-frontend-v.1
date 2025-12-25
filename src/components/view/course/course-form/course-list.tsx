@@ -199,20 +199,6 @@ export function CourseForm({
 				/>
 			</div>
 			<div>
-				<Label htmlFor="sessionMinutes">Session Minutes*</Label>
-				<Input
-					id="sessionMinutes"
-					type="number"
-					value={course.sessionMinutes || ""}
-					onChange={(e) => onChange("sessionMinutes", Number(e.target.value))}
-				/>
-				{errors.sessionMinutes && (
-					<p className="text-xs text-destructive mt-1">
-						{errors.sessionMinutes}
-					</p>
-				)}
-			</div>
-			<div>
 				<Label htmlFor="noOfDaysInWeek">Days Per Week*</Label>
 				<Input
 					id="noOfDaysInWeek"

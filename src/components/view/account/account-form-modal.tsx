@@ -13,6 +13,8 @@ import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
 import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox"; // Assuming shadcn checkbox
+import { Button } from "@/components/ui/button";
 
 /* -------------------- CONSTANTS -------------------- */
 
@@ -27,33 +29,12 @@ const SYSTEM_ACCOUNT_TYPES = [
 
 const RESTRICTED_ENUM_CASES = [4, 5, 6];
 
-/* -------------------- TYPES -------------------- */
-
-type AccountData = {
-  entityId?: number;
-  entityType?: string;
-};
-
-type Props = {
-  isOpen: boolean;
-  initialData?: Account;
-  accountData?: AccountData;
-  onClose: () => void;
-  onSave: () => void;
-  entityEnumCase: number;
-  entityId: number;
-};
-
 /* -------------------- DEFAULT -------------------- */
 
 const empty: Account = {
-  accountId: 0,
   regDate: format(new Date(), "yyyy-MM-dd"),
-  suspensionDate: undefined,
   entityId: 0,
-  defineEntity: "Family",
   accountName: "",
-  addressId: undefined,
   contact: "",
   proffesionalSector: "",
   adminInstruction: "",
@@ -63,142 +44,127 @@ const empty: Account = {
   state: "",
   country: "India",
   pinCode: "",
-} as Account;
+  accountType: "Transaction", // Default
+};
 
-/* -------------------- COMPONENT -------------------- */
+type Props = {
+  isOpen: boolean;
+  initialData?: Account;
+  onClose: () => void;
+  onSave: () => void;
+};
 
 export default function AccountFormModal({
   isOpen,
   initialData,
   onClose,
   onSave,
-  accountData,
-  entityEnumCase,
-  entityId,
 }: Props) {
   const [values, setValues] = useState<Account>(empty);
   const [entities, setEntities] = useState<Entity[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [entityTypes, setEntityTypes] = useState<Enums[]>([]);
   const [adminInstructionOpt, setAdminInstructionOpt] = useState<Enums[]>([]);
   const [accountTypeOpt, setAccountTypeOpt] = useState<Enums[]>([]);
-  const [entityPrefix, setEntityPrefix] = useState("");
 
-  const [existingSystemCount, setExistingSystemCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [generateSystem, setGenerateSystem] = useState(false);
 
-  /* -------------------- LOAD ENTITIES -------------------- */
-
-  useEffect(() => {
-    const load = async () => {
-      const res: Response<Entity[]> = await getEntities({ limit: 500 });
-      setEntities(res.data ?? []);
-    };
-    load();
-  }, []);
-
-  /* -------------------- LOAD ENUMS -------------------- */
+  /* -------------------- INITIAL LOAD -------------------- */
 
   useEffect(() => {
     if (!isOpen) return;
+    const loadData = async () => {
+      const [entRes, typeRes, adminRes, accTypeRes] = await Promise.all([
+        getEntities({ limit: 500 }),
+        getEnumsByCategory("ENTITY TYPE"),
+        getEnumsByCategory("ADMITINSTRUCTIONS"),
+        getEnumsByCategory("ACCOUNTTYPE"),
+      ]);
 
-    const loadEnums = async () => {
-      const admin = await getEnumsByCategory("ADMITINSTRUCTIONS");
-      const accType = await getEnumsByCategory("ACCOUNTTYPE");
-      setAdminInstructionOpt(admin.data ?? []);
-      setAccountTypeOpt(accType.data ?? []);
+      setEntities(entRes.data ?? []);
+      setEntityTypes(typeRes.data ?? []);
+      setAdminInstructionOpt(adminRes.data ?? []);
+      setAccountTypeOpt(accTypeRes.data ?? []);
     };
-
-    loadEnums();
+    loadData();
   }, [isOpen]);
 
-  /* -------------------- LOAD EXISTING SYSTEM ACCOUNTS -------------------- */
-
   useEffect(() => {
-    if (!entityId || !RESTRICTED_ENUM_CASES.includes(entityEnumCase)) return;
-
-    const loadSystemAccounts = async () => {
-      const res = await getAccounts({
-        entityId,
-        accountTypes: SYSTEM_ACCOUNT_TYPES,
-      });
-      setExistingSystemCount(res.data?.length ?? 0);
-    };
-
-    loadSystemAccounts();
-  }, [entityId, entityEnumCase]);
-
-  /* -------------------- INITIAL DATA -------------------- */
-
-  useEffect(() => {
-    if (initialData) {
-      setValues({ ...initialData });
-    } else {
-      setValues(empty);
-    }
+    if (initialData) setValues({ ...initialData });
+    else setValues(empty);
   }, [initialData]);
 
-  /* -------------------- ENTITY PREFIX -------------------- */
+  /* -------------------- HELPERS -------------------- */
 
-  useEffect(() => {
-    if (!values.entityId) return;
+  const getSelectedEntityInfo = () => {
+    const entity = entityTypes.find(e => e.value === values.defineEntity);
+    console.log(entity);
 
-    const ent = entities.find((e) => e.entityId === Number(values.entityId));
-    if (!ent) return;
+    if (!entity) return null;
 
-    setEntityPrefix(ent.entityName);
-    setValues((p) => ({ ...p, defineEntity: ent.entityType }));
-  }, [values.entityId, entities]);
+    // Find the enum case for this entity's type
+    const typeEnum = entityTypes.find(t => t.value === entity.entityType);
+    return {
+      ...entity,
+      enumCase: typeEnum ? typeEnum.enumCase : null
+    };
+  };
 
-  /* -------------------- VALIDATION -------------------- */
+  /* -------------------- SUBMIT LOGIC -------------------- */
 
-  const validate = useCallback(() => {
+  const executeCreation = async (accountData: Account) => {
+    const res = initialData
+      ? await updateAccount(initialData.accountId!, accountData)
+      : await createAccount(accountData);
+    if (!res.success) throw new Error();
+  };
+
+  const handleSubmit = useCallback(async () => {
+    setIsSubmitting(true);
+    setFieldErrors({});
+
+    // Basic Validation
     const e: Record<string, string> = {};
+    if (!values.entityId) e.entityId = "Required";
     if (!values.accountName) e.accountName = "Required";
     if (!values.line1) e.line1 = "Required";
     if (!values.city) e.city = "Required";
     if (!values.state) e.state = "Required";
     if (!values.pinCode) e.pinCode = "Required";
-    return e;
-  }, [values]);
 
-  /* -------------------- SUBMIT -------------------- */
-
-  const handleSubmit = useCallback(async () => {
-    setIsSubmitting(true);
-    setError(null);
-
-    const errs = validate();
-    if (Object.keys(errs).length) {
-      setFieldErrors(errs);
+    if (Object.keys(e).length) {
+      setFieldErrors(e);
       setIsSubmitting(false);
       return;
     }
-    console.log(entityEnumCase);
 
-    // 🚨 Restricted entity logic
-    
-    if (RESTRICTED_ENUM_CASES.includes(entityEnumCase)) {
-      if (existingSystemCount < 6) {
+    const entityInfo = getSelectedEntityInfo();
+    const isRestricted = RESTRICTED_ENUM_CASES.includes(entityInfo?.enumCase ?? 0);
+
+    if (isRestricted && !initialData) {
+      // Check for existing accounts
+      const existing = await getAccounts({ entityId: values.entityId });
+      const count = existing.data?.length ?? 0;
+      console.log(existing);
+
+      if (count === 0) {
         setShowConfirm(true);
         setIsSubmitting(false);
         return;
+      } else {
+        // If accounts exist, force this one to be Transaction
+        values.accountType = "Transaction";
       }
-
-      // force Transaction account
+    } else if (!isRestricted) {
       values.accountType = "Transaction";
     }
 
     try {
-      const res = initialData
-        ? await updateAccount(initialData.accountId, values)
-        : await createAccount(values);
-
-      if (!res.success) throw new Error();
-
-      toast({ title: "Account saved", variant: "success" });
+      await executeCreation(values);
+      toast({ title: "Account saved successfully" });
       onSave();
       onClose();
     } catch {
@@ -206,128 +172,113 @@ export default function AccountFormModal({
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    values,
-    validate,
-    initialData,
-    entityEnumCase,
-    existingSystemCount,
-    onSave,
-    onClose,
-  ]);
+  }, [values, entities, entityTypes, initialData]);
 
-  /* -------------------- FIELDS -------------------- */
+  /* -------------------- SYSTEM GENERATION -------------------- */
+
+  const handleGenerateSystemAccounts = async () => {
+    const entityInfo = getSelectedEntityInfo();
+    setIsSubmitting(true);
+    try {
+      // Loop through the 6 types
+      for (const type of SYSTEM_ACCOUNT_TYPES) {
+        await createAccount({
+          ...values,
+          accountType: type,
+          accountName: `${entityInfo?.entityName} - ${type}`,
+        });
+      }
+      toast({ title: "6 System accounts created" });
+      onSave();
+      onClose();
+    } catch (err) {
+      toast({ title: "Batch creation failed", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+      setShowConfirm(false);
+    }
+  };
+
+  /* -------------------- FIELD CONFIG -------------------- */
 
   const fields: FormFieldConfig<Account>[] = [
     {
       name: "entityId",
       label: "Entity",
       type: "select",
-      options: entities.map((e) => ({
-        label: e.entityName,
-        value: e.entityId,
-      })),
+      options: entities.map((e) => ({ label: e.entityName, value: e.entityId })),
     },
-    { name: "defineEntity", label: "Define Entity", type: "text", disabled: true },
     {
       name: "accountType",
       label: "Account Type",
       type: "select",
-      options: accountTypeOpt.map((a) => ({
-        label: a.value,
-        value: a.value,
-      })),
+      disabled: !!initialData, // Usually locked on edit
+      options: accountTypeOpt.map((a) => ({ label: a.value, value: a.value })),
     },
     { name: "accountName", label: "Account Name", type: "text", required: true },
+    { name: "contact", label: "Contact No", type: "text" },
+    { name: "proffesionalSector", label: "Sector", type: "text" },
+    {
+      name: "adminInstruction",
+      label: "Admin Instruction",
+      type: "select",
+      options: adminInstructionOpt.map((a) => ({ label: a.value, value: a.value })),
+    },
     { name: "line1", label: "Address Line 1", type: "text", required: true },
+    { name: "line2", label: "Address Line 2", type: "text" },
     { name: "city", label: "City", type: "text", required: true },
     { name: "state", label: "State", type: "text", required: true },
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
+    { name: "country", label: "Country", type: "text" },
   ];
-
-  if (!isOpen) return null;
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-        <div className="flex flex-col max-h-[70vh] overflow-hidden">
-
-          <FormHeader
-            title={initialData ? "Edit Account" : "Add Account"}
-            onClose={onClose}
-          />
-          <FormContent
-            fields={fields}
-            values={values}
-            errors={fieldErrors}
-            onChange={(f, v) =>
-              setValues((p) => ({ ...p, [f]: v }))
-            }
-              layout="grid"
-          />
-          <FormFooter
-            onClose={onClose}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            />
+          <div className="flex flex-col max-h-[90vh] overflow-hidden">
+            <FormHeader title={initialData ? "Edit Account" : "Add Account"} onClose={onClose} />
+            <div className="flex-1 overflow-y-auto p-6">
+              <FormContent
+                fields={fields}
+                values={values}
+                errors={fieldErrors}
+                onChange={(f, v) => setValues((p) => ({ ...p, [f]: v }))}
+                layout="grid"
+              />
             </div>
+            <FormFooter onClose={onClose} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* -------- CONFIRMATION DIALOG -------- */}
+      {/* Confirmation for System Accounts */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
-          <h3 className="text-lg font-semibold">
-            Generate system accounts?
-          </h3>
-
-          <p className="text-sm text-muted-foreground">
-            This entity requires 6 mandatory system accounts.
-          </p>
-
-          <label className="flex items-center gap-2 mt-4">
-            <input
-              type="checkbox"
-              checked={generateSystem}
-              onChange={(e) => setGenerateSystem(e.target.checked)}
-            />
-            Generate system accounts
-          </label>
-
-          <div className="flex justify-end gap-2 mt-6">
-            <button onClick={() => setShowConfirm(false)}>Cancel</button>
-
-            <button
-              disabled={!generateSystem}
-              onClick={async () => {
-                try {
-                  for (const type of SYSTEM_ACCOUNT_TYPES) {
-                    await createAccount({
-                      ...values,
-                      accountType: type,
-                      accountName: `${entityPrefix} - ${type}`,
-                    });
-                  }
-
-                  toast({
-                    title: "System accounts created",
-                    variant: "success",
-                  });
-
-                  setShowConfirm(false);
-                  onSave();
-                  onClose();
-                } catch {
-                  toast({
-                    title: "Failed to generate system accounts",
-                    variant: "destructive",
-                  });
-                }
-              }}
-            >
-              Confirm
-            </button>
+          <div className="p-4">
+            <h3 className="text-lg font-bold">New Entity Detected</h3>
+            <p className="text-sm text-gray-500 my-2">
+              This entity type requires mandatory system accounts. Would you like to generate the 6 standard accounts (Main, Expenses, etc.) automatically?
+            </p>
+            <div className="flex items-center space-x-2 my-4">
+              <Checkbox
+                id="gen"
+                checked={generateSystem}
+                onCheckedChange={(v) => setGenerateSystem(!!v)}
+              />
+              <label htmlFor="gen" className="text-sm font-medium">
+                Yes, generate system accounts
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={() => setShowConfirm(false)}>Cancel</Button>
+              <Button
+                disabled={!generateSystem || isSubmitting}
+                onClick={handleGenerateSystemAccounts}
+              >
+                {isSubmitting ? "Creating..." : "Confirm & Create"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

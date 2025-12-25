@@ -59,7 +59,6 @@ const emptyCourse: Partial<Course> = {
   avbFrom: format(new Date(), "HH-mm"),
   avbTo: format(new Date(), "HH-mm"),
   chargingPattern: "",
-  sessionMinutes: 60,
   noOfDaysInWeek: 1,
   daysPattern: "12345",
   maxPerson: 1,
@@ -213,6 +212,7 @@ export default function CourseFormModal({
 
   const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
   const [courseTypeOptions, setCourseTypeOptions] = useState<Enums[]>([]);
+  const [roleInCourse, setRoleInCourse] = useState<Enums[]>();
   const [entityOptions, setEntityOptions] = useState<Entity[]>([]);
   const [entityTypeOptions, setEntityTypeOptions] = useState<
     MembershipMaster[]
@@ -226,16 +226,18 @@ export default function CourseFormModal({
       setLoadingOptions(true);
       setGlobalError(null);
 
-      const [actRes, typeRes, membershipMasterRes, entityRes] =
+      const [actRes, typeRes, membershipMasterRes, entityRes, roleInCourseRes] =
         await Promise.all([
           getActivities({ limit: 500 }),
           getEnumsByCategory("COURSETYPE"),
           getMembershipMasters({ limit: 500 }),
           getEntities({ limit: 500 }),
+          getEnumsByCategory("ROLEINCOURSE"),
         ]);
 
       setActivityOptions((actRes as Response<Activity[]>)?.data ?? []);
       setCourseTypeOptions((typeRes as Response<Enums[]>)?.data ?? []);
+      setRoleInCourse((roleInCourseRes as Response<Enums[]>)?.data ?? []);
       setEntityTypeOptions(
         (membershipMasterRes as Response<MembershipMaster[]>)?.data ?? []
       );
@@ -309,12 +311,8 @@ export default function CourseFormModal({
     if (!c.activityId) e.activityName = "Activity is required";
     if (!c.courseType) e.courseType = "Course type is required";
     if (!c.introduceDate) e.introduceDate = "Introduce date is required";
-    if (c.sessionMinutes === undefined || c.sessionMinutes <= 0)
-      e.sessionMinutes = "Session minutes must be > 0";
     if (c.noOfDaysInWeek === undefined || c.noOfDaysInWeek <= 0)
       e.noOfDaysInWeek = "Days per week must be > 0";
-    if (c.minEnrollmentUnits === undefined || c.minEnrollmentUnits <= 0)
-      e.minEnrollmentUnits = "Min enrollment units must be > 0";
     if (c.batchCapacity === undefined || c.batchCapacity <= 0)
       e.batchCapacity = "Batch capacity must be > 0";
     if (c.totalParallelBatches === undefined || c.totalParallelBatches <= 0)
@@ -350,10 +348,10 @@ export default function CourseFormModal({
       e.sharesTotal = `Total share must equal 100% (current: ${totalShare}%)`;
     }
 
-    formState.rates.forEach((r, i) => {
-      if (!r.unitRate) e[`rate_${i}_unitRate`] = "Rate required";
-      if (!r.introduceDate) e[`rate_${i}_introduceDate`] = "Date required";
-    });
+    // formState.rates.forEach((r, i) => {
+    //   if (!r.unitRate) e[`rate_${i}_unitRate`] = "Rate required";
+    //   if (!r.introduceDate) e[`rate_${i}_introduceDate`] = "Date required";
+    // });
 
     formState.shares.forEach((s, i) => {
       if (!s.entityId || s.entityId <= 0)
@@ -378,6 +376,8 @@ export default function CourseFormModal({
 
     const vErrors = validate();
     if (Object.keys(vErrors).length) {
+      console.log(vErrors);
+
       setErrors(vErrors);
       setIsSubmitting(false);
       return;
@@ -397,6 +397,7 @@ export default function CourseFormModal({
       };
 
       const res = await createFullCourse(updatedFormState);
+      console.log("yagna");
 
       if (res?.success) {
         toast({
@@ -727,6 +728,7 @@ export default function CourseFormModal({
                     errors={errors}
                     onChange={handleShareChange}
                     onRemove={(i) => removeArrayItem("shares", i)}
+                    roleInCourse={roleInCourse}
                   />
                 </TabsContent>
 

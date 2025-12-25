@@ -15,12 +15,11 @@ type Props = {
   isOpen: boolean;
   initialData?: Entity;
   onClose: () => void;
-  onSave: () => void; 
+  onSave: () => void;
   entityType: string;
 };
 
 const empty: Entity = {
-  entityId: 0,
   entityName: "",
   entityType: "",
   legalStatus: "",
@@ -61,7 +60,7 @@ export default function EntityFormModal({
   const [entityRoleEnum, setEntityRoleEnum] = useState<Enums[]>([]);
   const [entityStatusEnum, setEntityStatusEnum] = useState<Enums[]>([]);
   console.log(entityType);
-  
+
 
   useEffect(() => {
     if (initialData) {
@@ -74,7 +73,7 @@ export default function EntityFormModal({
       });
     } else {
       if (entityType.toLocaleLowerCase() !== "all") {
-        setValues({...empty, entityType: entityType});
+        setValues({ ...empty, entityType: entityType });
       } else {
         setValues(empty);
       }

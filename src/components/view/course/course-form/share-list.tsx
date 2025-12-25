@@ -9,7 +9,6 @@ import type { Entity } from "@/types/entity";
 import type { Authority } from "@/types/authority";
 import { getAuthorityByEntity } from "@/api/authority.api";
 import type { Response } from "@/types/response";
-
 import {
   Select,
   SelectContent,
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Enums } from "@/types/enums";
 
 interface SharesListProps {
   shares: CourseShare[];
@@ -24,6 +24,7 @@ interface SharesListProps {
   errors: Record<string, string>;
   onChange: (index: number, field: keyof CourseShare, value: any) => void;
   onRemove: (index: number) => void;
+  roleInCourse: Enums[];
 }
 
 export const SharesList = ({
@@ -31,6 +32,7 @@ export const SharesList = ({
   entityOptions,
   onChange,
   onRemove,
+  roleInCourse,
 }: SharesListProps) => {
   /* -------------------- authority cache -------------------- */
   const [authorityMap, setAuthorityMap] = useState<Record<number, Authority[]>>(
@@ -65,12 +67,14 @@ export const SharesList = ({
       index === shares.length - 1
     ) {
       e.preventDefault();
+      // Logic to add a new row if necessary
       onChange(shares.length, "entityId", 0);
     }
   };
 
   return (
     <div className="space-y-1">
+      {/* Header Grid */}
       <div className="grid grid-cols-[2fr,1.5fr,1fr,0.6fr,0.6fr,1.2fr,60px] gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
         <div>Entity*</div>
         <div>Role In Course*</div>
@@ -92,11 +96,15 @@ export const SharesList = ({
             <motion.div
               key={index}
               layout
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
               className="grid grid-cols-[2fr,1.5fr,1fr,0.6fr,0.6fr,1.2fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
             >
-              {/* Entity */}
+              {/* 1. Entity Selection */}
               <Select
-                value={String(share.entityId || "")}
+                value={share.entityId ? String(share.entityId) : ""}
                 onValueChange={(v) => {
                   const id = Number(v);
                   onChange(index, "entityId", id);
@@ -116,25 +124,33 @@ export const SharesList = ({
                 </SelectContent>
               </Select>
 
-              {/* Role In Course */}
-              <Input
-                className="h-8 text-xs"
-                value={share.roleInCourse}
-                onChange={(e) =>
-                  onChange(index, "roleInCourse", e.target.value)
-                }
-                disabled={share.roleInCourse === "TSL Charges"}
-              />
+              {/* 2. Role In Course Dropdown (Previously Input) */}
+              <Select
+                value={share.roleInCourse || ""}
+                disabled={share.roleInCourse === "TSL"}
+                onValueChange={(v) => onChange(index, "roleInCourse", v)}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roleInCourse.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              {/* Share */}
+              {/* 3. Share Percentage */}
               <Input
                 type="number"
                 min={0}
                 max={100}
                 className={cn(
                   "h-8 text-xs",
-                  share.roleInCourse === "TSL Charges" &&
-                    "text-primary font-semibold"
+                  share.roleInCourse === "TSL" &&
+                  "text-primary font-semibold"
                 )}
                 value={share.share}
                 onChange={(e) =>
@@ -142,7 +158,7 @@ export const SharesList = ({
                 }
               />
 
-              {/* CGST */}
+              {/* 4. CGST */}
               <Input
                 type="number"
                 className="h-8 text-xs"
@@ -152,7 +168,7 @@ export const SharesList = ({
                 }
               />
 
-              {/* SGST */}
+              {/* 5. SGST */}
               <Input
                 type="number"
                 className="h-8 text-xs"
@@ -162,10 +178,10 @@ export const SharesList = ({
                 }
               />
 
-              {/* Approval Authority (Dropdown) */}
+              {/* 6. Approval Authority Dropdown */}
               <Select
                 disabled={!share.entityId}
-                value={String(share.approvalAuthorityId || "")}
+                value={share.approvalAuthorityId ? String(share.approvalAuthorityId) : ""}
                 onValueChange={(v) =>
                   onChange(index, "approvalAuthorityId", Number(v))
                 }
@@ -180,24 +196,30 @@ export const SharesList = ({
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {authorities.map((a) => (
-                    <SelectItem
-                      key={a.authorityId}
-                      value={String(a.authorityId)}
-                    >
-                      {a.memberFirstName} {a.memberLastName}
-                    </SelectItem>
-                  ))}
+                  {authorities.length > 0 ? (
+                    authorities.map((a) => (
+                      <SelectItem
+                        key={a.authorityId}
+                        value={String(a.authorityId)}
+                      >
+                        {a.memberFirstName} {a.memberLastName}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-xs text-muted-foreground">
+                      No authorities found
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
 
-              {/* Delete */}
+              {/* 7. Action / Remove Button */}
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(index)}
-                className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive justify-self-center"
                 onKeyDown={(e) => handleKeyDown(e, index, true)}
               >
                 <Trash2 className="w-3 h-3" />
@@ -206,6 +228,12 @@ export const SharesList = ({
           );
         })}
       </AnimatePresence>
+
+      {shares.length === 0 && (
+        <div className="p-8 text-center text-xs text-muted-foreground border-dashed border-2 rounded-md">
+          No shares added. Tab through or click "Add Row" to begin.
+        </div>
+      )}
     </div>
   );
 };
