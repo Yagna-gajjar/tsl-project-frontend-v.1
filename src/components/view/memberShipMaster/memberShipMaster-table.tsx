@@ -205,8 +205,8 @@ export default function MembershipMasterTable({
     },
     {
       header: "CA / Member / Month",
-      key: "caPerMemberPerMonth",
-      render: (row) => Number(row.caPerMemberPerMonth),
+      key: "commPerMemberPerMonth",
+      render: (row) => row.commPerMemberPerMonth ? Number(row.commPerMemberPerMonth) : "-",
     },
     {
       header: "Member Limit",
