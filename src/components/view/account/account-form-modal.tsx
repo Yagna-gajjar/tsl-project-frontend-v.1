@@ -5,7 +5,7 @@ import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 import type { Account } from "@/types/account";
 import type { Entity } from "@/types/entity";
-import { createAccount, updateAccount } from "@/api/account.api";
+import { createAccount, updateAccount, getAccounts } from "@/api/account.api";
 import { getEntities } from "@/api/entity.api";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { toast } from "@/hooks/use-toast";
@@ -13,6 +13,21 @@ import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
 import { format } from "date-fns";
+
+/* -------------------- CONSTANTS -------------------- */
+
+const SYSTEM_ACCOUNT_TYPES = [
+  "Main",
+  "Expenses",
+  "Deposits",
+  "SGST",
+  "CGST",
+  "Other",
+] as const;
+
+const RESTRICTED_ENUM_CASES = [4, 5, 6];
+
+/* -------------------- TYPES -------------------- */
 
 type AccountData = {
   entityId?: number;
@@ -25,8 +40,11 @@ type Props = {
   accountData?: AccountData;
   onClose: () => void;
   onSave: () => void;
+  entityEnumCase: number;
+  entityId: number;
 };
 
+/* -------------------- DEFAULT -------------------- */
 
 const empty: Account = {
   accountId: 0,
@@ -47,114 +65,106 @@ const empty: Account = {
   pinCode: "",
 } as Account;
 
+/* -------------------- COMPONENT -------------------- */
+
 export default function AccountFormModal({
   isOpen,
   initialData,
   onClose,
   onSave,
   accountData,
-}: Props) {  
-
+  entityEnumCase,
+  entityId,
+}: Props) {
   const [values, setValues] = useState<Account>(empty);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [adminInstructionOpt, setAdminInstructionOpt] = useState<Enums[]>([]);
-  const [aaccountTypeOpt, setAccountTypeOpt] = useState<Enums[]>([]);
+  const [accountTypeOpt, setAccountTypeOpt] = useState<Enums[]>([]);
+  const [entityPrefix, setEntityPrefix] = useState("");
 
-  const [entityPrefix, setEntityPrefix] = useState<string>("");
+  const [existingSystemCount, setExistingSystemCount] = useState(0);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [generateSystem, setGenerateSystem] = useState(false);
 
+  /* -------------------- LOAD ENTITIES -------------------- */
 
   useEffect(() => {
-    const loadEntities = async () => {
+    const load = async () => {
       const res: Response<Entity[]> = await getEntities({ limit: 500 });
       setEntities(res.data ?? []);
     };
-    loadEntities();
+    load();
   }, []);
 
+  /* -------------------- LOAD ENUMS -------------------- */
+
   useEffect(() => {
-    
-    if (initialData) {
-      setValues({
-        ...initialData,
-        regDate: initialData.regDate,
-        suspensionDate: initialData.suspensionDate || undefined,
-        line1: initialData.line1 || "",
-        line2: initialData.line2 || "",
-        city: initialData.city || "",
-        state: initialData.state || "",
-        country: initialData.country || "India",
-        pinCode: initialData.pinCode || "",
+    if (!isOpen) return;
+
+    const loadEnums = async () => {
+      const admin = await getEnumsByCategory("ADMITINSTRUCTIONS");
+      const accType = await getEnumsByCategory("ACCOUNTTYPE");
+      setAdminInstructionOpt(admin.data ?? []);
+      setAccountTypeOpt(accType.data ?? []);
+    };
+
+    loadEnums();
+  }, [isOpen]);
+
+  /* -------------------- LOAD EXISTING SYSTEM ACCOUNTS -------------------- */
+
+  useEffect(() => {
+    if (!entityId || !RESTRICTED_ENUM_CASES.includes(entityEnumCase)) return;
+
+    const loadSystemAccounts = async () => {
+      const res = await getAccounts({
+        entityId,
+        accountTypes: SYSTEM_ACCOUNT_TYPES,
       });
+      setExistingSystemCount(res.data?.length ?? 0);
+    };
+
+    loadSystemAccounts();
+  }, [entityId, entityEnumCase]);
+
+  /* -------------------- INITIAL DATA -------------------- */
+
+  useEffect(() => {
+    if (initialData) {
+      setValues({ ...initialData });
     } else {
       setValues(empty);
     }
+  }, [initialData]);
 
-    const fetchAdminInstructionOpt = async () => {
-      const res: Response<Enums[]> = await getEnumsByCategory(
-        "ADMITINSTRUCTIONS"
-      );
-      setAdminInstructionOpt(res.data ?? []);
-    };
-
-    const fetchAccountType = async () => {
-      const res: Response<Enums[]> = await getEnumsByCategory("ACCOUNTTYPE");
-      setAccountTypeOpt(res.data ?? []);
-    };
-    if (isOpen) {
-      fetchAdminInstructionOpt();
-      fetchAccountType();
-    }
-  }, [initialData, isOpen]);
+  /* -------------------- ENTITY PREFIX -------------------- */
 
   useEffect(() => {
-    if (!initialData && accountData) {
-      setValues((prev) => ({
-        ...prev,
-        entityId: accountData.entityId ?? prev.entityId,
-        defineEntity: accountData.entityType ?? prev.defineEntity,
-      }));
-    }
-  }, [accountData, initialData]);
-  
-  useEffect(() => {
-    if (!values.entityId || values.entityId === 0) {
-      setEntityPrefix("");
-      setValues((p) => ({ ...p, defineEntity: "Family" }));
-      return;
-    }
-  
-    const selectedEntity = entities.find(
-      (e) => e.entityId === Number(values.entityId)
-    );
-  
-    if (selectedEntity) {
-      setEntityPrefix(selectedEntity.entityName);
-  
-      setValues((p) => ({
-        ...p,
-        defineEntity: selectedEntity.entityType,
-      }));
-    }
+    if (!values.entityId) return;
+
+    const ent = entities.find((e) => e.entityId === Number(values.entityId));
+    if (!ent) return;
+
+    setEntityPrefix(ent.entityName);
+    setValues((p) => ({ ...p, defineEntity: ent.entityType }));
   }, [values.entityId, entities]);
-  
+
+  /* -------------------- VALIDATION -------------------- */
 
   const validate = useCallback(() => {
-    const errs: Record<string, string> = {};
-
-    if (!values.defineEntity?.trim())
-      errs.defineEntity = "Entity Type is required";
-    if (!values.accountName?.trim()) errs.name = "Account name is required";
-    if (!values.line1?.trim()) errs.line1 = "Address Line 1 is required";
-    if (!values.city?.trim()) errs.city = "City is required";
-    if (!values.state?.trim()) errs.state = "State is required";
-    if (!values.country?.trim()) errs.country = "Country is required";
-    if (!values.pinCode?.trim()) errs.pinCode = "Pin Code is required";
-
-    return errs;
+    const e: Record<string, string> = {};
+    if (!values.accountName) e.accountName = "Required";
+    if (!values.line1) e.line1 = "Required";
+    if (!values.city) e.city = "Required";
+    if (!values.state) e.state = "Required";
+    if (!values.pinCode) e.pinCode = "Required";
+    return e;
   }, [values]);
+
+  /* -------------------- SUBMIT -------------------- */
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
@@ -166,102 +176,83 @@ export default function AccountFormModal({
       setIsSubmitting(false);
       return;
     }
+    console.log(entityEnumCase);
+
+    // 🚨 Restricted entity logic
+    
+    if (RESTRICTED_ENUM_CASES.includes(entityEnumCase)) {
+      if (existingSystemCount < 6) {
+        setShowConfirm(true);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // force Transaction account
+      values.accountType = "Transaction";
+    }
 
     try {
-      const payload = {
-        ...values,
-        regDate: values.regDate ? new Date(values.regDate) : undefined,
-        suspensionDate: values.suspensionDate
-          ? new Date(values.suspensionDate)
-          : undefined,
-        entityId: Number(values.entityId),
-        addressId: values.addressId ? Number(values.addressId) : undefined,
-        accountType: values.accountType,
-      };
-
-      const res: Response<Account> = initialData?.accountId
-        ? await updateAccount(initialData.accountId, payload)
-        : await createAccount(payload as Account);
+      const res = initialData
+        ? await updateAccount(initialData.accountId, values)
+        : await createAccount(values);
 
       if (!res.success) throw new Error();
 
-      toast({
-        title: initialData ? "Account updated" : "Account created",
-        variant: "success",
-      });
-
+      toast({ title: "Account saved", variant: "success" });
       onSave();
       onClose();
     } catch {
-      setError("Failed to save account");
       toast({ title: "Save failed", variant: "destructive" });
     } finally {
-      setIsSubmitting(false); 
+      setIsSubmitting(false);
     }
-  }, [values, initialData, validate, onSave, onClose]);
+  }, [
+    values,
+    validate,
+    initialData,
+    entityEnumCase,
+    existingSystemCount,
+    onSave,
+    onClose,
+  ]);
+
+  /* -------------------- FIELDS -------------------- */
 
   const fields: FormFieldConfig<Account>[] = [
     {
       name: "entityId",
       label: "Entity",
       type: "select",
-      options: [
-        { label: "None", value: Number(0) },
-        ...entities.map((e) => ({
-          label: e.entityName,
-          value: e.entityId,
-        })),
-      ],
+      options: entities.map((e) => ({
+        label: e.entityName,
+        value: e.entityId,
+      })),
     },
-    {
-      name: "defineEntity",
-      label: "Define Entity",
-      type: "text",
-      disabled: true,
-      required: true,
-    },
+    { name: "defineEntity", label: "Define Entity", type: "text", disabled: true },
     {
       name: "accountType",
       label: "Account Type",
       type: "select",
-      options: aaccountTypeOpt?.map((a) => ({
-        value: a.value,
-        label: a.value,
-      })),
-    },
-    {
-      name: "accountName",
-      label: "Account Name",
-      type: "text",
-      required: true,
-    },
-    { name: "contact", label: "Contact", type: "text" },
-    { name: "proffesionalSector", label: "Professional Sector", type: "text" },
-    {
-      name: "adminInstruction",
-      label: "Admin Instruction",
-      type: "select",
-      options: adminInstructionOpt.map((a) => ({
+      options: accountTypeOpt.map((a) => ({
         label: a.value,
         value: a.value,
       })),
     },
+    { name: "accountName", label: "Account Name", type: "text", required: true },
     { name: "line1", label: "Address Line 1", type: "text", required: true },
-    { name: "line2", label: "Address Line 2", type: "text" },
     { name: "city", label: "City", type: "text", required: true },
     { name: "state", label: "State", type: "text", required: true },
-    { name: "country", label: "Country", type: "text", required: true },
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
-    { name: "regDate", label: "Registration Date", type: "Date" },
-    { name: "suspensionDate", label: "Suspension Date", type: "Date" },
   ];
 
   if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
+    <>
+      <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
         <div className="flex flex-col max-h-[70vh] overflow-hidden">
+
           <FormHeader
             title={initialData ? "Edit Account" : "Add Account"}
             onClose={onClose}
@@ -270,51 +261,76 @@ export default function AccountFormModal({
             fields={fields}
             values={values}
             errors={fieldErrors}
-            loading={false}
-            error={error}
-            isSubmitting={isSubmitting}
-            onChange={(f, v) => {
-              setValues((prev) => {
-                // Only auto-prefix for accountName
-                if (f === "accountName" && entityPrefix) {
-                  const prefix = `${entityPrefix} - `;
-            
-                  // If prefix already exists, don't add again
-                  if (v.startsWith(prefix)) {
-                    return { ...prev, accountName: v };
-                  }
-            
-                  // Remove old prefix if entity changed
-                  const cleanedValue = prev.accountName?.startsWith(prefix)
-                    ? v.replace(prefix, "")
-                    : v;
-            
-                  return {
-                    ...prev,
-                    accountName: `${prefix}${cleanedValue}`,
-                  };
-                }
-            
-                return { ...prev, [f]: v };
-              });
-            
-              setFieldErrors((e) => {
-                if (!e[f as string]) return e;
-                const c = { ...e };
-                delete c[f as string];
-                return c;
-              });
-            }}
-            
-            layout="grid"
+            onChange={(f, v) =>
+              setValues((p) => ({ ...p, [f]: v }))
+            }
+              layout="grid"
           />
-        </div>
-        <FormFooter
-          onClose={onClose}
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-        />
-      </DialogContent>
-    </Dialog>
+          <FormFooter
+            onClose={onClose}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            />
+            </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* -------- CONFIRMATION DIALOG -------- */}
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <h3 className="text-lg font-semibold">
+            Generate system accounts?
+          </h3>
+
+          <p className="text-sm text-muted-foreground">
+            This entity requires 6 mandatory system accounts.
+          </p>
+
+          <label className="flex items-center gap-2 mt-4">
+            <input
+              type="checkbox"
+              checked={generateSystem}
+              onChange={(e) => setGenerateSystem(e.target.checked)}
+            />
+            Generate system accounts
+          </label>
+
+          <div className="flex justify-end gap-2 mt-6">
+            <button onClick={() => setShowConfirm(false)}>Cancel</button>
+
+            <button
+              disabled={!generateSystem}
+              onClick={async () => {
+                try {
+                  for (const type of SYSTEM_ACCOUNT_TYPES) {
+                    await createAccount({
+                      ...values,
+                      accountType: type,
+                      accountName: `${entityPrefix} - ${type}`,
+                    });
+                  }
+
+                  toast({
+                    title: "System accounts created",
+                    variant: "success",
+                  });
+
+                  setShowConfirm(false);
+                  onSave();
+                  onClose();
+                } catch {
+                  toast({
+                    title: "Failed to generate system accounts",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              Confirm
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
