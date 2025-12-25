@@ -56,11 +56,12 @@ const emptyCourse: Partial<Course> = {
   entityId: 0,
   introduceDate: format(new Date(), "yyyy-MM-dd"),
   suspensionDate: "",
+  avbFrom: format(new Date(), "HH-mm"),
+  avbTo: format(new Date(), "HH-mm"),
   chargingPattern: "",
   sessionMinutes: 60,
   noOfDaysInWeek: 1,
   daysPattern: "12345",
-  minEnrollmentUnits: 1,
   maxPerson: 1,
   batchCapacity: 1,
   totalParallelBatches: 1,
@@ -69,8 +70,8 @@ const emptyCourse: Partial<Course> = {
   gender: "Any",
   balanceUsable: "",
   enrApprovalRequired: false,
-  CGSTRate: 0,
-  SGSTRate: 0,
+  cgstRate: 0,
+  sgstRate: 0,
   status: "",
 };
 
@@ -228,7 +229,7 @@ export default function CourseFormModal({
       const [actRes, typeRes, membershipMasterRes, entityRes] =
         await Promise.all([
           getActivities({ limit: 500 }),
-          getEnumsByCategory("courseType"),
+          getEnumsByCategory("COURSETYPE"),
           getMembershipMasters({ limit: 500 }),
           getEntities({ limit: 500 }),
         ]);

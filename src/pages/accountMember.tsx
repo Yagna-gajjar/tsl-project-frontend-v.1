@@ -38,7 +38,7 @@ export default function AccountMemberPage() {
 
   const filteredEnums = useMemo(() => {
     if (classification === "all") return entityTypeEnums;
-    const caseMap: Record<string, number> = { family: 2, client: 1, partner: 4, facility: 5 };
+    const caseMap: Record<string, number> = { family: 2, client: 1, partner: 4, facility: 5, tsl:6 };
     const targetCase = caseMap[classification];
     return entityTypeEnums.filter((e) => e.enumCase === targetCase);
   }, [classification, entityTypeEnums]);
@@ -73,13 +73,13 @@ export default function AccountMemberPage() {
         setSelectedAccountId("all");
         return;
       }
-
+      // if entityEnumCase > 3 than acccountType = other, else accounType = transaction
       try {
         const res: Response<Account[]> = await getAccounts({
           limit: 10000,
           entityId: Number(selectedEntityId),
           entityType: selectedEnumId.toLowerCase() !== 'all' ? selectedEnumId : undefined,
-          accountType: "Transactions"
+          accountType:  "Transactions"
         });
         if (res.success) setAccounts(res.data || []);
       } catch (error) {
@@ -98,6 +98,7 @@ export default function AccountMemberPage() {
     { label: "Client", value: "client" },
     { label: "Partner", value: "partner" },
     { label: "Facility", value: "facility" },
+    { label: "TSL", value: "tsl" },
   ];
 
   return (

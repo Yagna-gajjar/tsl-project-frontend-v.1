@@ -84,6 +84,7 @@ export default function MembershipLinkPage() {
         const res: Response<MembershipMaster[]> = await getMembershipMasters({
           entityType: entityType !== "all" ? entityType : undefined,
           enumCase: "2,5,6",
+          includeEnumCase: true
         });
         const items = res?.data || [];
 

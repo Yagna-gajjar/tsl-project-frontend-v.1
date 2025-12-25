@@ -67,7 +67,7 @@ export function CourseForm({
 					</SelectTrigger>
 					<SelectContent>
 						{courseTypeOptions?.map((c) => (
-							<SelectItem key={c.id} value={c.value}>
+							<SelectItem key={c.enumCase} value={String(c.value)}>
 								{c.value}
 							</SelectItem>
 						))}
@@ -132,6 +132,24 @@ export function CourseForm({
 				{errors.activityName && (
 					<p className="text-xs text-destructive mt-1">{errors.activityName}</p>
 				)}
+			</div>
+			<div>
+				<Label htmlFor="avbFrom">Available From</Label>
+				<Input
+					id="avbFrom"
+					type="time"
+					value={course.avbFrom || ""}
+					onChange={(e) => onChange("avbFrom", e.target.value)}
+				/>
+			</div>
+			<div>
+				<Label htmlFor="avbTo">Available To</Label>
+				<Input
+					id="avbTo"
+					type="time"
+					value={course.avbTo || ""}
+					onChange={(e) => onChange("avbTo", e.target.value)}
+				/>
 			</div>
 			<div>
 				<Label htmlFor="entityId">Entity*</Label>
@@ -231,23 +249,6 @@ export function CourseForm({
 				</div>
 				{errors.daysPattern && (
 					<p className="text-xs text-destructive mt-1">{errors.daysPattern}</p>
-				)}
-			</div>
-
-			<div>
-				<Label htmlFor="minEnrollmentUnits">Min Enrollment Units*</Label>
-				<Input
-					id="minEnrollmentUnits"
-					type="number"
-					value={course.minEnrollmentUnits || ""}
-					onChange={(e) =>
-						onChange("minEnrollmentUnits", Number(e.target.value))
-					}
-				/>
-				{errors.minEnrollmentUnits && (
-					<p className="text-xs text-destructive mt-1">
-						{errors.minEnrollmentUnits}
-					</p>
 				)}
 			</div>
 
@@ -373,8 +374,8 @@ export function CourseForm({
 				<Input
 					id="CGSTRate"
 					type="number"
-					value={course.CGSTRate || ""}
-					onChange={(e) => onChange("CGSTRate", Number(e.target.value))}
+					value={course.cgstRate || ""}
+					onChange={(e) => onChange("cgstRate", Number(e.target.value))}
 				/>
 				{errors.CGSTRate && (
 					<p className="text-xs text-destructive mt-1">{errors.CGSTRate}</p>
@@ -386,8 +387,8 @@ export function CourseForm({
 				<Input
 					id="SGSTRate"
 					type="number"
-					value={course.SGSTRate || ""}
-					onChange={(e) => onChange("SGSTRate", Number(e.target.value))}
+					value={course.sgstRate || ""}
+					onChange={(e) => onChange("sgstRate", Number(e.target.value))}
 				/>
 				{errors.SGSTRate && (
 					<p className="text-xs text-destructive mt-1">{errors.SGSTRate}</p>
