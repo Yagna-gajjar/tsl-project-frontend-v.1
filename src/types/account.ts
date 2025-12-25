@@ -1,5 +1,5 @@
 export interface Account {
-  accountId?: number;
+  accountId?: number|null;
   regDate: Date | string;
   suspensionDate?: Date | string;
   accountType?: string;

@@ -52,7 +52,7 @@ export default function TransactionExcelUpload({ isOpen, onClose, onSuccess }: T
 	const handleCreateTransaction = useCallback(async (row: TransactionImportRow) => {
 		const payload: Transaction = {
 			transactionType: String(row.transactionType),
-			typeSerialNo: "0", // Defaulting as backend usually generates this
+			typeSerialNo: 0, // Defaulting as backend usually generates this
 			amount: Number(row.amount),
 
 			crEntityId: Number(row.crEntityId),

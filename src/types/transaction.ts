@@ -1,7 +1,7 @@
 export interface Transaction {
 	transactionId?: number;
 	transactionType: string;
-	typeSerialNo: string;
+	typeSerialNo: number;
 
 	crEntityId: number | null;
 	crAccountId: number | null;
