@@ -37,7 +37,6 @@ import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
 import MembershipPage from "./pages/membership";
 import StaffAttendance from "./pages/staff-attendance";
-import BatchConnectionsPage from "./pages/batchConnection";
 import CoachAssignmentsPage from "./pages/coachAssignment";
 import FacilityAllotmentsPage from "./pages/facilityAllotment";
 import EntityPage from "./pages/entity";
@@ -136,14 +135,10 @@ export default function App() {
                   path="/course/course-rate"
                   element={<CourseRatePage />}
                 />
-                <Route path="/batch/batches" element={<BatchPage />} />
+                <Route path="/batches" element={<BatchPage />} />
                 <Route
                   path="/batch/attendance-sheet/:id"
                   element={<AttendanceSheet />}
-                />
-                <Route
-                  path="/batch/batch-connection"
-                  element={<BatchConnectionsPage />}
                 />
                 <Route
                   path="/infrastructure-configurations/facility"

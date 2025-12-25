@@ -17,7 +17,6 @@ import {
   Users,
   Award,
   BookA,
-  Layers,
   Book,
   IndianRupee,
   Crown,
@@ -79,17 +78,9 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   {
-    name: "Batch",
-    href: "/batch",
-    icon: Layers,
-    submenu: [
-      { label: "Batches", href: "/batch/batches", icon: User },
-      {
-        label: "Batch Connection",
-        href: "/batch/batch-connection",
-        icon: User,
-      },
-    ],
+    name: "Batches",
+    href: "/batches",
+    icon: User,
   },
   {
     name: "Enrollment",
