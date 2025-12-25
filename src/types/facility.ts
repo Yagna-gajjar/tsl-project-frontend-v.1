@@ -8,6 +8,7 @@ export interface Facility {
   academicCapacity?: number | null;
   recreationCapacity?: number | null;
   eventCapacity?: number | null;
+  level: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

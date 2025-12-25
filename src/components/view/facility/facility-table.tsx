@@ -40,7 +40,8 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
         facilityName: filters.facilityName as string | undefined,
         facilityType: filters.facilityType as string | undefined,
         areaSQFT: filters.areaSQFT as number | undefined,
-        academicCapacity: filters.capacity as number | undefined
+        academicCapacity: filters.capacity as number | undefined,
+        level: filters.level as number | undefined,
       });
 
       const rowsRaw = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data as Facility[] : []);
@@ -99,6 +100,13 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => r.academicCapacity ?? "-",
     },
     {
+      key: "level",
+      header: "Level",
+      sortable: true,
+      filterType: "number",
+      render: (r) => r.level ?? "-",
+    },
+    {
       key: "createdAt",
       header: "Created",
       sortable: true,
@@ -144,8 +152,8 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
     const rowsRaw = Array.isArray(res)
       ? res
       : Array.isArray(res?.data)
-      ? (res.data as Facility[])
-      : [];
+        ? (res.data as Facility[])
+        : [];
     const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
       ...r,
       createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
