@@ -75,11 +75,12 @@ export default function AccountMemberPage() {
       }
       // if entityEnumCase > 3 than acccountType = other, else accounType = transaction
       try {
+        const accountType = ['family', 'client'].includes(classification) ? 'Transactions' : 'Others';
         const res: Response<Account[]> = await getAccounts({
           limit: 10000,
           entityId: Number(selectedEntityId),
           entityType: selectedEnumId.toLowerCase() !== 'all' ? selectedEnumId : undefined,
-          accountType:  "Transactions"
+          accountType: accountType
         });
         if (res.success) setAccounts(res.data || []);
       } catch (error) {

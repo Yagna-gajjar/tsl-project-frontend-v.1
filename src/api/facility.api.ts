@@ -12,6 +12,7 @@ export interface FacilitiesQuery {
   facilityType?: string;
   areaSQFT?: number | string;
   academicCapacity?: number | string;
+  level?: number;
 }
 
 const FACILITY_BASE = import.meta.env.VITE_APP_API_URL + "/facility";
@@ -27,7 +28,8 @@ export function getFacilities(params: FacilitiesQuery = {}): Promise<Response<Fa
     facilityType: params.facilityType,
     areaSQFT: params.areaSQFT,
     academicCapacity: params.academicCapacity,
-  });  
+    level: params.level
+  });
 
   return request<Response<Facility[]>>(`${FACILITY_BASE}${qs}`);
 }

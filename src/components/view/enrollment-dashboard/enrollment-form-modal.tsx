@@ -1,497 +1,265 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { FormContent } from "@/components/form-modal/form-content";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { getMembers } from "@/api/member.api";
-// Assuming you have an activity API similar to members
 import { getActivities } from "@/api/activity.api";
+import { getEntities } from "@/api/entity.api";
+import { getCourses } from "@/api/course.api";
+import { getCourseRates } from "@/api/courseRate.api";
+import { getBatch } from "@/api/batch.api";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import type { Enrollment } from "@/types/enrollment";
-import type { Activity } from "@/types/activity";
-import type { Entity } from "@/types/entity";
-import { getEntities } from "@/api/entity.api";
-import type { Course } from "@/types/course";
-import { getCourses } from "@/api/course.api";
-import type { CourseRate } from "@/types/courseRate";
-import { getCourseRates } from "@/api/courseRate.api";
 import { addDays } from "@/helpers/helper";
+import type { Enrollment } from "@/types/enrollment";
+import type { Batch } from "@/types/batch";
+import type { Response } from "@/types/response";
 
-const EnrollmentFormNew = ({
-  setRateTableData
-}: { setRateTableData: any }) => {
-  console.log(setRateTableData);
-  const [error, _] = useState("");
-  const [values, setValues] = useState<Enrollment>({
-    enrollmentId: 0,
-    firstEnrollmentId: 0,
-    enrollmentNo: 0,
+const ALL_WEEK_DAYS = [
+  { label: "Monday", value: 1 },
+  { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 },
+  { label: "Saturday", value: 6 },
+  { label: "Sunday", value: 7 },
+];
+
+const EnrollmentFormNew = ({ setRateTableData }: { setRateTableData: any }) => {
+  const [values, setValues] = useState<Partial<Enrollment>>({
     enrollmentDate: format(new Date(), "yyyy-MM-dd"),
-    membershipMasterId: 0,
-    membershipId: 0,
-    accountId: 0,
-    memberId: 0,
-    memberFirstName: "",
-    activityId: 0,
-    permittedDays: 0,
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: undefined,
     membersEnrolled: 1,
-    academyEntityId: 0,
-    courseId: 0,
-    attendingPattern: "",
-    attendingPatternDays: 0,
-    billingDaysSessions: 0,
-    courseRateId: 0,
-    patternDiscount: 0,
-    rackPrice: 0,
-    dnOrDiscount: 0,
-    dnAccountId: 0,
-    billingRate: 0,
-    costToMember: 0,
-    roundedAmount: 0,
-    billingAmount: 0,
-    cgstAmount: 0,
-    sgstAmount: 0,
-    totalDebitAmount: 0,
-    openEnrollment: false,
-    printRemarks: "",
-    officeRemarks: "",
-    walkingName: "",
-    walkingContact: "",
-    memberApprovalStatus: 0,
-    academyApprovalStatus: 0,
-    finalTSLApproval: 0,
-    changeNo: 0,
-    previousCourseID: 0,
-    processingCharge: 0,
     status: "active",
+    openEnrollment: false,
+    permittedDays: 0,
+  });
+
+  const [memberOptions, setMemberOptions] = useState<any[]>([]);
+  const [activityOptions, setActivityOptions] = useState<any[]>([]);
+  const [courseOptions, setCourseOptions] = useState<any[]>([]);
+  const [entityOptions, setEntityOptions] = useState<any[]>([]);
+  const [batchOptions, setBatchOptions] = useState<any[]>([]);
+
+  const [pagination, setPagination] = useState({
+    member: { page: 1, hasMore: true, loading: false },
+    activity: { page: 1, hasMore: true, loading: false },
+    entity: { page: 1, hasMore: true, loading: false },
   });
 
   const PAGE_SIZE = 20;
 
-  // --- Member State ---
-  const [memberOptions, setMemberOptions] = useState<any[]>([]);
-  const [memberPage, setMemberPage] = useState(1);
-  const [hasMoreMembers, setHasMoreMembers] = useState(true);
-  const [loadingMembers, setLoadingMembers] = useState(false);
+  const allowedWeekDays = useMemo(() => {
+    const selectedCourse = courseOptions.find(c => c.courseId === values.courseId);
+    if (!selectedCourse || !selectedCourse.daysPattern) return ALL_WEEK_DAYS;
 
-  // --- Activity State ---
-  const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
-  const [activityPage, setActivityPage] = useState(1);
-  const [hasMoreActivities, setHasMoreActivities] = useState(true);
-  const [loadingActivities, setLoadingActivities] = useState(false);
-
-  // --- Entity State ---
-  const [entityOptions, setEntityOptions] = useState<Entity[]>([]);
-  const [entityPage, setEntityPage] = useState(1);
-  const [hasMoreEntity, setHasMoreEntity] = useState(true);
-  const [loadingEntity, setLoadingEntity] = useState(false);
-
-  // --- Course State ---
-  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
-  const [coursePage, setCoursePage] = useState(1);
-  const [hasMoreCourse, setHasMoreCourse] = useState(true);
-  const [loadingCourse, setLoadingCourse] = useState(false);
-
-  // --- Course Rate State ---
-  const [courseRateOptions, setCourseRateOptions] = useState<CourseRate[]>([]);
-  const [courseRatePage, setCourseRatePage] = useState(1);
-  const [hasMoreCourseRate, setHasMoreCourseRate] = useState(true);
-  const [loadingCourseRate, setLoadingCourseRate] = useState(false);
-
-  // --- Member Fetching Logic ---
-  const fetchMembers = useCallback(
-    async (isInitial = false) => {
-      if (loadingMembers || (!hasMoreMembers && !isInitial)) return;
-      setLoadingMembers(true);
-      try {
-        const page = isInitial ? 1 : memberPage;
-        const response = await getMembers({ limit: PAGE_SIZE, page });
-        const items = response?.data || [];
-        setMemberOptions((prev) => (isInitial ? items : [...prev, ...items]));
-        setHasMoreMembers(items.length === PAGE_SIZE);
-        setMemberPage(page + 1);
-      } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch members",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingMembers(false);
-      }
-    },
-    [loadingMembers, hasMoreMembers, memberPage]
-  );
-
-  const fetchActivities = useCallback(
-    async (isInitial = false) => {
-      if (loadingActivities || (!hasMoreActivities && !isInitial)) return;
-      setLoadingActivities(true);
-      try {
-        const page = isInitial ? 1 : activityPage;
-        const response = await getActivities({ limit: PAGE_SIZE, page });
-        const items = response?.data || [];
-        setActivityOptions((prev) => (isInitial ? items : [...prev, ...items]));
-        setHasMoreActivities(items.length === PAGE_SIZE);
-        setActivityPage(page + 1);
-      } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch activities",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingActivities(false);
-      }
-    },
-    [loadingActivities, hasMoreActivities, activityPage]
-  );
-
-  const fetchAcademyEntity = useCallback(
-    async (isInitial = false) => {
-      if (loadingEntity || (!hasMoreEntity && !isInitial)) return;
-      setLoadingEntity(true);
-      try {
-        const page = isInitial ? 1 : entityPage;
-        const response = await getEntities({ limit: PAGE_SIZE, page });
-        const items = response?.data || [];
-        setEntityOptions((prev) => (isInitial ? items : [...prev, ...items]));
-        setHasMoreEntity(items.length === PAGE_SIZE);
-        setEntityPage(page + 1);
-      } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch activities",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingEntity(false);
-      }
-    },
-    [loadingEntity, hasMoreEntity, entityPage]
-  );
-
-  const fetchCourse = useCallback(
-    async (isInitial = false) => {
-      if (loadingCourse || (!hasMoreCourse && !isInitial)) return;
-      setLoadingCourse(true);
-      try {
-        const page = isInitial ? 1 : entityPage;
-        const response = await getCourses({ limit: PAGE_SIZE, page });
-        const items = response?.data || [];
-        setCourseOptions((prev) => (isInitial ? items : [...prev, ...items]));
-        setHasMoreCourse(items.length === PAGE_SIZE);
-        setCoursePage(page + 1);
-      } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch activities",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingEntity(false);
-      }
-    },
-    [loadingCourse, hasMoreCourse, coursePage]
-  );
-
-  const fetchCourseRate = useCallback(
-    async (isInitial = false) => {
-      if (loadingCourseRate || (!hasMoreCourseRate && !isInitial)) return;
-      setLoadingCourseRate(true);
-      try {
-        const page = isInitial ? 1 : courseRatePage;
-        const response = await getCourseRates({ limit: PAGE_SIZE, page });
-        const items = response?.data || [];
-        setCourseRateOptions((prev) =>
-          isInitial ? items : [...prev, ...items]
-        );
-        setHasMoreCourseRate(items.length === PAGE_SIZE);
-        setCourseRatePage(page + 1);
-      } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch activities",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingCourseRate(false);
-      }
-    },
-    [loadingCourseRate, hasMoreCourseRate, courseRatePage]
-  );
-
-  const WEEK_DAYS = [
-    { label: "Monday", value: 1 },
-    { label: "Tuesday", value: 2 },
-    { label: "Wednesday", value: 3 },
-    { label: "Thursday", value: 4 },
-    { label: "Friday", value: 5 },
-    { label: "Saturday", value: 6 },
-    { label: "Sunday", value: 7 },
-  ];
-
-  const daysArrayToNumber = (days: number[]) => {
-    return Number(days.sort((a, b) => a - b).join(""));
-  };
+    const pattern = String(selectedCourse.daysPattern);
+    return ALL_WEEK_DAYS.filter(day => pattern.includes(String(day.value)));
+  }, [values.courseId, courseOptions]);
 
   useEffect(() => {
-    fetchMembers(true);
-    fetchActivities(true);
-    fetchAcademyEntity(true);
-    fetchCourse(true);
-    fetchCourseRate;
-    true;
-  }, []);
+    if (Array.isArray(values.attendingPattern)) {
+      const allowedIds = allowedWeekDays.map(d => Number(d.value));
+      const filtered = values.attendingPattern.filter((val: any) => allowedIds.includes(Number(val)));
 
-  useEffect(() => {
-    const { attendingStartDate, permittedDays } = values;
+      if (filtered.length !== values.attendingPattern.length) {
+        setValues((prev: any) => ({ ...prev, attendingPattern: filtered }));
+      }
+    }
+  }, [allowedWeekDays, values.attendingPattern]);
 
-    // Guard clauses – no fake dates
-    if (!attendingStartDate || !permittedDays || permittedDays <= 0) {
-      setValues((prev) => ({
+  const fetchOptions = useCallback(async (type: 'member' | 'activity' | 'entity', isInitial = false, search = "") => {
+    const current = pagination[type];
+    if (current.loading || (!current.hasMore && !isInitial && !search)) return;
+
+    setPagination(prev => ({ ...prev, [type]: { ...prev[type], loading: true } }));
+
+    try {
+      const page = isInitial ? 1 : current.page;
+      let res;
+      if (type === 'member') res = await getMembers({ limit: PAGE_SIZE, page, search });
+      else if (type === 'activity') res = await getActivities({ limit: PAGE_SIZE, page, search });
+      else if (type === 'entity') res = await getEntities({ limit: PAGE_SIZE, page, search });
+
+      const items = res?.data || [];
+      if (type === 'member') setMemberOptions(prev => (isInitial || search) ? items : [...prev, ...items]);
+      else if (type === 'activity') setActivityOptions(prev => (isInitial || search) ? items : [...prev, ...items]);
+      else if (type === 'entity') setEntityOptions(prev => (isInitial || search) ? items : [...prev, ...items]);
+
+      setPagination(prev => ({
         ...prev,
-        endDate: undefined,
+        [type]: { page: page + 1, hasMore: items.length === PAGE_SIZE, loading: false }
       }));
+    } catch (err) {
+      setPagination(prev => ({ ...prev, [type]: { ...prev[type], loading: false } }));
+    }
+  }, [pagination]);
+
+  useEffect(() => {
+    if (!values.courseId) {
+      setRateTableData([]);
+      return;
+    }
+    getCourseRates({ courseId: values.courseId, limit: 10000 }).then(res => {
+      if (res?.data) setRateTableData(res.data);
+    });
+  }, [values.courseId, setRateTableData]);
+
+  useEffect(() => {
+    if (values.attendingStartDate && values.permittedDays) {
+      const calculatedEndDate = addDays(values.attendingStartDate, Number(values.permittedDays));
+      const formatted = format(calculatedEndDate, "yyyy-MM-dd");
+      if (values.endDate !== formatted) {
+        setValues(prev => ({ ...prev, endDate: formatted }));
+      }
+    }
+  }, [values.attendingStartDate, values.permittedDays, values.endDate]);
+
+  useEffect(() => {
+    if (!values.activityId) {
+      setCourseOptions([]);
+      setBatchOptions([]);
       return;
     }
 
-    const calculatedEndDate = addDays(attendingStartDate, permittedDays);
-    console.log(calculatedEndDate);
+    getCourses({
+      activityId: values.activityId,
+      entityId: values.academyEntityId,
+      limit: 10000
+    }).then(res => {
+      setCourseOptions(res?.data || []);
+    });
 
-    setValues((prev: any) => ({
-      ...prev,
-      endDate: format(calculatedEndDate, "yyyy-MM-dd"),
-    }));
-  }, [values.attendingStartDate, values.permittedDays]);
+    getBatch({
+      activityId: values.activityId,
+      entityId: values.academyEntityId,
+      limit: 10000
+    }).then((res: Response<Batch[]>) => {
+      setBatchOptions(res?.data || []);
+    });
+  }, [values.activityId, values.academyEntityId]);
+
+  useEffect(() => {
+    fetchOptions('member', true);
+    fetchOptions('activity', true);
+    fetchOptions('entity', true);
+  }, []);
 
   const onChange = useCallback((field: string, value: any) => {
     setValues((prev: any) => ({ ...prev, [field]: value }));
   }, []);
-
-  const handleSubmit = async () => {
-    const payload = {
-      ...values,
-      attendingPattern: daysArrayToNumber(values.attendingPattern as any),
-    };
-    console.log("Submitting values:", payload);
-    toast({ title: "Success", description: "Form submitted" });
-  };
 
   const fields = [
     {
       name: "memberId",
       label: "Member Name",
       type: "select",
-      required: true,
-      options: memberOptions.map((m) => ({
-        label: `${m.memberFirstName} ${m.memberLastName}`,
-        value: m.memberId,
-      })),
-      onLoadMore: () => fetchMembers(),
-      isLoadingMore: loadingMembers,
+      options: memberOptions.map(m => ({ label: `${m.memberFirstName} ${m.memberLastName}`, value: m.memberId })),
+      onSearch: (q: string) => fetchOptions('member', true, q),
+      onLoadMore: () => fetchOptions('member'),
+      isLoadingMore: pagination.member.loading,
     },
     {
       name: "activityId",
       label: "Activity",
       type: "select",
-      required: true,
-      options: activityOptions.map((a) => ({
-        label: a.activityName,
-        value: a.activityId,
-      })),
-      onLoadMore: () => fetchActivities(),
-      isLoadingMore: loadingActivities,
+      options: activityOptions.map(a => ({ label: a.activityName, value: a.activityId })),
+      onSearch: (q: string) => fetchOptions('activity', true, q),
+      onLoadMore: () => fetchOptions('activity'),
+      isLoadingMore: pagination.activity.loading,
+    },
+    {
+      name: "academyEntityId",
+      label: "Academy Entity",
+      type: "select",
+      options: entityOptions.map(e => ({ label: e.entityName, value: e.entityId })),
+      onSearch: (q: string) => fetchOptions('entity', true, q),
+      onLoadMore: () => fetchOptions('entity'),
+      isLoadingMore: pagination.entity.loading,
     },
     {
       name: "courseId",
       label: "Course",
       type: "select",
-      options: courseOptions?.map((c) => ({
-        value: c.courseId,
-        label: c.courseName,
+      disabled: !values.activityId,
+      options: courseOptions.map(c => ({
+        label: `${c.courseName} [Pattern: ${c.daysPattern || 'N/A'}]`,
+        value: c.courseId
       })),
     },
     {
-      name: "enrollmentDate",
-      label: "Enrollment Date",
-      type: "Date",
-      disabled: true,
-    },
-    { name: "permittedDays", label: "Permitted Days", type: "number" },
-    { name: "attendingStartDate", label: "Attending Start Date", type: "Date" },
-    { name: "endDate", label: "End Date", type: "Date", disabled: true },
-    { name: "membersEnrolled", label: "Members Enrolled", type: "number" },
-    {
-      name: "academyEntityId",
-      label: "Academy Entity",
+      name: "batchId",
+      label: "Batch",
       type: "select",
-      options: entityOptions?.map((e) => ({
-        value: e.entityId,
-        label: e.entityName,
+      disabled: !values.activityId,
+      options: batchOptions.map(b => ({
+        label: `${b.batchName} (${b.startTime} - ${b.endTime})`,
+        value: b.batchId
       })),
     },
+    { name: "attendingStartDate", label: "Start Date", type: "date" },
+    { name: "permittedDays", label: "Permitted Days", type: "number" },
+    { name: "endDate", label: "End Date", type: "date", disabled: true },
     {
       name: "attendingPattern",
-      label: "Attending Pattern",
+      label: "Attending Days",
       type: "multiselect",
-      require: true,
-      options: WEEK_DAYS,
+      options: allowedWeekDays,
+      description: values.courseId ? "Showing only days allowed by the selected course pattern." : "Please select a course first."
     },
+    { name: "billingDaysSessions", label: "Sessions", type: "number" },
+    { name: "unitRate", label: "Unit Rate", type: "number" },
+    { name: "billingRate", label: "Billing Rate", type: "number" },
+    { name: "cgstAmount", label: "CGST", type: "number" },
+    { name: "sgstAmount", label: "SGST", type: "number" },
+    { name: "totalDebitAmount", label: "Total Amount", type: "number" },
+    { name: "walkingName", label: "Walk-in Name", type: "text" },
+    { name: "walkingContact", label: "Walk-in Contact", type: "text" },
     {
-      name: "attendingPatternDays",
-      label: "Attending Pattern Days",
-      type: "number",
-      disabled: true,
+      name: "status", label: "Status", type: "select", options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Cancelled", value: "cancelled" },
+      ]
     },
-    {
-      name: "billingDaysSessions",
-      label: "Billing Days Sessions",
-      type: "number",
-    },
-    {
-      name: "courseRateId",
-      label: "Course Rate",
-      type: "select",
-      options: courseRateOptions?.map((c) => ({
-        value: c.courseRateId,
-        label: c.aboveUnits,
-      })),
-    },
-    {
-      name: "patternDiscount",
-      label: "Pattern Discount",
-      type: "number",
-      disabled: true,
-    },
-    {
-      name: "rackPrice",
-      label: "Rack Price",
-      type: "number",
-      disabled: true,
-    },
-    {
-      name: "dnOrDiscount",
-      label: "Dn Or Discount",
-      type: "text",
-      options: [
-        { value: "Dn", label: "Dn" },
-        { value: "Discount", label: "Discount" },
-      ],
-    },
-    {
-      name: "billingRate",
-      label: "Billing Rate",
-      type: "number",
-      disabled: true,
-    },
-    {
-      name: "cgstAmount",
-      label: "CGST Amount",
-      type: "number",
-      disabled: true,
-    },
-    {
-      name: "sgstAmount",
-      label: "SGST Amount",
-      type: "number",
-      disabled: true,
-    },
-    {
-      name: "totalDebitAmount",
-      label: "Total Debit Amount",
-      type: "number",
-      disabled: true,
-    },
-    {
-      name: "openEnrollment",
-      label: "Open Enrollment",
-      type: "checkbox",
-    },
-    {
-      name: "printRemarks",
-      label: "Print Remarks",
-      type: "text",
-    },
-    {
-      name: "officeRemarks",
-      label: "Office Remarks",
-      type: "text",
-    },
-    {
-      name: "walkInName",
-      label: "walkIn Name",
-      type: "text",
-    },
-    {
-      name: "walkInContact",
-      label: "walkIn Contact",
-      type: "text",
-      disabled: true,
-    },
-    {
-      name: "memberApprovalStatus",
-      label: "Member Approval Status",
-      type: "text",
-      disabled: true,
-    },
-    {
-      name: "academyApprovalStatus",
-      label: "Academy Approval Status",
-      type: "text",
-      disabled: true,
-    },
-    {
-      name: "finalTSLApproval",
-      label: "Final TSL Approval",
-      type: "text",
-      disabled: true,
-    },
-    {
-      name: "ChangeNo",
-      label: "Change No",
-      type: "text",
-      disabled: true,
-    },
-    {
-      name: "previousCourseId",
-      label: "Previous CourseID",
-      type: "text",
-      disabled: true,
-    },
-    {
-      name: "processingCharges",
-      label: "Processing Charges",
-      type: "text",
-    },
+    { name: "openEnrollment", label: "Open Enrollment", type: "checkbox" },
   ];
 
-  return (
-    <div className="flex flex-col w-full max-h-[90vh] overflow-hidden">
-      <div className="overflow-auto px-4">
-        <h1 className="text-center text-blue-600 font-bold text-2xl py-4">
-          Enrollment Details
-        </h1>
+  const handleSave = () => {
+    const finalPattern = Array.isArray(values.attendingPattern)
+      ? values.attendingPattern.sort().join('')
+      : values.attendingPattern;
 
+    console.log("Saving Enrollment:", { ...values, attendingPattern: finalPattern });
+    toast({ title: "Success", description: "Enrollment Prepared for Save" });
+  };
+
+  return (
+    <div className="flex flex-col w-full h-[80vh] max-w-5xl mx-auto bg-background border rounded-xl overflow-hidden shadow-2xl transition-all">
+      <div className="flex-shrink-0 border-b p-6 bg-muted/5">
+        <h1 className="text-center text-blue-600 font-bold text-2xl">Enrollment Registration</h1>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
         <FormContent
           fields={fields as any}
           values={values}
           errors={{}}
           loading={false}
-          error={error}
+          error={null}
           isSubmitting={false}
           onChange={onChange}
           layout="grid"
         />
       </div>
 
-      <FormFooter
-        onClose={() => setValues({} as any)}
-        onSubmit={handleSubmit}
-        submitLabel="Create"
-        isSubmitting={false}
-      />
+      <div className="flex-shrink-0">
+        <FormFooter
+          onClose={() => { }}
+          onSubmit={handleSave}
+          submitLabel="Save Enrollment"
+          isSubmitting={false}
+        />
+      </div>
     </div>
   );
 };

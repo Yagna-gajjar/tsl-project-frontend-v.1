@@ -19,6 +19,7 @@ interface FacilityImportRow {
 	academicCapacity?: number | string;
 	recreationCapacity?: number | string;
 	eventCapacity?: number | string;
+	level?: number;
 }
 
 export default function FacilityExcelUpload({ isOpen, onClose, onSuccess }: FacilityExcelUploadProps) {
@@ -31,7 +32,8 @@ export default function FacilityExcelUpload({ isOpen, onClose, onSuccess }: Faci
 		'description',
 		'academicCapacity',
 		'recreationCapacity',
-		'eventCapacity'
+		'eventCapacity',
+		'level'
 	], []);
 
 	const handleValidateRow = useCallback((row: FacilityImportRow) => {
@@ -58,6 +60,7 @@ export default function FacilityExcelUpload({ isOpen, onClose, onSuccess }: Faci
 			academicCapacity: row.academicCapacity ? Math.floor(Number(row.academicCapacity)) : null,
 			recreationCapacity: row.recreationCapacity ? Math.floor(Number(row.recreationCapacity)) : null,
 			eventCapacity: row.eventCapacity ? Math.floor(Number(row.eventCapacity)) : null,
+			level: row.level ? Math.floor(Number(row.level)) : 1,
 		};
 
 		await createFacility(payload);

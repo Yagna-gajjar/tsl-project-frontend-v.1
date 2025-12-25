@@ -15,6 +15,7 @@ import {
   FileText,
   Calendar,
   Clock,
+  Layers,
 } from "lucide-react";
 
 type Props = {
@@ -31,6 +32,7 @@ const fields: FieldConfig<Facility>[] = [
   { key: "academicCapacity", label: "Academic Capacity", icon: Users },
   { key: "recreationCapacity", label: "Recreation Capacity", icon: Music },
   { key: "eventCapacity", label: "Event Capacity", icon: Megaphone },
+  { key: "level", label: "Level", icon: Layers },
   { key: "description", label: "Description", icon: FileText },
 
   {

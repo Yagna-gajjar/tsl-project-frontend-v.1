@@ -38,6 +38,7 @@ export function FacilityFormModal({
     academicCapacity: initialData?.academicCapacity ?? undefined,
     recreationCapacity: initialData?.recreationCapacity ?? undefined,
     eventCapacity: initialData?.eventCapacity ?? undefined,
+    level: initialData?.level ?? undefined,
   };
 
   const [values, setValues] = useState<Partial<Facility>>(empty);
@@ -103,6 +104,9 @@ export function FacilityFormModal({
         eventCapacity: values.eventCapacity
           ? Number(values.eventCapacity)
           : null,
+        level: values.level
+          ? Number(values.level)
+          : 1,
       };
 
       let res: Response;
@@ -180,6 +184,11 @@ export function FacilityFormModal({
     {
       name: "eventCapacity",
       label: "Event Capacity",
+      type: "number",
+    },
+    {
+      name: "level",
+      label: "Level",
       type: "number",
     },
     {

@@ -127,7 +127,6 @@ export default function AccountPage() {
     [loadingMembers, hasMoreMembers, membersPage, selectedEntityType]
   );
 
-  /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
     fetchEntityTypes(entityClassification);
     setSelectedEntityType("all");
@@ -135,7 +134,6 @@ export default function AccountPage() {
   }, [entityClassification]);
 
   useEffect(() => {
-    // FULL RESET when entity type changes
     setSelectedEntityId("all");
 
     setEntities([]);
@@ -214,7 +212,7 @@ export default function AccountPage() {
             setSelectedEntityType(selectedValue);
 
             if (selectedValue === "all") {
-              setSelectedEntityEnumCase(undefined); 
+              setSelectedEntityEnumCase(undefined);
               return;
             }
 
@@ -229,16 +227,16 @@ export default function AccountPage() {
 
         {selectedEntityType.toLocaleLowerCase() == "Family".toLocaleLowerCase() ? (
           <SearchableMultiselect
-          isSingle
-          placeholder="Member Name"
-          options={members.map((m) => ({
-            label: `${m.memberFirstName} ${m.memberLastName}`,
-            value: Number(m.memberId),
-          }))}
-          onChange={(v) => setSelectedEntityId(v ?? "all")}
-          onLoadMore={() => fetchMembers()}
-          isLoadingMore={loadingMembers}
-        />
+            isSingle
+            placeholder="Member Name"
+            options={members.map((m) => ({
+              label: `${m.memberFirstName} ${m.memberLastName}`,
+              value: Number(m.memberId),
+            }))}
+            onChange={(v) => setSelectedEntityId(v ?? "all")}
+            onLoadMore={() => fetchMembers()}
+            isLoadingMore={loadingMembers}
+          />
         ) : (
           <SearchableMultiselect
             isSingle
@@ -265,7 +263,7 @@ export default function AccountPage() {
           setFormOpen(true);
         }}
         onView={(r) => {
-          setViewId(r.accountId);
+          setViewId(Number(r.accountId));
           setViewOpen(true);
         }}
       />
