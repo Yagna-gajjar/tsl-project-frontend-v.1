@@ -242,7 +242,7 @@ export default function MembershipFormModal({
       selectedMembership.perMemberRegCharge ?? 0
     );
     const perMemberPerMonthCharge = Number(
-      selectedMembership.caPerMemberPerMonth ?? 0
+      selectedMembership.commPerMemberPerMonth ?? 0
     );
     const totalIssueCharges = Math.max(
       perMemberRegCharge * members,
@@ -251,9 +251,7 @@ export default function MembershipFormModal({
 
     /* 2. Applicable Discount */
     const memberLimit = Number(selectedMembership.disOnCaUptoMembers);
-    const discountPerMember =
-      Number(selectedMembership.descreaseCaByPercentage ?? 0) / 100;
-
+    const discountPerMember = Number(selectedMembership.descreaseCaByPercentage ?? 0) / 100;
     let applicableMembers;
     if (members === 1) {
       applicableMembers = 1;
@@ -270,7 +268,10 @@ export default function MembershipFormModal({
     const durationMultiplier = Math.floor(
       Number(selectedMembership.durationDays ?? 0) / 30
     );
-
+    console.log(appDisc, "app")
+    console.log(perMemberPerMonthCharge, "perMemberPerMonthCharge")
+    console.log(durationMultiplier, "durationMultiplier")
+    console.log(members, "members")
     const intermediate = Number(
       (
         appDisc *
@@ -279,9 +280,10 @@ export default function MembershipFormModal({
         members
       ).toFixed(2)
     );
-
     /* 4. Total F Balance */
     const fBalPrInCa = (selectedMembership?.fBalPrInCa as number) / 100;
+    console.log("intermediate", intermediate);
+    console.log("fBalPrInCa", fBalPrInCa);
     const tfBal = Math.floor((intermediate * fBalPrInCa) / 100) * 100;
 
     /* 5. Total C Balance */
@@ -317,7 +319,7 @@ export default function MembershipFormModal({
       caDepositPRRequiredFBalance: minDepositFBalanceReq,
       caDepositPRRequiredCBalance: minDepositCBalanceReq,
       depositeReq: depositReq,
-      vBalPrInCas: vBalPrInCas,
+      vBalPrInCa: vBalPrInCas,
     }));
   }, [debouncedMembers, selectedMembership]);
   const onChange = (

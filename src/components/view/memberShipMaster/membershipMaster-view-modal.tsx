@@ -87,7 +87,7 @@ const fields: FieldConfig<MembershipMaster>[] = [
     render: (v) => Number(v),
   },
   {
-    key: "caPerMemberPerMonth",
+    key: "commPerMemberPerMonth",
     label: "CA / Member / Month",
     icon: IndianRupee,
     render: (v) => Number(v),

@@ -232,7 +232,7 @@ export default function MembershipMasterFormModal({
         minIssueCharge: Number(values.minIssueCharge),
         perMemberRegCharge: Number(values.perMemberRegCharge),
         memberLimit: Number(values.memberLimit),
-        caPerMemberPerMonth: Number(values.caPerMemberPerMonth),
+        commPerMemberPerMonth: Number(values.commPerMemberPerMonth),
         disOnCaUptoMembers: Number(values.disOnCaUptoMembers),
         descreaseCaByPercentage: Number(values.descreaseCaByPercentage),
         fBalPrInCa: Number(values.fBalPrInCa),
@@ -360,7 +360,7 @@ export default function MembershipMasterFormModal({
       required: true,
     },
     {
-      name: "caPerMemberPerMonth",
+      name: "commPerMemberPerMonth",
       label: "Commitment / Month / Member",
       type: "number",
       required: false,

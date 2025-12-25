@@ -10,7 +10,7 @@ export interface MembershipMaster {
   caDepositPR: number;
   minIssueCharge: number;
   perMemberRegCharge: number;
-  caPerMemberPerMonth?: number;
+  commPerMemberPerMonth?: number;
   memberLimit?: number;
   disOnCaUptoMembers?: number;
   descreaseCaByPercentage?: number;
