@@ -18,64 +18,29 @@ type Props = {
 
 export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Batch[]>([]);
+  const [total, setTotal] = useState<number>(0);
   const [loading, setIsLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState<
-    Record<string, string | number | undefined>
-  >({});
+  const [filters, setFilters] = useState<Record<string, string | number | undefined>>({});
   const [sortBy, setSortBy] = useState<string>("batchId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
   const navigate = useNavigate();
 
-  const formatTimeDisplay = (t: unknown): string => {
-    if (t === undefined || t === null || t === "") return "-";
-
-    try {
-      if (typeof t === "string") {
-        const s = t.trim();
-        const hhmm = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(s);
-        if (hhmm) {
-          return `${hhmm[1].padStart(2, "0")}:${hhmm[2]}`;
-        }
-        const d = new Date(s);
-        if (!Number.isNaN(d.getTime())) {
-          return format(d, "HH:mm");
-        }
-        return s || "-";
-      }
-
-      if (t instanceof Date) {
-        if (Number.isNaN(t.getTime())) return "-";
-        return format(t, "HH:mm");
-      }
-
-      if (typeof t === "number") {
-        const d = new Date(t);
-        if (!Number.isNaN(d.getTime())) return format(d, "HH:mm");
-      }
-
-      return "-";
-    } catch {
-      return "-";
-    }
+  const formatTimeDisplay = (t: string | null | undefined): string => {
+    if (!t) return "-";
+    return t.substring(0, 5);
   };
 
-  const weekCodeToNames = (code: unknown): string => {
-    if (code === undefined || code === null || code === "") return "-";
+  const handlePageChange = (p: number) => setPage(p);
+  const weekCodeToNames = (code: string | null | undefined): string => {
+    if (!code) return "-";
     const map: Record<string, string> = {
-      "1": "Mon",
-      "2": "Tue",
-      "3": "Wed",
-      "4": "Thu",
-      "5": "Fri",
-      "6": "Sat",
-      "7": "Sun",
+      "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun",
     };
-    const s = String(code);
     const names: string[] = [];
-    for (const ch of s) {
+    for (const ch of String(code)) {
       if (map[ch]) names.push(map[ch]);
     }
     return names.length > 0 ? names.join(", ") : String(code);
@@ -88,28 +53,30 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
         page,
         limit,
         sortBy,
-        sortOrder: sortOrder,
+        sortOrder,
         search: search || undefined,
-        batchName: filters.batchName as string | undefined,
-        coachName: filters.coachName as string | undefined,
-        facilityName: filters.facilityName as string | undefined,
-        courseName: filters.courseName as string | undefined,
+        batchName: filters.batchName as string,
+        status: filters.status as string,
+        courseName: filters.courseName as string,
+        activityName: filters.activityName as string,
+        entityName: filters.entityName as string,
+        batchType: filters.batchType as string,
+        admissionCriteria: filters.admissionCriteria as string,
       });
 
-      const rowsRaw = Array.isArray(res)
-        ? res
-        : Array.isArray(res?.data)
-          ? (res?.data as Batch[])
-          : [];
-      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
+      const rowsRaw = res?.data || [];
+      const rows = rowsRaw.map((r: any) => ({
         ...r,
         createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
         updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
       })) as Batch[];
+
       setData(rows);
+      setTotal(res?.pagination?.total || 0);
     } catch (err) {
       console.error("Failed to fetch batches", err);
       setData([]);
+      setTotal(0);
     } finally {
       setIsLoading(false);
     }
@@ -124,14 +91,8 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-  const handleFilterChange = (
-    filterKey: string,
-    value: string | number | undefined
-  ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterKey]: value || undefined,
-    }));
+  const handleFilterChange = (key: string, value: string | number | undefined) => {
+    setFilters((prev) => ({ ...prev, [key]: value || undefined }));
     setPage(1);
   };
 
@@ -141,76 +102,44 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
     setPage(1);
   };
 
-  const handlePageChange = (p: number) => setPage(p);
-
   const handleExport = async (): Promise<Batch[]> => {
     const res = await getBatch({
       page: 1,
-      limit: data.length,
-      sortBy,
-      sortOrder: sortOrder,
+      limit: 1000, // Export all
       search: search || undefined,
-      batchName: filters.batchName as string | undefined,
-      coachName: filters.coachName as string | undefined,
-      facilityName: filters.facilityName as string | undefined,
-      courseName: filters.courseName as string | undefined,
+      ...filters
     });
-
-    const rowsRaw = Array.isArray(res)
-      ? res
-      : Array.isArray(res?.data)
-      ? (res?.data as Batch[])
-      : [];
-    const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
-      ...r,
-      createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
-      updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-    })) as Batch[];
-
-    return rows;
+    return res?.data || [];
   };
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const handleDelete = async (id: number | undefined) => {
-    if (id === undefined) return;
-
+  const handleDelete = async (id: number | null) => {
+    if (id === null) return;
     try {
       await deleteBatch(id);
-      toast({
-        title: "Success",
-        description: "Batch deleted successfully",
-      });
-      setDeleteId(null);
+      toast({ title: "Success", description: "Batch deleted successfully" });
       setDeleteOpen(false);
-      await loadData();
+      loadData();
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to delete batch",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
     }
   };
 
   const columns: Column<Batch>[] = [
     {
       key: "members",
-      header: "Members",
+      header: "Action",
       sortable: false,
-      filterType: null,
       render: (r) => (
-        <div className="flex flex-col">
-          <Button
-            variant={"outline"}
-            onClick={() => {
-              navigate(`/batch/attendance-sheet/${r?.batchId}`);
-            }}
-          >
-            <ExternalLink />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(`/batch/attendance-sheet/${r.batchId}`)}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
       ),
     },
     {
@@ -218,119 +147,68 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       header: "Batch Name",
       sortable: true,
       filterType: "text",
-      render: (r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{r.batchName}</span>
-        </div>
-      ),
+      render: (r) => <span className="font-medium">{r.batchName}</span>,
     },
     {
       key: "courseName",
-      header: "Course Name",
+      header: "Course",
       sortable: true,
       filterType: "text",
-      render: (r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{r.courseName}</span>
-        </div>
-      ),
     },
     {
-      key: "coachName",
-      header: "Coach Name",
+      key: "entityName",
+      header: "Entity",
       sortable: true,
       filterType: "text",
-      render: (r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{r.coachName ?? "-"} </span>
-        </div>
-      ),
     },
     {
-      key: "facilityName",
-      header: "Facility Name",
+      key: "batchType",
+      header: "Type",
       sortable: true,
       filterType: "text",
-      render: (r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{r.facilityName ?? "-"}</span>
-        </div>
-      ),
-    },
-    {
-      key: "areaName",
-      header: "Area Name",
-      sortable: true,
-      filterType: "text",
-      render: (r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{r.areaName ?? "-"}</span>
-        </div>
-      ),
     },
     {
       key: "introduceDate",
-      header: "Introduce Date",
+      header: "Start Date",
       sortable: true,
-      render: (r) =>
-        r.introduceDate
-          ? new Date(r.introduceDate).toLocaleDateString("en-US")
-          : "-",
-    },
-    {
-      key: "suspendedDate",
-      header: "Suspended Date",
-      sortable: true,
-      render: (r) =>
-        r.suspendedDate
-          ? new Date(r.suspendedDate).toLocaleDateString("en-US")
-          : "-",
+      render: (r) => r.introduceDate ? format(new Date(r.introduceDate), "dd MMM yyyy") : "-",
     },
     {
       key: "startTime",
-      header: "Start Time",
-      sortable: true,
-      render: (r) => <>{formatTimeDisplay(r.startTime)}</>,
-    },
-    {
-      key: "endTime",
-      header: "End Time",
-      sortable: true,
-      render: (r) => <>{formatTimeDisplay(r.endTime)}</>,
-    },
-    {
-      key: "weekDays",
-      header: "Week Days",
+      header: "Time Slot",
       sortable: true,
       render: (r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{weekCodeToNames(r.daysPerWeek)}</span>
-        </div>
+        <span className="text-xs font-mono">
+          {formatTimeDisplay(r.startTime)} - {formatTimeDisplay(r.endTime)}
+        </span>
+      ),
+    },
+    {
+      key: "daysPattern",
+      header: "Days",
+      sortable: true,
+      render: (r) => (
+        <span className="text-xs text-muted-foreground">
+          {weekCodeToNames(r.daysPattern)}
+        </span>
       ),
     },
     {
       key: "activeMemberCount",
-      header: "Active Members",
+      header: "Capacity",
       sortable: true,
       render: (r) => {
-        const percentage = (r.activeMemberCount / r.maxCapacity) * 100;
-
-        let textColorClass = "text-gray-900";
-
-        if (percentage >= 100) {
-          textColorClass = "text-red-600 font-bold";
-        } else if (percentage >= 50) {
-          textColorClass = "text-yellow-600";
-        } else {
-          textColorClass = "text-green-600";
-        }
+        const count = r.activeMemberCount || 0;
+        const max = r.maxCapacity || 1;
+        const percentage = (count / max) * 100;
+        let color = "text-green-600";
+        if (percentage >= 100) color = "text-red-600 font-bold";
+        else if (percentage >= 80) color = "text-yellow-600";
 
         return (
-          <div className="flex flex-col">
-            <span className={`font-medium ${textColorClass}`}>
-              {r.activeMemberCount}/{r.maxCapacity}
-            </span>
-          </div>
+          <span className={`font-medium ${color}`}>
+            {count} / {max}
+          </span>
         );
       },
     },
@@ -338,24 +216,22 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
       key: "status",
       header: "Status",
       sortable: true,
+      filterType: "text",
       render: (r) => (
-        <div className="flex flex-col">
-          <span
-            className={`font-medium ${
-              r.status === "active"
-                ? "bg-green-600/30 px-3 w-fit pb-1 rounded-lg text-green-600"
-                : "bg-red-600/30 px-2 w-fit pb-1 rounded-lg text-red-600"
+        <span
+          className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${r.status === "active"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
             }`}
-          >
-            {r.status}
-          </span>
-        </div>
+        >
+          {r.status}
+        </span>
       ),
     },
   ];
 
   return (
-    <div>
+    <div className="space-y-4">
       <DataTable<Batch>
         data={data}
         isLoading={loading}
@@ -363,33 +239,30 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
-        onView={(row) => onView?.(row)}
-        onEdit={(row) => onEdit?.(row)}
-        onDelete={(id: number | undefined) => {
-          setDeleteId(id ?? null);
+        onView={onView}
+        onEdit={onEdit}
+        onDelete={(id) => {
+          setDeleteId(Number(id));
           setDeleteOpen(true);
         }}
-        idKey={"batchId"}
-        exportFileName="Batch"
+        idKey="batchId"
+        exportFileName="Batches_List"
         onExport={handleExport}
       />
+
       <ConfirmDialog
         isOpen={deleteOpen}
-        onClose={() => {
-          setDeleteOpen(false);
-          setDeleteId(null);
-        }}
-        onConfirm={() => handleDelete(deleteId ?? undefined)}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => handleDelete(deleteId)}
         title="Delete Batch?"
-        description="Are you sure you want to delete this batch? This action cannot be undone."
+        description="This action cannot be undone. This will permanently delete the batch and remove its associations."
         confirmText="Delete"
-        cancelText="Cancel"
         variant="destructive"
       />
     </div>
