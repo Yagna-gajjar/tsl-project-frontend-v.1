@@ -583,7 +583,7 @@ export default function CourseFormModal({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-hidden min-h-[500px] flex flex-col">
             <AnimatePresence mode="wait">
               {(globalError ||
                 errors.rates ||

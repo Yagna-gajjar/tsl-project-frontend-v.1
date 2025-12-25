@@ -10,6 +10,7 @@ export interface AccountMemberQuery {
   search?: string;
   memberId?: number;
   accountId?: number;
+  entityType?: string
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
 }

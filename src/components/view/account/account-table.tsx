@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
 
 type Props = {
   onView?: (row: Account) => void;
@@ -72,18 +73,20 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
   const columns: Column<Account>[] = [
     { key: "accountName", header: "Account Name", sortable: true },
     { key: "entityType", header: "Define Type" },
-    {key: "regDate", header: "Registration Date"},
-    {key: "suspensionDate", header: "Suspension Date"},
     { key: "entityName", header: "Entity Name" },
     { key: "accountType", header: "Account Type" },
     { key: "contact", header: "Contact" },
     { key: "proffesionalSector", header: "Sector" },
     {
       key: "regDate",
-      header: "Reg Date",
+      header: "Registration Date",
       sortable: true,
-      render: (r) =>
-        r.regDate ? new Date(r.regDate).toLocaleDateString() : "-",
+      render: (r) => r.regDate ? format(r.regDate, "dd-MMM-yyyy") : "-",
+    },
+    {
+      key: "suspensionDate",
+      header: "Suspension Date",
+      render: (r) => r.suspensionDate ? format(r.suspensionDate, "dd-MMM-yyyy") : "-",
     },
   ];
 

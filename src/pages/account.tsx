@@ -5,6 +5,7 @@ import type { Account } from "@/types/account";
 import type { Enums } from "@/types/enums";
 import type { Entity } from "@/types/entity";
 import type { Response } from "@/types/response";
+import type { AccountMember } from "@/types/accountMember";
 
 import AccountTable from "@/components/view/account/account-table";
 import AccountFormModal from "@/components/view/account/account-form-modal";
@@ -16,6 +17,7 @@ import { SearchableMultiselect } from "@/components/form-modal/form-field-input"
 
 import { getEnumsByCategory } from "@/api/enums.api";
 import { getEntities } from "@/api/entity.api";
+import { getAccountMembers } from "@/api/accountMember.api";
 import { toast } from "@/hooks/use-toast";
 
 export default function AccountPage() {
@@ -28,8 +30,9 @@ export default function AccountPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [entityClassification, setEntityClassification] = useState<number>(2);
-  const [entityType, setEntityType] = useState<Enums[]>([]);
+  const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<string>("all");
+  const [selectedEntityEnumCase, setSelectedEntityEnumCase] = useState<number>();
 
   const [selectedEntityId, setSelectedEntityId] = useState<number | "all">(
     "all"
@@ -40,17 +43,21 @@ export default function AccountPage() {
   const [hasMoreEntities, setHasMoreEntities] = useState(true);
   const [loadingEntities, setLoadingEntities] = useState(false);
 
+  const [members, setMembers] = useState<AccountMember[]>([]);
+  const [membersPage, setMembersPage] = useState(1);
+  const [hasMoreMembers, setHasMoreMembers] = useState(true);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
   const PAGE_SIZE = 20;
 
-  const fetchEntityType = async (enumCase: number) => {
+  const fetchEntityTypes = async (enumCase: number) => {
     try {
       const res: Response<Enums[]> = await getEnumsByCategory("ENTITY TYPE", {
         includeEnumCase: String(enumCase),
       });
-
-      setEntityType(res?.data ?? []);
+      setEntityTypeEnums(res?.data ?? []);
     } catch {
-      setEntityType([]);
+      setEntityTypeEnums([]);
     }
   };
 
@@ -58,23 +65,14 @@ export default function AccountPage() {
     entityId: selectedEntityId === "all" ? undefined : selectedEntityId,
     entityType: selectedEntityType === "all" ? undefined : selectedEntityType,
   };
-  
-
-  useEffect(() => {
-    fetchEntityType(entityClassification);
-    setSelectedEntityType("all");
-  }, [entityClassification]);
 
   const fetchEntities = useCallback(
     async (isInitial = false) => {
-      if (loadingEntities) return;
-      if (!isInitial && !hasMoreEntities) return;
+      if (loadingEntities || (!isInitial && !hasMoreEntities)) return;
 
       setLoadingEntities(true);
-
       try {
         const page = isInitial ? 1 : entitiesPage;
-
         const res: Response<Entity[]> = await getEntities({
           limit: PAGE_SIZE,
           page,
@@ -82,10 +80,9 @@ export default function AccountPage() {
             selectedEntityType === "all" ? undefined : selectedEntityType,
         });
 
-        const items = res?.data ?? [];        
-
-        setEntities((prev) => (isInitial ? items : [...prev, ...items]));
-        setHasMoreEntities(items.length === PAGE_SIZE);
+        const data = res?.data ?? [];
+        setEntities((p) => (isInitial ? data : [...p, ...data]));
+        setHasMoreEntities(data.length === PAGE_SIZE);
         setEntitiesPage(page + 1);
       } catch {
         toast({
@@ -100,77 +97,149 @@ export default function AccountPage() {
     [loadingEntities, hasMoreEntities, entitiesPage, selectedEntityType]
   );
 
+  const fetchMembers = useCallback(
+    async (isInitial = false) => {
+      if (loadingMembers || (!isInitial && !hasMoreMembers)) return;
+
+      setLoadingMembers(true);
+      try {
+        const page = isInitial ? 1 : membersPage;
+        const res: Response<AccountMember[]> = await getAccountMembers({
+          limit: PAGE_SIZE,
+          page,
+          entityType: selectedEntityType
+        });
+
+        const data = res?.data ?? [];
+        setMembers((p) => (isInitial ? data : [...p, ...data]));
+        setHasMoreMembers(data.length === PAGE_SIZE);
+        setMembersPage(page + 1);
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to fetch members",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingMembers(false);
+      }
+    },
+    [loadingMembers, hasMoreMembers, membersPage, selectedEntityType]
+  );
+
+  /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
+    fetchEntityTypes(entityClassification);
+    setSelectedEntityType("all");
+    setSelectedEntityEnumCase(0);
+  }, [entityClassification]);
+
+  useEffect(() => {
+    // FULL RESET when entity type changes
+    setSelectedEntityId("all");
+
     setEntities([]);
     setEntitiesPage(1);
     setHasMoreEntities(true);
-    setSelectedEntityId("all");
-    fetchEntities(true);
+
+    setMembers([]);
+    setMembersPage(1);
+    setHasMoreMembers(true);
+
+    if (selectedEntityType === "Family") {
+      fetchMembers(true);
+    } else {
+      fetchEntities(true);
+    }
   }, [selectedEntityType]);
 
   const bumpRefresh = () => setRefreshKey((p) => p + 1);
 
+  /* ---------------- UI ---------------- */
   return (
     <div>
       <div className="flex justify-between mb-6">
         <h1 className="text-3xl font-bold">Account Management</h1>
 
-        <div className="flex items-center gap-3">
+        <div className="flex gap-3">
           <Button
             variant="outline"
             size="lg"
             onClick={() => setExcelOpen(true)}
-            className="flex items-center gap-2 border-emerald-600 text-emerald-600"
+            className="border-emerald-600 text-emerald-600"
           >
-            <Upload className="w-5 h-5" />
+            <Upload className="w-5 h-5 mr-2" />
             Upload Excel
           </Button>
 
           <Button
-           onClick={() => {
+            onClick={() => {
               setEditRow(undefined);
               setFormOpen(true);
             }}
           >
-          <Plus className="w-4 h-4 mr-2" /> Add Account
-        </Button>
-
+            <Plus className="w-4 h-4 mr-2" />
+            Add Account
+          </Button>
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-3">
-        <div className="w-1/4">
-          <SearchableMultiselect
-            isSingle
-            placeholder="Entity Classification"
-            value={entityClassification}
-            options={[
-              { label: "Family", value: 2 },
-              { label: "Client", value: 1 },
-              { label: "Partner", value: 4 },
-              { label: "Facility", value: 5 },
-            ]}
-            onChange={(v) => setEntityClassification(Number(v))}
-          />
-        </div>
+      <div className="mb-4 flex gap-3">
+        <SearchableMultiselect
+          isSingle
+          placeholder="Entity Classification"
+          value={entityClassification}
+          options={[
+            { label: "Family", value: 2 },
+            { label: "Client", value: 1 },
+            { label: "Partner", value: 4 },
+            { label: "Facility", value: 5 },
+          ]}
+          onChange={(v) => setEntityClassification(Number(v))}
+        />
 
-        <div className="w-1/4">
-          <SearchableMultiselect
-            isSingle
-            placeholder="Entity Type"
-            value={selectedEntityType}
-            options={[
-              { label: "All", value: "all" },
-              ...entityType.map((e) => ({
-                label: e.value,
-                value: e.value,
-              })),
-            ]}
-            onChange={(v) => setSelectedEntityType(v ?? "all")}
-          />
-        </div>
+        <SearchableMultiselect
+          isSingle
+          placeholder="Entity Type"
+          value={selectedEntityType}
+          options={[
+            { label: "All", value: "all" },
+            ...entityTypeEnums.map((e) => ({
+              label: e.value,
+              value: e.value,
+            })),
+          ]}
+          onChange={(v) => {
+            const selectedValue = v ?? "all";
+            setSelectedEntityType(selectedValue);
 
-        <div className="w-1/4">
+            if (selectedValue === "all") {
+              setSelectedEntityEnumCase(undefined); 
+              return;
+            }
+
+            const selectedEnum = entityTypeEnums.find(
+              (e) => e.value === selectedValue
+            );
+
+            setSelectedEntityEnumCase(selectedEnum?.enumCase);
+          }}
+        />
+
+
+        {selectedEntityType.toLocaleLowerCase() == "Family".toLocaleLowerCase() ? (
+          <SearchableMultiselect
+          isSingle
+          placeholder="Member Name"
+          options={members.map((m) => ({
+            label: `${m.memberFirstName} ${m.memberLastName}`,
+            value: Number(m.memberId),
+          }))}
+          onChange={(v) => setSelectedEntityId(v ?? "all")}
+          onLoadMore={() => fetchMembers()}
+          isLoadingMore={loadingMembers}
+        />
+        ) : (
           <SearchableMultiselect
             isSingle
             placeholder="Entity Name"
@@ -186,13 +255,12 @@ export default function AccountPage() {
             onLoadMore={() => fetchEntities()}
             isLoadingMore={loadingEntities}
           />
-        </div>
+        )}
       </div>
 
       <AccountTable
         refreshKey={refreshKey}
         onEdit={(r) => {
-          
           setEditRow(r);
           setFormOpen(true);
         }}
@@ -206,13 +274,11 @@ export default function AccountPage() {
         isOpen={formOpen}
         initialData={editRow}
         accountData={accountData}
-        onClose={() => {
-          setFormOpen(false);
-          setEditRow(undefined);
-        }}
+        onClose={() => setFormOpen(false)}
         onSave={bumpRefresh}
+        entityEnumCase={Number(selectedEntityEnumCase)}
+        entityId={Number(selectedEntityId)}
       />
-
 
       <AccountViewModal
         isOpen={viewOpen}
