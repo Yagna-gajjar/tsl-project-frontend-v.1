@@ -30,6 +30,7 @@ const empty: FacilityAllotment = {
   facilityId: undefined,
   areaId: undefined,
   batchId: undefined,
+  level: 1,
   assignmentDate: undefined,
   unAssignmentDate: undefined,
 };
@@ -66,13 +67,13 @@ export default function FacilityAllotmentFormModal({
         const facilities = Array.isArray(fRes?.data)
           ? fRes.data
           : Array.isArray(fRes)
-          ? fRes
-          : [];
+            ? fRes
+            : [];
         const batches = Array.isArray(bRes?.data)
           ? bRes.data
           : Array.isArray(bRes)
-          ? bRes
-          : [];
+            ? bRes
+            : [];
 
         setFacilityOptions(facilities);
         setBatchOptions(batches);
@@ -99,8 +100,8 @@ export default function FacilityAllotmentFormModal({
         const areas = Array.isArray(ares?.data)
           ? ares.data
           : Array.isArray(ares)
-          ? ares
-          : [];
+            ? ares
+            : [];
 
         setAreaOptions(areas);
       } catch {
@@ -163,6 +164,7 @@ export default function FacilityAllotmentFormModal({
         facilityId: values.facilityId ? Number(values.facilityId) : undefined,
         areaId: values.areaId ? Number(values.areaId) : undefined,
         batchId: values.batchId ? Number(values.batchId) : undefined,
+        level: values.level ? Number(values.level) : 1,
         assignmentDate: values.assignmentDate ?? undefined,
         unAssignmentDate: values.unAssignmentDate ?? undefined,
       };
@@ -237,6 +239,12 @@ export default function FacilityAllotmentFormModal({
         label: b.batchName,
         value: b.batchId,
       })),
+      required: true,
+    },
+    {
+      name: "level",
+      label: "Level",
+      type: "number",
       required: true,
     },
     {

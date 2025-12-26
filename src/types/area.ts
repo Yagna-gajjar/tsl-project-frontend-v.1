@@ -5,6 +5,7 @@ export interface Area {
   areaDimension?: string;
   areaSQFT?: number;
   portion?: number;
+  level?: number;
   groundAreaPart?: string;
   facilityName?: string;
   createdAt?: Date;

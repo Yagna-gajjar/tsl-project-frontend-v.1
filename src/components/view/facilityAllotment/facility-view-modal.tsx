@@ -20,6 +20,7 @@ const fields: FieldConfig<FacilityAllotment>[] = [
   { key: "areaId", label: "Area ID", icon: Map },
   { key: "batchName", label: "Batch", icon: Layers },
   { key: "batchId", label: "Batch ID", icon: Layers },
+  { key: "level", label: "Level", icon: Layers },
   { key: "assignmentDate", label: "Assignment Date", icon: Calendar },
   { key: "unAssignmentDate", label: "Unassignment Date", icon: Calendar },
   {

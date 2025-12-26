@@ -14,6 +14,7 @@ interface FacilityAllotmentImportRow {
 	facilityId: number | string;
 	areaId?: number | string;
 	batchId: number | string;
+	level: number;
 	assignmentDate?: string | number;
 	unAssignmentDate?: string | number;
 	status?: string;
@@ -25,6 +26,7 @@ export default function FacilityAllotmentExcelUpload({ isOpen, onClose, onSucces
 		'facilityId',
 		'areaId',
 		'batchId',
+		'level',
 		'assignmentDate',
 		'unAssignmentDate',
 		'status'
@@ -44,6 +46,7 @@ export default function FacilityAllotmentExcelUpload({ isOpen, onClose, onSucces
 			facilityId: Number(row.facilityId),
 			areaId: row.areaId ? Number(row.areaId) : null,
 			batchId: Number(row.batchId),
+			level: Number(row.level),
 
 			assignmentDate: row.assignmentDate ? new Date(row.assignmentDate).toISOString() : new Date().toISOString(),
 			unAssignmentDate: row.unAssignmentDate ? new Date(row.unAssignmentDate).toISOString() : null,
@@ -52,7 +55,6 @@ export default function FacilityAllotmentExcelUpload({ isOpen, onClose, onSucces
 		};
 
 		await createFacilityAllotment(payload);
-		console.log(`✅ Allotted Batch ${payload.batchId} to Facility ${payload.facilityId}`);
 	}, []);
 
 	return (

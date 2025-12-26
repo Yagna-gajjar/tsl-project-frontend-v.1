@@ -21,6 +21,7 @@ import type { FormFieldConfig } from "@/components/form-modal/types";
 const empty: Area = {
   areaId: 0,
   facilityId: 0,
+  level: 1,
   areaName: "",
   areaDimension: "",
   areaSQFT: undefined,
@@ -99,6 +100,7 @@ export default function AreaFormModal({
       const payload: Partial<Area> = {
         areaName: values.areaName,
         facilityId: values.facilityId ? Number(values.facilityId) : undefined,
+        level: values.level ? Number(values.level) : 1,
         areaDimension: values.areaDimension || undefined,
         areaSQFT: values.areaSQFT ? Number(values.areaSQFT) : undefined,
         portion: values.portion ? Number(values.portion) : undefined,
@@ -162,6 +164,7 @@ export default function AreaFormModal({
     },
     { name: "areaSQFT", label: "Area SQFT", type: "number", required: false },
     { name: "portion", label: "Portion", type: "number", required: false },
+    { name: "level", label: "Level", type: "number", required: false },
     {
       name: "groundAreaPart",
       label: "Ground Area Part",

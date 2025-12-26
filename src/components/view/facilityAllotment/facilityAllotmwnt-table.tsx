@@ -152,6 +152,12 @@ export default function FacilityAllotmentTable({
       render: (r) => <span>{r.batchName ?? r.batchId ?? "-"}</span>,
     },
     {
+      key: "level",
+      header: "Level",
+      sortable: true,
+      render: (r) => <span>{r.level ?? r.level ?? 1}</span>,
+    },
+    {
       key: "assignmentDate",
       header: "Assigned On",
       sortable: true,

@@ -39,6 +39,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
         search: search || undefined,
         areaName: filters.areaName as string | undefined,
         facilityId: filters.facilityId as number | undefined,
+        level: filters.level as number
       });
 
       const rowsRaw = Array.isArray(res)
@@ -99,13 +100,14 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
       search: search || undefined,
       areaName: filters.areaName as string | undefined,
       facilityId: filters.facilityId as number | undefined,
+      level: filters.level as number,
     });
 
     const rowsRaw = Array.isArray(res)
       ? res
       : Array.isArray(res?.data)
-      ? (res.data as Area[])
-      : [];
+        ? (res.data as Area[])
+        : [];
     const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
       ...r,
       createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
@@ -157,6 +159,13 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
       sortable: false,
       filterType: null,
       render: (r) => <span className="text-sm">{r.facilityName || "N/A"}</span>,
+    },
+    {
+      key: "level",
+      header: "Level",
+      sortable: false,
+      filterType: null,
+      render: (r) => <span className="text-sm">{r.level || 1}</span>,
     },
     {
       key: "areaSQFT",

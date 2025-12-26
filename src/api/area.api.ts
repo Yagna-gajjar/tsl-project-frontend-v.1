@@ -10,6 +10,7 @@ export interface AreasQuery {
   facilityId?: number;
   areaSQFT?: number;
   portion?: number;
+  level?: number;
   sortBy?: string;
   sortOrder?: SortOrder;
 }
@@ -25,6 +26,7 @@ export function getAreas(params: AreasQuery = {}): Promise<Response<Area[]>> {
     search: params.search ?? params.areaName,
     areaName: params.areaName ?? undefined,
     facilityId: params.facilityId ?? undefined,
+    level: params.level ?? undefined,
     areaSQFT: params.areaSQFT ?? undefined,
     portion: params.portion ?? undefined,
   });

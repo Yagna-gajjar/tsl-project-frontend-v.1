@@ -30,6 +30,8 @@ const fields: FieldConfig<Area>[] = [
 
   { key: "facilityId", label: "Facility ID", icon: Layers },
 
+  { key: "level", label: "Level", icon: Layers },
+
   { key: "areaDimension", label: "Area Dimension", icon: Ruler },
 
   { key: "areaSQFT", label: "Area (SQFT)", icon: Square },

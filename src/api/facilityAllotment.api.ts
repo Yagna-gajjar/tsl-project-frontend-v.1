@@ -16,6 +16,7 @@ export interface FacilityAllotmentQuery {
   assignmentDate?: string;
   unAssignmentDate?: string;
   sortBy?: string;
+  level?: number;
   sortOrder?: SortOrder;
 }
 
@@ -29,6 +30,7 @@ export function getFacilityAllotments(
     sortOrder: params.sortOrder ?? "ASC",
     search: params.search ?? undefined,
     facilityId: params.facilityId ?? undefined,
+    level: params.level ?? undefined,
     areaId: params.areaId ?? undefined,
     batchId: params.batchId ?? undefined,
     assignmentDate: params.assignmentDate ?? undefined,

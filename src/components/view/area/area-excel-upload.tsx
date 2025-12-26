@@ -16,6 +16,7 @@ interface AreaImportRow {
 	areaName: string;
 	areaDimension?: string;
 	areaSQFT?: number | string;
+	level?: number;
 	portion?: number | string;
 	groundAreaPart?: string;
 }
@@ -24,6 +25,7 @@ export default function AreaExcelUpload({ isOpen, onClose, onSuccess }: AreaExce
 
 	const expectedColumns = useMemo(() => [
 		'facilityId',
+		'level',
 		'areaName',
 		'areaDimension',
 		'areaSQFT',
@@ -44,6 +46,7 @@ export default function AreaExcelUpload({ isOpen, onClose, onSuccess }: AreaExce
 	const handleCreateArea = useCallback(async (row: AreaImportRow) => {
 		const payload: Area = {
 			facilityId: Number(row.facilityId),
+			level: Number(row.level),
 			areaName: row.areaName,
 			areaDimension: row.areaDimension || "",
 
@@ -53,7 +56,6 @@ export default function AreaExcelUpload({ isOpen, onClose, onSuccess }: AreaExce
 		};
 
 		await createArea(payload);
-		console.log(`✅ Imported Area: ${payload.areaName} for Facility ID: ${payload.facilityId}`);
 	}, []);
 
 	return (
