@@ -34,13 +34,11 @@ export const SharesList = ({
   onRemove,
   roleInCourse,
 }: SharesListProps) => {
-  console.log(shares," sjdf");
-  /* -------------------- authority cache -------------------- */
+  console.log(shares, " sjdf");
   const [authorityMap, setAuthorityMap] = useState<Record<number, Authority[]>>(
     {}
   );
 
-  /* -------------------- fetch authorities by entity -------------------- */
   const loadAuthorities = async (accountId: number) => {
     if (!accountId || authorityMap[accountId]) return;
 
@@ -55,7 +53,6 @@ export const SharesList = ({
     }
   };
 
-  /* -------------------- keydown handler -------------------- */
   const handleKeyDown = (
     e: React.KeyboardEvent,
     index: number,
@@ -68,14 +65,12 @@ export const SharesList = ({
       index === shares.length - 1
     ) {
       e.preventDefault();
-      // Logic to add a new row if necessary
       onChange(shares.length, "accountId", 0);
     }
   };
 
   return (
     <div className="space-y-1">
-      {/* Header Grid */}
       <div className="grid grid-cols-[2fr,1.5fr,1fr,0.6fr,0.6fr,1.2fr,60px] gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
         <div>Account*</div>
         <div>Role In Course*</div>
@@ -103,7 +98,6 @@ export const SharesList = ({
               transition={{ duration: 0.2 }}
               className="grid grid-cols-[2fr,1.5fr,1fr,0.6fr,0.6fr,1.2fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
             >
-              {/* 1. Entity Selection */}
               <Select
                 value={share.accountId ? String(share.accountId) : ""}
                 onValueChange={(v) => {
@@ -125,7 +119,6 @@ export const SharesList = ({
                 </SelectContent>
               </Select>
 
-              {/* 2. Role In Course Dropdown (Previously Input) */}
               <Select
                 value={share.roleInCourse || ""}
                 disabled={share.roleInCourse === "TSL"}
@@ -143,7 +136,6 @@ export const SharesList = ({
                 </SelectContent>
               </Select>
 
-              {/* 3. Share Percentage */}
               <Input
                 type="number"
                 min={0}
@@ -159,7 +151,6 @@ export const SharesList = ({
                 }
               />
 
-              {/* 4. CGST */}
               <Input
                 type="number"
                 className="h-8 text-xs"
@@ -169,7 +160,6 @@ export const SharesList = ({
                 }
               />
 
-              {/* 5. SGST */}
               <Input
                 type="number"
                 className="h-8 text-xs"
@@ -179,7 +169,6 @@ export const SharesList = ({
                 }
               />
 
-              {/* 6. Approval Authority Dropdown */}
               <Select
                 disabled={!share.accountId}
                 value={share.approvalAuthorityId ? String(share.approvalAuthorityId) : ""}

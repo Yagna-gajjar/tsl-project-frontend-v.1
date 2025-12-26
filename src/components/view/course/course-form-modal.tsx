@@ -38,10 +38,11 @@ import { RatesList } from "./course-form/rate-list";
 import { PackagesList } from "./course-form/package-list";
 import { CourseForm } from "./course-form/course-list";
 import CourseFooter from "./course-form/course-footer";
-import { getCourseRates } from "@/api/courseRate.api";
-import { getCourseShares } from "@/api/courseShare.api";
-import { getCoursePackages } from "@/api/coursePackage.api";
+import { getCourseRates, createCourseRate, updateCourseRate, deleteCourseRate } from "@/api/courseRate.api";
+import { getCourseShares, createCourseShare, updateCourseShare, deleteCourseShare } from "@/api/courseShare.api";
+import { getCoursePackages, createCoursePackage, updateCoursePackage, deleteCoursePackage } from "@/api/coursePackage.api";
 import { getAccounts } from "@/api/account.api";
+import { createFullCourse, updateCourse } from "@/api/course.api";
 import type { Account } from "@/types/account";
 
 interface CourseFormState {
@@ -388,7 +389,8 @@ export default function CourseFormModal({
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    
+    setGlobalError(null);
+
     // Validation
     const vErrors = validate();
     if (Object.keys(vErrors).length) {
@@ -398,23 +400,165 @@ export default function CourseFormModal({
     }
     try {
       const availabilityCode = weekArrayToNumber(formState.course.daysPattern as any);
-      const updatedFormState = {
-        ...formState,
-        course: {
-          ...formState.course,
-          daysPattern: String(availabilityCode),
-          suspensionDate: formState.course.suspensionDate || null,
-        },
+      const isUpdate = !!formState.course.courseId;
+      const courseId = formState.course.courseId;
+
+      // Prepare course data
+      const courseData = {
+        ...formState.course,
+        daysPattern: String(availabilityCode),
+        suspensionDate: formState.course.suspensionDate || null,
       };
 
-      // const res = await createFullCourse(updatedFormState);
-      // if (res?.success) {
-      //   toast({ title: "Success", description: "Course saved successfully", variant: "success" });
-      //   onSave();
-      //   onClose();
-      // }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save", variant: "destructive" });
+      if (isUpdate) {
+        // UPDATE MODE
+        // 1. Update main course
+        const courseRes = await updateCourse(courseId, courseData);
+        if (!courseRes?.success) {
+          throw new Error(courseRes?.message || "Failed to update course");
+        }
+
+        // 2. Handle Rates - Compare with original and apply changes
+        const originalRates = originalState?.rates || [];
+        const currentRates = formState.rates;
+
+        // Delete removed rates
+        for (const originalRate of originalRates) {
+          if (!currentRates.find(r => r.courseRateId === originalRate.courseRateId)) {
+            await deleteCourseRate(originalRate.courseRateId);
+          }
+        }
+
+        // Create or update rates
+        for (const rate of currentRates) {
+          const rateData = {
+            courseId,
+            membershipMasterId: rate.membershipMasterId,
+            aboveUnits: rate.aboveUnits || 0,
+            unitRate: rate.unitRate,
+            introduceDate: rate.introduceDate || new Date().toISOString(),
+            suspensionDate: rate.suspensionDate || null,
+            enrChangesAllowed: rate.enrChangesAllowed ?? false,
+            enrFreezingAllowed: rate.enrFreezingAllowed ?? false,
+            minDaysInEnr: rate.minDaysInEnr || 0,
+            discountOnDayReduce: rate.discountOnDayReduce || 0,
+            status: rate.status || "active",
+          };
+
+          if (rate.courseRateId && rate.courseRateId > 0) {
+            // Update existing rate
+            await updateCourseRate(rate.courseRateId, rateData);
+          } else {
+            // Create new rate
+            await createCourseRate(rateData);
+          }
+        }
+
+        // 3. Handle Shares - Compare with original and apply changes
+        const originalShares = originalState?.shares || [];
+        const currentShares = formState.shares;
+
+        // Delete removed shares
+        for (const originalShare of originalShares) {
+          if (!currentShares.find(s => s.courseShareId === originalShare.courseShareId)) {
+            await deleteCourseShare(originalShare.courseShareId);
+          }
+        }
+
+        // Create or update shares
+        for (const share of currentShares) {
+          const shareData = {
+            courseId,
+            entityId: share.entityId,
+            roleInCourse: share.roleInCourse,
+            share: share.share || 0,
+            cgst: share.cgst || 0,
+            sgst: share.sgst || 0,
+            approvalAuthorityId: share.approvalAuthorityId || null,
+          };
+
+          if (share.courseShareId && share.courseShareId > 0) {
+            // Update existing share
+            await updateCourseShare(share.courseShareId, shareData);
+          } else {
+            // Create new share
+            await createCourseShare(shareData);
+          }
+        }
+
+        // 4. Handle Packages - Compare with original and apply changes
+        const originalPackages = originalState?.packages || [];
+        const currentPackages = formState.packages;
+
+        // Delete removed packages
+        for (const originalPkg of originalPackages) {
+          if (!currentPackages.find(p => p.coursePackageId === originalPkg.coursePackageId)) {
+            await deleteCoursePackage(originalPkg.coursePackageId);
+          }
+        }
+
+        // Create or update packages
+        for (const pkg of currentPackages) {
+          const pkgData = {
+            courseId,
+            linkType: pkg.linkType,
+            activityId: pkg.activityId || null,
+            approvalAuthorityId: pkg.approvalAuthorityId || null,
+          };
+
+          if (pkg.coursePackageId && pkg.coursePackageId > 0) {
+            // Update existing package
+            await updateCoursePackage(pkg.coursePackageId, pkgData);
+          } else {
+            // Create new package
+            await createCoursePackage(pkgData);
+          }
+        }
+
+        toast({ title: "Success", description: "Course updated successfully", variant: "default" });
+      } else {
+        // CREATE MODE - Use createFullCourse for atomic transaction
+        const createPayload = {
+          course: courseData,
+          packages: formState.packages.map(p => ({
+            linkType: p.linkType,
+            activityId: p.activityId || null,
+            approvalAuthorityId: p.approvalAuthorityId || null,
+          })),
+          rates: formState.rates.map(r => ({
+            membershipMasterId: r.membershipMasterId,
+            aboveUnits: r.aboveUnits || 0,
+            unitRate: r.unitRate,
+            introduceDate: r.introduceDate || new Date().toISOString(),
+            suspensionDate: r.suspensionDate || null,
+            enrChangesAllowed: r.enrChangesAllowed ?? false,
+            enrFreezingAllowed: r.enrFreezingAllowed ?? false,
+            minDaysInEnr: r.minDaysInEnr || 0,
+            discountOnDayReduce: r.discountOnDayReduce || 0,
+            status: r.status || "active",
+          })),
+          shares: formState.shares.map(s => ({
+            entityId: s.entityId,
+            roleInCourse: s.roleInCourse,
+            share: s.share || 0,
+            cgst: s.cgst || 0,
+            sgst: s.sgst || 0,
+            approvalAuthorityId: s.approvalAuthorityId || null,
+          })),
+        };
+
+        const res = await createFullCourse(createPayload);
+        if (!res?.success) {
+          throw new Error(res?.message || "Failed to create course");
+        }
+        toast({ title: "Success", description: "Course created successfully", variant: "default" });
+      }
+
+      onSave();
+      onClose();
+    } catch (error: any) {
+      setGlobalError(error?.message || "Failed to save course");
+      toast({ title: "Error", description: error?.message || "Failed to save", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -529,7 +673,7 @@ export default function CourseFormModal({
     let newItem;
     if (key === "packages") newItem = { ...emptyPackage };
     else if (key === "rates") {
-      
+
       if (selectedMembership === 0 || selectedMembership == null) {
         toast({
           title: "error",
@@ -537,21 +681,22 @@ export default function CourseFormModal({
           variant: "destructive"
         })
       } else {
-      newItem = {
-        membershipMasterId: selectedMembership,
-        courseRateId: 0,
-        courseId: 0,
-        membershipType: "",
-        aboveUnits: 0,
-        unitRate: 0,
-        enrChangesAllowed: 0,
-        enrFreezingAllowed: 0,
-        minDaysInEnr: 0,
-        discountOnDayReduce: 0,
-        introduceDate: format(new Date(), "yyyy-MM-dd"),
-        daySelection: false,
-    }}
-  }
+        newItem = {
+          membershipMasterId: selectedMembership,
+          courseRateId: 0,
+          courseId: 0,
+          membershipType: "",
+          aboveUnits: 0,
+          unitRate: 0,
+          enrChangesAllowed: 0,
+          enrFreezingAllowed: 0,
+          minDaysInEnr: 0,
+          discountOnDayReduce: 0,
+          introduceDate: format(new Date(), "yyyy-MM-dd"),
+          daySelection: false,
+        }
+      }
+    }
     else if (key === "shares") {
       newItem = {
         courseShareId: 0,
@@ -581,7 +726,7 @@ export default function CourseFormModal({
   const totalShare = useMemo(
     () => formState.shares.reduce((sum, s) => sum + Number(s.share || 0), 0),
     [formState.shares]
-  );  
+  );
 
   if (!isOpen) return null;
 
