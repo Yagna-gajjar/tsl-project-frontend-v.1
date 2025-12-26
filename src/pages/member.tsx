@@ -183,7 +183,7 @@ export default function MemberPage() {
           setFormOpen(false);
           setEditRow(null);
         }}
-        initialData={editRow || {}}
+        initialData={editRow as any || null}
         onSaved={() => {
           setRefreshKey(k => k + 1);
           setIsCleared(false);

@@ -1,7 +1,7 @@
 import type { Response } from "@/types/response";
-import type { BatchMember } from "./batchMember.api";
 import { request } from "./helper";
 import type { Enrollment } from "@/types/enrollment";
+import type { BatchMember } from "@/types/batchMember";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL ?? "http://localhost:9705/api";

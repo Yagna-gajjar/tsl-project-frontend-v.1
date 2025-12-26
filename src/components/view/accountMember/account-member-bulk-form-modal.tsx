@@ -171,9 +171,9 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
   };
 
   const handleDlink = async (am: AccountMember) => {
-    setUnlinkingIds(prev => new Set(prev).add(am.accountMemberId));
+    setUnlinkingIds(prev => new Set(prev).add(Number(am.accountMemberId)));
     try {
-      const res = await updateAccountMember(am.accountMemberId, {
+      const res = await updateAccountMember(Number(am.accountMemberId), {
         ...am,
         dlinkDate: format(new Date(), "yyyy-MM-dd"),
         status: "unlinked",
@@ -188,7 +188,7 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
     } finally {
       setUnlinkingIds(prev => {
         const next = new Set(prev);
-        next.delete(am.accountMemberId);
+        next.delete(Number(am.accountMemberId));
         return next;
       });
     }
@@ -385,11 +385,11 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={unlinkingIds.has(am.accountMemberId)}
+                          disabled={unlinkingIds.has(Number(am.accountMemberId))}
                           className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10 gap-2"
                           onClick={() => handleDlink(am)}
                         >
-                          {unlinkingIds.has(am.accountMemberId) ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unlink className="h-3 w-3" />}
+                          {unlinkingIds.has(Number(am.accountMemberId)) ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unlink className="h-3 w-3" />}
                           D-Link
                         </Button>
                       )}

@@ -29,8 +29,6 @@ import { cn } from "@/lib/utils";
 import type { CoursePackage } from "@/types/coursePackage";
 import type { CourseRate } from "@/types/courseRate";
 import type { CourseShare } from "@/types/courseShare";
-import { getMembershipMasters } from "@/api/membershipMaster.api";
-import type { MembershipMaster } from "@/types/memberShipMaster";
 import { toast } from "@/hooks/use-toast";
 import type { Entity } from "@/types/entity";
 import { SharesList } from "./course-form/share-list";
@@ -203,9 +201,6 @@ export default function CourseFormModal({
   const [roleInCourse, setRoleInCourse] = useState<Enums[]>();
   const [entityOptions, setEntityOptions] = useState<Entity[]>([]);
   const [isFetchingData, setIsFetchingData] = useState(false);
-  const [entityTypeOptions, setEntityTypeOptions] = useState<
-    MembershipMaster[]
-  >([]);
   const [shareEntityOptions, setShareEntityOptions] = useState<Account[]>([]);
   const [selectedMembership, setSelectedMembership] = useState<number | null>(null);
 
@@ -216,11 +211,10 @@ export default function CourseFormModal({
       setLoadingOptions(true);
       setGlobalError(null);
 
-      const [actRes, typeRes, membershipMasterRes, entityRes, roleInCourseRes] =
+      const [actRes, typeRes, entityRes, roleInCourseRes] =
         await Promise.all([
           getActivities({ limit: 500 }),
           getEnumsByCategory("COURSETYPE"),
-          getMembershipMasters({ limit: 500 }),
           getAccounts({ limit: 500 }),
           getEnumsByCategory("ROLEINCOURSE"),
         ]);
@@ -228,9 +222,6 @@ export default function CourseFormModal({
       setActivityOptions((actRes as Response<Activity[]>)?.data ?? []);
       setCourseTypeOptions((typeRes as Response<Enums[]>)?.data ?? []);
       setRoleInCourse((roleInCourseRes as Response<Enums[]>)?.data ?? []);
-      setEntityTypeOptions(
-        (membershipMasterRes as Response<MembershipMaster[]>)?.data ?? []
-      );
       setShareEntityOptions((entityRes as Response<Account[]>)?.data ?? []);
 
       await loadCourseAcademies();
@@ -274,11 +265,7 @@ export default function CourseFormModal({
         shares: fetchedShares,
         packages: fetchedPackages,
       };
-
-      // Update active form state
       setFormState(fullData);
-
-      // Save snapshot for comparison (Deep Copy)
       setOriginalState(JSON.parse(JSON.stringify(fullData)));
 
     } catch (error) {
@@ -291,7 +278,7 @@ export default function CourseFormModal({
     } finally {
       setIsFetchingData(false);
     }
-  }, []); // Depends on course because it's part of the state we snapshot
+  }, []);
 
   useEffect(() => {
     loadMasterData();
@@ -300,8 +287,6 @@ export default function CourseFormModal({
   useEffect(() => {
     if (isOpen && initialData?.course?.courseId) {
       const courseId = initialData.course.courseId;
-
-      // Prepare the course shell with formatted dates
       const courseShell = {
         ...initialData.course,
         introduceDate: initialData.course.introduceDate
@@ -367,11 +352,6 @@ export default function CourseFormModal({
       e.sharesTotal = `Total share must equal 100% (current: ${totalShare}%)`;
     }
 
-    // formState.rates.forEach((r, i) => {
-    //   if (!r.unitRate) e[`rate_${i}_unitRate`] = "Rate required";
-    //   if (!r.introduceDate) e[`rate_${i}_introduceDate`] = "Date required";
-    // });
-
     formState.shares.forEach((s, i) => {
       if (!s.accountId || s.accountId <= 0)
         e[`share_${i}accountId`] = "Entity required";
@@ -391,7 +371,6 @@ export default function CourseFormModal({
     setIsSubmitting(true);
     setGlobalError(null);
 
-    // Validation
     const vErrors = validate();
     if (Object.keys(vErrors).length) {
       setErrors(vErrors);
@@ -403,7 +382,6 @@ export default function CourseFormModal({
       const isUpdate = !!formState.course.courseId;
       const courseId = formState.course.courseId;
 
-      // Prepare course data
       const courseData = {
         ...formState.course,
         daysPattern: String(availabilityCode),
@@ -411,25 +389,20 @@ export default function CourseFormModal({
       };
 
       if (isUpdate) {
-        // UPDATE MODE
-        // 1. Update main course
         const courseRes = await updateCourse(courseId, courseData);
         if (!courseRes?.success) {
           throw new Error(courseRes?.message || "Failed to update course");
         }
 
-        // 2. Handle Rates - Compare with original and apply changes
         const originalRates = originalState?.rates || [];
         const currentRates = formState.rates;
 
-        // Delete removed rates
         for (const originalRate of originalRates) {
           if (!currentRates.find(r => r.courseRateId === originalRate.courseRateId)) {
-            await deleteCourseRate(originalRate.courseRateId);
+            await deleteCourseRate(Number(originalRate.courseRateId));
           }
         }
 
-        // Create or update rates
         for (const rate of currentRates) {
           const rateData = {
             courseId,
@@ -446,26 +419,21 @@ export default function CourseFormModal({
           };
 
           if (rate.courseRateId && rate.courseRateId > 0) {
-            // Update existing rate
-            await updateCourseRate(rate.courseRateId, rateData);
+            await updateCourseRate(rate.courseRateId, rateData as any);
           } else {
-            // Create new rate
-            await createCourseRate(rateData);
+            await createCourseRate(rateData as any);
           }
         }
 
-        // 3. Handle Shares - Compare with original and apply changes
         const originalShares = originalState?.shares || [];
         const currentShares = formState.shares;
 
-        // Delete removed shares
         for (const originalShare of originalShares) {
           if (!currentShares.find(s => s.courseShareId === originalShare.courseShareId)) {
-            await deleteCourseShare(originalShare.courseShareId);
+            await deleteCourseShare(Number(originalShare.courseShareId));
           }
         }
 
-        // Create or update shares
         for (const share of currentShares) {
           const shareData = {
             courseId,
@@ -478,11 +446,9 @@ export default function CourseFormModal({
           };
 
           if (share.courseShareId && share.courseShareId > 0) {
-            // Update existing share
-            await updateCourseShare(share.courseShareId, shareData);
+            await updateCourseShare(share.courseShareId, shareData as any);
           } else {
-            // Create new share
-            await createCourseShare(shareData);
+            await createCourseShare(shareData as any);
           }
         }
 
@@ -493,7 +459,7 @@ export default function CourseFormModal({
         // Delete removed packages
         for (const originalPkg of originalPackages) {
           if (!currentPackages.find(p => p.coursePackageId === originalPkg.coursePackageId)) {
-            await deleteCoursePackage(originalPkg.coursePackageId);
+            await deleteCoursePackage(Number(originalPkg.coursePackageId));
           }
         }
 
@@ -508,10 +474,10 @@ export default function CourseFormModal({
 
           if (pkg.coursePackageId && pkg.coursePackageId > 0) {
             // Update existing package
-            await updateCoursePackage(pkg.coursePackageId, pkgData);
+            await updateCoursePackage(pkg.coursePackageId, pkgData as any);
           } else {
             // Create new package
-            await createCoursePackage(pkgData);
+            await createCoursePackage(pkgData as any);
           }
         }
 
@@ -856,9 +822,7 @@ export default function CourseFormModal({
                       <RatesList
                         rates={formState.rates}
                         selectedMembership={selectedMembership}
-                        setSelectedMembership={setSelectedMembership}
-                        entityTypeOptions={entityTypeOptions}
-                        errors={errors}
+                        setSelectedMembership={setSelectedMembership as any}
                         onChange={(i, f, v) => handleArrayChange("rates", i, f, v)}
                         onRemove={(i) => removeArrayItem("rates", i)}
                       />
@@ -903,7 +867,7 @@ export default function CourseFormModal({
                         errors={errors}
                         onChange={handleShareChange}
                         onRemove={(i) => removeArrayItem("shares", i)}
-                        roleInCourse={roleInCourse}
+                        roleInCourse={roleInCourse as any}
                       />
                     </TabsContent>
 

@@ -105,7 +105,7 @@ export default function BatchRequestedForm({
       };
 
       try {
-        const res: any = await createBatchMemberRequests(body);
+        const res: any = await createBatchMemberRequests(body as any);
 
         if (!res.success) {
           throw new Error("Request failed");

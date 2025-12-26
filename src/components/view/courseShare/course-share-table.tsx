@@ -57,14 +57,14 @@ export default function CourseShareTable({
   const columns: Column<CourseShare>[] = [
     { header: "Share ID", key: "courseShareId" },
     { header: "Role", key: "roleInCourse" },
-    { header: "Course", key: "courseName" }, // populated from Course table
-    { header: "Account", key: "accountName" }, // populated from Account table
+    { header: "Course", key: "courseName" },
+    { header: "Account", key: "accountName" },
     {
       header: "Approval Authority",
       key: "approvalAuthorityId",
-      render: (_: any, r: any) =>
-        r?.memberFirstName
-          ? `${r?.memberFirstName ?? "-"} ${r?.memberLastName ?? ""}`
+      render: (r: CourseShare | any) =>
+        r.memberFirstName
+          ? `${r.memberFirstName} ${r.memberLastName ?? ""}`
           : "-",
     },
     { header: "Share (%)", key: "share", render: (r) => `${r.share}%` },

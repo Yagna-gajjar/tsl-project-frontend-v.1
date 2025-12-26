@@ -4,18 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import type { CourseRate } from "@/types/courseRate";
-import type { MembershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/membershipMaster";
 import type { Response } from "@/types/response";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Plus, Check } from "lucide-react";
-import { useCallback, useEffect, useState, type SetStateAction } from "react";
+import { Trash2, Check } from "lucide-react";
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 interface RatesListProps {
   rates: CourseRate[];
   onChange: (index: number, field: keyof CourseRate, value: any) => void;
   onRemove: (index: number) => void;
-  selectedMembership?: number | null,
-  setSelectedMembership?: SetStateAction<number | null> 
+  selectedMembership?: number | null;
+  setSelectedMembership?: Dispatch<SetStateAction<number | null>>;
 }
 
 const DEFAULT_ABOVE_UNITS = [0, 6, 29, 89, 179, 364];
@@ -29,15 +29,18 @@ type BulkFields = {
   monthUnit: string;
 };
 
-export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSelectedMembership }: RatesListProps) => {
-  /* ---------------- State ---------------- */
+export const RatesList = ({
+  rates,
+  onChange,
+  onRemove,
+  selectedMembership,
+  setSelectedMembership
+}: RatesListProps) => {
   const [membershipMasterOpt, setMembershipMasterOpt] = useState<MembershipMaster[]>([]);
   const [membershipMasterPage, setMembershipMasterPage] = useState(1);
   const [hasMoreMembershipMaster, setHasMoreMembershipMaster] = useState(true);
   const [loadingMembershipMaster, setLoadingMembershipMaster] = useState(false);
-  // const [selectedMembership, setSelectedMembership] = useState<number | null>(null);
 
-  // Added baseRate and monthUnit to bulkFields
   const [bulkFields, setBulkFields] = useState<BulkFields>({
     enrChangesAllowed: "",
     enrFreezingAllowed: "",
@@ -83,31 +86,31 @@ export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSe
   const isMembershipAlreadyGenerated = selectedMembership !== null && membershipRates.length > 0;
   const handleApplyBulk = () => {
     if (membershipRates.length === 0) return;
-  
+
     const bRate = parseFloat(bulkFields.baseRate);
     const mUnit = parseFloat(bulkFields.monthUnit);
-  
+
     if (isNaN(bRate) || isNaN(mUnit) || mUnit === 0) {
       toast({ title: "Invalid Base Rate / Month Unit", variant: "destructive" });
       return;
     }
-  
+
     membershipRates.forEach(({ idx }) => {
       if (bulkFields.enrChangesAllowed !== "")
         onChange(idx, "enrChangesAllowed", Number(bulkFields.enrChangesAllowed));
-  
+
       if (bulkFields.enrFreezingAllowed !== "")
         onChange(idx, "enrFreezingAllowed", Number(bulkFields.enrFreezingAllowed));
-  
+
       if (bulkFields.minDaysInEnr !== "")
         onChange(idx, "minDaysInEnr", Number(bulkFields.minDaysInEnr));
-  
+
       if (bulkFields.discountOnDayReduce !== "")
         onChange(idx, "discountOnDayReduce", Number(bulkFields.discountOnDayReduce));
-  
+
       const baseUnit = Math.round(bRate / mUnit);
       const discount = Number(rowPercentages[idx] || 0);
-      
+
       setBaseUnitRates(prev => ({ ...prev, [idx]: baseUnit }));
       if (discount != 0) {
         const finalRate = Math.round(baseUnit * (discount / 100));
@@ -117,10 +120,10 @@ export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSe
         onChange(idx, "unitRate", finalRate);
       }
     });
-  
+
     toast({ title: "Applied", description: "Bulk values applied correctly." });
   };
-  
+
 
   const addDefaultRates = () => {
     if (!selectedMembership) return;
@@ -147,25 +150,25 @@ export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSe
       {distinctMemberships.length > 0 && (
         <div className="border p-2 rounded-lg flex flex-wrap gap-2">
           {distinctMemberships.map((id) => (
-            <Button key={id} type="button" size="sm" variant={selectedMembership === id ? "default" : "outline"} onClick={() => setSelectedMembership(Number(id))}>
+            <Button key={id} type="button" size="sm" variant={selectedMembership === id ? "default" : "outline"} onClick={() => setSelectedMembership?.(Number(id))}>
               {getMembershipLabel(Number(id))}
             </Button>
           ))}
         </div>
       )}
 
-  
+
       <div className="flex flex-wrap items-end gap-3 p-3 border rounded-lg bg-card">
-        
-          <label className="text-xs font-medium">Select Membership</label>
-          <SearchableMultiselect
-            isSingle
-            placeholder="Membership Master Type"
-            value={selectedMembership}
-            options={membershipMasterOpt.map((m) => ({ value: Number(m.membershipMasterId), label: m.membershipType }))}
-            onChange={(v) => setSelectedMembership(v ?? null)}
-          />
-        
+
+        <label className="text-xs font-medium">Select Membership</label>
+        <SearchableMultiselect
+          isSingle
+          placeholder="Membership Master Type"
+          value={selectedMembership}
+          options={membershipMasterOpt.map((m) => ({ value: Number(m.membershipMasterId), label: m.membershipType }))}
+          onChange={(v) => setSelectedMembership?.(v ?? null)}
+        />
+
 
         <div className="grid grid-cols-4 md:grid-cols-7 items-end gap-2">
           {(["enrChangesAllowed", "enrFreezingAllowed", "minDaysInEnr", "discountOnDayReduce"] as const).map((f) => (
@@ -182,9 +185,9 @@ export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSe
             <label className="text-[10px] uppercase font-bold text-primary">Month Unit</label>
             <Input type="number" className="h-8 border-primary bg-primary/5" value={bulkFields.monthUnit} onChange={(e) => setBulkFields(p => ({ ...p, monthUnit: e.target.value }))} />
           </div>
-        <Button type="button" onClick={handleApplyBulk} className="h-8">
-          <Check className="w-4 h-4 mr-1" /> Apply
-        </Button>
+          <Button type="button" onClick={handleApplyBulk} className="h-8">
+            <Check className="w-4 h-4 mr-1" /> Apply
+          </Button>
         </div>
 
       </div>
@@ -216,7 +219,7 @@ export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSe
               <Input type="number" className="h-8 text-xs" value={rate.minDaysInEnr} onChange={(e) => onChange(idx, "minDaysInEnr", Number(e.target.value))} />
               <Input type="number" className="h-8 text-xs" value={rate.discountOnDayReduce} onChange={(e) => onChange(idx, "discountOnDayReduce", Number(e.target.value))} />
               <Input type="number" className="h-8 text-xs font-bold" value={rate.unitRate} onChange={(e) => onChange(idx, "unitRate", Number(e.target.value))} />
-              
+
               <Input
                 type="number"
                 placeholder="%"
@@ -224,17 +227,17 @@ export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSe
                 value={rowPercentages[idx] || ""}
                 onChange={(e) => {
                   const discount = Number(e.target.value || 0);
-                  
+
                   const baseUnit = baseUnitRates[idx] ?? rate.unitRate;
 
                   setRowPercentages(prev => ({ ...prev, [idx]: e.target.value }));
 
-                  const finalRate = Math.round(baseUnit * (discount/ 100));
+                  const finalRate = Math.round(baseUnit * (discount / 100));
                   onChange(idx, "unitRate", finalRate);
                 }}
               />
               <div className="text-center bg-muted mx-5 py-2 text-xs font-medium">
-                {(rate.unitRate * bulkFields.monthUnit).toLocaleString()}
+                {(rate.unitRate * Number(bulkFields.monthUnit)).toLocaleString()}
               </div>
 
               <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(idx)} className="h-8 w-8 p-0 text-destructive">

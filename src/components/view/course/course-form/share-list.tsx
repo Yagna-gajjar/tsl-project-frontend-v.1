@@ -24,7 +24,7 @@ interface SharesListProps {
   errors: Record<string, string>;
   onChange: (index: number, field: keyof CourseShare, value: any) => void;
   onRemove: (index: number) => void;
-  roleInCoFurse: Enums[];
+  roleInCourse: Enums[];
 }
 
 export const SharesList = ({
