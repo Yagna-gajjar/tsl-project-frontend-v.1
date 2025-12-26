@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState, useCallback, useMemo, type SetStateAction } from "react"
 import { FormContent } from "@/components/form-modal/form-content"
 import { FormFooter } from "@/components/form-modal/form-footer"
@@ -48,7 +46,6 @@ const EnrollmentFormNew = ({
   const [courseOptions, setCourseOptions] = useState<Course[]>([])
   const [entityOptions, setEntityOptions] = useState<Entity[]>([])
   const [batchOptions, setBatchOptions] = useState<Batch[]>([])
-
   const [pagination, setPagination] = useState({
     member: { page: 1, hasMore: true, loading: false },
     activity: { page: 1, hasMore: true, loading: false },

@@ -6,8 +6,6 @@ interface BatchTableProps {
 }
 
 export default function BatchTable({ batchData }: BatchTableProps) {
-    console.log(batchData);
-
     return (
         <div className="rounded-md border overflow-hidden">
             <Table>
