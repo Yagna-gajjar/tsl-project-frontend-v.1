@@ -26,7 +26,16 @@ export default function CoursePage() {
   };
 
   const openForm = (row?: Course) => {
-    setEditRow(row);
+    if (row) {
+      setEditRow({
+        course: row,
+        packages: [],
+        rates: [],
+        shares: [],
+      } as any);
+    } else {
+      setEditRow(undefined);
+    }
     setFormOpen(true);
   };
 

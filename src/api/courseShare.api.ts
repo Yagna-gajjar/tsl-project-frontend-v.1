@@ -11,6 +11,7 @@ export interface CourseShareQuery {
 	shareType?: string;
 	academyId?: number;
 	academyName?: string;
+	courseId?: number;
 }
 
 const COURSE_SHARE_BASE =
@@ -28,6 +29,7 @@ export function getCourseShares(
 		shareType: params.shareType ?? undefined,
 		academyId: params.academyId ?? undefined,
 		academyName: params.academyName ?? undefined,
+		courseId: params.courseId ?? undefined,
 	});
 
 	return request<Response<CourseShare[]>>(`${COURSE_SHARE_BASE}${qs}`);

@@ -5,9 +5,8 @@ import { cn } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { CourseShare } from "@/types/courseShare";
-import type { Entity } from "@/types/entity";
 import type { Authority } from "@/types/authority";
-import { getAuthorityByEntity } from "@/api/authority.api";
+import { getAuthorityByAccount } from "@/api/authority.api";
 import type { Response } from "@/types/response";
 import {
   Select,
@@ -17,14 +16,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Enums } from "@/types/enums";
+import type { Account } from "@/types/account";
 
 interface SharesListProps {
   shares: CourseShare[];
-  entityOptions: Entity[];
+  entityOptions: Account[];
   errors: Record<string, string>;
   onChange: (index: number, field: keyof CourseShare, value: any) => void;
   onRemove: (index: number) => void;
-  roleInCourse: Enums[];
+  roleInCoFurse: Enums[];
 }
 
 export const SharesList = ({
@@ -34,23 +34,24 @@ export const SharesList = ({
   onRemove,
   roleInCourse,
 }: SharesListProps) => {
+  console.log(shares," sjdf");
   /* -------------------- authority cache -------------------- */
   const [authorityMap, setAuthorityMap] = useState<Record<number, Authority[]>>(
     {}
   );
 
   /* -------------------- fetch authorities by entity -------------------- */
-  const loadAuthorities = async (entityId: number) => {
-    if (!entityId || authorityMap[entityId]) return;
+  const loadAuthorities = async (accountId: number) => {
+    if (!accountId || authorityMap[accountId]) return;
 
     try {
-      const res: Response<Authority[]> = await getAuthorityByEntity(entityId);
+      const res: Response<Authority[]> = await getAuthorityByAccount(accountId);
       setAuthorityMap((p) => ({
         ...p,
-        [entityId]: res.data ?? [],
+        [accountId]: res.data ?? [],
       }));
     } catch {
-      setAuthorityMap((p) => ({ ...p, [entityId]: [] }));
+      setAuthorityMap((p) => ({ ...p, [accountId]: [] }));
     }
   };
 
@@ -68,7 +69,7 @@ export const SharesList = ({
     ) {
       e.preventDefault();
       // Logic to add a new row if necessary
-      onChange(shares.length, "entityId", 0);
+      onChange(shares.length, "accountId", 0);
     }
   };
 
@@ -76,7 +77,7 @@ export const SharesList = ({
     <div className="space-y-1">
       {/* Header Grid */}
       <div className="grid grid-cols-[2fr,1.5fr,1fr,0.6fr,0.6fr,1.2fr,60px] gap-1 px-2 py-1 bg-muted/50 text-xs font-semibold border-b">
-        <div>Entity*</div>
+        <div>Account*</div>
         <div>Role In Course*</div>
         <div>Share (%)*</div>
         <div className="text-center">CGST</div>
@@ -88,8 +89,8 @@ export const SharesList = ({
       <AnimatePresence mode="popLayout">
         {shares.map((share, index) => {
           const authorities =
-            share.entityId && authorityMap[share.entityId]
-              ? authorityMap[share.entityId]
+            share.accountId && authorityMap[share.accountId]
+              ? authorityMap[share.accountId]
               : [];
 
           return (
@@ -104,10 +105,10 @@ export const SharesList = ({
             >
               {/* 1. Entity Selection */}
               <Select
-                value={share.entityId ? String(share.entityId) : ""}
+                value={share.accountId ? String(share.accountId) : ""}
                 onValueChange={(v) => {
                   const id = Number(v);
-                  onChange(index, "entityId", id);
+                  onChange(index, "accountId", id);
                   onChange(index, "approvalAuthorityId", null);
                   loadAuthorities(id);
                 }}
@@ -117,8 +118,8 @@ export const SharesList = ({
                 </SelectTrigger>
                 <SelectContent>
                   {entityOptions.map((e) => (
-                    <SelectItem key={e.entityId} value={String(e.entityId)}>
-                      {e.entityName}
+                    <SelectItem key={e.accountId} value={String(e.accountId)}>
+                      {e.accountName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -180,7 +181,7 @@ export const SharesList = ({
 
               {/* 6. Approval Authority Dropdown */}
               <Select
-                disabled={!share.entityId}
+                disabled={!share.accountId}
                 value={share.approvalAuthorityId ? String(share.approvalAuthorityId) : ""}
                 onValueChange={(v) =>
                   onChange(index, "approvalAuthorityId", Number(v))
@@ -189,9 +190,9 @@ export const SharesList = ({
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue
                     placeholder={
-                      share.entityId
+                      share.accountId
                         ? "Select Authority"
-                        : "Select entity first"
+                        : "Select Account first"
                     }
                   />
                 </SelectTrigger>

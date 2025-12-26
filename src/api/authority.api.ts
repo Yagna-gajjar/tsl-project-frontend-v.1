@@ -53,11 +53,11 @@ export function getAuthorityById(id: number): Promise<Response<Authority>> {
 }
 
 
-export function getAuthorityByEntity(
+export function getAuthorityByAccount(
   id: number
 ): Promise<Response<Authority[]>> {
   return request<Response<Authority[]>>(
-    `${AUTHORITY_BASE}/authorityByEntity/${id}`
+    `${AUTHORITY_BASE}/authorityByAccount/${id}`
   );
 }
 

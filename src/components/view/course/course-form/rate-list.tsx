@@ -8,12 +8,14 @@ import type { MembershipMaster } from "@/types/memberShipMaster";
 import type { Response } from "@/types/response";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Plus, Check } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type SetStateAction } from "react";
 
 interface RatesListProps {
   rates: CourseRate[];
   onChange: (index: number, field: keyof CourseRate, value: any) => void;
   onRemove: (index: number) => void;
+  selectedMembership?: number | null,
+  setSelectedMembership?: SetStateAction<number | null> 
 }
 
 const DEFAULT_ABOVE_UNITS = [0, 6, 29, 89, 179, 364];
@@ -27,13 +29,13 @@ type BulkFields = {
   monthUnit: string;
 };
 
-export const RatesList = ({ rates, onChange, onRemove }: RatesListProps) => {
+export const RatesList = ({ rates, onChange, onRemove, selectedMembership, setSelectedMembership }: RatesListProps) => {
   /* ---------------- State ---------------- */
   const [membershipMasterOpt, setMembershipMasterOpt] = useState<MembershipMaster[]>([]);
   const [membershipMasterPage, setMembershipMasterPage] = useState(1);
   const [hasMoreMembershipMaster, setHasMoreMembershipMaster] = useState(true);
   const [loadingMembershipMaster, setLoadingMembershipMaster] = useState(false);
-  const [selectedMembership, setSelectedMembership] = useState<number | null>(null);
+  // const [selectedMembership, setSelectedMembership] = useState<number | null>(null);
 
   // Added baseRate and monthUnit to bulkFields
   const [bulkFields, setBulkFields] = useState<BulkFields>({
@@ -105,7 +107,6 @@ export const RatesList = ({ rates, onChange, onRemove }: RatesListProps) => {
   
       const baseUnit = Math.round(bRate / mUnit);
       const discount = Number(rowPercentages[idx] || 0);
-      console.log(baseUnit, discount);
       
       setBaseUnitRates(prev => ({ ...prev, [idx]: baseUnit }));
       if (discount != 0) {
