@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, type SetStateAction } from "react";
 import { FormContent } from "@/components/form-modal/form-content";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { getMembers } from "@/api/member.api";
@@ -13,6 +13,10 @@ import { addDays } from "@/helpers/helper";
 import type { Enrollment } from "@/types/enrollment";
 import type { Batch } from "@/types/batch";
 import type { Response } from "@/types/response";
+import type { Member } from "@/types/member";
+import type { Activity } from "@/types/activity";
+import type { Course } from "@/types/course";
+import type { Entity } from "@/types/entity";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -34,11 +38,11 @@ const EnrollmentFormNew = ({ setRateTableData }: { setRateTableData: any }) => {
     permittedDays: 0,
   });
 
-  const [memberOptions, setMemberOptions] = useState<any[]>([]);
-  const [activityOptions, setActivityOptions] = useState<any[]>([]);
-  const [courseOptions, setCourseOptions] = useState<any[]>([]);
-  const [entityOptions, setEntityOptions] = useState<any[]>([]);
-  const [batchOptions, setBatchOptions] = useState<any[]>([]);
+  const [memberOptions, setMemberOptions] = useState<Member[]>([]);
+  const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
+  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
+  const [entityOptions, setEntityOptions] = useState<Entity[]>([]);
+  const [batchOptions, setBatchOptions] = useState<Batch[]>([]);
 
   const [pagination, setPagination] = useState({
     member: { page: 1, hasMore: true, loading: false },
@@ -81,15 +85,15 @@ const EnrollmentFormNew = ({ setRateTableData }: { setRateTableData: any }) => {
       else if (type === 'entity') res = await getEntities({ limit: PAGE_SIZE, page, search });
 
       const items = res?.data || [];
-      if (type === 'member') setMemberOptions(prev => (isInitial || search) ? items : [...prev, ...items]);
-      else if (type === 'activity') setActivityOptions(prev => (isInitial || search) ? items : [...prev, ...items]);
-      else if (type === 'entity') setEntityOptions(prev => (isInitial || search) ? items : [...prev, ...items]);
+      if (type === 'member') setMemberOptions((prev: SetStateAction<Member[]>) => (isInitial || search) ? items : [...prev as any, ...items]);
+      else if (type === 'activity') setActivityOptions((prev: SetStateAction<Activity[]>) => (isInitial || search) ? items : [...prev as any, ...items]);
+      else if (type === 'entity') setEntityOptions((prev: SetStateAction<Entity[]>) => (isInitial || search) ? items : [...prev as any, ...items]);
 
       setPagination(prev => ({
         ...prev,
         [type]: { page: page + 1, hasMore: items.length === PAGE_SIZE, loading: false }
       }));
-    } catch (err) {
+    } catch {
       setPagination(prev => ({ ...prev, [type]: { ...prev[type], loading: false } }));
     }
   }, [pagination]);
