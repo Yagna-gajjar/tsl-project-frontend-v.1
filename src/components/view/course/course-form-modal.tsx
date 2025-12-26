@@ -91,25 +91,25 @@ const emptyPackage: CoursePackage = {
 const defaultShares: CourseShare[] = [
   {
     courseShareId: 0,
-    entityId: 8,
+    accountId: 8,
     courseId: 0,
-    roleInCourse: "TSL Charges",
+    roleInCourse: "TSL",
     share: 100,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
   {
     courseShareId: 0,
-    entityId: 8,
+    accountId: 8,
     courseId: 0,
-    roleInCourse: "Facility Charges",
+    roleInCourse: "Facility",
     share: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
   {
     courseShareId: 0,
-    entityId: 8,
+    accountId: 8,
     courseId: 0,
     roleInCourse: "SGST",
     share: 0,
@@ -118,7 +118,7 @@ const defaultShares: CourseShare[] = [
   },
   {
     courseShareId: 0,
-    entityId: 8,
+    accountId: 8,
     courseId: 0,
     roleInCourse: "CGST",
     share: 0,
@@ -373,8 +373,8 @@ export default function CourseFormModal({
     // });
 
     formState.shares.forEach((s, i) => {
-      if (!s.entityId || s.entityId <= 0)
-        e[`share_${i}_entityId`] = "Entity required";
+      if (!s.accountId || s.accountId <= 0)
+        e[`share_${i}accountId`] = "Entity required";
       if (!s.roleInCourse) e[`share_${i}_roleInCourse`] = "Type required";
       if (s.share === undefined || s.share < 0 || s.share > 100)
         e[`share_${i}_share`] = "Share (0-100) required";
@@ -469,7 +469,7 @@ export default function CourseFormModal({
         for (const share of currentShares) {
           const shareData = {
             courseId,
-            entityId: share.entityId,
+            accountId: share.accountId,
             roleInCourse: share.roleInCourse,
             share: share.share || 0,
             cgst: share.cgst || 0,
@@ -538,7 +538,7 @@ export default function CourseFormModal({
             status: r.status || "active",
           })),
           shares: formState.shares.map(s => ({
-            entityId: s.entityId,
+            accountId: s.accountId,
             roleInCourse: s.roleInCourse,
             share: s.share || 0,
             cgst: s.cgst || 0,
@@ -700,7 +700,7 @@ export default function CourseFormModal({
     else if (key === "shares") {
       newItem = {
         courseShareId: 0,
-        entityId: 0,
+        accountId: 0,
         courseId: 0,
         roleInCourse: "",
         share: 0,
