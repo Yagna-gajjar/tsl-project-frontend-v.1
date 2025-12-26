@@ -157,7 +157,9 @@ export function SearchableMultiselect({
               onChange={(e) => {
                 const query = e.target.value
                 setSearchQuery(query) // Local filter
-                onSearch?.(query) // External callback
+                if (onSearch) {
+                  onSearch(query) // External callback
+                }
               }}
               className="h-8 bg-background"
               onClick={(e) => e.stopPropagation()}

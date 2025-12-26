@@ -52,6 +52,12 @@ const EnrollmentFormNew = ({
     entity: { page: 1, hasMore: true, loading: false },
   })
 
+  const [memberSearch, setMemberSearch] = useState("")
+  const [memberResults, setMemberResults] = useState<Member[]>([])
+  const [memberLoading, setMemberLoading] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+
+
   const PAGE_SIZE = 20
 
   const allowedWeekDays = useMemo(() => {
@@ -169,20 +175,37 @@ const EnrollmentFormNew = ({
     fetchOptions("entity", true)
   }, [])
 
+  useEffect(() => {
+    if (!memberSearch.trim()) {
+      setMemberResults([])
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setMemberLoading(true)
+        const res = await getMembers({
+          search: memberSearch,
+          limit: 10,
+          page: 1,
+        })
+        setMemberResults(res?.data || [])
+      } catch (e) {
+        toast({ title: "Error", description: "Failed to search members" })
+      } finally {
+        setMemberLoading(false)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [memberSearch])
+
+
   const onChange = useCallback((field: string, value: any) => {
     setValues((prev: any) => ({ ...prev, [field]: value }))
   }, [])
 
   const fields = [
-    {
-      name: "memberId",
-      label: "Member Name",
-      type: "select",
-      options: memberOptions.map((m) => ({ label: `${m.memberFirstName} ${m.memberLastName}`, value: m.memberId })),
-      onSearch: (q: string) => fetchOptions("member", true, q),
-      onLoadMore: () => fetchOptions("member"),
-      isLoadingMore: pagination.member.loading,
-    },
     {
       name: "activityId",
       label: "Activity",
@@ -272,6 +295,54 @@ const EnrollmentFormNew = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+        <div className="mb-6 relative">
+          <label className="block text-sm font-medium mb-1">Member</label>
+
+          <input
+            type="text"
+            value={selectedMember ? `${selectedMember.memberFirstName} ${selectedMember.memberLastName}` : memberSearch}
+            onChange={(e) => {
+              setSelectedMember(null)
+              setMemberSearch(e.target.value)
+            }}
+            placeholder="Search member by name, phone, email..."
+            className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {memberLoading && (
+            <div className="absolute right-3 top-9 text-xs text-muted-foreground">
+              Searching…
+            </div>
+          )}
+
+          {!selectedMember && memberResults.length > 0 && (
+            <div className="absolute z-20 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+              {memberResults.map((m) => (
+                <div
+                  key={m.memberId}
+                  className="px-3 py-2 cursor-pointer hover:bg-muted"
+                  onClick={() => {
+                    setSelectedMember(m)
+                    setMemberResults([])
+                    setMemberSearch("")
+                    setValues((prev: any) => ({
+                      ...prev,
+                      memberId: m.memberId,
+                    }))
+                  }}
+                >
+                  <div className="font-medium">
+                    {m.memberFirstName} {m.memberLastName}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {m.contactNumber || m.email}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <FormContent
           fields={fields as any}
           values={values}

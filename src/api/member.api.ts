@@ -43,7 +43,7 @@ export function getMembers(
 		limit: params.limit ?? 10,
 		sortBy: params.sortBy ?? "memberId",
 		sortOrder: params.sortOrder ?? "ASC",
-		search: params.search,
+		search: params.search || undefined,
 
 		memberFirstName: params.memberFirstName,
 		memberLastName: params.memberLastName,
