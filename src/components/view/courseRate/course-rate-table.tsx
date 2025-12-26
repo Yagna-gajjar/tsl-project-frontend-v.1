@@ -9,14 +9,12 @@ import type { Response } from "@/types/response";
 
 type Props = {
   onView?: (row: CourseRate) => void;
-  onEdit?: (row: CourseRate) => void;
   refreshKey?: number;
   filterCourseId?: number;
 };
 
 export default function CourseRateTable({
   onView,
-  onEdit,
   refreshKey,
   filterCourseId,
 }: Props) {
@@ -139,7 +137,6 @@ export default function CourseRateTable({
           setSortOrder(d);
         }}
         onView={onView}
-        onEdit={onEdit}
         onDelete={(id) => {
           setDeleteId(id ?? null);
           setDeleteOpen(true);

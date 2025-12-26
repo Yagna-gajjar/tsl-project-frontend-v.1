@@ -48,6 +48,9 @@ export default function AccountPage() {
   const [hasMoreMembers, setHasMoreMembers] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
+  const [selectedMemberId, setSelectedMemberId] = useState<number | "all">("all");
+
+
   const PAGE_SIZE = 20;
 
   const fetchEntityTypes = async (enumCase: number) => {
@@ -135,6 +138,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     setSelectedEntityId("all");
+    setSelectedMemberId("all");
 
     setEntities([]);
     setEntitiesPage(1);
@@ -151,9 +155,9 @@ export default function AccountPage() {
     }
   }, [selectedEntityType]);
 
+
   const bumpRefresh = () => setRefreshKey((p) => p + 1);
 
-  /* ---------------- UI ---------------- */
   return (
     <div>
       <div className="flex justify-between mb-6">
@@ -233,10 +237,12 @@ export default function AccountPage() {
               label: `${m.memberFirstName} ${m.memberLastName}`,
               value: Number(m.memberId),
             }))}
-            onChange={(v) => setSelectedEntityId(v ?? "all")}
+            value={selectedMemberId === "all" ? null : selectedMemberId}
+            onChange={(v) => setSelectedMemberId(v ?? "all")}
             onLoadMore={() => fetchMembers()}
             isLoadingMore={loadingMembers}
           />
+
         ) : (
           <SearchableMultiselect
             isSingle
@@ -266,17 +272,20 @@ export default function AccountPage() {
           setViewId(Number(r.accountId));
           setViewOpen(true);
         }}
+        entityType={selectedEntityType}
+        entityId={selectedEntityId}
       />
-
-      <AccountFormModal
-        isOpen={formOpen}
-        initialData={editRow}
-        accountData={accountData}
-        onClose={() => setFormOpen(false)}
-        onSave={bumpRefresh}
-        entityEnumCase={Number(selectedEntityEnumCase)}
-        entityId={Number(selectedEntityId)}
-      />
+      {formOpen &&
+        <AccountFormModal
+          isOpen={formOpen}
+          initialData={editRow}
+          accountData={accountData}
+          onClose={() => setFormOpen(false)}
+          onSave={bumpRefresh}
+          entityEnumCase={Number(selectedEntityEnumCase)}
+          entityId={Number(selectedEntityId)}
+        />
+      }
 
       <AccountViewModal
         isOpen={viewOpen}

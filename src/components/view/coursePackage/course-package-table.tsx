@@ -14,13 +14,11 @@ import type { Response } from "@/types/response";
 
 type Props = {
   onView: (row: CoursePackage) => void;
-  onEdit: (row: CoursePackage) => void;
   refreshKey?: number;
 };
 
 export default function CoursePackageTable({
   onView,
-  onEdit,
   refreshKey,
 }: Props) {
   const [data, setData] = useState<CoursePackage[]>([]);
@@ -62,7 +60,7 @@ export default function CoursePackageTable({
   const columns: Column<CoursePackage>[] = [
     { header: "Package ID", key: "coursePackageId" },
     { header: "Course Name", key: "courseName" },
-    { header: "Batch Name", key: "batchName" }, // Changed from activityType
+    { header: "Batch Name", key: "batchName" },
     { header: "Link Type", key: "linkType" },
     {
       header: "Status",
@@ -104,7 +102,6 @@ export default function CoursePackageTable({
           onPageChange: setPage,
         }}
         onView={onView}
-        onEdit={onEdit}
         onDelete={(id) => {
           setDeleteId(id ?? null);
           setDeleteOpen(true);

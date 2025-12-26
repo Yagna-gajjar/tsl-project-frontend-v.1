@@ -14,9 +14,11 @@ type Props = {
   onView?: (row: Account) => void;
   onEdit?: (row: Account) => void;
   refreshKey?: number;
+  entityId?: number;
+  entityType?: string;
 };
 
-export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
+export default function AccountTable({ onView, onEdit, refreshKey, entityType, entityId }: Props) {
   const [data, setData] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,6 +41,8 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
         sortBy,
         sortOrder,
         search: search || undefined,
+        entityType: entityType !== "all" ? entityType : undefined,
+        entityId: entityId !== "all" ? entityId : undefined
       });
 
       setTotal(res.pagination.total);
@@ -68,7 +72,7 @@ export default function AccountTable({ onView, onEdit, refreshKey }: Props) {
 
   useEffect(() => {
     loadData();
-  }, [loadData, refreshKey]);
+  }, [loadData, refreshKey, entityId, entityType]);
 
   const columns: Column<Account>[] = [
     { key: "accountName", header: "Account Name", sortable: true },

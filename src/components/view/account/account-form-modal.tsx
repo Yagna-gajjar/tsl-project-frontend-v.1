@@ -13,10 +13,9 @@ import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
 import { format } from "date-fns";
-import { Checkbox } from "@/components/ui/checkbox"; // Assuming shadcn checkbox
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
-/* -------------------- CONSTANTS -------------------- */
 
 const SYSTEM_ACCOUNT_TYPES = [
   "Main",
@@ -25,11 +24,11 @@ const SYSTEM_ACCOUNT_TYPES = [
   "SGST",
   "CGST",
   "Other",
+  "Transaction"
 ] as const;
 
 const RESTRICTED_ENUM_CASES = [4, 5, 6];
 
-/* -------------------- DEFAULT -------------------- */
 
 const empty: Account = {
   regDate: format(new Date(), "yyyy-MM-dd"),
@@ -44,7 +43,7 @@ const empty: Account = {
   state: "",
   country: "India",
   pinCode: "",
-  accountType: "Transaction", // Default
+  accountType: "Transaction",
 };
 
 type Props = {
@@ -72,8 +71,6 @@ export default function AccountFormModal({
   const [showConfirm, setShowConfirm] = useState(false);
   const [generateSystem, setGenerateSystem] = useState(false);
 
-  /* -------------------- INITIAL LOAD -------------------- */
-
   useEffect(() => {
     if (!isOpen) return;
     const loadData = async () => {
@@ -97,23 +94,21 @@ export default function AccountFormModal({
     else setValues(empty);
   }, [initialData]);
 
-  /* -------------------- HELPERS -------------------- */
+  useEffect(() => {
+    getSelectedEntityInfo();
+  }, [values.entityId])
 
   const getSelectedEntityInfo = () => {
-    const entity = entityTypes.find(e => e.value === values.defineEntity);
-    console.log(entity);
+    const entity = entities.find(e => e.entityId === values.entityId);
 
     if (!entity) return null;
 
-    // Find the enum case for this entity's type
     const typeEnum = entityTypes.find(t => t.value === entity.entityType);
     return {
       ...entity,
       enumCase: typeEnum ? typeEnum.enumCase : null
     };
   };
-
-  /* -------------------- SUBMIT LOGIC -------------------- */
 
   const executeCreation = async (accountData: Account) => {
     const res = initialData
@@ -126,7 +121,6 @@ export default function AccountFormModal({
     setIsSubmitting(true);
     setFieldErrors({});
 
-    // Basic Validation
     const e: Record<string, string> = {};
     if (!values.entityId) e.entityId = "Required";
     if (!values.accountName) e.accountName = "Required";
@@ -145,17 +139,14 @@ export default function AccountFormModal({
     const isRestricted = RESTRICTED_ENUM_CASES.includes(entityInfo?.enumCase ?? 0);
 
     if (isRestricted && !initialData) {
-      // Check for existing accounts
       const existing = await getAccounts({ entityId: values.entityId });
       const count = existing.data?.length ?? 0;
-      console.log(existing);
 
       if (count === 0) {
         setShowConfirm(true);
         setIsSubmitting(false);
         return;
       } else {
-        // If accounts exist, force this one to be Transaction
         values.accountType = "Transaction";
       }
     } else if (!isRestricted) {
@@ -174,13 +165,11 @@ export default function AccountFormModal({
     }
   }, [values, entities, entityTypes, initialData]);
 
-  /* -------------------- SYSTEM GENERATION -------------------- */
 
   const handleGenerateSystemAccounts = async () => {
     const entityInfo = getSelectedEntityInfo();
     setIsSubmitting(true);
     try {
-      // Loop through the 6 types
       for (const type of SYSTEM_ACCOUNT_TYPES) {
         await createAccount({
           ...values,
@@ -188,7 +177,7 @@ export default function AccountFormModal({
           accountName: `${entityInfo?.entityName} - ${type}`,
         });
       }
-      toast({ title: "6 System accounts created" });
+      toast({ title: "6 System accounts created and one transaction account" });
       onSave();
       onClose();
     } catch (err) {
@@ -199,7 +188,6 @@ export default function AccountFormModal({
     }
   };
 
-  /* -------------------- FIELD CONFIG -------------------- */
 
   const fields: FormFieldConfig<Account>[] = [
     {
@@ -212,7 +200,7 @@ export default function AccountFormModal({
       name: "accountType",
       label: "Account Type",
       type: "select",
-      disabled: !!initialData, // Usually locked on edit
+      disabled: !!initialData,
       options: accountTypeOpt.map((a) => ({ label: a.value, value: a.value })),
     },
     { name: "accountName", label: "Account Name", type: "text", required: true },
@@ -231,6 +219,7 @@ export default function AccountFormModal({
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
     { name: "country", label: "Country", type: "text" },
   ];
+  console.log(initialData);
 
   return (
     <>
@@ -243,7 +232,9 @@ export default function AccountFormModal({
                 fields={fields}
                 values={values}
                 errors={fieldErrors}
-                onChange={(f, v) => setValues((p) => ({ ...p, [f]: v }))}
+                onChange={(f, v) => {
+                  setValues((p) => ({ ...p, [f]: v }))
+                }}
                 layout="grid"
               />
             </div>
@@ -252,7 +243,6 @@ export default function AccountFormModal({
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation for System Accounts */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <div className="p-4">

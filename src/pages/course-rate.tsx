@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Plus, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import type { CourseRate } from "@/types/courseRate";
 import type { Course } from "@/types/course";
 import CourseRateTable from "@/components/view/courseRate/course-rate-table";
-import CourseRateFormModal from "@/components/view/courseRate/course-rate-form-modal";
 import CourseRateViewModal from "@/components/view/courseRate/course-rate-view-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +17,6 @@ import CourseRateExcelUpload from "@/components/view/courseRate/course-rate-exce
 
 export default function CourseRatePage() {
 	const [viewOpen, setViewOpen] = useState(false);
-	const [formOpen, setFormOpen] = useState(false);
-	const [editRow, setEditRow] = useState<CourseRate>();
 	const [viewData, setViewData] = useState<number>();
 	const [refreshKey, setRefreshKey] = useState(0);
 
@@ -40,11 +37,6 @@ export default function CourseRatePage() {
 	const openView = (row: CourseRate) => {
 		setViewData(row.courseRateId);
 		setViewOpen(true);
-	};
-
-	const openForm = (row?: CourseRate) => {
-		setEditRow(row);
-		setFormOpen(true);
 	};
 
 	const handleSaved = () => {
@@ -89,14 +81,6 @@ export default function CourseRatePage() {
 							<Upload className="w-5 h-5" />
 							Upload Excel
 						</Button>
-						<Button
-							size="lg"
-							onClick={() => openForm()}
-							className="flex items-center gap-2 px-4 py-2"
-						>
-							<Plus className="w-5 h-5" />
-							Add Rate
-						</Button>
 					</div>
 				</div>
 			</div>
@@ -104,22 +88,10 @@ export default function CourseRatePage() {
 			<div className="rounded-lg">
 				<CourseRateTable
 					onView={openView}
-					onEdit={openForm}
 					refreshKey={refreshKey}
 					filterCourseId={selectedCourseId !== "all" ? Number(selectedCourseId) : undefined}
 				/>
 			</div>
-
-			<CourseRateFormModal
-				isOpen={formOpen}
-				initialData={editRow}
-				preSelectedCourseId={selectedCourseId !== "all" ? Number(selectedCourseId) : undefined}
-				onClose={() => {
-					setFormOpen(false);
-					setEditRow(undefined);
-				}}
-				onSave={handleSaved}
-			/>
 
 			<CourseRateViewModal
 				isOpen={viewOpen}

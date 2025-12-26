@@ -11,13 +11,11 @@ import type { Response } from "@/types/response";
 
 type Props = {
   onView: (row: CourseShare) => void;
-  onEdit: (row: CourseShare) => void;
   refreshKey?: number;
 };
 
 export default function CourseShareTable({
   onView,
-  onEdit,
   refreshKey,
 }: Props) {
   const [data, setData] = useState<CourseShare[]>([]);
@@ -97,7 +95,6 @@ export default function CourseShareTable({
           onPageChange: setPage,
         }}
         onView={onView}
-        onEdit={onEdit}
         onDelete={(id) => {
           setDeleteId(id ?? null);
           setDeleteOpen(true);
