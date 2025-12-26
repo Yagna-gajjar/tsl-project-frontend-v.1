@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
@@ -10,11 +8,14 @@ import RateTable from "./panel/rate-table"
 import BatchTable from "./panel/batch-table" // Added BatchTable import
 import EnrollmentFormNew from "./enrollment-form-modal"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" // Added Tabs components
+import { CourseRate } from "@/types/courseRate"
 
 export default function EnrollmentDashboard() {
   const [middleview] = useState<any>(null)
   const [rateTableData, setRateTableData] = useState<any>(null)
   const [batchTableData, setBatchTableData] = useState<any>([]) // State for batch data
+  const [memberId, setMemberId] = useState<number>();
+  const [selectedRate, setSelectedRate] = useState<CourseRate>();
 
   const [topHeight, setTopHeight] = useState(100)
   const [isDraggingY, setIsDraggingY] = useState(false)
@@ -23,6 +24,14 @@ export default function EnrollmentDashboard() {
   const [panelWidth, setPanelWidth] = useState(0)
   const [isDraggingX, setIsDraggingX] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+
+  const [enableCourseView, setEnableCourseView] = useState(false);
+
+  const [selectedNoOfDays, setSelectedNoOfDays] = useState(0);
+
+  // const []
+
+
 
   const handleMouseDownY = () => {
     if (!isExpanded) setIsDraggingY(true)
@@ -79,7 +88,14 @@ export default function EnrollmentDashboard() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex-1 overflow-hidden">
-            <EnrollmentFormNew setRateTableData={setRateTableData} setBatchTableData={setBatchTableData} />
+            <EnrollmentFormNew
+              setSelectedNoOfDays={setSelectedNoOfDays}
+              setEnableCourseView={setEnableCourseView}
+              setRateTableData={setRateTableData}
+              setBatchTableData={setBatchTableData}
+              setMemberId={setMemberId}
+              selectedRate={selectedRate}
+            />
           </div>
         </motion.div>
 
@@ -113,20 +129,19 @@ export default function EnrollmentDashboard() {
         animate={{ width: `${panelWidth}%` }}
         transition={isDraggingX ? { duration: 0 } : { duration: 0.4 }}
       >
-        <div
+        {enableCourseView && <div
           className="absolute left-0 top-0 h-full w-10 -translate-x-full flex items-center justify-center cursor-ew-resize group"
           onMouseDown={handleMouseDownX}
         >
           <Button
             onClick={togglePanel}
             className="rotate-[-90deg] py-1 h-8 px-4 rounded-full z-20 gap-2 shadow-lg"
-            variant="secondary"
           >
             <span className="text-xs font-bold"> {panelWidth > 5 ? "HIDE RATES" : "VIEW RATES"}</span>
             {panelWidth > 5 ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </Button>
           <div className="absolute w-[1px] h-[80vh] bg-border group-hover:bg-primary/40 top-1/2 -translate-y-1/2" />
-        </div>
+        </div>}
 
         <div className="flex-1 flex flex-col">
           <div className="p-4 border-b flex items-center justify-between">
@@ -151,7 +166,12 @@ export default function EnrollmentDashboard() {
               {/* Change h-[50vh] to something more flexible or larger like h-[calc(100vh-150px)] */}
               <div className="flex-1 overflow-hidden h-[80vh] py-4">
                 <TabsContent value="rates" className="m-0 h-full"> {/* Added h-full */}
-                  <RateTable rateTableData={rateTableData} />
+                  <RateTable
+                    rateTableData={rateTableData}
+                    NoOfDays={selectedNoOfDays}
+                    memberId={Number(memberId)}
+                    setSelectedRate={setSelectedRate}
+                  />
                 </TabsContent>
                 <TabsContent value="batches" className="m-0 h-full"> {/* Added h-full */}
                   <BatchTable batchData={batchTableData} />

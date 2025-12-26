@@ -66,6 +66,10 @@ export function getMemberById(id: number): Promise<Response<Member>> {
 	return request<Response<Member>>(`${MEMBER_BASE}/${id}`)
 }
 
+export function getMembershipsByMember(id: number): Promise<Response<any>> {
+	return request<Response<any>>(`${MEMBER_BASE}/memberships/${id}`)
+}
+
 export function checkDuplicateEmail(email: string): Promise<Response<boolean>> {
 	return request<Response<boolean>>(`${MEMBER_BASE}/duplicate-email`, {
 		method: 'POST',

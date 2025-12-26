@@ -31,15 +31,28 @@ const ALL_WEEK_DAYS = [
 const EnrollmentFormNew = ({
   setRateTableData,
   setBatchTableData,
-}: { setRateTableData: any; setBatchTableData: any }) => {
-  const [values, setValues] = useState<Partial<Omit<Enrollment, "startTime">>>({
+  setEnableCourseView,
+  setSelectedNoOfDays,
+  setMemberId,
+  selectedRate
+}: { setRateTableData: any; setBatchTableData: any, setEnableCourseView: any, setSelectedNoOfDays: any, setMemberId: any, selectedRate: any }) => {
+  const [values, setValues] = useState<Partial<Enrollment & { membershipMasterId: number; courseRateId: number; discountAmount: number }>>({
     enrollmentDate: format(new Date(), "yyyy-MM-dd"),
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
     membersEnrolled: 1,
     status: "active",
     openEnrollment: false,
     permittedDays: 0,
+    unitRate: 0,
+    billingRate: 0,
+    discountAmount: 0,
+    cgstAmount: 0,
+    sgstAmount: 0,
+    totalDebitAmount: 0,
+    membershipMasterId: 0,
+    courseRateId: 0
   })
+
 
   const [memberOptions, setMemberOptions] = useState<Member[]>([])
   const [activityOptions, setActivityOptions] = useState<Activity[]>([])
@@ -58,26 +71,75 @@ const EnrollmentFormNew = ({
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
 
 
+
   const PAGE_SIZE = 20
 
   const allowedWeekDays = useMemo(() => {
-    const selectedCourse = courseOptions.find((c) => c.courseId === values.courseId)
-    if (!selectedCourse || !selectedCourse.daysPattern) return ALL_WEEK_DAYS
+    const selectedCourse = courseOptions.find(
+      (c) => c.courseId === values.courseId
+    )
+
+    if (!selectedCourse || !selectedCourse.daysPattern) {
+      return ALL_WEEK_DAYS
+    }
 
     const pattern = String(selectedCourse.daysPattern)
-    return ALL_WEEK_DAYS.filter((day) => pattern.includes(String(day.value)))
+
+    return ALL_WEEK_DAYS.filter((day) =>
+      pattern.includes(String(day.value))
+    )
   }, [values.courseId, courseOptions])
 
   useEffect(() => {
-    if (Array.isArray(values.attendingPattern)) {
-      const allowedIds = allowedWeekDays.map((d) => Number(d.value))
-      const filtered = values.attendingPattern.filter((val: any) => allowedIds.includes(Number(val)))
+    const selectedCourse = courseOptions.find(
+      (c) => c.courseId === values.courseId
+    )
 
-      if (filtered.length !== values.attendingPattern.length) {
-        setValues((prev: any) => ({ ...prev, attendingPattern: filtered }))
-      }
+    if (!selectedCourse || !selectedCourse.daysPattern) return
+
+    const pattern = String(selectedCourse.daysPattern)
+    const allowed = pattern.split("")
+
+    setValues((prev: any) => ({
+      ...prev,
+      attendingPatternDays: selectedCourse.noOfDaysInWeek,
+      attendingPattern: allowed,
+    }))
+  }, [values.courseId])
+
+  useEffect(() => {
+    if (selectedRate) {
+      const uRate = parseFloat(selectedRate.unitRate) || 0;
+      const days = Number(values.permittedDays) || 0;
+
+      // 1. Calculate Base Billing Rate
+      const bRate = uRate * days;
+
+      // 2. Calculate Taxes (Assuming 9% CGST + 9% SGST = 18% Total)
+      // You can change these multipliers based on your specific business rules
+      const cgst = parseFloat(((bRate * 9) / 100).toFixed(2));
+      const sgst = parseFloat(((bRate * 9) / 100).toFixed(2));
+
+      // 3. Calculate Final Total
+      const total = bRate + cgst + sgst;
+
+      setValues((prev) => ({
+        ...prev,
+        unitRate: uRate,
+        billingRate: bRate,
+        cgstAmount: cgst,
+        sgstAmount: sgst,
+        totalDebitAmount: total,
+        // Also map the membership master ID if needed for the save API
+        membershipMasterId: selectedRate.membershipMasterId
+      }));
+
+      toast({
+        title: "Rate Applied",
+        description: `Applied ${selectedRate.membershipType} rate: ₹${uRate}/unit`,
+      });
     }
-  }, [allowedWeekDays, values.attendingPattern])
+  }, [selectedRate, values.permittedDays]);
 
   const fetchOptions = useCallback(
     async (type: "member" | "activity" | "entity", isInitial = false, search = "") => {
@@ -127,16 +189,35 @@ const EnrollmentFormNew = ({
       if (res?.data) setRateTableData(res.data)
     })
   }, [values.courseId, setRateTableData])
-
   useEffect(() => {
-    if (values.attendingStartDate && values.permittedDays) {
-      const calculatedEndDate = addDays(values.attendingStartDate, Number(values.permittedDays))
-      const formatted = format(calculatedEndDate, "yyyy-MM-dd")
-      if (values.endDate !== formatted) {
-        setValues((prev) => ({ ...prev, endDate: formatted }))
-      }
+    if (!values.permittedDays) return
+
+    if (!values.attendingStartDate) {
+      toast({
+        title: "Start date required",
+        description: "Please select Start Date before entering number of days",
+        variant: "destructive",
+      })
+      return
     }
-  }, [values.attendingStartDate, values.permittedDays, values.endDate])
+
+    const startDate = new Date(values.attendingStartDate)
+    if (isNaN(startDate.getTime())) return
+
+    const days = Number(values.permittedDays)
+    if (days <= 0) return
+
+    // inclusive logic
+    const calculatedEndDate = addDays(startDate, days)
+
+    const formatted = format(calculatedEndDate, "yyyy-MM-dd")
+
+    setValues((prev) =>
+      prev.endDate === formatted ? prev : { ...prev, endDate: formatted }
+    )
+  }, [values.attendingStartDate, values.permittedDays])
+
+
 
   useEffect(() => {
     if (!values.activityId) {
@@ -153,12 +234,10 @@ const EnrollmentFormNew = ({
     }).then((res) => {
       setCourseOptions(res?.data || [])
     })
-
     getBatch({
       activityId: values.activityId,
       entityId: values.academyEntityId,
-      startTime: values.startTime,
-      attendingPattern: Array.isArray(values.attendingPattern)
+      daysPattern: Array.isArray(values.attendingPattern)
         ? values.attendingPattern.join("")
         : values.attendingPattern,
       limit: 10000,
@@ -167,7 +246,7 @@ const EnrollmentFormNew = ({
       setBatchOptions(data)
       setBatchTableData(data) // Sync batch table data with dashboard
     })
-  }, [values.activityId, values.academyEntityId, values.startTime, values.attendingPattern, setBatchTableData])
+  }, [values.activityId, values.academyEntityId, values.attendingStartDate, values.attendingPattern, setBatchTableData])
 
   useEffect(() => {
     fetchOptions("member", true)
@@ -202,8 +281,27 @@ const EnrollmentFormNew = ({
 
 
   const onChange = useCallback((field: string, value: any) => {
-    setValues((prev: any) => ({ ...prev, [field]: value }))
+    if (field === "batchId") {
+      console.log(value);
+
+    }
+
+    setValues((prev: any) => {
+      if (field === "permittedDays") {
+        setEnableCourseView(true)
+        setSelectedNoOfDays(value)
+      }
+      if (field === "permittedDays" && value && !prev.attendingStartDate) {
+        toast({
+          title: "Start date missing",
+          description: "Please select Start Date first",
+          variant: "destructive",
+        })
+      }
+      return { ...prev, [field]: value }
+    })
   }, [])
+
 
   const fields = [
     {
@@ -322,6 +420,7 @@ const EnrollmentFormNew = ({
                   key={m.memberId}
                   className="px-3 py-2 cursor-pointer hover:bg-muted"
                   onClick={() => {
+                    setMemberId(Number(m.memberId))
                     setSelectedMember(m)
                     setMemberResults([])
                     setMemberSearch("")
