@@ -60,7 +60,7 @@ export default function RateTable({ rateTableData }: FamilyPanelProps) {
         </div>
 
         {/* Table Container */}
-        <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-md overflow-hidden shadow-xl shadow-blue-900/5">
+        <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-md shadow-xl shadow-blue-900/5">
           {rateTableData && rateTableData.length > 0 ? (
             <div className="overflow-x-auto relative">
               <Table>
@@ -122,7 +122,7 @@ export default function RateTable({ rateTableData }: FamilyPanelProps) {
 
         {/* Footer Info */}
         {rateTableData?.length > 0 && (
-          <div className="flex items-center gap-2 px-1 text-muted-foreground/70 italic">
+          <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/20 overflow-y-auto p-5">
             <Info className="h-3 w-3" />
             <span className="text-[10px]">All rates are exclusive of applicable taxes unless specified.</span>
           </div>
