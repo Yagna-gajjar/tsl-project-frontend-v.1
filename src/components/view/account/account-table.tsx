@@ -42,7 +42,7 @@ export default function AccountTable({ onView, onEdit, refreshKey, entityType, e
         sortOrder,
         search: search || undefined,
         entityType: entityType !== "all" ? entityType : undefined,
-        entityId: entityId !== "all" ? entityId : undefined
+        entityId: String(entityId) !== "all" ? entityId : undefined
       });
 
       setTotal(res.pagination.total);

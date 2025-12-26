@@ -9,7 +9,6 @@ import { createAccount, updateAccount, getAccounts } from "@/api/account.api";
 import { getEntities } from "@/api/entity.api";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import { toast } from "@/hooks/use-toast";
-import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
 import { getEnumsByCategory } from "@/api/enums.api";
 import { format } from "date-fns";
@@ -232,6 +231,9 @@ export default function AccountFormModal({
                 fields={fields}
                 values={values}
                 errors={fieldErrors}
+                error={null}
+                loading={false}
+                isSubmitting={isSubmitting}
                 onChange={(f, v) => {
                   setValues((p) => ({ ...p, [f]: v }))
                 }}

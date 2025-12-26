@@ -10,12 +10,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import type { FormFieldConfig } from "@/components/form-modal/types";
-import type { MembershipMaster } from "@/types/memberShipMaster";
 import type { Response } from "@/types/response";
 import { getEntities } from "@/api/entity.api";
 import type { Entity } from "@/types/entity";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
+import type { MembershipMaster } from "@/types/membershipMaster";
 
 type Props = {
   isOpen: boolean;
@@ -37,7 +37,7 @@ const empty: MembershipMaster = {
   cBalPrInCa: 0,
   vBalPrInCa: 0,
   graceDays: 0,
-  guestAllowed: false,
+  guestAllowed: 0,
   clubAccess: false,
   birthdayVenueUsage: 0,
   anniversaryVenueUsage: 0,

@@ -71,7 +71,6 @@ export default function TransactionFormModal({ isOpen, initialData, onClose, onS
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 	const [error, setError] = useState<string | null>(null);
 
-	// Options States
 	const [entities, setEntities] = useState<Entity[]>([]);
 	const [crAccounts, setCrAccounts] = useState<Account[]>([]);
 	const [drAccounts, setDrAccounts] = useState<Account[]>([]);

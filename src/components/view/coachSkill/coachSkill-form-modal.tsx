@@ -19,7 +19,6 @@ type Props = {
   onSave: () => void;
 };
 
-// Initial state matching the new schema
 const empty: CoachSkill = {
   coachSkillId: 0,
   memberId: 0,
@@ -64,7 +63,7 @@ export default function CoachSkillFormModal({
 
         const members = (resMembers?.data as Member[]) || [];
         setMemberOptions(
-          members.map((m) => ({
+          members.map((m: any) => ({
             value: m.memberId,
             label: `${m.memberFirstName} ${m.memberLastName}`,
           }))
@@ -72,7 +71,7 @@ export default function CoachSkillFormModal({
 
         const activities = Array.isArray(resActivities.data) ? resActivities.data : [];
         setActivityOptions(
-          activities.map((a) => ({
+          activities.map((a: any) => ({
             value: a.activityId,
             label: a.activityName,
           }))

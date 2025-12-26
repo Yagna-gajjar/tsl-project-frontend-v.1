@@ -8,7 +8,7 @@ import {
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import type { MembershipMaster } from "@/types/memberShipMaster";
+import type { MembershipMaster } from "@/types/membershipMaster";
 
 type Props = {
   onView?: (row: MembershipMaster) => void;

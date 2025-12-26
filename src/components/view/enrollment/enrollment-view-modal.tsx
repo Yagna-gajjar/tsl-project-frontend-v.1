@@ -5,9 +5,7 @@ import {
   Users,
   BookOpen,
   DollarSign,
-  CheckCircle,
-  // FileText,
-  // Settings2,
+  CheckCircle
 } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Enrollment } from "@/types/enrollment";

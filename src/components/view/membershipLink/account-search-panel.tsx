@@ -1,6 +1,3 @@
-// account-search-panel.tsx
-"use client";
-
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Account } from "@/types/account";
@@ -10,8 +7,8 @@ type Props = {
   search: string;
   setSearch: (value: string) => void;
   results: Account[];
-  isSearching: boolean;
-  searchAccount: () => Promise<void>;
+  isSearching?: boolean;
+  searchAccount?: () => Promise<void>;
   addAccount: (acc: Account) => void;
   selectedAccounts: Account[];
 };

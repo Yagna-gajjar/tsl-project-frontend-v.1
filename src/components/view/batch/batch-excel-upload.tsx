@@ -11,7 +11,6 @@ interface BatchExcelUploadProps {
 	onSuccess: () => void;
 }
 
-// Interface for the Excel Row data
 interface BatchImportRow {
 	batchName: string;
 	courseId: number | string;
@@ -19,9 +18,9 @@ interface BatchImportRow {
 	activityId?: string;
 	membershipMasterId?: number | string;
 	batchType?: string;
-	startTime: string; // Expected format: "HH:mm" or "HH:mm:ss"
+	startTime: string;
 	endTime: string;
-	introduceDate: string | number; // Excel dates can sometimes come as numbers
+	introduceDate: string | number;
 	maxCapacity?: number | string;
 	sessionMinutes?: number | string;
 	daysPerWeek?: number | string;
@@ -31,7 +30,6 @@ interface BatchImportRow {
 
 export default function BatchExcelUpload({ isOpen, onClose, onSuccess }: BatchExcelUploadProps) {
 
-	// Define columns expected in the Excel file
 	const expectedColumns = useMemo(() => [
 		'batchName',
 		'courseId',
@@ -49,23 +47,17 @@ export default function BatchExcelUpload({ isOpen, onClose, onSuccess }: BatchEx
 		'status'
 	], []);
 
-	// Validation logic for each row
 	const handleValidateRow = useCallback((row: BatchImportRow) => {
 		if (!row.batchName) return "Batch Name is required";
-		// if (!row.courseId || isNaN(Number(row.courseId))) return "Valid Course ID is required";
 		if (!row.entityId || isNaN(Number(row.entityId))) return "Valid Entity ID is required";
 		if (!row.startTime) return "Start Time is required";
 		if (!row.endTime) return "End Time is required";
-		// if (!row.introduceDate) return "Introduce Date is required";
 
-		// Optional numeric validations
 		if (row.maxCapacity && isNaN(Number(row.maxCapacity))) return "Max Capacity must be a number";
-		// if (row.membershipMasterId && isNaN(Number(row.membershipMasterId))) return "Membership Master ID must be numeric";
 
 		return null;
 	}, []);
 
-	// API submission logic
 	const handleCreateBatch = useCallback(async (row: BatchImportRow) => {
 		const payload: Batch = {
 			batchType: row.batchType || null,
@@ -85,7 +77,6 @@ export default function BatchExcelUpload({ isOpen, onClose, onSuccess }: BatchEx
 		};
 
 		await createBatch(payload as Batch);
-		console.log(`✅ Imported Batch: ${payload.batchName}`);
 	}, []);
 
 	return (

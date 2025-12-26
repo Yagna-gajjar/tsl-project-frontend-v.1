@@ -9,10 +9,10 @@ import {
   IndianRupee,
 } from "lucide-react";
 import { ViewModal } from "@/components/view-modal/view-modal";
-import type { MembershipMaster } from "@/types/memberShipMaster";
 import { getMembershipMasterById } from "@/api/membershipMaster.api";
 import type { FieldConfig } from "@/components/view-modal/types";
 import type { Response } from "@/types/response";
+import type { MembershipMaster } from "@/types/membershipMaster";
 
 type Props = {
   isOpen: boolean;

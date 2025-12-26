@@ -11,7 +11,6 @@ interface TransactionExcelUploadProps {
 	onSuccess: () => void;
 }
 
-// Defining columns that match your backend's expected CSV/Excel structure
 interface TransactionImportRow {
 	transactionType: string;
 	amount: string | number;
@@ -52,14 +51,14 @@ export default function TransactionExcelUpload({ isOpen, onClose, onSuccess }: T
 	const handleCreateTransaction = useCallback(async (row: TransactionImportRow) => {
 		const payload: Transaction = {
 			transactionType: String(row.transactionType),
-			typeSerialNo: 0, // Defaulting as backend usually generates this
+			typeSerialNo: 0,
 			amount: Number(row.amount),
 
 			crEntityId: Number(row.crEntityId),
 			crAccountId: Number(row.crAccountId),
-			crMemberId: null, // Defaulting or can be added to CSV
+			crMemberId: null,
 			crMsNo: null,
-			crEntityName: "", // These are joined fields, not needed for POST
+			crEntityName: "",
 			crAccountName: "",
 			crMemberFirstName: "",
 			crMemberLastName: "",

@@ -21,8 +21,6 @@ export default function MembershipTable({
   onEdit,
   refreshKey,
   entityType,
-  expire,
-  membershipMasterId,
   entityId
 }: Props) {
   const [data, setData] = useState<membership[]>([]);

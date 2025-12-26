@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ExcelUpload from '@/components/ExcelUploader';
 import { createAccountMember } from '@/api/accountMember.api';
+import type { AccountMember } from '@/types/accountMember';
 
 interface AccountMemberExcelUploadProps {
 	isOpen: boolean;
@@ -53,7 +54,7 @@ export default function AccountMemberExcelUpload({ isOpen, onClose, onSuccess }:
 			return s === 'true' || s === '1' || s === 'yes';
 		};
 
-		const payload = {
+		const payload: AccountMember = {
 			memberId: Number(row.memberId),
 			accountId: Number(row.accountId),
 
@@ -63,8 +64,8 @@ export default function AccountMemberExcelUpload({ isOpen, onClose, onSuccess }:
 			relationship: row.relationship,
 			linkBilling: parseBool(row.linkBilling),
 
-			authorityId: row.authorityId ? Number(row.authorityId) : null,
-			ctcPerHr: row.ctcPerHr ? Math.round(Number(row.ctcPerHr)) : null,
+			authorityId: row.authorityId ? Number(row.authorityId) : undefined,
+			ctcPerHr: row.ctcPerHr ? Math.round(Number(row.ctcPerHr)) : undefined,
 
 			details: row.details || "",
 			status: row.status || 'active'

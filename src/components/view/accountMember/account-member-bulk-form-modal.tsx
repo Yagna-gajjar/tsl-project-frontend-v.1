@@ -138,7 +138,7 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
     if (entityType == "Family") {
       try {
         console.log(member.memberId, " memberId")
-        const res: Response<any> = await isMemberAlreadyLinked(member.memberId);
+        const res: Response<any> = await isMemberAlreadyLinked(Number(member?.memberId));
         if (res.success) {
           if ((res as any)?.isLinked) {
             toast({
@@ -164,8 +164,8 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
 
     setSelectedMembers((prev) => {
       const copy = { ...prev };
-      if (copy[member.memberId]) delete copy[member.memberId];
-      else copy[member.memberId] = { memberData: member, relationship: "", linkBilling: false };
+      if (copy[Number(member.memberId)]) delete copy[Number(member?.memberId)];
+      else copy[Number(member.memberId)] = { memberData: member, relationship: "", linkBilling: false };
       return copy;
     });
   };
@@ -225,7 +225,6 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
         />
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Left Panel: Search & Selection */}
           <div className="w-full md:w-1/2 border-r flex flex-col bg-muted/5">
             <div className="p-4 border-b space-y-3 bg-background">
               <div className="flex items-center gap-2">
@@ -265,7 +264,7 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {memberOptions.map((member) => {
-                    const isSelected = !!selectedMembers[member.memberId];
+                    const isSelected = !!selectedMembers[Number(member?.memberId)];
                     const isCurrentlyActive = existingMembers.some(am => am.memberId === member.memberId && !am.dlinkDate);
 
                     return (
@@ -338,7 +337,7 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
                           <Select
                             value={item.relationship}
                             onValueChange={(v) => setSelectedMembers(prev => ({
-                              ...prev, [item.memberData.memberId]: { ...prev[item.memberData.memberId], relationship: v }
+                              ...prev, [Number(item.memberData.memberId)]: { ...prev[Number(item.memberData.memberId)], relationship: v }
                             }))}
                           >
                             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Rel." /></SelectTrigger>
@@ -348,7 +347,7 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
                             <Checkbox
                               checked={item.linkBilling}
                               onCheckedChange={(v) => setSelectedMembers(prev => ({
-                                ...prev, [item.memberData.memberId]: { ...prev[item.memberData.memberId], linkBilling: !!v }
+                                ...prev, [Number(item.memberData.memberId)]: { ...prev[Number(item.memberData.memberId)], linkBilling: !!v }
                               }))}
                             />
                             <span className="text-[10px]">Billing</span>
@@ -359,7 +358,6 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
                   </div>
                 )}
 
-                {/* Combined Linked List (Active & History) */}
                 <div className="space-y-3">
                   <Label className="text-xs uppercase text-muted-foreground font-bold">Linked Members (Active: {activeCount})</Label>
                   {initLoading ? (
@@ -383,7 +381,6 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
                         <span className="text-[10px] text-muted-foreground">{am.relationship} • {am.linkBilling ? 'Billing' : 'No Billing'}</span>
                       </div>
 
-                      {/* Button only shown if the member is active (dlinkDate is null) */}
                       {!am.dlinkDate && (
                         <Button
                           variant="outline"
