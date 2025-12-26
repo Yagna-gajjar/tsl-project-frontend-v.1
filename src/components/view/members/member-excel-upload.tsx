@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ExcelUpload from '@/components/ExcelUploader';
 import { createMember } from '@/api/member.api';
+import type { Member } from '@/types/member';
 
 interface MemberExcelUploadProps {
 	isOpen: boolean;
@@ -16,7 +17,7 @@ interface MemberImportRow {
 	memberLastName: string;
 	regDate?: string | number;
 	suspensionDate?: string | number;
-	dob?: string | number;
+	dob?: string | undefined;
 	email?: string;
 	gender: string;
 	personalStatusOrganization?: string;
@@ -27,12 +28,12 @@ interface MemberImportRow {
 	idProofType?: string;
 	idProofNumber?: string;
 	contactNumber?: string | number;
-	transportMode?: string
+	transportMode?: string | undefined;
 	personalStatus?: string;
 	adminInstruction?: string;
 	status?: string;
 	remarks?: string;
-	addressId: number | string;
+	addressId: number | null;
 }
 
 export default function MemberExcelUpload({ isOpen, onClose, onSuccess }: MemberExcelUploadProps) {
@@ -74,39 +75,38 @@ export default function MemberExcelUpload({ isOpen, onClose, onSuccess }: Member
 	}, []);
 
 	const handleCreateMember = useCallback(async (row: MemberImportRow) => {
-		const payload = {
+		const payload: Member = {
 			memberFirstName: row.memberFirstName,
-			memberMiddleName: row.memberMiddleName || null,
+			memberMiddleName: row.memberMiddleName || "",
 			memberLastName: row.memberLastName,
 
 			regDate: row.regDate ? new Date(row.regDate).toISOString() : new Date().toISOString(),
 			suspensionDate: row.suspensionDate ? new Date(row.suspensionDate).toISOString() : null,
-			dob: row.dob ? new Date(row.dob).toISOString() : null,
+			dob: row.dob ? new Date(row.dob).toISOString() : undefined,
 
-			email: row.email || null,
+			email: row.email || undefined,
 			gender: row.gender.toLowerCase(),
 
-			personalStatusOrganization: row.personalStatusOrganization || null,
-			qualification: row.qualification || null,
-			motherTounge: row.motherTounge || null,
-			bloodGroup: row.bloodGroup || null,
-			maritialStatus: row.maritialStatus || null,
+			personalStatusOrganization: row.personalStatusOrganization || "",
+			qualification: row.qualification || undefined,
+			mothertongue: row.motherTounge || "",
+			bloodGroup: row.bloodGroup as Member["bloodGroup"] || undefined,
+			maritialStatus: row.maritialStatus || "",
 
-			idProofType: row.idProofType || null,
-			idProofNumber: row.idProofNumber || null,
-			contactNumber: row.contactNumber ? String(row.contactNumber) : null,
-			transportMode: row.transportMode || null,
+			idProofType: row.idProofType || undefined,
+			idProofNumber: row.idProofNumber || undefined,
+			contactNumber: row.contactNumber ? String(row.contactNumber) : undefined,
+			transportMode: row.transportMode || undefined,
 
-			personalStatus: row.personalStatus || null,
-			adminInstruction: row.adminInstruction || null,
-			status: row.status || 'active',
-			remarks: row.remarks || null,
+			personalStatus: row.personalStatus || "",
+			adminInstruction: row.adminInstruction || undefined,
+			status: (row.status || "active") as Member["status"],
+			remarks: row.remarks || undefined,
 
 			addressId: Number(row.addressId) ? row.addressId : null,
 		};
 
-		await createMember(payload as any);
-		console.log(`✅ Imported Member: ${payload.memberFirstName} ${payload.memberLastName}`);
+		await createMember(payload);
 	}, []);
 
 	return (

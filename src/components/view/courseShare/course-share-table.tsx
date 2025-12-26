@@ -62,7 +62,7 @@ export default function CourseShareTable({
     {
       header: "Approval Authority",
       key: "approvalAuthorityId",
-      render: (_:  any, r: any) =>
+      render: (_: any, r: any) =>
         r?.memberFirstName
           ? `${r?.memberFirstName ?? "-"} ${r?.memberLastName ?? ""}`
           : "-",

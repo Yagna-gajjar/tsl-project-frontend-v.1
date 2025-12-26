@@ -42,6 +42,7 @@ export default function AccountMemberFormModal({
     dlinkDate: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    authorityId: undefined
   });
 
   const [memberOptions, setMemberOptions] = useState<Member[]>([]);
@@ -75,6 +76,7 @@ export default function AccountMemberFormModal({
         dlinkDate: undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
+        authorityId: undefined
       });
     }
 

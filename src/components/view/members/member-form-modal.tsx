@@ -74,8 +74,8 @@ export function MemberFormModal({
     contactNumber: initialData?.contactNumber ?? "",
     transportMode: initialData?.transportMode ?? "self drive",
     remarks: initialData?.remarks ?? "",
-    maratialStatus: initialData?.maratialStatus ?? "",
-    admitInstruction: initialData?.admitInstruction,
+    maritialStatus: initialData?.maritialStatus ?? "",
+    adminInstruction: initialData?.adminInstruction,
     status: initialData?.status ?? "active",
     line1: initialData?.line1 ?? "",
     line2: initialData?.line2 ?? "",
@@ -98,8 +98,8 @@ export function MemberFormModal({
   const [qualificationEnum, setqualificationEnum] = useState<Enums[]>([]);
   const [idProofTypeEnum, setIdProofTypeEnum] = useState<Enums[]>([]);
   const [transportModeEnum, setTransportModeEnum] = useState<Enums[]>([]);
-  const [maratialStatusEnum, setMaratialStatusEnum] = useState<Enums[]>([]);
-  const [admitInstructionEnum, setAdmitInstructionEnum] = useState<Enums[]>([]);
+  const [maritialStatusEnum, setmaritialStatusEnum] = useState<Enums[]>([]);
+  const [adminInstructionEnum, setadminInstructionEnum] = useState<Enums[]>([]);
   useEffect(() => {
     setValues({
       ...empty,
@@ -162,8 +162,8 @@ export function MemberFormModal({
       fetchEnumByCategory("QUALIFICATION", setqualificationEnum);
       fetchEnumByCategory("IDPROOFTYPE", setIdProofTypeEnum);
       fetchEnumByCategory("TRANSPORTMODE", setTransportModeEnum);
-      fetchEnumByCategory("MARATIALSTATUS", setMaratialStatusEnum);
-      fetchEnumByCategory("ADMITINSTRUCTIONS", setAdmitInstructionEnum);
+      fetchEnumByCategory("maritialStatus", setmaritialStatusEnum);
+      fetchEnumByCategory("adminInstructionS", setadminInstructionEnum);
     }
   }, [initialData, isOpen]);
 
@@ -282,19 +282,19 @@ export function MemberFormModal({
     { name: "country", label: "Country", type: "text", required: true },
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
     {
-      name: "maratialStatus",
-      label: "maratialStatus",
+      name: "maritialStatus",
+      label: "maritialStatus",
       type: "select",
-      options: maratialStatusEnum?.map((m) => ({
+      options: maritialStatusEnum?.map((m) => ({
         value: m.value,
         label: m.value,
       })),
     },
     {
-      name: "admitInstruction",
+      name: "adminInstruction",
       label: "Admit Instruction",
       type: "select",
-      options: admitInstructionEnum?.map((m) => ({
+      options: adminInstructionEnum?.map((m) => ({
         value: m.value,
         label: m.value,
       })),
@@ -390,8 +390,8 @@ export function MemberFormModal({
         state: values.state,
         country: values.country,
         pinCode: values.pinCode,
-        maratialStatus: values.maratialStatus ?? "",
-        admitInstruction: values.admitInstruction ?? "",
+        maritialStatus: values.maritialStatus ?? "",
+        adminInstruction: values.adminInstruction ?? "",
         status: values.status ?? "active",
       };
       console.log(payload);

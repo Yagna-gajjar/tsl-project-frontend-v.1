@@ -14,7 +14,7 @@ interface CourseShareExcelUploadProps {
 interface CourseShareImportRow {
 	roleInCourse?: string;
 	courseId: number | string;
-	accountId: number | string; // changed from entityId
+	accountId: number | string;
 	share: number | string;
 	cgst: number | string;
 	sgst: number | string;
@@ -28,7 +28,7 @@ export default function CourseShareExcelUpload({ isOpen, onClose, onSuccess }: C
 	const expectedColumns = useMemo(() => [
 		'roleInCourse',
 		'courseId',
-		'accountId', // updated
+		'accountId',
 		'share',
 		'cgst',
 		'sgst',
@@ -40,11 +40,6 @@ export default function CourseShareExcelUpload({ isOpen, onClose, onSuccess }: C
 	const handleValidateRow = useCallback((row: CourseShareImportRow) => {
 		if (!row.courseId || isNaN(Number(row.courseId))) return "Valid Course ID is required";
 		if (!row.accountId || isNaN(Number(row.accountId))) return "Valid Account ID is required";
-
-		// if (row.share === undefined || isNaN(Number(row.share))) return "Share percentage is required";
-		// if (row.cgst === undefined || isNaN(Number(row.cgst))) return "CGST is required";
-		// if (row.sgst === undefined || isNaN(Number(row.sgst))) return "SGST is required";
-
 		return null;
 	}, []);
 
@@ -64,7 +59,6 @@ export default function CourseShareExcelUpload({ isOpen, onClose, onSuccess }: C
 		};
 
 		await createCourseShare(payload);
-		console.log(`✅ Imported Share for Account ${payload.accountId} on Course ${payload.courseId}`);
 	}, []);
 
 	return (

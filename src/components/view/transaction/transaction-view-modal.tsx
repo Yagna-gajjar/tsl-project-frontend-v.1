@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Transaction } from "@/types/transaction";
@@ -30,17 +28,14 @@ const fields: FieldConfig<Transaction>[] = [
 	{ key: "status", label: "Status", icon: Info },
 	{ key: "amount", label: "Amount", icon: DollarSign, render: (v) => `₹${Number(v).toLocaleString('en-IN')}` },
 
-	// Credit Section
 	{ key: "crEntityName", label: "Credit Entity", icon: Wallet },
 	{ key: "crAccountName", label: "Credit Account", icon: Wallet },
 	{ key: "crMemberFirstName", label: "Credit Member", icon: User, render: (v, row) => `${v} ${row.crMemberLastName || ""}` },
 
-	// Debit Section
 	{ key: "drEntityName", label: "Debit Entity", icon: Wallet },
 	{ key: "drAccountName", label: "Debit Account", icon: Wallet },
 	{ key: "drMemberFirstName", label: "Debit Member", icon: User, render: (v, row) => `${v} ${row.drMemberLastName || ""}` },
 
-	// Details & Remarks
 	{ key: "transactionDetails", label: "Details", icon: ClipboardList },
 	{ key: "accApproval", label: "Acc Approval", icon: CheckCircle2, render: (v) => (v ? "Approved" : "Pending") },
 	{ key: "formReferenceNo", label: "Ref No", icon: Hash },

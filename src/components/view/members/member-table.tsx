@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState, useRef } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";

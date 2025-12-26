@@ -9,13 +9,13 @@ import { getMembershipMasters } from "@/api/membershipMaster.api";
 import { getAccounts } from "@/api/account.api";
 
 import type { membership } from "@/types/membership";
-import type { MembershipMaster } from "@/types/memberShipMaster";
 import type { Account } from "@/types/account";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import type { Response } from "@/types/response";
 
 import { toast } from "@/hooks/use-toast";
 import { addDays, format } from "date-fns";
+import type { MembershipMaster } from "@/types/membershipMaster";
 
 type Props = {
   isOpen: boolean;

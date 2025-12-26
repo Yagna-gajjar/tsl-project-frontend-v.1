@@ -9,4 +9,5 @@ export interface MembershipLink {
   membershipType?: string;
   accountName?: string;
   membershipName?: string;
+  contact?: string;
 }

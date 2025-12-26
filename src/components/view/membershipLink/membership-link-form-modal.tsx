@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, type SetStateAction } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -26,7 +26,9 @@ type AccountWithLinkData = Account & {
   dLinkDate?: string | null;
   membershipLinkId?: number;
   isExisting?: boolean;
+  accountId?: number;
 };
+
 
 type UnlinkPreviewItem = {
   membershipLinkId: number;
@@ -45,7 +47,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  membershipData: MembershipData;
+  membershipData?: MembershipData;
 };
 
 const dialogContentVariants = {
@@ -123,7 +125,7 @@ export default function MembershipLinkFormModal({
       isExisting: true,
     }));
 
-    setSelectedAccounts(linked);
+    setSelectedAccounts(linked as SetStateAction<AccountWithLinkData[]>);
   }, [membershipId, membershipMasterId]);
 
 
@@ -146,12 +148,12 @@ export default function MembershipLinkFormModal({
 
   useEffect(() => {
     if (!members) return;
-  
+
     const effectiveCount =
       selectedAccounts.filter((a) => a.isExisting && !a.dLinkDate).length +
       selectedAccounts.filter((a) => !a.isExisting).length -
       unlinkPreview.length;
-  
+
     if (effectiveCount === members) {
       toast({
         title: "Limit reached",
@@ -159,27 +161,27 @@ export default function MembershipLinkFormModal({
       });
     }
   }, [unlinkPreview]);
-  
+
 
   const addAccount = (acc: Account) => {
     if (selectedAccounts.some((a) => a.accountId === acc.accountId)) return;
-  
+
     const nextSelected = [{ ...acc, isExisting: false }, ...selectedAccounts];
-  
-    const effectiveCount = getEffectiveMemberCount(nextSelected);
-  
+
+    const effectiveCount = getEffectiveMemberCount(nextSelected as AccountWithLinkData[]);
+
     if (members && effectiveCount > members) {
       toast({
         title: "Member limit reached",
         description: `You can link only ${members} accounts. Remove or de-link an account first.`,
         variant: "destructive",
       });
-      return; 
+      return;
     }
-    setSelectedAccounts(nextSelected);
+    setSelectedAccounts(nextSelected as AccountWithLinkData[]);
   };
-  
-  
+
+
 
   const removeAccount = (id: number) => {
     setSelectedAccounts((p) => p.filter((a) => a.accountId !== id));
@@ -192,27 +194,27 @@ export default function MembershipLinkFormModal({
     const activeExisting = nextSelectedAccounts.filter(
       (a) => a.isExisting && !a.dLinkDate
     ).length;
-  
+
     const newSelected = nextSelectedAccounts.filter(
       (a) => !a.isExisting
     ).length;
-  
+
     return activeExisting + newSelected - nextUnlinkPreview.length;
   };
-  
+
 
   const handleSubmit = async () => {
     const activeExisting = selectedAccounts.filter(
       (a) => a.isExisting && !a.dLinkDate
     ).length;
-  
+
     const newSelected = selectedAccounts.filter(
       (a) => !a.isExisting
     ).length;
-  
+
     const effectiveCount =
       activeExisting + newSelected - unlinkPreview.length;
-  
+
     if (members && effectiveCount > members) {
       toast({
         title: "Member limit exceeded",
@@ -221,32 +223,30 @@ export default function MembershipLinkFormModal({
       });
       return;
     }
-  
+
     try {
       setIsSubmitting(true);
-  
-      // CREATE NEW LINKS
+
       for (const acc of selectedAccounts.filter((a) => !a.isExisting)) {
         await createMembershipLink({
-          membershipMasterId,
+          membershipMasterId: membershipMasterId ?? 0,
           membershipId,
           accountId: acc.accountId!,
         });
       }
-  
-      // APPLY UNLINKS
+
       for (const u of unlinkPreview) {
         await updateMembershipLink(u.membershipLinkId, {
           dLinkDate: u.dLinkDate,
         });
       }
-  
+
       toast({
         title: "Success",
         description: "Membership links updated",
         variant: "success",
       });
-  
+
       onSave();
       handleClose();
     } catch {
@@ -259,7 +259,7 @@ export default function MembershipLinkFormModal({
       setIsSubmitting(false);
     }
   };
-  
+
 
   const handleClose = () => {
     setSelectedAccounts([]);
@@ -299,7 +299,7 @@ export default function MembershipLinkFormModal({
                 selectedAccounts={selectedAccounts}
                 memberLimit={Number(members)}
                 unlinkPreview={unlinkPreview}
-                setUnlinkPreview={setUnlinkPreview}
+                setUnlinkPreview={setUnlinkPreview as any}
                 removeAccount={removeAccount}
               />
             </div>

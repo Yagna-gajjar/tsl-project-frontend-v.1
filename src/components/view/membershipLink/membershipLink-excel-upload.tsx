@@ -48,7 +48,6 @@ export default function MembershipLinkExcelUpload({ isOpen, onClose, onSuccess }
 		};
 
 		await createMembershipLink(payload);
-		console.log(`✅ Linked Account ${payload.accountId} to Master ${payload.membershipMasterId}`);
 	}, []);
 
 	return (

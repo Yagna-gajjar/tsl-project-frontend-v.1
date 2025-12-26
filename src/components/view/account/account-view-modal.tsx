@@ -176,11 +176,10 @@ export function MemberListModal({
                       key={m.memberId}
                       className={`
                     border rounded-xl p-4 flex justify-between items-center cursor-pointer transition duration-150 ease-in-out
-                    ${
-                      checked
-                        ? "border-blue-600 bg-blue-50 shadow-md"
-                        : "border-gray-200 hover:border-blue-300"
-                    }
+                    ${checked
+                          ? "border-blue-600 bg-blue-50 shadow-md"
+                          : "border-gray-200 hover:border-blue-300"
+                        }
                   `}
                     >
                       <div>
@@ -306,7 +305,7 @@ export default function AccountViewModal({
 
   const openAddMemberForAccount = (account: Account | null) => {
     if (!account) return;
-    setMemberInitialData({ accountId: account.accountId });
+    setMemberInitialData({ accountId: Number(account.accountId) });
     setMemberFormOpen(true);
   };
 

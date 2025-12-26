@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Area } from "@/types/area";
