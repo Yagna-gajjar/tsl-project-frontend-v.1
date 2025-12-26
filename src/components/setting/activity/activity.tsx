@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import ActivityTable from "./activity-table";
 import { ActivityFormModal } from "./activity-form-modal";

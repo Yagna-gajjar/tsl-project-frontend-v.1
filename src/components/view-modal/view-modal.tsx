@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState, useCallback } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ModalHeader } from "./modal-header"

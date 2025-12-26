@@ -9,12 +9,10 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-// --- Utils ---
 function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
-// --- Types ---
 export interface ExcelUploadProps<T = any> {
 	title?: string;
 	createFunction: (row: T, index: number) => Promise<void>;
@@ -38,18 +36,15 @@ export default function ExcelUpload<T extends Record<string, any>>({
 	onUploadComplete
 }: ExcelUploadProps<T>) {
 
-	// --- State ---
 	const [data, setData] = useState<T[]>([]);
 	const [_, setWorkbook] = useState<Record<string, T[]> | null>(null);
 	const [fileName, setFileName] = useState<string | null>(null);
 
-	// UI State
 	const [isDragging, setIsDragging] = useState(false);
 	const [loadingFile, setLoadingFile] = useState(false);
 	const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
 	const [editValue, setEditValue] = useState("");
 
-	// Processing State
 	const [processStatus, setProcessStatus] = useState<ProcessingStatus>('idle');
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [rowStatuses, setRowStatuses] = useState<Record<number, RowStatus>>({});
@@ -57,7 +52,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const abortControllerRef = useRef<boolean>(false);
 
-	// --- File Processing ---
 	const handleFileUpload = useCallback(async (file: File) => {
 		setLoadingFile(true);
 		try {
@@ -77,11 +71,9 @@ export default function ExcelUpload<T extends Record<string, any>>({
 			if (sheets.length === 0) throw new Error("File is empty");
 
 			setWorkbook(parsedSheets);
-			// Default to first sheet
 			setData(parsedSheets[sheets[0]]);
 			setFileName(file.name);
 
-			// Reset
 			setProcessStatus('idle');
 			setCurrentIndex(0);
 			setRowStatuses({});
@@ -94,7 +86,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 		}
 	}, []);
 
-	// --- Processing Logic ---
 	const startUploadProcess = useCallback(async () => {
 		if (!data.length) return;
 
@@ -109,23 +100,17 @@ export default function ExcelUpload<T extends Record<string, any>>({
 				return;
 			}
 
-			// Update UI for processing
 			setRowStatuses(prev => ({ ...prev, [i]: { status: 'processing' } }));
 			setCurrentIndex(i);
 
 			try {
 				const row = data[i];
 
-				// Validation
 				if (validateRow) {
 					const validationError = validateRow(row);
 					if (validationError) throw new Error(validationError);
 				}
-
-				// Execution
 				await createFunction(row, i);
-
-				// Success
 				setRowStatuses(prev => ({ ...prev, [i]: { status: 'success' } }));
 
 			} catch (error: any) {
@@ -155,8 +140,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 		startUploadProcess();
 	}, [startUploadProcess]);
 
-	// --- Data Manipulation (Optimized) ---
-
 	const updateCell = useCallback((rowIndex: number, col: string, value: any) => {
 		setData(prevData => {
 			const newData = [...prevData];
@@ -174,22 +157,18 @@ export default function ExcelUpload<T extends Record<string, any>>({
 			return prev;
 		});
 
-		// Allow retry if we were blocked on this row
 		if (processStatus === 'error' && rowIndex === currentIndex) {
 			setProcessStatus('paused');
 		}
 	}, [currentIndex, processStatus]);
 
 	const deleteRow = useCallback((rowIndex: number) => {
-		// Prevent deletion while running to avoid index mismatch
 		if (processStatus === 'running') return;
 
 		setData(prev => prev.filter((_, idx) => idx !== rowIndex));
 
-		// We must clean up statuses because indices shift after deletion
 		setRowStatuses(prev => {
 			const newStatuses: Record<number, RowStatus> = {};
-			// Re-map statuses: any index AFTER the deleted one shifts down by 1
 			Object.keys(prev).forEach(key => {
 				const idx = Number(key);
 				if (idx < rowIndex) {
@@ -197,7 +176,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 				} else if (idx > rowIndex) {
 					newStatuses[idx - 1] = prev[idx];
 				}
-				// idx === rowIndex is explicitly dropped
 			});
 			return newStatuses;
 		});
@@ -212,7 +190,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 		}));
 	}, [processStatus]);
 
-	// --- Render Props ---
 	const columns = useMemo(() => data.length ? Object.keys(data[0]) : [], [data]);
 	const isLocked = processStatus === 'running';
 
@@ -247,11 +224,9 @@ export default function ExcelUpload<T extends Record<string, any>>({
 
 		return (
 			<>
-				{/* Status / Index / Delete Column */}
 				<td className="w-[80px] border-b border-r border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-slate-900/50 p-0 sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-100 dark:group-hover:bg-slate-800 transition-colors">
 					<div className="w-full h-full flex items-center justify-center relative group/status">
 
-						{/* 1. Status Icons (Priority) */}
 						<div className={cn("flex items-center justify-center transition-opacity duration-200", !isLocked && "group-hover/status:opacity-0")}>
 							{status?.status === 'processing' && <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />}
 							{status?.status === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
@@ -266,7 +241,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 							{!status && <span className="text-gray-400 text-xs font-mono">{index + 1}</span>}
 						</div>
 
-						{/* 2. Delete Button (Hover) */}
 						{!isLocked && (
 							<button
 								onClick={() => deleteRow(index)}
@@ -279,7 +253,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 					</div>
 				</td>
 
-				{/* Data Cells */}
 				{columns.map(col => (
 					<td
 						key={col}
@@ -324,11 +297,9 @@ export default function ExcelUpload<T extends Record<string, any>>({
 		);
 	}, [rowStatuses, editingCell, editValue, columns, isLocked, deleteRow, updateCell]);
 
-	// --- Main Render ---
 	return (
 		<div className="w-full h-full flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden font-sans">
 
-			{/* Header Bar */}
 			<div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-900/50">
 				<div>
 					<h2 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-white">
@@ -376,7 +347,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 				</div>
 			</div>
 
-			{/* Progress Bar */}
 			{data.length > 0 && (
 				<div className="w-full h-1 bg-gray-100 dark:bg-slate-900">
 					<motion.div
@@ -389,7 +359,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 				</div>
 			)}
 
-			{/* Error Banner */}
 			<AnimatePresence>
 				{processStatus === 'error' && (
 					<motion.div
@@ -409,7 +378,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 				)}
 			</AnimatePresence>
 
-			{/* Table / Upload Area */}
 			<div className="flex-1 bg-white dark:bg-slate-950 overflow-hidden relative">
 				{data.length === 0 ? (
 					<div
@@ -441,7 +409,6 @@ export default function ExcelUpload<T extends Record<string, any>>({
 						fixedHeaderContent={FixedHeader}
 						itemContent={RowContent}
 						className="h-full"
-						// Optimize scrolling performance
 						overscan={20}
 						components={{
 							Table: (props) => <table {...props} className="w-full border-collapse text-left" />,

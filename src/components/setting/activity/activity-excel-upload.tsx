@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ExcelUpload from '@/components/ExcelUploader';
 import { createActivity } from '@/api/activity.api';
+import type { Activity } from '@/types/activity';
 
 interface ActivityExcelUploadProps {
 	isOpen: boolean;
@@ -45,22 +46,19 @@ export default function ActivityExcelUpload({ isOpen, onClose, onSuccess }: Acti
 	}, []);
 
 	const handleCreateActivity = useCallback(async (row: ActivityImportRow) => {
-		const payload = {
+		const payload: Activity = {
 			activityName: row.activityName,
-			activityType: row.activityType,
+			activityType: row.activityType as Activity["activityType"],
 			description: row.description || "",
 
-			// Casting tax percentages to INT as per SQL schema
 			cgst: row.cgst ? Math.round(Number(row.cgst)) : 0,
 			sgst: row.sgst ? Math.round(Number(row.sgst)) : 0,
 			srgst: row.srgst ? Math.round(Number(row.srgst)) : 0,
 
-			// Default status 'create' if not specified
 			status: row.status || 'create'
 		};
 
 		await createActivity(payload);
-		console.log(`✅ Imported Activity: ${payload.activityName}`);
 	}, []);
 
 	return (

@@ -32,7 +32,6 @@ export default function AccountPage() {
   const [entityClassification, setEntityClassification] = useState<number>(2);
   const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<string>("all");
-  const [selectedEntityEnumCase, setSelectedEntityEnumCase] = useState<number>();
 
   const [selectedEntityId, setSelectedEntityId] = useState<number | "all">(
     "all"
@@ -62,11 +61,6 @@ export default function AccountPage() {
     } catch {
       setEntityTypeEnums([]);
     }
-  };
-
-  const accountData = {
-    entityId: selectedEntityId === "all" ? undefined : selectedEntityId,
-    entityType: selectedEntityType === "all" ? undefined : selectedEntityType,
   };
 
   const fetchEntities = useCallback(
@@ -133,7 +127,6 @@ export default function AccountPage() {
   useEffect(() => {
     fetchEntityTypes(entityClassification);
     setSelectedEntityType("all");
-    setSelectedEntityEnumCase(0);
   }, [entityClassification]);
 
   useEffect(() => {
@@ -214,17 +207,6 @@ export default function AccountPage() {
           onChange={(v) => {
             const selectedValue = v ?? "all";
             setSelectedEntityType(selectedValue);
-
-            if (selectedValue === "all") {
-              setSelectedEntityEnumCase(undefined);
-              return;
-            }
-
-            const selectedEnum = entityTypeEnums.find(
-              (e) => e.value === selectedValue
-            );
-
-            setSelectedEntityEnumCase(selectedEnum?.enumCase);
           }}
         />
 
@@ -273,17 +255,14 @@ export default function AccountPage() {
           setViewOpen(true);
         }}
         entityType={selectedEntityType}
-        entityId={selectedEntityId}
+        entityId={Number(selectedEntityId)}
       />
       {formOpen &&
         <AccountFormModal
           isOpen={formOpen}
           initialData={editRow}
-          accountData={accountData}
           onClose={() => setFormOpen(false)}
           onSave={bumpRefresh}
-          entityEnumCase={Number(selectedEntityEnumCase)}
-          entityId={Number(selectedEntityId)}
         />
       }
 

@@ -28,4 +28,6 @@ export interface membership {
 
   membershipType?: string;
   accountName?: string;
+  entityName?: string;
+  entityId?: number;
 }

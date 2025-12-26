@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Plus, Upload, Search, Loader2 } from "lucide-react";
 import MemberTable from "@/components/view/members/member-table";
@@ -85,11 +83,11 @@ export default function MemberPage() {
       if (idProofType && idProofNumber) checks.push(checkDuplicateIdProof(idProofType, idProofNumber).then(res => ({ type: 'ID Proof', data: res.data })));
 
       const results = await Promise.all(checks);
-      const duplicates = results.filter(r => r.data && r.data.length > 0);
+      const duplicates = results.filter((r: any) => r.data && r.data?.length > 0);
 
       if (duplicates.length > 0) {
         setIsCleared(false);
-        const msgs = duplicates.map(d => `${d.type}: ${d.data.length} found`).join(", ");
+        const msgs = duplicates.map((d: any) => `${d.type}: ${d.data?.length} found`).join(", ");
         toast({ title: "Duplicates Found", description: msgs, variant: "destructive" });
       } else {
         setIsCleared(true);

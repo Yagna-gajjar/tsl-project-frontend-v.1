@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useCallback, useEffect } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { motion, AnimatePresence } from "framer-motion"

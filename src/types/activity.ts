@@ -1,5 +1,5 @@
 export interface Activity {
-  activityId: number;
+  activityId?: number;
   activityName: string;
   activityType:
     | "art"
@@ -12,11 +12,11 @@ export interface Activity {
     | "sports"
     | "tsl charges";
   description?: string;
-  activeCourses: number;
+  activeCourses?: number;
   cgst: number;
   sgst: number;
   srgst: number;
-  availableCoaches: number;
+  availableCoaches?: number;
   status: string;
   createdAt?: Date;
   updatedAt?: Date;

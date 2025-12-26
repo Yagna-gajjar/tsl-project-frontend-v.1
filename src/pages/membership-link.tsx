@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type SetStateAction } from "react";
 import { Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -163,7 +163,7 @@ export default function MembershipLinkPage() {
     fetchEntities(true);
   }, [membershipMasterId]);
 
-  
+
 
   return (
     <div>
@@ -238,7 +238,7 @@ export default function MembershipLinkPage() {
               }
 
               if (selected) {
-                setMembershipMasterEnumCase(selected.enumCase);
+                setMembershipMasterEnumCase(selected.enumCase as SetStateAction<number | undefined>);
                 setMembershipData((prev) => ({
                   membershipId: prev?.membershipId ?? 0,
                   membershipMasterId: Number(selected.membershipMasterId),
@@ -257,7 +257,7 @@ export default function MembershipLinkPage() {
             value={entityId === "all" ? null : entityId}
             options={[
               { label: "All", value: "all" },
-              ...entities.map((e) => ({
+              ...entities.map((e: any) => ({
                 label: e.entityName,
                 value: e.entityId,
               })),
@@ -290,7 +290,7 @@ export default function MembershipLinkPage() {
           setEditRow(r);
           setFormOpen(true);
         }}
-        membershipData={membershipData}
+        membershipData={membershipData as any}
         onView={(r) => {
           setViewId(r.membershipLinkId);
           setViewOpen(true);
@@ -303,7 +303,7 @@ export default function MembershipLinkPage() {
           setFormOpen(false);
           setEditRow(undefined);
         }}
-        membershipData={membershipData}
+        membershipData={membershipData as any}
         onSave={() => setRefreshKey((p) => p + 1)}
       />
 

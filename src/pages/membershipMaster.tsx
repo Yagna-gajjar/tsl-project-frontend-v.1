@@ -2,10 +2,10 @@ import { useState } from "react";
 import MembershipMasterTable from "@/components/view/memberShipMaster/memberShipMaster-table";
 import MembershipMasterFormModal from "@/components/view/memberShipMaster/membershipMaster-form-modal";
 import MembershipMasterViewModal from "@/components/view/memberShipMaster/membershipMaster-view-modal";
-import type { MembershipMaster } from "@/types/memberShipMaster";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload } from "lucide-react";
 import MembershipExcelUpload from "@/components/view/memberShipMaster/membershipMaster-excel-upload";
+import type { MembershipMaster } from "@/types/membershipMaster";
 
 export default function MembershipMasterPage() {
 
@@ -14,7 +14,7 @@ export default function MembershipMasterPage() {
   const [excelOpen, setExcelOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editRow, setEditRow] = useState<MembershipMaster | null>(null);
-  const [refreshKey, setRefreshKey] = useState<number>(0);
+  const [_, setRefreshKey] = useState<number>(0);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
   const openView = (row: MembershipMaster) => {

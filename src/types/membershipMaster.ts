@@ -29,5 +29,6 @@ export interface MembershipMaster {
   updatedAt?: Date;
 
   entityName: string;
-  entityType?:string;
+  entityType?: string;
+  enumCase?: number | undefined;
 }

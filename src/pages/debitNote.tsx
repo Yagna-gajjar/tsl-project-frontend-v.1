@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import type { DebitNote } from "@/types/debitNote";
 import DebitNoteTable from "@/components/view/debitNote/debitNote-table";

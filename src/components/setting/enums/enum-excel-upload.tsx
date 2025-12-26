@@ -54,7 +54,6 @@ export default function EnumExcelUpload({ isOpen, onClose, onSuccess }: EnumExce
 		};
 
 		await createEnum(payload as Enums);
-		console.log(`✅ Imported Enum: [${payload.category}] ${payload.value}`);
 	}, []);
 
 	return (

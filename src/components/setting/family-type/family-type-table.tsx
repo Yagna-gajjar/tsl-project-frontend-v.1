@@ -51,7 +51,11 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
       const totalCount = Number(res?.pagination?.total ?? rows.length ?? 0);
       setTotal(totalCount);
     } catch (err) {
-      console.error("Failed to fetch family types", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch Family Types",
+        variant: "destructive"
+      })
       setData([]);
       setTotal(0);
     } finally {
@@ -167,7 +171,7 @@ export default function FamilyTypeTable({ onView, onEdit, refreshKey }: Props) {
       if (!ok) {
         throw new Error(
           (res as Record<string, any>)?.message ||
-            "Failed to delete family type"
+          "Failed to delete family type"
         );
       }
 

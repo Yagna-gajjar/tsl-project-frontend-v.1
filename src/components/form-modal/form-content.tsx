@@ -1,5 +1,3 @@
-"use client"
-
 import { motion, AnimatePresence } from "framer-motion"
 import { AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"

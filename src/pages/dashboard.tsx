@@ -1,5 +1,3 @@
-"use client"
-
 import { motion, useAnimation } from "framer-motion"
 import {
 	Building2,

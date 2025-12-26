@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import FamilyTable from "@/components/view/family/family-table";
 import FamilyFormModal from "@/components/view/family/family-form-modal";

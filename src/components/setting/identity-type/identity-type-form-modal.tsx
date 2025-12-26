@@ -110,10 +110,14 @@ export function IdentityTypeFormModal({
         const res: Response<IdentityType> = await getIdentityTypesByID(
           Number(initialData.identityTypeId)
         );
-        const row:any = res && (res.data ?? res) ? res.data ?? res : res;
+        const row: any = res && (res.data ?? res) ? res.data ?? res : res;
         if (row) setValues({ ...row });
       } catch (e) {
-        console.warn("Failed to fetch identity type", e);
+        toast({
+          title: "Error",
+          description: "Failed to fetch identity type.",
+          variant: "destructive"
+        })
       } finally {
         setLoading(false);
       }

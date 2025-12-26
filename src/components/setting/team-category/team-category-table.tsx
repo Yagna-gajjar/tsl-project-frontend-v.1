@@ -10,6 +10,7 @@ import {
 import type { TeamCategory } from "@/types/teamCategory";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import type { Response } from "@/types/response";
+import { toast } from "@/hooks/use-toast";
 
 type Props = {
   onView?: (row: TeamCategory) => void;
@@ -58,7 +59,11 @@ export default function TeamCategoryTable({
       setData(rows);
       setTotal(Number(res?.pagination?.total ?? rows.length ?? 0));
     } catch (err) {
-      console.error("Failed to fetch team categories", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch team category.",
+        variant: "destructive"
+      });
       setData([]);
       setTotal(0);
     } finally {
@@ -144,8 +149,11 @@ export default function TeamCategoryTable({
 
       await loadData();
     } catch (err) {
-      console.error("Delete failed:", err);
-    } finally {
+      toast({
+        title: "Error",
+        description: "Failed to delete.",
+        variant: "destructive"
+      })    } finally {
       setLoadingDelete(false);
       setDeleteOpen(false);
       setDeleteId(null);

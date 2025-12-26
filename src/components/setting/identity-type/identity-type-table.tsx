@@ -12,6 +12,7 @@ import { getFamilyTypes } from "@/api/family-type.api";
 import { getTeamCategories } from "@/api/team-category.api";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import type { Response } from "@/types/response";
+import { toast } from "@/hooks/use-toast";
 
 type SelectOption = { label: string; value: string | number };
 
@@ -65,7 +66,11 @@ export default function IdentityTypeTable({
       }));
       setTeamOptions([{ label: "No category (null)", value: "null" }, ...opts]);
     } catch (e) {
-      console.warn("Failed to load team categories", e);
+      toast({
+        title: "Error",
+        description: "Failed to fetch team category type.",
+        variant: "destructive"
+      })
       setTeamOptions([{ label: "No category (null)", value: "null" }]);
     }
   }, []);
@@ -99,7 +104,11 @@ export default function IdentityTypeTable({
         : Number(res?.pagination?.total ?? rows.length);
       setTotal(totalCount);
     } catch (err) {
-      console.error("Failed to fetch identity types", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch identity type.",
+        variant: "destructive"
+      })
       setData([]);
       setTotal(0);
     } finally {
@@ -259,7 +268,11 @@ export default function IdentityTypeTable({
 
       await loadData();
     } catch (err) {
-      console.error("Delete failed:", err);
+      toast({
+        title: "Error",
+        description: "Failed to delete identity.",
+        variant: "destructive"
+      })
     } finally {
       setLoadingDelete(false);
       setDeleteOpen(false);

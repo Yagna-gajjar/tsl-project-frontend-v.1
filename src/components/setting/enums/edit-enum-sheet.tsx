@@ -110,7 +110,6 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
       if (isEdit && initialData?.id) {
         res = await updateEnum(initialData.id, payload);
       } else {
-        console.log(payload);
         res = await createEnum(payload as any);
       }
 

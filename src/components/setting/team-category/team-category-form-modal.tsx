@@ -68,8 +68,11 @@ export function TeamCategoryFormModal({
           });
         }
       } catch (e) {
-        console.warn("Failed to fetch team category details", e);
-      } finally {
+        toast({
+          title: "Error",
+          description: "Failed to fetch team category details.",
+          variant: "destructive"
+        })      } finally {
         setLoading(false);
       }
     })();
