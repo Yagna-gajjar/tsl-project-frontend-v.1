@@ -19,18 +19,23 @@ type Props = {
   onSave: () => void;
 };
 
-const empty = {
+// Initial state matching the new schema
+const empty: CoachSkill = {
   coachSkillId: 0,
-  coachId: 0,
+  memberId: 0,
   activityId: 0,
   activityQualification: "",
   experience: "",
-  currentInterest: "",
+  currentlyInterest: "",
   currentlyInTeam: "",
   wantsUsToManageBookings: false,
   detailsOfChargesExpected: "",
   detailsOfServicesAvailable: "",
-} as unknown as CoachSkill;
+  status: "active",
+  memberFirstName: "",
+  memberLastName: "",
+  activityName: "",
+};
 
 export default function CoachSkillFormModal({
   isOpen,
@@ -39,58 +44,53 @@ export default function CoachSkillFormModal({
   onSave,
 }: Props) {
   const [values, setValues] = useState<CoachSkill>(empty);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [coachOptions, setCoachOptions] = useState<Member[]>([]);
-  const [activityOptions, setActivityOptions] = useState<
-    {
-      label: string;
-      value: string | number;
-    }[]
-  >([]);
+
+  const [memberOptions, setMemberOptions] = useState<{ label: string; value: number }[]>([]);
+  const [activityOptions, setActivityOptions] = useState<{ label: string; value: number }[]>([]);
 
   useEffect(() => {
-    const loadData = async () => {
+    if (!isOpen) return;
+
+    const loadOptions = async () => {
       try {
-        if (initialData) {
-          setValues(initialData);
-        } else {
-          setValues(empty);
-        }
-
-        setFieldErrors({});
         setError(null);
-
-        const [resCoach, resActivity] = await Promise.all([
+        const [resMembers, resActivities] = await Promise.all([
           getMembers({ limit: 1000 }),
           getActivities(),
         ]);
-        const coachOpts = resCoach?.data as Member[];
 
-        const activityOpts = Array.isArray(resActivity.data)
-          ? resActivity.data.map((activity) => ({
-              value: activity.activityId,
-              label: `${activity.activityName}`,
-            }))
-          : [];
+        const members = (resMembers?.data as Member[]) || [];
+        setMemberOptions(
+          members.map((m) => ({
+            value: m.memberId,
+            label: `${m.memberFirstName} ${m.memberLastName}`,
+          }))
+        );
 
-        setCoachOptions(coachOpts);
+        const activities = Array.isArray(resActivities.data) ? resActivities.data : [];
+        setActivityOptions(
+          activities.map((a) => ({
+            value: a.activityId,
+            label: a.activityName,
+          }))
+        );
 
-        setActivityOptions(activityOpts);
-      } catch {
-        toast({
-          variant: "destructive",
-          title: "Failed to load data",
-          description: "Something went wrong.",
-        });
-
-        setCoachOptions([]);
-        setActivityOptions([]);
-        setError("Failed to load data");
+        if (initialData) {
+          setValues({ ...initialData });
+        } else {
+          setValues(empty);
+        }
+        setFieldErrors({});
+      } catch (err) {
+        console.error("Option loading error:", err);
+        setError("Failed to load required form options.");
       }
     };
-    loadData();
+
+    loadOptions();
   }, [initialData, isOpen]);
 
   const onChange = (
@@ -98,7 +98,6 @@ export default function CoachSkillFormModal({
     val: string | number | boolean
   ) => {
     setValues((p) => ({ ...p, [field]: val }));
-
     setFieldErrors((prev) => {
       if (!prev[field as string]) return prev;
       const copy = { ...prev };
@@ -109,96 +108,59 @@ export default function CoachSkillFormModal({
 
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
-    if (!values.coachId || Number(values.coachId) === 0) {
-      errs.coachId = "Coach is required";
+    if (!values.memberId || values.memberId === 0) {
+      errs.memberId = "Member/Coach selection is required";
     }
-    if (!values.activityId || Number(values.activityId) === 0) {
-      errs.activityId = "Activity is required";
+    if (!values.activityId || values.activityId === 0) {
+      errs.activityId = "Activity selection is required";
     }
     if (!values.experience || String(values.experience).trim() === "") {
-      errs.experience = "Experience is required";
+      errs.experience = "Experience details are required";
     }
     return errs;
   }, [values]);
 
   const handleSubmit = useCallback(async () => {
-    setIsSubmitting(true);
-    setError(null);
     const errs = validate();
-
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
-      setIsSubmitting(false);
-      toast({
-        title: "Error",
-        description: "Please fix the errors in the form.",
-        variant: "destructive",
-      });
       return;
     }
 
+    setIsSubmitting(true);
+    setError(null);
+
     try {
-      const payload: Partial<CoachSkill> = {
-        coachId: Number(values.coachId),
-        activityId: Number(values.activityId),
-        activityQualification: values.activityQualification || undefined,
-        experience: values.experience,
-        currentInterest: values.currentInterest || undefined,
-        currentlyInTeam: values.currentlyInTeam || undefined,
-        wantsUsToManageBookings: Boolean(values.wantsUsToManageBookings),
-        detailsOfChargesExpected: values.detailsOfChargesExpected || undefined,
-        detailsOfServicesAvailable:
-          values.detailsOfServicesAvailable || undefined,
-      };
+      // Omit frontend-only fields and IDs for update/create logic
+      const {
+        coachSkillId, createdAt, updatedAt,
+        memberFirstName, memberLastName, activityName,
+        ...payload
+      } = values;
+
       let res: Response<CoachSkill>;
       if (initialData?.coachSkillId) {
-        res = await updateCoachSkill(
-          initialData.coachSkillId,
-          payload as Omit<
-            CoachSkill,
-            "coachSkillId" | "createdAt" | "updatedAt"
-          >
-        );
-
-        const ok =
-          typeof res?.success !== "undefined"
-            ? res.success === true || String(res.success) === "true"
-            : true;
-
-        if (!ok) {
-          throw new Error("Failed to update coach skill");
-        }
+        res = await updateCoachSkill(initialData.coachSkillId, payload);
       } else {
-        res = await createCoachSkill(
-          payload as Omit<
-            CoachSkill,
-            "coachSkillId" | "createdAt" | "updatedAt"
-          >
-        );
-        const ok =
-          typeof res?.success !== "undefined"
-            ? res.success === true || String(res.success) === "true"
-            : true;
-        if (!ok) {
-          throw new Error("Failed to create coach skill");
-        }
+        res = await createCoachSkill(payload);
       }
-      toast({
-        title: "Success",
-        description: `Coach skill ${
-          initialData?.coachSkillId ? "updated" : "created"
-        } successfully.`,
-        variant: "success",
-      });
 
-      onSave();
-      onClose();
+      if (res.success) {
+        toast({
+          title: "Success",
+          description: `Skill entry ${initialData?.coachSkillId ? "updated" : "created"} successfully.`,
+        });
+        onSave();
+        onClose();
+      } else {
+        throw new Error(res.message || "Operation failed");
+      }
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(msg);
       toast({
         title: "Error",
-        description: `Failed to ${
-          initialData?.coachSkillId ? "update" : "create"
-        } coach skill.`,
+        description: msg,
         variant: "destructive",
       });
     } finally {
@@ -208,18 +170,15 @@ export default function CoachSkillFormModal({
 
   const fields: FormFieldConfig<CoachSkill>[] = [
     {
-      name: "coachId",
-      label: "Coach Name",
+      name: "memberId",
+      label: "Member (Coach)",
       type: "select",
-      options: coachOptions?.map((c) => ({
-        value: c.memberId,
-        label: c.memberFirstName + " " + c.memberLastName,
-      })),
+      options: memberOptions,
       required: true,
     },
     {
       name: "activityId",
-      label: "Activity Name",
+      label: "Activity",
       type: "select",
       options: activityOptions,
       required: true,
@@ -232,93 +191,82 @@ export default function CoachSkillFormModal({
     },
     {
       name: "activityQualification",
-      label: "Activity Qualification",
+      label: "Qualification",
       type: "text",
-      required: false,
     },
     {
-      name: "currentInterest",
+      name: "currentlyInterest",
       label: "Current Interest",
       type: "text",
-      required: false,
     },
     {
       name: "currentlyInTeam",
       label: "Currently In Team",
       type: "text",
-      required: false,
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Pending", value: "pending" },
+      ],
     },
     {
       name: "wantsUsToManageBookings",
       label: "Wants Us To Manage Bookings",
       type: "checkbox",
-      required: false,
     },
     {
       name: "detailsOfChargesExpected",
-      label: "Details Of Charges Expected",
+      label: "Charges Details",
       type: "text",
-      required: false,
     },
     {
       name: "detailsOfServicesAvailable",
-      label: "Details Of Services Available",
+      label: "Services Details",
       type: "textarea",
-      required: false,
     },
   ];
 
-  if (!isOpen) return null;
-
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
-      <div>
-        <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-          <div className="flex flex-col max-h-[90vh] overflow-hidden">
-            <FormHeader
-              title={
-                initialData?.coachSkillId
-                  ? "Edit Coach Skill"
-                  : "Add New Coach Skill"
-              }
-              onClose={onClose}
-            />
-            <div className="overflow-auto">
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
-                  {error}
-                </div>
-              )}
-              <FormContent
-                fields={fields}
-                values={values}
-                errors={fieldErrors}
-                loading={false}
-                error={error}
-                isSubmitting={isSubmitting}
-                onChange={
-                  onChange as (
-                    field: keyof CoachSkill,
-                    value: string | number | boolean
-                  ) => void
-                }
-                layout="grid"
-              />
-            </div>
-            <FormFooter
-              onClose={onClose}
-              onSubmit={handleSubmit}
-              submitLabel={initialData?.coachSkillId ? "Update" : "Create"}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
+        <div className="flex flex-col max-h-[90vh]">
+          <FormHeader
+            title={initialData?.coachSkillId ? "Edit Coach Skill" : "Add Coach Skill"}
+            onClose={onClose}
+          />
+
+          <div className="flex-1 overflow-y-auto">
+            {error && (
+              <div className="m-4 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
+            <FormContent
+              fields={fields}
+              values={values}
+              errors={fieldErrors}
+              loading={false}
+              error={error}
               isSubmitting={isSubmitting}
+              onChange={(field, val) => onChange(field as keyof CoachSkill, val)}
+              layout="grid"
             />
           </div>
-        </DialogContent>
-      </div>
+
+          <FormFooter
+            onClose={onClose}
+            onSubmit={handleSubmit}
+            submitLabel={initialData?.coachSkillId ? "Update Skill" : "Create Skill"}
+            isSubmitting={isSubmitting}
+          />
+        </div>
+      </DialogContent>
     </Dialog>
   );
 }

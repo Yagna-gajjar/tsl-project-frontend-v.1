@@ -39,7 +39,7 @@ export default function CourseRateExcelUpload({ isOpen, onClose, onSuccess }: Co
 		'enrFreezingAllowed',
 		'minDaysInEnr',
 		'daysSelection',
-		'discountOnDayReducce',
+		'discountOnDayReduce',
 		'status'
 	], []);
 

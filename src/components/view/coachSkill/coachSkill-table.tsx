@@ -30,37 +30,43 @@ export default function CoachSkillTable({
   const [sortBy, setSortBy] = useState<string>("coachSkillId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
+      // Constructing query params based on updated schema
       const res: Response<CoachSkill[]> = await getCoachSkills({
         page,
         limit,
         sortBy,
-        sortOrder: sortOrder,
+        sortOrder,
         search: search || undefined,
-        coachId: filters.coachId as number | undefined,
+        memberId: filters.memberId as number | undefined,
         activityId: filters.activityId as number | undefined,
         experience: filters.experience as string | undefined,
-        coachFirstName: filters.coachFirstName as string | undefined,
+        memberFirstName: filters.memberFirstName as string | undefined,
         activityName: filters.activityName as string | undefined,
-        currentInterest: filters.currentInterest as string | undefined,
+        currentlyInterest: filters.currentlyInterest as string | undefined,
         currentlyInTeam: filters.currentlyInTeam as string | undefined,
+        status: filters.status as string | undefined,
       });
 
-      const rowsRaw = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data as CoachSkill[] : []);
-      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r) => ({
-        ...r,
-        createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
-        updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
-      })) as CoachSkill[];
-      setTotal(res.pagination.total)
-      setData(rows);
-    } catch {
-      console.error("Failed to fetch coach skills");
+      if (res.success && Array.isArray(res.data)) {
+        const rows: CoachSkill[] = res.data.map((r) => ({
+          ...r,
+          createdAt: r.createdAt ? new Date(r.createdAt) : undefined,
+          updatedAt: r.updatedAt ? new Date(r.updatedAt) : undefined,
+        }));
+        setTotal(res.pagination?.total || 0);
+        setData(rows);
+      } else {
+        setData([]);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch coach skills";
+      console.error(errorMessage);
       setData([]);
     } finally {
       setIsLoading(false);
@@ -71,9 +77,7 @@ export default function CoachSkillTable({
     loadData();
   }, [loadData, refreshKey]);
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
+  const handlePageChange = (newPage: number) => setPage(newPage);
 
   const handleSearchChange = (q: string) => {
     setSearch(q);
@@ -89,16 +93,16 @@ export default function CoachSkillTable({
   };
 
   const handleSortChange = (column: string, direction: "ASC" | "DESC") => {
-    if (column === "coachName") {
-      column = "coachFirstName";
-    }
-    setSortBy(column);
+    let sortKey = column;
+    if (column === "memberFullName") sortKey = "memberFirstName";
+
+    setSortBy(sortKey);
     setSortOrder(direction);
     setPage(1);
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
+    if (deleteId === null) return;
     try {
       await deleteCoachSkill(deleteId);
       setData((prev) => prev.filter((c) => c.coachSkillId !== deleteId));
@@ -108,10 +112,11 @@ export default function CoachSkillTable({
       });
       setDeleteOpen(false);
       setDeleteId(null);
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete coach skill";
       toast({
         title: "Error",
-        description: "Failed to delete coach skill",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -119,50 +124,45 @@ export default function CoachSkillTable({
 
   const columns: Column<CoachSkill>[] = [
     {
-      header: "Coach Name",
-      key: "coachFirstName",
-      render: (row: CoachSkill) =>
-        `${row.coachFirstName + " " + row.coachLastName}`,
+      header: "Member Name",
+      key: "memberFirstName",
+      render: (row) => `${row.memberFirstName} ${row.memberLastName}`,
       filterType: "text",
       sortable: true,
     },
     {
-      header: "Activity Name",
+      header: "Activity",
       key: "activityName",
-      render: (row: CoachSkill) => `${row.activityName}`,
       filterType: "text",
       sortable: true,
     },
     {
       header: "Experience",
       key: "experience",
-      filterType: "number",
-      render: (row: CoachSkill) => row.experience || "-",
+      filterType: "text",
       sortable: true,
     },
     {
-      header: "Current Interest",
-      key: "currentInterest",
+      header: "Status",
+      key: "status",
       filterType: "text",
-      render: (row: CoachSkill) => row.currentInterest || "-",
+      render: (row) => (
+        <span className={`capitalize ${row.status === 'active' ? 'text-green-600' : 'text-gray-500'}`}>
+          {row.status || "N/A"}
+        </span>
+      ),
     },
     {
-      header: "In Team",
-      key: "currentlyInTeam",
-      filterType: "text",
-      render: (row: CoachSkill) => row.currentlyInTeam || "-",
-    },
-    {
-      header: "Created",
+      header: "Created At",
       key: "createdAt",
-      render: (row: CoachSkill) =>
-        row.createdAt ? row.createdAt.toLocaleDateString() : "-",
+      render: (row) =>
+        row.createdAt instanceof Date ? row.createdAt.toLocaleDateString() : "-",
       sortable: true,
     },
   ];
 
   return (
-    <div>
+    <div className="w-full">
       <DataTable<CoachSkill>
         data={data}
         columns={columns}
@@ -176,14 +176,17 @@ export default function CoachSkillTable({
         onSearchChange={handleSearchChange}
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
-        onView={(row) => onView?.(row)}
-        onEdit={(row) => onEdit?.(row)}
-        onDelete={(coachSkillId: number | undefined) => {
-          setDeleteId(coachSkillId ?? null);
-          setDeleteOpen(true);
+        onView={onView}
+        onEdit={onEdit}
+        onDelete={(id) => {
+          if (typeof id === 'number') {
+            setDeleteId(id);
+            setDeleteOpen(true);
+          }
         }}
-        idKey={"coachSkillId"}
+        idKey="coachSkillId"
       />
+
       <ConfirmDialog
         isOpen={deleteOpen}
         onClose={() => {
@@ -192,7 +195,7 @@ export default function CoachSkillTable({
         }}
         onConfirm={handleDelete}
         title="Delete Coach Skill?"
-        description="Are you sure you want to delete this coach skill? This action cannot be undone."
+        description="Are you sure you want to delete this skill entry? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"

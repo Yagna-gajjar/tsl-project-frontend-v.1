@@ -8,13 +8,14 @@ export interface CoachSkillQuery {
   sortBy?: string;
   sortOrder?: SortOrder;
   search?: string;
-  coachId?: number;
+  memberId?: number;
   activityId?: number;
   experience?: string;
-  coachFirstName?: string;
+  memberFirstName?: string;
   activityName?: string;
-  currentInterest?: string;
+  currentlyInterest?: string;
   currentlyInTeam?: string;
+  status?: string;
 }
 
 const COACH_SKILL_BASE = import.meta.env.VITE_APP_API_URL + "/coach-skill";
@@ -28,24 +29,33 @@ export function getCoachSkills(
     sortBy: params.sortBy ?? "coachSkillId",
     sortOrder: params.sortOrder ?? "ASC",
     search: params.search ?? undefined,
-    coachId: params.coachId ?? undefined,
+    memberId: params.memberId ?? undefined,
     activityId: params.activityId ?? undefined,
     experience: params.experience ?? undefined,
-    coachFirstName: params.coachFirstName ?? undefined,
+    memberFirstName: params.memberFirstName ?? undefined,
     activityName: params.activityName ?? undefined,
-    currentInterest: params.currentInterest ?? undefined,
+    currentlyInterest: params.currentlyInterest ?? undefined,
     currentlyInTeam: params.currentlyInTeam ?? undefined,
+    status: params.status ?? undefined,
   });
 
   return request<Response<CoachSkill[]>>(`${COACH_SKILL_BASE}${qs}`);
 }
 
-export function getCoachSkillById(id: number): Promise<Response<CoachSkill>> {
+export function getCoachSkill(id: number): Promise<Response<CoachSkill>> {
   return request<Response<CoachSkill>>(`${COACH_SKILL_BASE}/${id}`);
 }
 
 export function createCoachSkill(
-  payload: Omit<CoachSkill, "coachSkillId" | "createdAt" | "updatedAt">
+  payload: Omit<
+    CoachSkill,
+    | "coachSkillId"
+    | "createdAt"
+    | "updatedAt"
+    | "memberFirstName"
+    | "memberLastName"
+    | "activityName"
+  >
 ): Promise<Response<CoachSkill>> {
   return request<Response<CoachSkill>>(COACH_SKILL_BASE, {
     method: "POST",
@@ -55,7 +65,17 @@ export function createCoachSkill(
 
 export function updateCoachSkill(
   id: number,
-  payload: Partial<Omit<CoachSkill, "coachSkillId" | "createdAt" | "updatedAt">>
+  payload: Partial<
+    Omit<
+      CoachSkill,
+      | "coachSkillId"
+      | "createdAt"
+      | "updatedAt"
+      | "memberFirstName"
+      | "memberLastName"
+      | "activityName"
+    >
+  >
 ): Promise<Response<CoachSkill>> {
   return request<Response<CoachSkill>>(`${COACH_SKILL_BASE}/${id}`, {
     method: "PUT",
@@ -63,8 +83,8 @@ export function updateCoachSkill(
   });
 }
 
-export function deleteCoachSkill(id: number): Promise<CoachSkill> {
-  return request<CoachSkill>(`${COACH_SKILL_BASE}/${id}`, {
+export function deleteCoachSkill(id: number): Promise<Response<CoachSkill>> {
+  return request<Response<CoachSkill>>(`${COACH_SKILL_BASE}/${id}`, {
     method: "DELETE",
   });
 }
