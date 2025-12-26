@@ -29,9 +29,8 @@ export default function EnrollmentDashboard() {
 
   const [selectedNoOfDays, setSelectedNoOfDays] = useState(0);
 
-  // const []
-
-
+  const [actualDaysInWeek, setActualDaysInWeek] = useState(0);
+  const [selectedCourseDayInWeek, setSelectedCourseDayInWeek] = useState();
 
   const handleMouseDownY = () => {
     if (!isExpanded) setIsDraggingY(true)
@@ -95,6 +94,8 @@ export default function EnrollmentDashboard() {
               setBatchTableData={setBatchTableData}
               setMemberId={setMemberId}
               selectedRate={selectedRate}
+              setActualDaysInWeek={setActualDaysInWeek}
+              setSelectedCourseDayInWeek={setSelectedCourseDayInWeek}
             />
           </div>
         </motion.div>
@@ -171,6 +172,8 @@ export default function EnrollmentDashboard() {
                     NoOfDays={selectedNoOfDays}
                     memberId={Number(memberId)}
                     setSelectedRate={setSelectedRate}
+                    actualDaysInWeek={actualDaysInWeek}
+                    selectedCourseDayInWeek={Number(selectedCourseDayInWeek)}
                   />
                 </TabsContent>
                 <TabsContent value="batches" className="m-0 h-full"> {/* Added h-full */}
