@@ -19,9 +19,10 @@ export interface BatchQuery {
   status?: string;
   entityName?: string;
   admissionCriteria?: string;
-  activityId?:number;
+  activityId?: number;
   entityId?: number;
   startTime?: Date;
+  daysPattern?: string;
 }
 
 const BATCH_BASE = import.meta.env.VITE_APP_API_URL + "/batch";
@@ -46,7 +47,8 @@ export function getBatch(params: BatchQuery = {}): Promise<Response<Batch[]>> {
     admissionCriteria: params.admissionCriteria ?? undefined,
     entityId: params.entityId ?? undefined,
     activityId: params.activityId ?? undefined,
-    startTime: params.startTime ?? undefined
+    startTime: params.startTime ?? undefined,
+    daysPattern: params.daysPattern ?? undefined
   });
 
   return request<Response<Batch[]>>(`${BATCH_BASE}${qs}`);

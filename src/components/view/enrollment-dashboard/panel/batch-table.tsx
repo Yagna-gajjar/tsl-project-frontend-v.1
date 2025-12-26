@@ -1,11 +1,14 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Batch } from "@/types/batch"
+import { format } from "date-fns"
 
 interface BatchTableProps {
     batchData: Batch[]
 }
 
 export default function BatchTable({ batchData }: BatchTableProps) {
+
+
     return (
         <div className="rounded-md border overflow-hidden">
             <Table>
@@ -14,7 +17,9 @@ export default function BatchTable({ batchData }: BatchTableProps) {
                         <TableHead className="font-bold">CourseName</TableHead>
                         <TableHead className="font-bold">Batch Name</TableHead>
                         <TableHead className="font-bold">NoOfPerson</TableHead>
-                        <TableHead className="font-bold text-right">AdmitInstruction</TableHead>
+                        <TableHead className="font-bold text-right">Admission Criteria</TableHead>
+                        <TableHead className="font-bold text-right">Start Time</TableHead>
+                        <TableHead className="font-bold text-right">End Time</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -24,7 +29,13 @@ export default function BatchTable({ batchData }: BatchTableProps) {
                                 <TableCell className="font-medium">{batch.courseName}</TableCell>
                                 <TableCell className="font-medium">{batch.batchName}</TableCell>
                                 <TableCell>{batch.maxCapacity || 0}</TableCell>
-                                <TableCell className="text-right">{batch.startTime || "N/A"}</TableCell>
+                                <TableCell className="text-right">{batch.admissionCriteria || "N/A"}</TableCell>
+                                <TableCell className="text-right">{batch.startTime
+                                    ? batch.startTime
+                                    : "N/A"}</TableCell>
+                                <TableCell className="text-right">{batch.endTime
+                                    ? batch.endTime
+                                    : "N/A"}</TableCell>
                             </TableRow>
                         ))
                     ) : (
