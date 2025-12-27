@@ -52,9 +52,8 @@ const EnrollmentFormNew = ({
   setActualDaysInWeek,
   setSelectedCourseDayInWeek,
 }: Props) => {
-  console.log(selectedRate, "rate");
   // 1. Unified Form State
-  const [values, setValues] = useState<Partial<Enrollment & { membershipMasterId: number; courseRateId: number; discountAmount: number }>>({
+  const [values, setValues] = useState<Partial<Enrollment & { membershipMasterId: number}>>({
     enrollmentDate: format(new Date(), "yyyy-MM-dd"),
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
     membersEnrolled: 1,
@@ -62,22 +61,26 @@ const EnrollmentFormNew = ({
     openEnrollment: false,
     permittedDays: 0,
     unitRate: 0,
+    rackPrice: 0, // Requirement 5
     billingRate: 0,
-    discountAmount: 0,
     cgstAmount: 0,
     sgstAmount: 0,
     totalDebitAmount: 0,
     membershipMasterId: 0,
-    courseRateId: 0,
-    attendingPattern: [], // Initialized as empty array for multiselect
+    courseRateId: 0, // Requirement 1
+    // attendingPattern: [],
     startTime: "",
     dnOrDiscount: 0,
     dnAccountId: null,
     roundedAmount: 0,
     billingAmount: 0,
+    processingCharge: 0, // Requirement 6
+    printRemarks: "",    // Requirement 3
+    officeRemarks: "",   // Requirement 3
+    walkingName: "",     // Requirement 3
+    walkingContact: "",  // Requirement 3
   });
 
-  // 2. Options & UI State
   const [options, setOptions] = useState({
     members: [] as Member[],
     activities: [] as Activity[],
@@ -96,22 +99,17 @@ const EnrollmentFormNew = ({
   const [memberLoading, setMemberLoading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  // 3. Memoized Helpers
   const allowedWeekDays = useMemo(() => {
     const selectedCourse = options.courses.find((c) => c.courseId === values.courseId);
     if (!selectedCourse || !selectedCourse.daysPattern) return ALL_WEEK_DAYS;
-
     const pattern = String(selectedCourse.daysPattern);
     return ALL_WEEK_DAYS.filter((day) => pattern.includes(String(day.value)));
   }, [values.courseId, options.courses]);
 
-  // 4. API Fetchers
   const fetchBaseOptions = useCallback(async (type: "member" | "activity" | "entity", isInitial = false, search = "") => {
     const current = pagination[type];
     if (current.loading || (!current.hasMore && !isInitial && !search)) return;
-
     setPagination((prev) => ({ ...prev, [type]: { ...prev[type], loading: true } }));
-
     try {
       const page = isInitial ? 1 : current.page;
       let res;
@@ -120,15 +118,12 @@ const EnrollmentFormNew = ({
       else if (type === "entity") res = await getEntities({ limit: PAGE_SIZE, page, search, includeEnumCase: [4] });
 
       const items = res?.data || [];
-
-      // FIX: Correct pluralization mapping to avoid "activitys" error
       const stateKey = type === "member" ? "members" : type === "activity" ? "activities" : "entities";
 
       setOptions((prev) => ({
         ...prev,
         [stateKey]: isInitial || search ? items : [...(prev[stateKey] as any), ...items],
       }));
-
       setPagination((prev) => ({
         ...prev,
         [type]: { page: page + 1, hasMore: items.length === PAGE_SIZE, loading: false },
@@ -138,15 +133,11 @@ const EnrollmentFormNew = ({
     }
   }, [pagination]);
 
-  // Initial Data Load
   useEffect(() => {
     fetchBaseOptions("activity", true);
     fetchBaseOptions("entity", true);
   }, []);
 
-  // 5. Dependent Logic (The "Brain")
-
-  // Handle Member Search Debounce
   useEffect(() => {
     if (!memberSearch.trim()) return;
     const timer = setTimeout(async () => {
@@ -161,7 +152,6 @@ const EnrollmentFormNew = ({
     return () => clearTimeout(timer);
   }, [memberSearch]);
 
-  // Fetch Courses when Activity/Entity changes
   useEffect(() => {
     if (values.activityId) {
       getCourses({ activityId: values.activityId, entityId: values.academyEntityId, limit: 1000 }).then((res) => {
@@ -172,42 +162,26 @@ const EnrollmentFormNew = ({
     }
   }, [values.activityId, values.academyEntityId]);
 
-  // Fetch Batches: Updated to check all required fields efficiently
   useEffect(() => {
     const { activityId, academyEntityId, attendingPattern, startTime } = values;
-
-    // Check if pattern exists and convert to string if array
-    const patternStr = Array.isArray(attendingPattern)
-      ? attendingPattern.sort().join("")
-      : attendingPattern;
-
-    // Fetch only if all 4 conditions are met
+    const patternStr = Array.isArray(attendingPattern) ? attendingPattern.sort().join("") : attendingPattern;
     if (activityId && academyEntityId && patternStr && patternStr.length > 0 && startTime) {
-      getBatch({
-        activityId,
-        entityId: academyEntityId,
-        daysPattern: patternStr,
-        startTime: String(startTime),
-        limit: 1000,
-      }).then((res: Response<Batch[]>) => {
+      getBatch({ activityId, entityId: academyEntityId, daysPattern: patternStr, startTime: String(startTime), limit: 1000 }).then((res: Response<Batch[]>) => {
         const data = res?.data || [];
         setOptions((prev) => ({ ...prev, batches: data }));
-        setBatchTableData(data); // Sync batch table data with dashboard
+        setBatchTableData(data);
       });
     } else {
-      // Clear data if any required field is missing
       setOptions((prev) => ({ ...prev, batches: [] }));
       setBatchTableData([]);
     }
   }, [values.activityId, values.academyEntityId, values.attendingPattern, values.startTime, setBatchTableData]);
 
-  // Fetch Course Rates
   useEffect(() => {
     if (values.courseId) {
       getCourseRates({ courseId: values.courseId, limit: 1000 }).then((res) => {
         if (res?.data) setRateTableData(res.data);
       });
-      // Sync course-specific info to parent
       const course = options.courses.find(c => c.courseId === values.courseId);
       if (course) {
         setSelectedCourseDayInWeek(course.noOfDaysInWeek);
@@ -221,28 +195,6 @@ const EnrollmentFormNew = ({
     }
   }, [values.courseId, options.courses]);
 
-  // Handle Billing/Tax Logic
-  useEffect(() => {
-    if (selectedRate) {
-      const uRate = parseFloat(selectedRate.unitRate) || 0;
-      const days = Number(values.permittedDays) || 0;
-      const bRate = uRate * days;
-      const cgst = parseFloat(((bRate * 9) / 100).toFixed(2));
-      const sgst = parseFloat(((bRate * 9) / 100).toFixed(2));
-
-      setValues((prev) => ({
-        ...prev,
-        unitRate: uRate,
-        billingRate: bRate,
-        cgstAmount: cgst,
-        sgstAmount: sgst,
-        totalDebitAmount: bRate + cgst + sgst,
-        membershipMasterId: selectedRate.membershipMasterId
-      }));
-    }
-  }, [selectedRate, values.permittedDays]);
-
-  // Handle Date Calculation
   useEffect(() => {
     if (values.permittedDays && values.attendingStartDate) {
       const startDate = new Date(values.attendingStartDate);
@@ -253,13 +205,14 @@ const EnrollmentFormNew = ({
     }
   }, [values.attendingStartDate, values.permittedDays]);
 
-  // Handle Billing/Tax Logic with DN Account Condition
+  // Handle Billing/Tax Logic with DN Account Condition & Processing Charge
   useEffect(() => {
     if (selectedRate) {
       const uRate = parseFloat(selectedRate.unitRate) || 0;
       const days = Number(values.permittedDays) || 0;
-      const discount = Number(values.dnOrDiscount) || 0;
-      const hasDnAccount = (values.dnAccountId && values.dnAccountId !== 0) || values.dnAccountId !== null;
+      const discount = Number(values.dnOrDiscount) || 0; // Requirement 2: Handled as number
+      const procCharge = Number(values.processingCharge) || 0;
+      const hasDnAccount = values.dnAccountId !== null && values.dnAccountId !== 0;
 
       let billingAmount = 0;
       let cgst = 0;
@@ -267,44 +220,31 @@ const EnrollmentFormNew = ({
       let totalDebit = 0;
       let finalUnitRate = uRate;
 
-      if (!hasDnAccount) {
-        /** * Case 1: DN Account is Available
-         * Logic: Reduce the Rate itself.
-         * New Unit Rate = Original Rate - (Discount / Days)
-         */
+      if (hasDnAccount) {
+        // Case: DN Account is Available (Reduce Rate)
         const discountPerDay = days > 0 ? discount / days : 0;
         finalUnitRate = uRate - discountPerDay;
-
-        // Billing amount is calculated on the adjusted rate
         billingAmount = parseFloat((finalUnitRate * days).toFixed(2));
-
-        // Taxes calculated on the NEW billing amount
         cgst = parseFloat((billingAmount * 0.09).toFixed(2));
         sgst = parseFloat((billingAmount * 0.09).toFixed(2));
-        totalDebit = billingAmount + cgst + sgst;
-
+        totalDebit = billingAmount + cgst + sgst + procCharge; // Added Processing Charge
       } else {
-        /** * Case 2: DN Account is NOT Available (Normal Discount)
-         * Logic: Deduct discount only from the final Total.
-         */
+        // Case: No DN Account (Deduct from Total)
         billingAmount = uRate * days;
-
-        // Taxes calculated on the ORIGINAL billing amount
         cgst = parseFloat((billingAmount * 0.09).toFixed(2));
         sgst = parseFloat((billingAmount * 0.09).toFixed(2));
-
-        // Deduct discount only from the final total
-        totalDebit = (billingAmount + cgst + sgst) - discount;
+        totalDebit = (billingAmount + cgst + sgst) - discount + procCharge; // Added Processing Charge
       }
 
-      // Apply Rounding
       const roundedTotal = Math.ceil(totalDebit);
       const roundingDiff = parseFloat((roundedTotal - totalDebit).toFixed(2));
 
       setValues((prev) => ({
         ...prev,
+        courseRateId: selectedRate.courseRateId, // Requirement 1
         unitRate: parseFloat(finalUnitRate.toFixed(2)),
-        billingRate: billingAmount, // The taxable value
+        rackPrice: parseFloat(finalUnitRate.toFixed(2)), // Requirement 5
+        billingRate: billingAmount,
         billingAmount: billingAmount,
         cgstAmount: cgst,
         sgstAmount: sgst,
@@ -317,13 +257,19 @@ const EnrollmentFormNew = ({
     selectedRate,
     values.permittedDays,
     values.dnOrDiscount,
-    values.dnAccountId
+    values.dnAccountId,
+    values.processingCharge // Requirement 6 dependency
   ]);
 
-  // 6. Change Handler
   const onChange = useCallback((field: string, value: any) => {
     setValues((prev) => {
-      const updates: any = { [field]: value };
+      // Requirement 2: Convert numeric inputs immediately
+      let finalValue = value;
+      if (["dnOrDiscount", "processingCharge", "permittedDays"].includes(field)) {
+        finalValue = value === "" ? 0 : Number(value);
+      }
+
+      const updates: any = { [field]: finalValue };
 
       if (field === "attendingPattern") {
         updates.attendingPatternDays = Array.isArray(value) ? value.length : 0;
@@ -339,7 +285,17 @@ const EnrollmentFormNew = ({
     });
   }, [setEnableCourseView, setSelectedNoOfDays, setActualDaysInWeek]);
 
-  // 7. Field Configuration
+  // Requirement 4: Formatting function for submission
+  const handleFinalSubmit = () => {
+    const submissionData = {
+      ...values,
+      attendingPattern: Array.isArray(values.attendingPattern)
+        ? Number(values.attendingPattern.sort().join(""))
+        : values.attendingPattern
+    };
+    console.log("Final Submission Data:", submissionData);
+  };
+
   const fields = [
     {
       name: "activityId",
@@ -395,13 +351,18 @@ const EnrollmentFormNew = ({
       name: "dnAccountId",
       label: "DN Account",
       type: "select",
-      options: options.entities.map((e) => ({ label: e.entityName, value: e.entityId })), // Reusing entities or update with specific DN accounts
+      options: options.entities.map((e) => ({ label: e.entityName, value: e.entityId })),
     },
+    { name: "processingCharge", label: "Processing Charge", type: "number" }, // Requirement 6
     { name: "billingAmount", label: "Billing Amount", type: "number", disabled: true },
-    { name: "roundedAmount", label: "Rounded Amount", type: "number", disabled: true },
-    { name: "cgstAmount", label: "CGST", type: "number", disabled: true },
-    { name: "sgstAmount", label: "SGST", type: "number", disabled: true },
-    { name: "totalDebitAmount", label: "Total Amount", type: "number", disabled: true },
+    { name: "roundedAmount", label: "Rounding", type: "number", disabled: true },
+    { name: "cgstAmount", label: "CGST (9%)", type: "number", disabled: true },
+    { name: "sgstAmount", label: "SGST (9%)", type: "number", disabled: true },
+    { name: "totalDebitAmount", label: "Total Payable", type: "number", disabled: true },
+    { name: "walkingName", label: "Walking Name", type: "text" }, // Requirement 3
+    { name: "walkingContact", label: "Walking Contact", type: "text" }, // Requirement 3
+    { name: "printRemarks", label: "Print Remarks", type: "text" }, // Requirement 3
+    { name: "officeRemarks", label: "Office Remarks", type: "text" }, // Requirement 3
     {
       name: "status",
       label: "Status",
@@ -434,7 +395,6 @@ const EnrollmentFormNew = ({
               }}
             />
             {memberLoading && <div className="absolute right-3 top-2.5 animate-pulse text-xs">Searching...</div>}
-
             {!selectedMember && options.members.length > 0 && (
               <div className="absolute z-50 w-full mt-1 bg-popover border shadow-md rounded-md max-h-48 overflow-auto">
                 {options.members.map(m => (
@@ -469,10 +429,8 @@ const EnrollmentFormNew = ({
       </div>
 
       <FormFooter
-        onClose={() => {
-          setValues({});
-        }}
-        onSubmit={() => console.log("Final Data:", values)}
+        onClose={() => setValues({})}
+        onSubmit={handleFinalSubmit}
         submitLabel="Complete Enrollment"
         isSubmitting={false}
       />
