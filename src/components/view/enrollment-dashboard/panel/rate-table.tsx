@@ -77,7 +77,6 @@ export default function RateTable({
 
     const bestTier = availableTiers.filter((tier) => tier <= NoOfDays).reverse()[0];
     const rawObject = bestTier !== undefined ? dataTiers[bestTier] : null;
-
     if (!rawObject) return { selectedObject: null, total: 0 };
 
     const factor = getDiscountFactor(rawObject.minDaysInEnr, rawObject.discountOnDayReduce);
@@ -85,7 +84,7 @@ export default function RateTable({
     const total = NoOfDays * displayedUnitRate;
     const selectedObject = {
       ...rawObject,
-      patternDiscount: displayedUnitRate,
+      patternDiscount: factor,
     };
 
     return {
@@ -172,7 +171,8 @@ export default function RateTable({
               const { selectedObject, total } = getCalculatedData(membership);
               const isMatchedMember = activeMemberships.some(m => m.membershipMasterId === groupedData[membership].masterId);
               const isCasual = membership.toLowerCase().includes("casual");
-              const isHighlighted = isMatchedMember || isCasual;
+              const isWalkin = membership.toLowerCase().includes("walk in");
+              const isHighlighted = isMatchedMember || isCasual || isWalkin;
               const isSelected = currentSelectedRow === membership;
 
               return (

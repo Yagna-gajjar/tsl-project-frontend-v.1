@@ -41,9 +41,9 @@ export interface Enrollment {
   officeRemarks?: string;
   walkingName?: string;
   walkingContact?: string;
-  memberApprovalStatus?: number;
-  academyApprovalStatus?: number;
-  finalTSLApproval?: number;
+  memberApprovalStatus?: number | null;
+  academyApprovalStatus?: number | null;
+  finalTSLApproval?: number | null;
   changeNo?: number;
   previousCourseID?: number;
   processingCharge?: number;

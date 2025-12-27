@@ -62,6 +62,7 @@ const EnrollmentFormNew = ({
     activityType: null,
     chargingPattern: "",
     billingDaysSessions: 0,
+    patternDiscount: 1,
     enrollmentDate: format(new Date(), "yyyy-MM-dd"),
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
     membersEnrolled: 1,
@@ -86,6 +87,10 @@ const EnrollmentFormNew = ({
     officeRemarks: "",
     walkingName: "",
     walkingContact: "",
+    costToMember: 0,
+    memberApprovalStatus: null,
+    academyApprovalStatus: null,
+    finalTSLApproval: null,
   });
 
   const [options, setOptions] = useState({
@@ -308,38 +313,45 @@ const EnrollmentFormNew = ({
 
   useEffect(() => {
     if (selectedRate) {
-      const uRate = parseFloat(selectedRate.unitRate) || 0;
-      const days = Number(values.permittedDays) || 0;
-      const discount = Number(values.dnOrDiscount) || 0;
-      const procCharge = Number(values.processingCharge) || 0;
+      // 1. Initial assignment from selectedRate
+      const rackPrice = parseFloat(selectedRate.unitRate) || 0;
+      const patternDiscount = parseFloat(selectedRate.patternDiscount) || 0;
+      const dnOrDiscount = Number(values.dnOrDiscount) || 0;
+      const sessions = Number(values.billingDaysSessions) || 1; // Prevent division by zero
       const hasDnAccount = values.dnAccountId !== null && values.dnAccountId !== 0;
 
-      let billingAmount = 0;
-      let cgst = 0, sgst = 0, totalDebit = 0, finalUnitRate = uRate;
+      // 2. Define local variables based on your formulas
+      const x = rackPrice * patternDiscount;
+      const y = sessions > 0 ? dnOrDiscount / sessions : 0;
 
-      if (hasDnAccount) {
-        const discountPerDay = days > 0 ? discount / days : 0;
-        finalUnitRate = uRate - discountPerDay;
-        billingAmount = parseFloat((finalUnitRate * days).toFixed(2));
-        cgst = parseFloat((billingAmount * 0.09).toFixed(2));
-        sgst = parseFloat((billingAmount * 0.09).toFixed(2));
-        totalDebit = billingAmount + cgst + sgst + procCharge;
+      let billingRate = 0;
+      let costToMember = 0;
+
+      if (!hasDnAccount) {
+        billingRate = parseFloat((x - y).toFixed(2));
+        costToMember = parseFloat((x - y).toFixed(2));
       } else {
-        billingAmount = uRate * days;
-        cgst = parseFloat((billingAmount * 0.09).toFixed(2));
-        sgst = parseFloat((billingAmount * 0.09).toFixed(2));
-        totalDebit = billingAmount + cgst + sgst - discount + procCharge;
+        billingRate = x;
+        costToMember = parseFloat((x - y).toFixed(2));
       }
 
+      const days = Number(values.permittedDays) || 0;
+      const billingAmount = parseFloat((billingRate * days).toFixed(2));
+      const cgst = parseFloat((billingAmount * 0.09).toFixed(2));
+      const sgst = parseFloat((billingAmount * 0.09).toFixed(2));
+      const procCharge = Number(values.processingCharge) || 0;
+
+      const totalDebit = billingAmount + cgst + sgst + procCharge;
       const roundedTotal = Math.ceil(totalDebit);
       const roundingDiff = parseFloat((roundedTotal - totalDebit).toFixed(2));
 
       setValues((prev) => ({
         ...prev,
         courseRateId: selectedRate.courseRateId,
-        unitRate: parseFloat(finalUnitRate.toFixed(2)),
-        rackPrice: parseFloat(finalUnitRate.toFixed(2)),
-        billingRate: billingAmount,
+        rackPrice: rackPrice,
+        patternDiscount: patternDiscount,
+        costToMember: parseFloat(costToMember.toFixed(2)),
+        billingRate: parseFloat(billingRate.toFixed(2)),
         billingAmount: billingAmount,
         cgstAmount: cgst,
         sgstAmount: sgst,
@@ -348,8 +360,14 @@ const EnrollmentFormNew = ({
         membershipMasterId: selectedRate.membershipMasterId,
       }));
     }
-  }, [selectedRate, values.permittedDays, values.dnOrDiscount, values.dnAccountId, values.processingCharge]);
-
+  }, [
+    selectedRate,
+    values.dnOrDiscount,
+    values.dnAccountId,
+    values.billingDaysSessions,
+    values.permittedDays,
+    values.processingCharge
+  ]);
   const onChange = useCallback(
     (field: string, value: any) => {
       setValues((prev) => {
@@ -417,6 +435,7 @@ const EnrollmentFormNew = ({
   const handleFinalSubmit = () => {
     const submissionData = {
       ...values,
+      processingCharge: (values?.processingCharge ?? 0) + (values?.roundedAmount ?? 0),
       attendingPattern: Array.isArray(values.attendingPattern)
         ? Number(values.attendingPattern.sort().join(""))
         : values.attendingPattern,
@@ -524,12 +543,15 @@ const EnrollmentFormNew = ({
       type: "select",
       options: availableEntities.map((e) => ({ label: e.name, value: e.id })),
     },
-    { name: "processingCharge", label: "Processing Charge", type: "number" },
+    { name: "billingRate", label: "Billing Rate", type: "number", disabled: true },
+    { name: "rackPrice", label: "Rack Price", type: "number", disabled: true },
+    { name: "costToMember", label: "Cost To Member", type: "number", disabled: true },
     { name: "billingAmount", label: "Billing Amount", type: "number", disabled: true },
     { name: "roundedAmount", label: "Rounding", type: "number", disabled: true },
     { name: "cgstAmount", label: "CGST (9%)", type: "number", disabled: true },
     { name: "sgstAmount", label: "SGST (9%)", type: "number", disabled: true },
     { name: "totalDebitAmount", label: "Total Debit Amount", type: "number", disabled: true },
+    { name: "processingCharge", label: "Processing Charge", type: "number" },
     { name: "walkingName", label: "Walking Name", type: "text" },
     { name: "walkingContact", label: "Walking Contact", type: "text" },
     { name: "printRemarks", label: "Print Remarks", type: "text" },
