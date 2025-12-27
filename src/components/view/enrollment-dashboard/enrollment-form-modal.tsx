@@ -34,8 +34,10 @@ const EnrollmentFormNew = ({
   setEnableCourseView,
   setSelectedNoOfDays,
   setMemberId,
-  selectedRate
-}: { setRateTableData: any; setBatchTableData: any, setEnableCourseView: any, setSelectedNoOfDays: any, setMemberId: any, selectedRate: any }) => {
+  selectedRate,
+  setActualDaysInWeek,
+  setSelectedCourseDayInWeek
+}: { setRateTableData: any; setBatchTableData: any, setEnableCourseView: any, setSelectedNoOfDays: any, setMemberId: any, selectedRate: any, setActualDaysInWeek: any, setSelectedCourseDayInWeek: any }) => {
   const [values, setValues] = useState<Partial<Enrollment & { membershipMasterId: number; courseRateId: number; discountAmount: number }>>({
     enrollmentDate: format(new Date(), "yyyy-MM-dd"),
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
@@ -78,7 +80,7 @@ const EnrollmentFormNew = ({
     const selectedCourse = courseOptions.find(
       (c) => c.courseId === values.courseId
     )
-
+    setSelectedCourseDayInWeek(selectedCourse?.noOfDaysInWeek)
     if (!selectedCourse || !selectedCourse.daysPattern) {
       return ALL_WEEK_DAYS
     }
@@ -95,10 +97,12 @@ const EnrollmentFormNew = ({
       (c) => c.courseId === values.courseId
     )
 
+
     if (!selectedCourse || !selectedCourse.daysPattern) return
 
     const pattern = String(selectedCourse.daysPattern)
     const allowed = pattern.split("")
+    setActualDaysInWeek(selectedCourse.noOfDaysInWeek)
 
     setValues((prev: any) => ({
       ...prev,
@@ -281,9 +285,15 @@ const EnrollmentFormNew = ({
 
 
   const onChange = useCallback((field: string, value: any) => {
-    if (field === "batchId") {
-      console.log(value);
 
+    if (field === "attendingPattern") {
+      setValues((prev) => ({
+        ...prev,
+        attendingPatternDays: value.length
+      }))
+
+
+      setActualDaysInWeek(value.length)
     }
 
     setValues((prev: any) => {
@@ -291,6 +301,7 @@ const EnrollmentFormNew = ({
         setEnableCourseView(true)
         setSelectedNoOfDays(value)
       }
+
       if (field === "permittedDays" && value && !prev.attendingStartDate) {
         toast({
           title: "Start date missing",

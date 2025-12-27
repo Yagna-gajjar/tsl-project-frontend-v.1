@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Calculator, CheckSquare, Info, MousePointer2 } from "lucide-react";
 import { getMembershipsByMember } from "@/api/member.api";
 import type { Response } from "@/types/response";
@@ -19,9 +18,11 @@ interface FamilyPanelProps {
   NoOfDays: number;
   memberId: number;
   setSelectedRate: (data: any) => void;
+  actualDaysInWeek: number;
+  selectedCourseDayInWeek: number;
 }
 
-export default function RateTable({ rateTableData, NoOfDays, memberId, setSelectedRate }: FamilyPanelProps) {
+export default function RateTable({ rateTableData, NoOfDays, memberId, setSelectedRate, actualDaysInWeek, selectedCourseDayInWeek }: FamilyPanelProps) {
   const [activeMemberships, setActiveMemberships] = useState<any[]>([]);
   const [currentSelectedRow, setCurrentSelectedRow] = useState<string | null>(null);
 
@@ -66,6 +67,20 @@ export default function RateTable({ rateTableData, NoOfDays, memberId, setSelect
       total: NoOfDays * (selectedObject?.unitRate || 0)
     };
   };
+
+  const calculateDisWithSelectedPattern = (rateDaysInWeek: number, disc: number) => {
+
+    console.log(rateDaysInWeek, " = rateDaysInWeek");
+    console.log(actualDaysInWeek, " = actualDaysInWeek");
+    console.log(selectedCourseDayInWeek, " = selectedCourseDayInWeek");
+    console.log(disc, " = disc");
+
+    const finalDaysInWeek = Math.max(rateDaysInWeek, actualDaysInWeek)
+
+    const finalRate = (1 - (selectedCourseDayInWeek - finalDaysInWeek) * (disc / 100))
+    console.log(finalRate);
+    // return finalRate
+  }
 
   /**
    * Handles user selection - Passing the whole data object back
@@ -194,6 +209,11 @@ export default function RateTable({ rateTableData, NoOfDays, memberId, setSelect
                   {sortedUnits.map((unit) => {
                     const item = groupedData[membership].fullDataByTier[unit];
                     const isAppliedTier = selectedObject?.aboveUnits === unit;
+
+                    if (item) {
+                      calculateDisWithSelectedPattern(item.minDaysInEnr, item.discountOnDayReduce);
+                    }
+
 
                     return (
                       <TableCell
