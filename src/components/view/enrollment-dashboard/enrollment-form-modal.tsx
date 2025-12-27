@@ -17,6 +17,9 @@ import type { Activity } from "@/types/activity";
 import type { Course } from "@/types/course";
 import type { Enums } from "@/types/enums";
 import { toast } from "@/hooks/use-toast";
+import TransactionFormModal from "../transaction/transaction-form-modal";
+import { Button } from "@/components/ui/button";
+import { Transaction } from "@/types/transaction";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -106,6 +109,10 @@ const EnrollmentFormNew = ({
     activity: { page: 1, hasMore: true, loading: false },
   });
 
+  const [paymentFormOpen, setPaymentFormOpen] = useState(false);
+  const [transactionData, setTransactionData] = useState<Partial<Transaction>>({
+    transactionType: "receipt"
+  });
   const [memberSearch, setMemberSearch] = useState("");
   const [memberLoading, setMemberLoading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -177,6 +184,18 @@ const EnrollmentFormNew = ({
     },
     [pagination]
   );
+
+  const handleAddTransactionDetailsa = async () => {
+    setValues((prev)=>({
+      ...prev,
+      payment: transactionData
+    }))
+    console.log("Payment Added", transactionData);
+    toast({
+      title: "Success",
+      description: "Payment"
+    })
+  }
 
   useEffect(() => {
     getEnumsByCategory("ACTIVITY STATUS").then((res) => setOptions((p) => ({ ...p, activityClassification: res?.data || [] })));
@@ -368,6 +387,7 @@ const EnrollmentFormNew = ({
     values.permittedDays,
     values.processingCharge
   ]);
+
   const onChange = useCallback(
     (field: string, value: any) => {
       setValues((prev) => {
@@ -431,6 +451,12 @@ const EnrollmentFormNew = ({
     },
     [setEnableCourseView, setSelectedNoOfDays, setActualDaysInWeek, onFilterChange]
   );
+
+  useEffect(() => {
+    setTransactionData({
+      amount: values.totalDebitAmount
+    })
+  }, [values.totalDebitAmount]);
 
   const handleFinalSubmit = () => {
     const submissionData = {
@@ -569,49 +595,61 @@ const EnrollmentFormNew = ({
   ];
 
   return (
-    <div className="flex flex-col w-full h-[83vh] max-w-6xl mx-auto bg-background border rounded-xl overflow-hidden shadow-2xl">
-      <div className="p-6 border-b bg-muted/10">
-        <h1 className="text-xl font-bold text-primary">New Enrollment Registration</h1>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="mb-8 p-4 border rounded-lg bg-card">
-          <label className="text-sm font-semibold mb-2 block">Search Member</label>
-          <div className="relative">
-            <input
-              className="w-full p-2 border rounded-md"
-              placeholder="Start typing name or contact..."
-              value={selectedMember ? `${selectedMember.memberFirstName} ${selectedMember.memberLastName}` : memberSearch}
-              onChange={(e) => {
-                setSelectedMember(null);
-                setMemberSearch(e.target.value);
-              }}
-            />
-            {memberLoading && <div className="absolute right-3 top-2.5 animate-pulse text-xs">Searching...</div>}
-            {!selectedMember && options.members.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-popover border shadow-md rounded-md max-h-48 overflow-auto">
-                {options.members.map((m) => (
-                  <div
-                    key={m.memberId}
-                    className="p-2 hover:bg-accent cursor-pointer border-b last:border-0"
-                    onClick={() => {
-                      setMemberId(Number(m.memberId));
-                      setSelectedMember(m);
-                      setValues((v) => ({ ...v, memberId: m.memberId }));
-                    }}
-                  >
-                    <p className="font-medium">{m.memberFirstName} {m.memberLastName}</p>
-                    <p className="text-xs opacity-70">{m.contactNumber}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+    <>
+      <div className="flex flex-col w-full h-[83vh] max-w-6xl mx-auto bg-background border rounded-xl overflow-hidden shadow-2xl">
+        <div className="p-6 border-b bg-muted/10">
+          <h1 className="text-xl font-bold text-primary">New Enrollment Registration</h1>
         </div>
-        <FormContent fields={fields as any} values={values} errors={{}} loading={false} error={null} isSubmitting={false} onChange={onChange} layout="grid" />
+
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="mb-8 p-4 border rounded-lg bg-card">
+            <label className="text-sm font-semibold mb-2 block">Search Member</label>
+            <div className="relative">
+              <input
+                className="w-full p-2 border rounded-md"
+                placeholder="Start typing name or contact..."
+                value={selectedMember ? `${selectedMember.memberFirstName} ${selectedMember.memberLastName}` : memberSearch}
+                onChange={(e) => {
+                  setSelectedMember(null);
+                  setMemberSearch(e.target.value);
+                }}
+              />
+              {memberLoading && <div className="absolute right-3 top-2.5 animate-pulse text-xs">Searching...</div>}
+              {!selectedMember && options.members.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-popover border shadow-md rounded-md max-h-48 overflow-auto">
+                  {options.members.map((m) => (
+                    <div
+                      key={m.memberId}
+                      className="p-2 hover:bg-accent cursor-pointer border-b last:border-0"
+                      onClick={() => {
+                        setMemberId(Number(m.memberId));
+                        setSelectedMember(m);
+                        setValues((v) => ({ ...v, memberId: m.memberId }));
+                      }}
+                    >
+                      <p className="font-medium">{m.memberFirstName} {m.memberLastName}</p>
+                      <p className="text-xs opacity-70">{m.contactNumber}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <FormContent fields={fields as any} values={values} errors={{}} loading={false} error={null} isSubmitting={false} onChange={onChange} layout="grid" />
+          <Button className="ml-5" onClick={() => { setPaymentFormOpen(true) }}>Open Payment</Button>
+        </div>
+        <FormFooter onClose={() => setValues({})} onSubmit={handleFinalSubmit} submitLabel="Complete Enrollment" isSubmitting={false} />
       </div>
-      <FormFooter onClose={() => setValues({})} onSubmit={handleFinalSubmit} submitLabel="Complete Enrollment" isSubmitting={false} />
-    </div>
+      {values.totalDebitAmount && <TransactionFormModal
+        isOpen={paymentFormOpen}
+        initialData={transactionData as any}
+        onClose={() => {
+          setPaymentFormOpen(false);
+        }}
+        onSave={handleAddTransactionDetailsa}
+      />}
+    </>
+
   );
 };
 
