@@ -28,7 +28,7 @@ export interface Enrollment {
   patternDiscount?: number;
   rackPrice?: number;
   dnOrDiscount?: number;
-  dnAccountId?: number;
+  dnAccountId?: number | null;
   billingRate?: number;
   costToMember?: number;
   roundedAmount?: number;

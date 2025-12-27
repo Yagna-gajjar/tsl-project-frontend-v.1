@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, type SetStateAction } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { FormContent } from "@/components/form-modal/form-content";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { getMembers } from "@/api/member.api";
@@ -7,7 +7,6 @@ import { getEntities } from "@/api/entity.api";
 import { getCourses } from "@/api/course.api";
 import { getCourseRates } from "@/api/courseRate.api";
 import { getBatch } from "@/api/batch.api";
-import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { addDays } from "@/helpers/helper";
 
@@ -53,6 +52,7 @@ const EnrollmentFormNew = ({
   setActualDaysInWeek,
   setSelectedCourseDayInWeek,
 }: Props) => {
+  console.log(selectedRate, "rate");
   // 1. Unified Form State
   const [values, setValues] = useState<Partial<Enrollment & { membershipMasterId: number; courseRateId: number; discountAmount: number }>>({
     enrollmentDate: format(new Date(), "yyyy-MM-dd"),
@@ -72,7 +72,7 @@ const EnrollmentFormNew = ({
     attendingPattern: [], // Initialized as empty array for multiselect
     startTime: "",
     dnOrDiscount: 0,
-    dnAccountId: 0,
+    dnAccountId: null,
     roundedAmount: 0,
     billingAmount: 0,
   });
@@ -252,6 +252,73 @@ const EnrollmentFormNew = ({
       }
     }
   }, [values.attendingStartDate, values.permittedDays]);
+
+  // Handle Billing/Tax Logic with DN Account Condition
+  useEffect(() => {
+    if (selectedRate) {
+      const uRate = parseFloat(selectedRate.unitRate) || 0;
+      const days = Number(values.permittedDays) || 0;
+      const discount = Number(values.dnOrDiscount) || 0;
+      const hasDnAccount = (values.dnAccountId && values.dnAccountId !== 0) || values.dnAccountId !== null;
+
+      let billingAmount = 0;
+      let cgst = 0;
+      let sgst = 0;
+      let totalDebit = 0;
+      let finalUnitRate = uRate;
+
+      if (!hasDnAccount) {
+        /** * Case 1: DN Account is Available
+         * Logic: Reduce the Rate itself.
+         * New Unit Rate = Original Rate - (Discount / Days)
+         */
+        const discountPerDay = days > 0 ? discount / days : 0;
+        finalUnitRate = uRate - discountPerDay;
+
+        // Billing amount is calculated on the adjusted rate
+        billingAmount = parseFloat((finalUnitRate * days).toFixed(2));
+
+        // Taxes calculated on the NEW billing amount
+        cgst = parseFloat((billingAmount * 0.09).toFixed(2));
+        sgst = parseFloat((billingAmount * 0.09).toFixed(2));
+        totalDebit = billingAmount + cgst + sgst;
+
+      } else {
+        /** * Case 2: DN Account is NOT Available (Normal Discount)
+         * Logic: Deduct discount only from the final Total.
+         */
+        billingAmount = uRate * days;
+
+        // Taxes calculated on the ORIGINAL billing amount
+        cgst = parseFloat((billingAmount * 0.09).toFixed(2));
+        sgst = parseFloat((billingAmount * 0.09).toFixed(2));
+
+        // Deduct discount only from the final total
+        totalDebit = (billingAmount + cgst + sgst) - discount;
+      }
+
+      // Apply Rounding
+      const roundedTotal = Math.ceil(totalDebit);
+      const roundingDiff = parseFloat((roundedTotal - totalDebit).toFixed(2));
+
+      setValues((prev) => ({
+        ...prev,
+        unitRate: parseFloat(finalUnitRate.toFixed(2)),
+        billingRate: billingAmount, // The taxable value
+        billingAmount: billingAmount,
+        cgstAmount: cgst,
+        sgstAmount: sgst,
+        totalDebitAmount: roundedTotal,
+        roundedAmount: roundingDiff,
+        membershipMasterId: selectedRate.membershipMasterId
+      }));
+    }
+  }, [
+    selectedRate,
+    values.permittedDays,
+    values.dnOrDiscount,
+    values.dnAccountId
+  ]);
 
   // 6. Change Handler
   const onChange = useCallback((field: string, value: any) => {
