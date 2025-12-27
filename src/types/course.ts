@@ -18,7 +18,7 @@ export interface Course {
   totalParallelBatches: number;
   minAge: number;
   maxAge: number;
-  gender?: "Male" | "Female" | "Any" | null;
+  gender?: "M" | "F" | "O" | "A" | null;
   balanceUsable?: string | null;
   enrApprovalRequired?: boolean;
   cgstRate?: number;

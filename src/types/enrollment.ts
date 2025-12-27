@@ -53,5 +53,9 @@ export interface Enrollment {
   createdAt?: string;
   updatedAt?: string;
 
+  //support
   startTime?: string;
+  activityClassification?: number | null;
+  activityType?: string | null;
+  chargingPattern: "",
 }

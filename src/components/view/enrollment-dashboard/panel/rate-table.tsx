@@ -85,7 +85,7 @@ export default function RateTable({
     const total = NoOfDays * displayedUnitRate;
     const selectedObject = {
       ...rawObject,
-      unitRate: displayedUnitRate,
+      patternDiscount: displayedUnitRate,
     };
 
     return {
