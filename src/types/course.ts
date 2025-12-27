@@ -6,7 +6,7 @@ export interface Course {
   classification?: string | null;
   entityId: number;
   introduceDate: string;
-  suspensionDate?: string | null;
+  suspensionDate?: Date | string | null;
   courseName: string;
   chargingPattern?: string | null;
   sessionMinutes: number;

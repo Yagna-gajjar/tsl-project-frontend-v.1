@@ -57,7 +57,6 @@ const EnrollmentFormNew = ({
   allCourse,
   onFilterChange
 }: Props) => {
-  // --- 1. State Management ---
   const [values, setValues] = useState<Partial<Enrollment & { membershipMasterId: number }>>({
     activityClassification: null,
     activityType: null,
@@ -223,21 +222,49 @@ const EnrollmentFormNew = ({
       getCourseRates({ courseId: values.courseId, limit: 1000 }).then((res) => {
         if (res?.data) setRateTableData(res.data);
       });
+
       const course = filteredCourses.find((c) => c.courseId === values.courseId);
       if (course) {
-        setSelectedCourseDayInWeek(course.noOfDaysInWeek);
-        setActualDaysInWeek(course.noOfDaysInWeek);
-        setValues((prev: any) => ({
-          ...prev,
+        const pattern = String(course.chargingPattern || "").toLowerCase();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let updates: any = {
           attendingPattern: String(course.daysPattern || "").split(""),
           attendingPatternDays: course.noOfDaysInWeek,
           chargingPattern: course.chargingPattern,
-        }));
+        };
+
+        if (pattern === "unit" || pattern === "school") {
+          const introDate = new Date(course.introduceDate);
+          const suspDate = new Date(course?.suspensionDate as any);
+          const finalStart = introDate < today ? today : introDate;
+          const diffTime = suspDate.getTime() - finalStart.getTime();
+          const calcPermittedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+          updates = {
+            ...updates,
+            billingDaysSessions: 1,
+            attendingStartDate: format(finalStart, "yyyy-MM-dd"),
+            endDate: format(suspDate, "yyyy-MM-dd"),
+            permittedDays: calcPermittedDays,
+          };
+
+          setSelectedNoOfDays(calcPermittedDays);
+          setEnableCourseView(true);
+        }
+
+        setActualDaysInWeek(course.noOfDaysInWeek);
+        setSelectedCourseDayInWeek(course.noOfDaysInWeek);
+        setValues((prev: any) => ({ ...prev, ...updates }));
       }
     }
   }, [values.courseId, filteredCourses]);
 
   useEffect(() => {
+    const pattern = String(values.chargingPattern || "").toLowerCase();
+    if (pattern === "unit" || pattern === "school") return;
+
     if (values.permittedDays && values.attendingStartDate) {
       const startDate = new Date(values.attendingStartDate);
       if (!isNaN(startDate.getTime())) {
@@ -245,7 +272,7 @@ const EnrollmentFormNew = ({
         setValues((prev) => (prev.endDate === endDate ? prev : { ...prev, endDate }));
       }
     }
-  }, [values.attendingStartDate, values.permittedDays]);
+  }, [values.attendingStartDate, values.permittedDays, values.chargingPattern]);
 
   useEffect(() => {
     if (selectedRate) {
@@ -259,7 +286,6 @@ const EnrollmentFormNew = ({
       let cgst = 0, sgst = 0, totalDebit = 0, finalUnitRate = uRate;
 
       if (hasDnAccount) {
-        // logic: Discount per day reduces unit rate before tax
         const discountPerDay = days > 0 ? discount / days : 0;
         finalUnitRate = uRate - discountPerDay;
         billingAmount = parseFloat((finalUnitRate * days).toFixed(2));
@@ -267,7 +293,6 @@ const EnrollmentFormNew = ({
         sgst = parseFloat((billingAmount * 0.09).toFixed(2));
         totalDebit = billingAmount + cgst + sgst + procCharge;
       } else {
-        // logic: Discount is subtracted from the total after tax
         billingAmount = uRate * days;
         cgst = parseFloat((billingAmount * 0.09).toFixed(2));
         sgst = parseFloat((billingAmount * 0.09).toFixed(2));
@@ -325,19 +350,12 @@ const EnrollmentFormNew = ({
           }
         }
         if (field === "billingDaysSessions" && pattern === "session") {
-          // 1. Find the selected course to get its 'noOfDaysInWeek'
           const selectedCourse = allCourse.find(c => c.courseId === prev.courseId);
           const daysInWeek = selectedCourse?.noOfDaysInWeek || 0;
-
-          // 2. Calculate X: billingSessions * noOfDaysInWeek
           const X = Number(finalValue) * daysInWeek;
-
-          // 3. Update permittedDays and Dashboard views
           updates.permittedDays = X;
           setSelectedNoOfDays(X);
           setEnableCourseView(true);
-
-          // 4. Update endDate: (startDate + X - 1)
           if (prev.attendingStartDate && X > 0) {
             const startDate = new Date(prev.attendingStartDate);
             if (!isNaN(startDate.getTime())) {
@@ -346,7 +364,18 @@ const EnrollmentFormNew = ({
             }
           }
         }
+        if (field === "attendingStartDate" && (pattern === "unit" || pattern === "school")) {
+          const newStart = new Date(value);
+          const fixedEnd = new Date(prev.endDate as string);
 
+          if (!isNaN(newStart.getTime()) && !isNaN(fixedEnd.getTime())) {
+            const diffTime = fixedEnd.getTime() - newStart.getTime();
+            const newPermitted = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            updates.permittedDays = newPermitted;
+            setSelectedNoOfDays(newPermitted);
+          }
+        }
         return { ...prev, ...updates };
       });
     },
@@ -435,7 +464,7 @@ const EnrollmentFormNew = ({
       name: "billingDaysSessions",
       label: "Billing Days/Sessions",
       type: "number",
-      disabled: values.chargingPattern?.toLowerCase() === "day"
+      disabled: ["day", "unit"].includes(values.chargingPattern?.toLowerCase() as string)
     },
     {
       name: "endDate",
@@ -449,6 +478,12 @@ const EnrollmentFormNew = ({
       type: "select",
       disabled: !values.activityId || options.batches.length === 0,
       options: options.batches.map((b) => ({ label: `${b.batchName} (${b.startTime} - ${b.endTime})`, value: b.batchId })),
+    },
+    {
+      name: "membersEnrolled",
+      label: "Members Enrolled",
+      type: "number",
+      disabled: values.chargingPattern?.toLowerCase() !== "school"
     },
     { name: "dnOrDiscount", label: "Discount / DN", type: "number" },
     {
@@ -519,10 +554,8 @@ const EnrollmentFormNew = ({
             )}
           </div>
         </div>
-
         <FormContent fields={fields as any} values={values} errors={{}} loading={false} error={null} isSubmitting={false} onChange={onChange} layout="grid" />
       </div>
-
       <FormFooter onClose={() => setValues({})} onSubmit={handleFinalSubmit} submitLabel="Complete Enrollment" isSubmitting={false} />
     </div>
   );

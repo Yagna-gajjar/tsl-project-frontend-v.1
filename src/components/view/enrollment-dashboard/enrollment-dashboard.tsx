@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +13,6 @@ import type { CourseRate } from "@/types/courseRate";
 import type { Course } from "@/types/course";
 
 export default function EnrollmentDashboard() {
-  // --- Data State ---
   const [middleview] = useState<any>(null);
   const [rateTableData, setRateTableData] = useState<any>(null);
   const [batchTableData, setBatchTableData] = useState<any>([]);
@@ -27,8 +24,6 @@ export default function EnrollmentDashboard() {
     entityId: null as number | null,
     startTime: "" as string,
   });
-
-  // --- Layout State ---
   const [topHeight, setTopHeight] = useState(100);
   const [isDraggingY, setIsDraggingY] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -36,14 +31,10 @@ export default function EnrollmentDashboard() {
   const [panelWidth, setPanelWidth] = useState(0);
   const [isDraggingX, setIsDraggingX] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-
-  // --- Logic State ---
   const [enableCourseView, setEnableCourseView] = useState(false);
   const [selectedNoOfDays, setSelectedNoOfDays] = useState(0);
   const [actualDaysInWeek, setActualDaysInWeek] = useState(0);
   const [selectedCourseDayInWeek, setSelectedCourseDayInWeek] = useState<number>(0);
-
-  // --- Handlers ---
   const handleMouseDownY = () => {
     if (!isExpanded) setIsDraggingY(true);
     document.body.style.userSelect = "none";
@@ -92,9 +83,7 @@ export default function EnrollmentDashboard() {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* MAIN CONTENT AREA (Form + History) */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* TOP SECTION: Enrollment Form */}
         <motion.div
           className="flex overflow-hidden border-b bg-card/30"
           style={{ height: isExpanded ? "0%" : `${topHeight}%` }}
@@ -118,7 +107,6 @@ export default function EnrollmentDashboard() {
           </div>
         </motion.div>
 
-        {/* HORIZONTAL RESIZER / HISTORY TOGGLE */}
         <div
           className="relative w-full h-10 flex justify-center items-center cursor-ns-resize z-30 group select-none"
           onMouseDown={handleMouseDownY}
@@ -137,7 +125,6 @@ export default function EnrollmentDashboard() {
           <div className="absolute w-full h-[1px] bg-border group-hover:bg-primary/50 top-1/2 -translate-y-1/2 transition-colors" />
         </div>
 
-        {/* BOTTOM SECTION: Member History */}
         <motion.div
           className="z-10 overflow-hidden bg-muted/20"
           style={{ height: isExpanded ? "100%" : `${100 - topHeight}%` }}
@@ -147,14 +134,12 @@ export default function EnrollmentDashboard() {
         </motion.div>
       </div>
 
-      {/* RIGHT SLIDE-OUT PANEL (Course/Rate/Batch Tables) */}
       <motion.div
         className="absolute right-0 top-0 h-full z-[100] bg-card border-l border-border shadow-2xl flex flex-col items-stretch overflow-visible"
         style={{ width: `${panelWidth}%` }}
         animate={{ width: `${panelWidth}%` }}
         transition={isDraggingX ? { duration: 0 } : { duration: 0.4 }}
       >
-        {/* PANEL TOGGLE BUTTON (Floating on the left edge) */}
         <div className="absolute left-0 top-0 h-full w-10 -translate-x-full flex items-center justify-center cursor-ew-resize z-[110]">
           <Button
             onClick={togglePanel}
@@ -168,10 +153,8 @@ export default function EnrollmentDashboard() {
           <div className="absolute w-[2px] h-full bg-primary/20 hover:bg-primary/60 top-0 right-0" onMouseDown={handleMouseDownX} />
         </div>
 
-        {/* PANEL CONTENT: Tabs and Tables */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background/50 backdrop-blur-sm">
           <Tabs defaultValue="courses" className="flex-1 flex flex-col min-h-0">
-            {/* Header Area */}
             <div className="p-4 border-b flex items-center justify-between shrink-0 bg-muted/10">
               <TabsList className="grid grid-cols-3 w-[450px] h-11 bg-muted/50 p-1">
                 <TabsTrigger value="courses" className="text-xs font-bold data-[state=active]:bg-background">
@@ -206,7 +189,6 @@ export default function EnrollmentDashboard() {
               </Button>
             </div>
 
-            {/* Scrollable Content Area */}
             <div className="flex-1 min-h-0 overflow-hidden relative">
               <AnimatePresence mode="wait">
                 <TabsContent value="courses">
