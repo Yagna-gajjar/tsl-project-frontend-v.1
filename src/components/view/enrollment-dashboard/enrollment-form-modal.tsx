@@ -70,7 +70,11 @@ const EnrollmentFormNew = ({
     membershipMasterId: 0,
     courseRateId: 0,
     attendingPattern: [], // Initialized as empty array for multiselect
-    startTime: ""
+    startTime: "",
+    dnOrDiscount: 0,
+    dnAccountId: 0,
+    roundedAmount: 0,
+    billingAmount: 0,
   });
 
   // 2. Options & UI State
@@ -319,6 +323,17 @@ const EnrollmentFormNew = ({
         value: b.batchId,
       })),
     },
+    { name: "dnOrDiscount", label: "Discount / DN", type: "number" },
+    {
+      name: "dnAccountId",
+      label: "DN Account",
+      type: "select",
+      options: options.entities.map((e) => ({ label: e.entityName, value: e.entityId })), // Reusing entities or update with specific DN accounts
+    },
+    { name: "billingAmount", label: "Billing Amount", type: "number", disabled: true },
+    { name: "roundedAmount", label: "Rounded Amount", type: "number", disabled: true },
+    { name: "cgstAmount", label: "CGST", type: "number", disabled: true },
+    { name: "sgstAmount", label: "SGST", type: "number", disabled: true },
     { name: "totalDebitAmount", label: "Total Amount", type: "number", disabled: true },
     {
       name: "status",
@@ -333,7 +348,7 @@ const EnrollmentFormNew = ({
   ];
 
   return (
-    <div className="flex flex-col w-full h-[85vh] max-w-6xl mx-auto bg-background border rounded-xl overflow-hidden shadow-2xl">
+    <div className="flex flex-col w-full h-[83vh] max-w-6xl mx-auto bg-background border rounded-xl overflow-hidden shadow-2xl">
       <div className="p-6 border-b bg-muted/10">
         <h1 className="text-xl font-bold text-primary">New Enrollment Registration</h1>
       </div>
@@ -387,7 +402,9 @@ const EnrollmentFormNew = ({
       </div>
 
       <FormFooter
-        onClose={() => { }}
+        onClose={() => {
+          setValues({});
+        }}
         onSubmit={() => console.log("Final Data:", values)}
         submitLabel="Complete Enrollment"
         isSubmitting={false}

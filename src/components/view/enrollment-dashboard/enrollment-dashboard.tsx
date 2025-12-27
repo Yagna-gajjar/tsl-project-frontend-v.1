@@ -8,7 +8,7 @@ import RateTable from "./panel/rate-table"
 import BatchTable from "./panel/batch-table" // Added BatchTable import
 import EnrollmentFormNew from "./enrollment-form-modal"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" // Added Tabs components
-import { CourseRate } from "@/types/courseRate"
+import type { CourseRate } from "@/types/courseRate"
 
 export default function EnrollmentDashboard() {
   const [middleview] = useState<any>(null)
