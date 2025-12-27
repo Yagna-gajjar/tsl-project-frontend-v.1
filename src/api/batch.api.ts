@@ -22,6 +22,7 @@ export interface BatchQuery {
   activityId?: number;
   entityId?: number;
   startTime?: Date | string;
+  endTime?: Date | string;
   daysPattern?: string;
 }
 
@@ -48,6 +49,7 @@ export function getBatch(params: BatchQuery = {}): Promise<Response<Batch[]>> {
     entityId: params.entityId ?? undefined,
     activityId: params.activityId ?? undefined,
     startTime: params.startTime ?? undefined,
+    endTime: params.endTime ?? undefined,
     daysPattern: params.daysPattern ?? undefined
   });
 

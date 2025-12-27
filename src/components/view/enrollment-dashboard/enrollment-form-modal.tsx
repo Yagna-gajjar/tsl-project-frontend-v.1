@@ -203,10 +203,34 @@ const EnrollmentFormNew = ({
   }, [memberSearch]);
 
   useEffect(() => {
-    const { activityId, academyEntityId, attendingPattern, startTime } = values;
+    const { activityId, academyEntityId, attendingPattern, startTime, courseId } = values;
+
+    // Find the selected course to get sessionMinutes
+    const selectedCourse = allCourse.find(c => c.courseId === courseId);
     const patternStr = Array.isArray(attendingPattern) ? attendingPattern.sort().join("") : attendingPattern;
-    if (activityId && academyEntityId && patternStr && patternStr.length > 0 && startTime) {
-      getBatch({ activityId, entityId: academyEntityId, daysPattern: patternStr, startTime: String(startTime), limit: 1000 }).then((res) => {
+
+    if (activityId && academyEntityId && patternStr && patternStr.length > 0 && startTime && selectedCourse) {
+
+      // 1. Calculate endTime: startTime + sessionMinutes
+      const [startHours, startMins] = startTime.split(":").map(Number);
+      const sessionMinutes = selectedCourse.sessionMinutes || 0;
+
+      // Convert to total minutes, add session, then convert back to HH:mm
+      const totalMinutes = (startHours * 60) + startMins + sessionMinutes;
+      const endHours = Math.floor(totalMinutes / 60) % 24; // Use % 24 to handle midnight wrap
+      const endMins = totalMinutes % 60;
+
+      const formattedEndTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+
+      // 2. Pass both startTime and calculated endTime to the API
+      getBatch({
+        activityId,
+        entityId: academyEntityId,
+        daysPattern: patternStr,
+        startTime: String(startTime),
+        endTime: formattedEndTime,
+        limit: 1000
+      }).then((res) => {
         const data = res?.data || [];
         setOptions((prev) => ({ ...prev, batches: data }));
         setBatchTableData(data);
@@ -215,7 +239,15 @@ const EnrollmentFormNew = ({
       setOptions((prev) => ({ ...prev, batches: [] }));
       setBatchTableData([]);
     }
-  }, [values.activityId, values.academyEntityId, values.attendingPattern, values.startTime, setBatchTableData]);
+  }, [
+    values.activityId,
+    values.academyEntityId,
+    values.attendingPattern,
+    values.startTime,
+    values.courseId,
+    allCourse,
+    setBatchTableData
+  ]);
 
   useEffect(() => {
     if (values.courseId) {

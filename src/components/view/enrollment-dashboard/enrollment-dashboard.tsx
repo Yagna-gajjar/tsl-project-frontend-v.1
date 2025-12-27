@@ -19,15 +19,17 @@ export default function EnrollmentDashboard() {
   const [memberId, setMemberId] = useState<number>();
   const [selectedRate, setSelectedRate] = useState<CourseRate>();
   const [allCourse, setAllCourse] = useState<Course[]>([]);
+  const [activeTab, setActiveTab] = useState("courses"); // Track active tab manually
+
   const [filters, setFilters] = useState({
     activityId: null as number | null,
     entityId: null as number | null,
     startTime: "" as string,
   });
+
   const [topHeight, setTopHeight] = useState(100);
   const [isDraggingY, setIsDraggingY] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-
   const [panelWidth, setPanelWidth] = useState(0);
   const [isDraggingX, setIsDraggingX] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -35,6 +37,7 @@ export default function EnrollmentDashboard() {
   const [selectedNoOfDays, setSelectedNoOfDays] = useState(0);
   const [actualDaysInWeek, setActualDaysInWeek] = useState(0);
   const [selectedCourseDayInWeek, setSelectedCourseDayInWeek] = useState<number>(0);
+
   const handleMouseDownY = () => {
     if (!isExpanded) setIsDraggingY(true);
     document.body.style.userSelect = "none";
@@ -154,7 +157,11 @@ export default function EnrollmentDashboard() {
         </div>
 
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background/50 backdrop-blur-sm">
-          <Tabs defaultValue="courses" className="flex-1 flex flex-col min-h-0">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex-1 flex flex-col min-h-0"
+          >
             <div className="p-4 border-b flex items-center justify-between shrink-0 bg-muted/10">
               <TabsList className="grid grid-cols-3 w-[450px] h-11 bg-muted/50 p-1">
                 <TabsTrigger value="courses" className="text-xs font-bold data-[state=active]:bg-background">
@@ -169,7 +176,6 @@ export default function EnrollmentDashboard() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="batches"
-                  disabled={!enableCourseView}
                   className="text-xs font-bold data-[state=active]:bg-background"
                 >
                   3. BATCHES
@@ -189,31 +195,79 @@ export default function EnrollmentDashboard() {
               </Button>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-hidden relative">
+            <div className="flex-1 min-h-0 overflow-hidden relative flex flex-col">
               <AnimatePresence mode="wait">
-                <TabsContent value="courses">
-                  <CourseTable
-                    courses={allCourse}
-                    activityId={filters.activityId}
-                    entityId={filters.entityId}
-                    startTime={filters.startTime}
-                  />
-                </TabsContent>
+                {/* We use conditional rendering {activeTab === "..."} 
+                   along with forceMount to ensure inactive tabs 
+                   are physically removed from the DOM.
+                */}
+                {activeTab === "courses" && (
+                  <TabsContent
+                    value="courses"
+                    key="courses"
+                    forceMount
+                    className="m-0 flex-1 flex flex-col overflow-hidden outline-none data-[state=active]:flex"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="flex-1 flex flex-col min-h-0"
+                    >
+                      <CourseTable
+                        courses={allCourse}
+                        activityId={filters.activityId}
+                        entityId={filters.entityId}
+                        startTime={filters.startTime}
+                      />
+                    </motion.div>
+                  </TabsContent>
+                )}
 
-                <TabsContent value="rates" className="m-0 h-full w-full flex flex-col overflow-hidden outline-none">
-                  <RateTable
-                    rateTableData={rateTableData}
-                    NoOfDays={selectedNoOfDays}
-                    memberId={Number(memberId)}
-                    setSelectedRate={setSelectedRate}
-                    actualDaysInWeek={actualDaysInWeek}
-                    selectedCourseDayInWeek={Number(selectedCourseDayInWeek)}
-                  />
-                </TabsContent>
+                {activeTab === "rates" && (
+                  <TabsContent
+                    value="rates"
+                    key="rates"
+                    forceMount
+                    className="m-0 flex-1 flex flex-col overflow-hidden outline-none data-[state=active]:flex"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="flex-1 flex flex-col min-h-0"
+                    >
+                      <RateTable
+                        rateTableData={rateTableData}
+                        NoOfDays={selectedNoOfDays}
+                        memberId={Number(memberId)}
+                        setSelectedRate={setSelectedRate}
+                        actualDaysInWeek={actualDaysInWeek}
+                        selectedCourseDayInWeek={Number(selectedCourseDayInWeek)}
+                      />
+                    </motion.div>
+                  </TabsContent>
+                )}
 
-                <TabsContent value="batches" className="m-0 h-full w-full flex flex-col overflow-hidden outline-none">
-                  <BatchTable batchData={batchTableData} />
-                </TabsContent>
+                {activeTab === "batches" && (
+                  <TabsContent
+                    value="batches"
+                    key="batches"
+                    forceMount
+                    className="m-0 flex-1 flex flex-col overflow-hidden outline-none data-[state=active]:flex"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="flex-1 flex flex-col min-h-0"
+                    >
+                      <div className="flex-1 overflow-auto p-2">
+                        <BatchTable batchData={batchTableData} />
+                      </div>
+                    </motion.div>
+                  </TabsContent>
+                )}
               </AnimatePresence>
             </div>
           </Tabs>
