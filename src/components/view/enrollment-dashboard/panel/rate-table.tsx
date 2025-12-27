@@ -70,16 +70,10 @@ export default function RateTable({ rateTableData, NoOfDays, memberId, setSelect
 
   const calculateDisWithSelectedPattern = (rateDaysInWeek: number, disc: number) => {
 
-    console.log(rateDaysInWeek, " = rateDaysInWeek");
-    console.log(actualDaysInWeek, " = actualDaysInWeek");
-    console.log(selectedCourseDayInWeek, " = selectedCourseDayInWeek");
-    console.log(disc, " = disc");
-
     const finalDaysInWeek = Math.max(rateDaysInWeek, actualDaysInWeek)
 
     const finalRate = (1 - (selectedCourseDayInWeek - finalDaysInWeek) * (disc / 100))
-    console.log(finalRate);
-    // return finalRate
+    return finalRate
   }
 
   /**
@@ -210,11 +204,6 @@ export default function RateTable({ rateTableData, NoOfDays, memberId, setSelect
                     const item = groupedData[membership].fullDataByTier[unit];
                     const isAppliedTier = selectedObject?.aboveUnits === unit;
 
-                    if (item) {
-                      calculateDisWithSelectedPattern(item.minDaysInEnr, item.discountOnDayReduce);
-                    }
-
-
                     return (
                       <TableCell
                         key={unit}
@@ -223,7 +212,7 @@ export default function RateTable({ rateTableData, NoOfDays, memberId, setSelect
                           isAppliedTier && (isSelected ? "bg-blue-100 text-blue-800 font-black" : "bg-green-50 text-green-700 font-bold")
                         )}
                       >
-                        {item ? parseFloat(item.unitRate).toFixed(2) : <span className="text-slate-300">—</span>}
+                        {item ? (parseFloat(item.unitRate).toFixed(2) + "/" + calculateDisWithSelectedPattern(item.minDaysInEnr, item.discountOnDayReduce)) : <span className="text-slate-300">—</span>}
                       </TableCell>
                     );
                   })}

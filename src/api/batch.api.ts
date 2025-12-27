@@ -21,7 +21,7 @@ export interface BatchQuery {
   admissionCriteria?: string;
   activityId?: number;
   entityId?: number;
-  startTime?: Date;
+  startTime?: Date | string;
   daysPattern?: string;
 }
 

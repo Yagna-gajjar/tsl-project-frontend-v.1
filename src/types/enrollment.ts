@@ -52,4 +52,6 @@ export interface Enrollment {
   createdByUser?: string;
   createdAt?: string;
   updatedAt?: string;
+
+  startTime?: string;
 }
