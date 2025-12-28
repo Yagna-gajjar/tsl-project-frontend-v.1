@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import EnrollmentReceiptModal from "../transaction/transaction-form";
 import { createEnrollment } from "@/api/enrollment.api";
 import type { Response } from "@/types/response";
+import { getAuthorities } from "@/api/authority.api";
+import type { Authority } from "@/types/authority";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -272,6 +274,30 @@ const EnrollmentFormNew = ({
   ]);
 
   useEffect(() => {
+    const fetchMemberAuthority = async () => {
+      try {
+        const res: Response<Authority[]> = await getAuthorities({
+          accountId: values.accountId,
+          active: true
+        });
+        if (res?.data) {
+          const authority = res.data[0];
+          setValues((prev) => ({
+            ...prev,
+            memberApprovalStatus: authority.memberId ?? null,
+          }));
+        }
+      } catch {
+        toast({ title: "Error", description: "Failed to load member authority", variant: "destructive" });
+      }
+    }
+
+    if (values.accountId) {
+      fetchMemberAuthority();
+    }
+  }, [values.accountId]);
+
+  useEffect(() => {
     if (values.courseId) {
       getCourseRates({ courseId: values.courseId, limit: 1000 }).then((res) => {
         if (res?.data) setRateTableData(res.data);
@@ -474,7 +500,8 @@ const EnrollmentFormNew = ({
         ? Number(values.attendingPattern.sort().join(""))
         : values.attendingPattern,
     };
-
+    console.log(submissionData);
+    return;
     try {
       const eRes: Response<Enrollment> = await createEnrollment(submissionData as any);
       if (eRes.success) {
