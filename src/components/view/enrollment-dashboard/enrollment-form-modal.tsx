@@ -19,6 +19,8 @@ import type { Enums } from "@/types/enums";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import EnrollmentReceiptModal from "../transaction/transaction-form";
+import { createEnrollment } from "@/api/enrollment.api";
+import type { Response } from "@/types/response";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -68,7 +70,7 @@ const EnrollmentFormNew = ({
     enrollmentDate: format(new Date(), "yyyy-MM-dd"),
     attendingStartDate: format(new Date(), "yyyy-MM-dd"),
     membersEnrolled: 1,
-    status: "active",
+    status: "created",
     openEnrollment: false,
     permittedDays: 0,
     unitRate: 0,
@@ -435,7 +437,7 @@ const EnrollmentFormNew = ({
     [setEnableCourseView, setSelectedNoOfDays, setActualDaysInWeek, onFilterChange]
   );
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     const submissionData = {
       ...values,
       processingCharge: (values?.processingCharge ?? 0) + (values?.roundedAmount ?? 0),
@@ -443,7 +445,25 @@ const EnrollmentFormNew = ({
         ? Number(values.attendingPattern.sort().join(""))
         : values.attendingPattern,
     };
-    console.log("Final Submission Data:", submissionData);
+
+    try {
+      const eRes: Response<Enrollment> = await createEnrollment(submissionData as any);
+      if (eRes.success) {
+        toast({
+          title: "Success",
+          description: "Enrollment created successfully"
+        });
+        setValues({});
+      } else {
+        throw new Error("Failed to craete Enrollment");
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to created Enrollment",
+        variant: "destructive"
+      })
+    }
   };
 
   const fields = [
@@ -564,9 +584,12 @@ const EnrollmentFormNew = ({
       label: "Status",
       type: "select",
       options: [
-        { label: "Active", value: "active" },
-        { label: "Inactive", value: "inactive" },
-        { label: "Cancelled", value: "cancelled" },
+        { label: "created", value: "Created" },
+        { label: "billGenerated", value: "BillGenerated" },
+        { label: "billingComplete", value: "BillingComplete" },
+        { label: "draft", value: "Draft" },
+        { label: "history", value: "History" },
+        { label: "locked", value: "Locked" },
       ],
     },
   ];
