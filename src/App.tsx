@@ -49,6 +49,8 @@ import CourseRatePage from "./pages/course-rate";
 import AuthorityPage from "./pages/authority";
 import TransactionPage from "./pages/transaction";
 import AccessAndDetails from "./pages/access-details";
+import UserAccessPage from "./components/view/user/UserAccessPage";
+import StatusVisible from "./pages/status-visible";
 
 export default function App() {
   return (
@@ -114,6 +116,10 @@ export default function App() {
                 <Route
                   path="/staff-management/access-details"
                   element={<AccessAndDetails />}
+                />
+                <Route
+                  path="/staff-management/user-access"
+                  element={<UserAccessPage />}
                 />
                 <Route
                   path="/staff-management/coach-skills"
@@ -183,6 +189,10 @@ export default function App() {
                 <Route
                   path="/setting/identity-type"
                   element={<IdentityTypePage />}
+                />
+                <Route
+                  path="/setting/status"
+                  element={<StatusVisible />}
                 />
                 <Route path="/setting/activity" element={<ActivityPage />} />
                 <Route path="/setting/common-lookups" element={<EnumsPage />} />

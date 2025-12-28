@@ -1,3 +1,4 @@
+import { toast } from "@/hooks/use-toast"
 import type { User } from "@/types/user"
 import React, {
 	createContext,
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	})
 
 	const redirectToLogin = () => {
-		// window.location.replace("/login")
+		window.location.replace("/login")
 	}
 
 	const login = (user: User, token: string) => {
@@ -65,7 +66,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				}
 
 				const data = await res.json()
-
 				if (data.success) {
 					setUser(data.user)
 
@@ -77,7 +77,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 					logout()
 				}
 			} catch (err) {
-				console.error("Session validation failed", err)
+				toast({
+					title: "Error",
+					description: "Failed to validate session. Please login again.",
+					variant: "destructive",
+				});
 				logout()
 			}
 		}

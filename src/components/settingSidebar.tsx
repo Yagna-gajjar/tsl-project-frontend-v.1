@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Home,
   Menu,
+  Eye,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,12 @@ const navigationItems: NavigationItem[] = [
     icon: Menu,
     submenu: null,
     href: "/setting/entity",
+  },
+  {
+    name: "Status Access",
+    icon: Eye,
+    submenu: null,
+    href: "/setting/status",
   },
 ];
 

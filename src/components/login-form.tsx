@@ -140,7 +140,6 @@ export default function LoginForm() {
         });
       }
     } catch (error) {
-      console.error('Network error:', error);
       toast({
         title: "Network Error",
         description: "Could not connect to the server.",

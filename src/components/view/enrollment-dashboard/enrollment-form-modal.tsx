@@ -103,6 +103,7 @@ const EnrollmentFormNew = ({
     batches: [] as Batch[],
     activityClassification: [] as Enums[],
     activityTypes: [] as Enums[],
+    visibility: [] as Enums[],
   });
 
   const [pagination, setPagination] = useState({
@@ -154,6 +155,14 @@ const EnrollmentFormNew = ({
     return ALL_WEEK_DAYS.filter((day) => pattern.includes(String(day.value)));
   }, [values.courseId, filteredCourses]);
 
+  const getVisibilityValueByName = (name: string): boolean => {
+    const item = options.visibility.find(
+      (v) => v.value.toLowerCase() === name.toLowerCase()
+    );
+    return Boolean(item?.enumCase);
+  };
+
+
   const fetchBaseOptions = useCallback(
     async (type: "member" | "activity", isInitial = false, search = "") => {
       const current = pagination[type];
@@ -163,7 +172,7 @@ const EnrollmentFormNew = ({
         const page = isInitial ? 1 : current.page;
         const res =
           type === "member"
-            ? await getMembers({ limit: PAGE_SIZE, page, search })
+            ? await getMembers({ limit: PAGE_SIZE, page, search, status: getVisibilityValueByName("member") == false ? "active" : "inactive" })
             : await getActivities({ limit: PAGE_SIZE, page, search });
 
         const items = res?.data || [];
@@ -186,12 +195,16 @@ const EnrollmentFormNew = ({
   useEffect(() => {
     getEnumsByCategory("ACTIVITY STATUS").then((res) => setOptions((p) => ({ ...p, activityClassification: res?.data || [] })));
     getEnumsByCategory("ACTIVITY TYPE").then((res) => setOptions((p) => ({ ...p, activityTypes: res?.data || [] })));
+    getEnumsByCategory("STATUSVISIBLE").then((res) => setOptions((p) => ({ ...p, visibility: res?.data || [] })));
     fetchBaseOptions("activity", true);
   }, []);
 
   useEffect(() => {
+  }, [options.visibility]);
+
+  useEffect(() => {
     if (values.activityType) {
-      getCourses({ classification: values.activityType, limit: 10000 }).then((res) => {
+      getCourses({ classification: values.activityType, limit: 10000, suspenspedCourse: getVisibilityValueByName("course") }).then((res) => {
         if (res.success) setAllCourse(res?.data || []);
         else toast({ title: "Error", description: "Failed to load courses", variant: "destructive" });
       });
@@ -203,7 +216,7 @@ const EnrollmentFormNew = ({
     const timer = setTimeout(async () => {
       setMemberLoading(true);
       try {
-        const res = await getMembers({ search: memberSearch, limit: 10, page: 1 });
+        const res = await getMembers({ search: memberSearch, limit: 10, page: 1, status: getVisibilityValueByName("member") == false ? "active" : "inactive" });
         setOptions((prev) => ({ ...prev, members: res?.data || [] }));
       } finally {
         setMemberLoading(false);
@@ -237,7 +250,8 @@ const EnrollmentFormNew = ({
         daysPattern: patternStr,
         startTime: String(startTime),
         endTime: formattedEndTime,
-        limit: 1000
+        limit: 1000,
+        status: getVisibilityValueByName("batch") ? "inactive" : "active"
       }).then((res) => {
         const data = res?.data || [];
         setOptions((prev) => ({ ...prev, batches: data }));
@@ -373,6 +387,21 @@ const EnrollmentFormNew = ({
     values.processingCharge
   ]);
 
+  useEffect(() => {
+    if (!options.activityClassification.length) return;
+
+    const courseEnum = options.activityClassification.find(
+      (e) => e.value === "Courses"
+    );
+
+    if (courseEnum) {
+      setValues((prev) => ({
+        ...prev,
+        activityClassification: courseEnum.enumCase,
+      }));
+    }
+  }, [options.activityClassification]);
+
   const onChange = useCallback(
     (field: string, value: any) => {
       setValues((prev) => {
@@ -471,7 +500,12 @@ const EnrollmentFormNew = ({
       name: "activityClassification",
       label: "Activity Classification",
       type: "select",
-      options: options.activityClassification.map((item) => ({ label: item.value, value: item.enumCase })),
+      options: options.activityClassification
+        .filter(item => item.value !== "System")
+        .map(item => ({
+          label: item.value,
+          value: item.enumCase
+        })),
     },
     {
       name: "activityType",

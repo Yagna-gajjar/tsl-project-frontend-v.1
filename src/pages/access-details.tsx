@@ -5,6 +5,7 @@ import UserTable from "@/components/view/user/user-table";
 import UserFormModal from "@/components/view/user/user-form-modal";
 import UserViewModal from "@/components/view/user/user-view-modal";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function AccessAndDetails() {
 	const [viewOpen, setViewOpen] = useState(false);
@@ -12,6 +13,7 @@ export default function AccessAndDetails() {
 	const [editRow, setEditRow] = useState<User>();
 	const [viewData, setViewData] = useState<number>();
 	const [refreshKey, setRefreshKey] = useState(0);
+	const router = useNavigate();
 
 	// Function to trigger a re-fetch in the UserTable
 	const bumpRefresh = () => {
@@ -47,6 +49,15 @@ export default function AccessAndDetails() {
 				</div>
 
 				<div className="flex items-center gap-3">
+					<Button
+						onClick={() => {
+							router("/staff-management/user-access");
+						}}
+						className="flex items-center gap-2"
+					>
+						<UserPlus className="w-4 h-4" />
+						See Access
+					</Button>
 					<Button
 						onClick={() => openForm()}
 						className="flex items-center gap-2"
