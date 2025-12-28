@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserPlus, Shield } from "lucide-react";
+import { UserPlus, Shield, ShieldCheck } from "lucide-react";
 import type { User } from "@/types/user";
 import UserTable from "@/components/view/user/user-table";
 import UserFormModal from "@/components/view/user/user-form-modal";
@@ -53,9 +53,9 @@ export default function AccessAndDetails() {
 						onClick={() => {
 							router("/staff-management/user-access");
 						}}
-						className="flex items-center gap-2"
+						className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
 					>
-						<UserPlus className="w-4 h-4" />
+						<ShieldCheck className="w-4 h-4" />
 						See Access
 					</Button>
 					<Button
