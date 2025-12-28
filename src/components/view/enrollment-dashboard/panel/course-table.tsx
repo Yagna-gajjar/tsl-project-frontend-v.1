@@ -54,10 +54,10 @@ export default function CourseTable({ courses, activityId, entityId, startTime }
 						{filteredCourses.map((course) => (
 							<TableRow key={course.courseId} className="group hover:bg-muted/50 h-10 border-b">
 								<TableCell className="overflow-hidden">
-									<div className="truncate font-bold text-[15px] group-hover:text-primary transition-colors">
+									<div className="ml-1 font-bold text-[15px] group-hover:text-primary transition-colors">
 										{course.courseName}
 									</div>
-									<div className="truncate text-[10px] text-muted-foreground flex items-center gap-1">
+									<div className="ml-1 text-[10px] text-muted-foreground flex items-center gap-1">
 										<Building2 className="h-2.5 w-2.5 shrink-0" />
 										{course.entityName}
 									</div>

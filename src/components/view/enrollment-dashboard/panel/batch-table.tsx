@@ -25,7 +25,7 @@ export default function BatchTable({ batchData }: BatchTableProps) {
                         batchData.map((batch, index) => (
                             <TableRow key={batch.batchId || index} className="hover:bg-muted/30">
                                 <TableCell className="font-medium text-sm">
-                                    {batch.courseName || "General / No Course"}
+                                    {batch.courseName || "No Course"}
                                 </TableCell>
                                 <TableCell className="text-sm">{batch.batchName}</TableCell>
                                 <TableCell className="text-sm">

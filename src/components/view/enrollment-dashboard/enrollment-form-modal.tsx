@@ -19,7 +19,7 @@ import type { Enums } from "@/types/enums";
 import { toast } from "@/hooks/use-toast";
 import TransactionFormModal from "../transaction/transaction-form-modal";
 import { Button } from "@/components/ui/button";
-import { Transaction } from "@/types/transaction";
+import type { Transaction } from "@/types/transaction";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -186,7 +186,7 @@ const EnrollmentFormNew = ({
   );
 
   const handleAddTransactionDetailsa = async () => {
-    setValues((prev)=>({
+    setValues((prev) => ({
       ...prev,
       payment: transactionData
     }))
@@ -636,18 +636,19 @@ const EnrollmentFormNew = ({
             </div>
           </div>
           <FormContent fields={fields as any} values={values} errors={{}} loading={false} error={null} isSubmitting={false} onChange={onChange} layout="grid" />
-          <Button className="ml-5" onClick={() => { setPaymentFormOpen(true) }}>Open Payment</Button>
-        </div>
+          {values.totalDebitAmount != 0 &&
+            <Button className="ml-5" onClick={() => { setPaymentFormOpen(true) }}>Pay ({values.totalDebitAmount}) Now</Button>
+          }        </div>
         <FormFooter onClose={() => setValues({})} onSubmit={handleFinalSubmit} submitLabel="Complete Enrollment" isSubmitting={false} />
       </div>
-      {values.totalDebitAmount && <TransactionFormModal
+      <TransactionFormModal
         isOpen={paymentFormOpen}
         initialData={transactionData as any}
         onClose={() => {
           setPaymentFormOpen(false);
         }}
         onSave={handleAddTransactionDetailsa}
-      />}
+      />
     </>
 
   );

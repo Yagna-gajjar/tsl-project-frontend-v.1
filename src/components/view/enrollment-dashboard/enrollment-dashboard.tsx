@@ -177,6 +177,7 @@ export default function EnrollmentDashboard() {
                 <TabsTrigger
                   value="batches"
                   className="text-xs font-bold data-[state=active]:bg-background"
+                  disabled={batchTableData.length == 0}
                 >
                   3. BATCHES
                 </TabsTrigger>
