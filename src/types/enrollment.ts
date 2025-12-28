@@ -1,3 +1,5 @@
+import type { Transaction } from "./transaction";
+
 export interface Enrollment {
   enrollmentId: number;
   firstEnrollmentId?: number;
@@ -58,4 +60,5 @@ export interface Enrollment {
   activityClassification?: number | null;
   activityType?: string | null;
   chargingPattern: "",
+  payment: Transaction
 }

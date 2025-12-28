@@ -24,6 +24,7 @@ import {
   Package,
   CircleSlash,
   Banknote,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -126,6 +127,11 @@ const navigationItems: NavigationItem[] = [
     icon: Users,
     submenu: [
       // { label: "Coach", href: "/staff-management/coach", icon: Users },
+      {
+        label: "Access & Details",
+        href: "/staff-management/access-details",
+        icon: Shield,
+      },
       {
         label: "Coach Assignment",
         href: "/staff-management/coach-assignment",

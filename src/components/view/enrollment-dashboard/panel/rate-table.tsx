@@ -12,6 +12,8 @@ import { getMembershipsByMember } from "@/api/member.api";
 import type { Response } from "@/types/response";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getEnumsByCategory } from "@/api/enums.api";
+import type { Enums } from "@/types/enums";
 
 interface FamilyPanelProps {
   rateTableData: any[];
@@ -32,6 +34,15 @@ export default function RateTable({
 }: FamilyPanelProps) {
   const [activeMemberships, setActiveMemberships] = useState<any[]>([]);
   const [currentSelectedRow, setCurrentSelectedRow] = useState<string | null>(null);
+  const [walkingAccount, setWalkingAccount] = useState<number>();
+  const [casualAccount, setCasualAccount] = useState<number>();
+
+  const getAccountForMembership = (membershipMasterId: number) => {
+    return activeMemberships.find(
+      (m: any) => m.membershipMasterId === membershipMasterId
+    );
+  };
+
 
   const formatDec = (num: number) => {
     return num.toLocaleString("en-IN", {
@@ -80,9 +91,32 @@ export default function RateTable({
     const factor = getDiscountFactor(rawObject.minDaysInEnr, rawObject.discountOnDayReduce);
     const displayedUnitRate = parseFloat((parseFloat(rawObject.unitRate) * factor).toFixed(2));
     const total = NoOfDays * displayedUnitRate;
+    const matchedAccount = getAccountForMembership(membershipObj.masterId);
+
+    const membershipTypeLower = rawObject.membershipType.toLowerCase();
+
+    let accountId: number | null = matchedAccount?.accountId ?? null;
+    let accountName: string | null = matchedAccount?.accountName ?? null;
+    let membershipId: number | null = matchedAccount?.membershipId ?? null;
+
+    if (membershipTypeLower.includes("casual")) {
+      accountId = casualAccount ?? null;
+      accountName = "Casual Account";
+      membershipId = null;
+    }
+
+    if (membershipTypeLower.includes("walk in")) {
+      accountId = walkingAccount ?? null;
+      accountName = "Walk-in Account";
+      membershipId = null;
+    }
+
     const selectedObject = {
       ...rawObject,
       patternDiscount: factor,
+      accountId,
+      accountName,
+      membershipId,
     };
 
     return { selectedObject, total };
@@ -120,9 +154,38 @@ export default function RateTable({
     }
   };
 
+  const fetchCasualAndWalkingAccounts = async () => {
+    try {
+      const [casualRes, walkingRes]: [
+        Response<Enums[]>,
+        Response<Enums[]>
+      ] = await Promise.all([
+        getEnumsByCategory("casual_account"),
+        getEnumsByCategory("walking_account"),
+      ]);
+      if (casualRes.success && casualRes.data) {
+        setCasualAccount(Number(casualRes?.data[0].value));
+      }
+
+      if (walkingRes.success && walkingRes.data) {
+        setWalkingAccount(Number(walkingRes?.data[0].value));
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch casual & walk-in accounts.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchMembershipsByMember();
   }, [memberId, rateTableData]);
+
+  useEffect(() => {
+    fetchCasualAndWalkingAccounts()
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden p-2">
@@ -189,7 +252,14 @@ export default function RateTable({
                       : "bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300"
                   )}>
                     <div className="flex items-center justify-between">
-                      <span className="truncate mr-1">{membership}</span>
+                      <div className="flex flex-col justify-center">
+                        <span className="truncate mr-1">{membership}</span>
+                        {isMatchedMember && (
+                          <span className="text-xs text-slate-500 block">
+                            {getAccountForMembership(groupedData[membership].masterId)?.accountName}
+                          </span>
+                        )}
+                      </div>
                       {isMatchedMember && <CheckSquare className="h-4 w-4 text-green-700 dark:text-green-500 shrink-0" />}
                     </div>
                   </TableCell>

@@ -48,6 +48,7 @@ import CourseSharePage from "./pages/courseShare";
 import CourseRatePage from "./pages/course-rate";
 import AuthorityPage from "./pages/authority";
 import TransactionPage from "./pages/transaction";
+import AccessAndDetails from "./pages/access-details";
 
 export default function App() {
   return (
@@ -110,6 +111,10 @@ export default function App() {
                   element={<FacilityAllotmentsPage />}
                 />
                 <Route path="/member" element={<MemberPage />} />
+                <Route
+                  path="/staff-management/access-details"
+                  element={<AccessAndDetails />}
+                />
                 <Route
                   path="/staff-management/coach-skills"
                   element={<CoachSkillPage />}

@@ -17,9 +17,8 @@ import type { Activity } from "@/types/activity";
 import type { Course } from "@/types/course";
 import type { Enums } from "@/types/enums";
 import { toast } from "@/hooks/use-toast";
-import TransactionFormModal from "../transaction/transaction-form-modal";
 import { Button } from "@/components/ui/button";
-import type { Transaction } from "@/types/transaction";
+import EnrollmentReceiptModal from "../transaction/transaction-form";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -110,9 +109,6 @@ const EnrollmentFormNew = ({
   });
 
   const [paymentFormOpen, setPaymentFormOpen] = useState(false);
-  const [transactionData, setTransactionData] = useState<Partial<Transaction>>({
-    transactionType: "receipt"
-  });
   const [memberSearch, setMemberSearch] = useState("");
   const [memberLoading, setMemberLoading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -185,18 +181,6 @@ const EnrollmentFormNew = ({
     [pagination]
   );
 
-  const handleAddTransactionDetailsa = async () => {
-    setValues((prev) => ({
-      ...prev,
-      payment: transactionData
-    }))
-    console.log("Payment Added", transactionData);
-    toast({
-      title: "Success",
-      description: "Payment"
-    })
-  }
-
   useEffect(() => {
     getEnumsByCategory("ACTIVITY STATUS").then((res) => setOptions((p) => ({ ...p, activityClassification: res?.data || [] })));
     getEnumsByCategory("ACTIVITY TYPE").then((res) => setOptions((p) => ({ ...p, activityTypes: res?.data || [] })));
@@ -229,13 +213,11 @@ const EnrollmentFormNew = ({
   useEffect(() => {
     const { activityId, academyEntityId, attendingPattern, startTime, courseId } = values;
 
-    // Find the selected course to get sessionMinutes
     const selectedCourse = allCourse.find(c => c.courseId === courseId);
     const patternStr = Array.isArray(attendingPattern) ? attendingPattern.sort().join("") : attendingPattern;
 
     if (activityId && academyEntityId && patternStr && patternStr.length > 0 && startTime && selectedCourse) {
 
-      // 1. Calculate endTime: startTime + sessionMinutes
       const [startHours, startMins] = startTime.split(":").map(Number);
       const sessionMinutes = selectedCourse.sessionMinutes || 0;
 
@@ -332,7 +314,6 @@ const EnrollmentFormNew = ({
 
   useEffect(() => {
     if (selectedRate) {
-      // 1. Initial assignment from selectedRate
       const rackPrice = parseFloat(selectedRate.unitRate) || 0;
       const patternDiscount = parseFloat(selectedRate.patternDiscount) || 0;
       const dnOrDiscount = Number(values.dnOrDiscount) || 0;
@@ -377,6 +358,8 @@ const EnrollmentFormNew = ({
         totalDebitAmount: roundedTotal,
         roundedAmount: roundingDiff,
         membershipMasterId: selectedRate.membershipMasterId,
+        membershipId: selectedRate.membershipId,
+        accountId: selectedRate.accountId
       }));
     }
   }, [
@@ -451,12 +434,6 @@ const EnrollmentFormNew = ({
     },
     [setEnableCourseView, setSelectedNoOfDays, setActualDaysInWeek, onFilterChange]
   );
-
-  useEffect(() => {
-    setTransactionData({
-      amount: values.totalDebitAmount
-    })
-  }, [values.totalDebitAmount]);
 
   const handleFinalSubmit = () => {
     const submissionData = {
@@ -641,14 +618,22 @@ const EnrollmentFormNew = ({
           }        </div>
         <FormFooter onClose={() => setValues({})} onSubmit={handleFinalSubmit} submitLabel="Complete Enrollment" isSubmitting={false} />
       </div>
-      <TransactionFormModal
+
+      {values.totalDebitAmount && <EnrollmentReceiptModal
         isOpen={paymentFormOpen}
-        initialData={transactionData as any}
-        onClose={() => {
-          setPaymentFormOpen(false);
+        onClose={() => setPaymentFormOpen(false)}
+        setTransactionData={setValues}
+        initialData={{
+          crEntityId: values.academyEntityId,
+          crAccountId: values.accountId,
+          crMemberId: values.memberId,
+          crMsNo: selectedRate?.membershipId ?? null,
+          amount: values.totalDebitAmount,
+          crAccountName: selectedRate?.accountName ?? "No Name Found",
+          crMemberFirstName: selectedMember?.memberFirstName,
+          crMemberLastName: selectedMember?.memberLastName,
         }}
-        onSave={handleAddTransactionDetailsa}
-      />
+      />}
     </>
 
   );

@@ -5,7 +5,9 @@ import type { Response } from "@/types/response";
 export interface UserQuery {
 	page?: number;
 	limit?: number;
-	username?: string;
+	search?: string;
+	role?: string;
+	memberId?: number;
 	sortBy?: string;
 	sortOrder?: SortOrder;
 }
@@ -15,56 +17,37 @@ export interface LoginPayload {
 	password: string;
 }
 
-export interface SignupPayload {
-	username: string;
-	email: string;
-	password: string;
-	role?: "staff" | "admin" | "superadmin";
-}
-
-export interface LoginResponseData {
+export interface LoginResponseData extends Response {
 	token: string;
 	user: User;
-	success: boolean;
-	message: string
 }
 
 const USER_BASE = import.meta.env.VITE_APP_API_URL + "/user";
 
-export function getUser(params: UserQuery = {}): Promise<User[]> {
+
+export function getUsers(params: UserQuery = {}): Promise<Response<User[]>> {
 	const qs = toQueryString({
 		page: params.page ?? 1,
 		limit: params.limit ?? 10,
-		sortBy: params.sortBy ?? "areaId",
-		sorting: params.sortOrder ?? "ASC",
-		search: params.username ?? params.username,
+		sortBy: params.sortBy ?? "userId", // Changed from areaId to userId
+		sortOrder: params.sortOrder ?? "ASC",
+		search: params.search,
+		role: params.role,
+		memberId: params.memberId
 	});
 
-	return request<User[]>(`${USER_BASE}${qs}`);
+	return request<Response<User[]>>(`${USER_BASE}${qs}`);
 }
 
-export function createUser(
-	payload: Omit<User, "userId" | "createdAt" | "updatedAt" | "lastLogin">
-): Promise<Response<User>> {
-	return request<Response<User>>(USER_BASE, {
+
+export function getUserById(id: number): Promise<Response<User>> {
+	return request<Response<User>>(`${USER_BASE}/${id}`);
+}
+
+export function signup(payload: User): Promise<Response<User>> {
+	return request<Response<User>>(`${USER_BASE}/signup`, {
 		method: "POST",
 		body: JSON.stringify(payload),
-	});
-}
-
-export function updateUser(
-	id: number,
-	payload: Partial<User>
-): Promise<Response> {
-	return request<Response<User>>(`${USER_BASE}/${id}`, {
-		method: "PUT",
-		body: JSON.stringify(payload),
-	});
-}
-
-export function deleteUser(id: number): Promise<Response<User>> {
-	return request<Response<User>>(`${USER_BASE}/${id}`, {
-		method: "DELETE",
 	});
 }
 
@@ -75,9 +58,25 @@ export function login(payload: LoginPayload): Promise<LoginResponseData> {
 	});
 }
 
-export function signup(payload: SignupPayload): Promise<Response<User>> {
-	return request<Response<User>>(`${USER_BASE}/signup`, {
-		method: "POST",
+export function validateToken(): Promise<LoginResponseData> {
+	return request<LoginResponseData>(`${USER_BASE}/validate`, {
+		method: "GET",
+	});
+}
+
+export function updateUser(
+	id: number,
+	payload: Partial<User>
+): Promise<Response<User>> {
+	return request<Response<User>>(`${USER_BASE}/${id}`, {
+		method: "PUT",
 		body: JSON.stringify(payload),
+	});
+}
+
+
+export function deleteUser(id: number): Promise<Response<User>> {
+	return request<Response<User>>(`${USER_BASE}/${id}`, {
+		method: "DELETE",
 	});
 }

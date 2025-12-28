@@ -7,19 +7,19 @@ export interface Transaction {
 	crAccountId: number | null;
 	crMemberId: number | null;
 	crMsNo: number | null;
-	crEntityName: string;
-	crAccountName: string;
-	crMemberFirstName: string;
-	crMemberLastName: string;
+	crEntityName?: string;
+	crAccountName?: string;
+	crMemberFirstName?: string;
+	crMemberLastName?: string;
 
 	drEntityId: number | null;
 	drAccountId: number | null;
 	drMemberId: number | null;
 	drMsNo: number | null;
-	drEntityName: string;
-	drAccountName: string;
-	drMemberFirstName: string;
-	drMemberLastName: string;
+	drEntityName?: string;
+	drAccountName?: string;
+	drMemberFirstName?: string;
+	drMemberLastName?: string;
 
 	transactionDetails: string;
 	entrySource: string;
