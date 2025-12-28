@@ -71,7 +71,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 		if (currentCategory === "casual_account") {
 			fetchAccounts("casual");
 		} else if (currentCategory === "walking_account") {
-			fetchAccounts("walking");
+			fetchAccounts("walk");
 		} else {
 			setFetchedAccounts([]);
 		}
