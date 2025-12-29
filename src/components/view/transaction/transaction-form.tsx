@@ -50,7 +50,6 @@ export default function EnrollmentReceiptModal({
 	onClose,
 	setTransactionData
 }: Props) {
-	console.log(initialData,"iii");
 	const [values, setValues] = useState<Transaction>(emptyReceipt);
 	const [drAccounts, setDrAccounts] = useState<Account[]>([]);
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});

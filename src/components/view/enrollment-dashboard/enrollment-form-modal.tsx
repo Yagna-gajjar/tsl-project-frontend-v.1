@@ -23,6 +23,7 @@ import { createEnrollment } from "@/api/enrollment.api";
 import type { Response } from "@/types/response";
 import { getAuthorities } from "@/api/authority.api";
 import type { Authority } from "@/types/authority";
+import { useAuth } from "@/contexts/authContext";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -99,6 +100,8 @@ const EnrollmentFormNew = ({
     finalTSLApproval: null,
   });
 
+  const { user } = useAuth();
+
   const [options, setOptions] = useState({
     members: [] as Member[],
     activities: [] as Activity[],
@@ -164,7 +167,6 @@ const EnrollmentFormNew = ({
     return Boolean(item?.enumCase);
   };
 
-
   const fetchBaseOptions = useCallback(
     async (type: "member" | "activity", isInitial = false, search = "") => {
       const current = pagination[type];
@@ -199,10 +201,15 @@ const EnrollmentFormNew = ({
     getEnumsByCategory("ACTIVITY TYPE").then((res) => setOptions((p) => ({ ...p, activityTypes: res?.data || [] })));
     getEnumsByCategory("STATUSVISIBLE").then((res) => setOptions((p) => ({ ...p, visibility: res?.data || [] })));
     fetchBaseOptions("activity", true);
+    setTimeout(() => {
+      if (user) {
+        setValues((prev) => ({
+          ...prev,
+          createdBy: Number(user.memberId),
+        }));
+      }
+    }, 200);
   }, []);
-
-  useEffect(() => {
-  }, [options.visibility]);
 
   useEffect(() => {
     if (values.activityType) {
@@ -284,7 +291,7 @@ const EnrollmentFormNew = ({
           const authority = res.data[0];
           setValues((prev) => ({
             ...prev,
-            memberApprovalStatus: authority.memberId ?? null,
+            memberApprovalStatus: authority?.memberId ?? null,
           }));
         }
       } catch {
@@ -304,12 +311,30 @@ const EnrollmentFormNew = ({
       });
 
       const course = filteredCourses.find((c) => c.courseId === values.courseId);
+
+      const resetFinancials = {
+        rackPrice: 0,
+        patternDiscount: 0,
+        dnOrDiscount: 0,
+        billingDaysSessions: 0,
+        billingRate: 0,
+        billingAmount: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        totalDebitAmount: 0,
+        roundedAmount: 0,
+        costToMember: 0,
+        processingCharge: 0,
+        courseRateId: 0,
+      };
+
       if (course) {
         const pattern = String(course.chargingPattern || "").toLowerCase();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         let updates: any = {
+          ...resetFinancials,
           attendingPattern: String(course.daysPattern || "").split(""),
           attendingPatternDays: course.noOfDaysInWeek,
           chargingPattern: course.chargingPattern,
@@ -324,7 +349,7 @@ const EnrollmentFormNew = ({
 
           updates = {
             ...updates,
-            billingDaysSessions: 1,
+            billingDaysSessions: 1, // Set to 1 for calculation triggers
             attendingStartDate: format(finalStart, "yyyy-MM-dd"),
             endDate: format(suspDate, "yyyy-MM-dd"),
             permittedDays: calcPermittedDays,
@@ -336,7 +361,10 @@ const EnrollmentFormNew = ({
 
         setActualDaysInWeek(course.noOfDaysInWeek);
         setSelectedCourseDayInWeek(course.noOfDaysInWeek);
+
         setValues((prev: any) => ({ ...prev, ...updates }));
+      } else {
+        setValues((prev: any) => ({ ...prev, ...resetFinancials }));
       }
     }
   }, [values.courseId, filteredCourses]);
@@ -355,50 +383,55 @@ const EnrollmentFormNew = ({
   }, [values.attendingStartDate, values.permittedDays, values.chargingPattern]);
 
   useEffect(() => {
-    if (selectedRate) {
+    if (selectedRate && values.billingDaysSessions && values.billingDaysSessions > 0) {
+      // 0. Find the selected course to get tax rates
+      const selectedCourse = allCourse.find(c => c.courseId === values.courseId);
+
+      // Fallback to 9% if rates are not defined in the course object
+      const cgstRate = Number(selectedCourse?.cgstRate) ?? 0;
+      const sgstRate = Number(selectedCourse?.sgstRate) ?? 0;
+
       const rackPrice = parseFloat(selectedRate.unitRate) || 0;
       const patternDiscount = parseFloat(selectedRate.patternDiscount) || 0;
       const dnOrDiscount = Number(values.dnOrDiscount) || 0;
-      const sessions = Number(values.billingDaysSessions) || 1; // Prevent division by zero
+      const processingCharge = Number(values.processingCharge) || 0;
+      const billingDaysSessions = Number(values.billingDaysSessions) || 1;
+      const membersEnrolled = Number(values.membersEnrolled) || 1;
       const hasDnAccount = values.dnAccountId !== null && values.dnAccountId !== 0;
 
-      // 2. Define local variables based on your formulas
-      const x = rackPrice * patternDiscount;
-      const y = sessions > 0 ? dnOrDiscount / sessions : 0;
-
-      let billingRate = 0;
-      let costToMember = 0;
-
+      // 1. Calculate Base Rate (D)
+      let baseRateD = 0;
       if (!hasDnAccount) {
-        billingRate = parseFloat((x - y).toFixed(2));
-        costToMember = parseFloat((x - y).toFixed(2));
+        baseRateD = (rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions);
       } else {
-        billingRate = x;
-        costToMember = parseFloat((x - y).toFixed(2));
+        baseRateD = (rackPrice * patternDiscount);
       }
+      const A = ((baseRateD * billingDaysSessions) + processingCharge);
+      const B = 100 + sgstRate + cgstRate;
+      const C = A * (B / 100);
+      const X = Math.ceil(C);
+      const E = X - C;
+      const roundedAmount = ((100 * E) / B) / billingDaysSessions;
+      const billingRate = baseRateD + roundedAmount;
+      const costToMember = ((rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions)) + roundedAmount;
+      const billingAmount = billingRate * billingDaysSessions * membersEnrolled;
+      const cgstAmount = (billingAmount + processingCharge) * (cgstRate / 100);
+      const sgstAmount = (billingAmount + processingCharge) * (sgstRate / 100);
+      const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + processingCharge;
 
-      const days = Number(values.permittedDays) || 0;
-      const billingAmount = parseFloat((billingRate * days).toFixed(2));
-      const cgst = parseFloat((billingAmount * 0.09).toFixed(2));
-      const sgst = parseFloat((billingAmount * 0.09).toFixed(2));
-      const procCharge = Number(values.processingCharge) || 0;
-
-      const totalDebit = billingAmount + cgst + sgst + procCharge;
-      const roundedTotal = Math.ceil(totalDebit);
-      const roundingDiff = parseFloat((roundedTotal - totalDebit).toFixed(2));
 
       setValues((prev) => ({
         ...prev,
         courseRateId: selectedRate.courseRateId,
-        rackPrice: rackPrice,
-        patternDiscount: patternDiscount,
-        costToMember: parseFloat(costToMember.toFixed(2)),
-        billingRate: parseFloat(billingRate.toFixed(2)),
-        billingAmount: billingAmount,
-        cgstAmount: cgst,
-        sgstAmount: sgst,
-        totalDebitAmount: roundedTotal,
-        roundedAmount: roundingDiff,
+        rackPrice: parseFloat(rackPrice.toFixed(4)),
+        patternDiscount: parseFloat(patternDiscount.toFixed(4)),
+        roundedAmount: parseFloat(roundedAmount.toFixed(4)),
+        billingRate: parseFloat(billingRate.toFixed(4)),
+        costToMember: parseFloat(costToMember.toFixed(4)),
+        billingAmount: parseFloat(billingAmount.toFixed(4)),
+        cgstAmount: parseFloat(cgstAmount.toFixed(4)),
+        sgstAmount: parseFloat(sgstAmount.toFixed(4)),
+        totalDebitAmount: parseFloat(totalDebitAmount.toFixed(4)),
         membershipMasterId: selectedRate.membershipMasterId,
         membershipId: selectedRate.membershipId,
         accountId: selectedRate.accountId
@@ -409,8 +442,10 @@ const EnrollmentFormNew = ({
     values.dnOrDiscount,
     values.dnAccountId,
     values.billingDaysSessions,
-    values.permittedDays,
-    values.processingCharge
+    values.membersEnrolled,
+    values.processingCharge,
+    values.courseId,
+    allCourse
   ]);
 
   useEffect(() => {
@@ -556,18 +591,18 @@ const EnrollmentFormNew = ({
     },
     {
       name: "academyEntityId",
-      label: "Academy Entity Filter",
+      label: "Services Provider Name",
       type: "select",
       options: availableEntities.map((e) => ({ label: e.name, value: e.id })),
     },
     {
       name: "startTime",
-      label: "Start Time",
+      label: "Desired Start Time",
       type: "Time",
     },
     {
       name: "courseId",
-      label: "Course",
+      label: "Service Identification Code",
       type: "select",
       options: filteredCourses.map((c) => ({
         label: `${c.courseName} [Pattern: ${c.daysPattern || "N/A"}]`,
@@ -583,15 +618,17 @@ const EnrollmentFormNew = ({
     },
     {
       name: "attendingPattern",
-      label: "Attending Days",
+      label: "Member Will Attend On WeekDays",
       type: "multiselect",
       options: allowedWeekDays,
       description: values.courseId ? "Course restricted days." : "Select course first.",
     },
-    { name: "attendingStartDate", label: "Start Date", type: "date" },
+    {
+      name: "attendingStartDate", label: "Desired Start Date", type: "date"
+    },
     {
       name: "permittedDays",
-      label: "Permitted Days",
+      label: "Duration in Days",
       type: "number",
       disabled: values.chargingPattern?.toLowerCase() === "session"
     },
@@ -616,30 +653,58 @@ const EnrollmentFormNew = ({
     },
     {
       name: "membersEnrolled",
-      label: "Members Enrolled",
+      label: "Members Being Enrolled",
       type: "number",
       disabled: values.chargingPattern?.toLowerCase() !== "school"
     },
-    { name: "dnOrDiscount", label: "Discount / DN", type: "number" },
+    {
+      name: "dnOrDiscount", label: "Adjustment Amount", type: "number"
+    },
     {
       name: "dnAccountId",
       label: "DN Account",
       type: "select",
       options: availableEntities.map((e) => ({ label: e.name, value: e.id })),
     },
-    { name: "billingRate", label: "Billing Rate", type: "number", disabled: true },
-    { name: "rackPrice", label: "Rack Price", type: "number", disabled: true },
-    { name: "costToMember", label: "Cost To Member", type: "number", disabled: true },
-    { name: "billingAmount", label: "Billing Amount", type: "number", disabled: true },
-    { name: "roundedAmount", label: "Rounding", type: "number", disabled: true },
-    { name: "cgstAmount", label: "CGST (9%)", type: "number", disabled: true },
-    { name: "sgstAmount", label: "SGST (9%)", type: "number", disabled: true },
-    { name: "totalDebitAmount", label: "Total Debit Amount", type: "number", disabled: true },
-    { name: "processingCharge", label: "Processing Charge", type: "number" },
-    { name: "walkingName", label: "Walking Name", type: "text" },
-    { name: "walkingContact", label: "Walking Contact", type: "text" },
-    { name: "printRemarks", label: "Print Remarks", type: "text" },
-    { name: "officeRemarks", label: "Office Remarks", type: "text" },
+    {
+      name: "billingRate", label: "Billing Rate / Unit / Member", type: "number", disabled: true
+    },
+    {
+      name: "costToMember", label: "Cost to Member / Unit / Member", type: "number", disabled: true
+    },
+    {
+      name: "billingAmount", label: "Total Bill Amount", type: "number", disabled: true
+    },
+    {
+      name: "roundedAmount", label: "Rounded Amount", type: "number", disabled: true
+    },
+    {
+      name: "cgstAmount", label: "CGST", type: "number", disabled: true
+    },
+    {
+      name: "sgstAmount", label: "SGST", type: "number", disabled: true
+    },
+    {
+      name: "totalDebitAmount", label: "Payment to be Made By Client", type: "number", disabled: true
+    },
+    {
+      name: "processingCharge", label: "TSL Processing Charges", type: "number"
+    },
+    {
+      name: "walkingName", label: "Walking Name", type: "text"
+    },
+    {
+      name: "walkingContact", label: "Walking Contact", type: "text"
+    },
+    {
+      name: "printRemarks", label: "Enrolment Remarks", type: "text"
+    },
+    {
+      name: "officeRemarks", label: "Internal Remarks", type: "text"
+    },
+    {
+      name: "openEnrollment", label: "Is the Enrolment Open", type: "checkbox"
+    },
     {
       name: "status",
       label: "Status",
