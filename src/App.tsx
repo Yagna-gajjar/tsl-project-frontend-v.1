@@ -28,7 +28,7 @@ import CoursePage from "@/pages/course";
 import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
 import EnrollmentPage from "./pages/enrollment";
-import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
+// import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
 import AttendanceSheet from "./components/view/batch/attendance-sheet";
 import DebitNote from "./pages/debitNote";
 // import PaymentPage from "./pages/payment";
@@ -51,6 +51,7 @@ import TransactionPage from "./pages/transaction";
 import AccessAndDetails from "./pages/access-details";
 import UserAccessPage from "./components/view/user/UserAccessPage";
 import StatusVisible from "./pages/status-visible";
+import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrollment-flow";
 
 export default function App() {
   return (
@@ -67,8 +68,12 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route
                   path="/enrollment-dashboard"
-                  element={<EnrollmentDashboard />}
+                  element={<EnrollmentFlow />}
                 />
+                {/* <Route
+                  path="/enrollment-dashboard"
+                  element={<EnrollmentDashboard />}
+                /> */}
                 <Route path="/enrollment" element={<EnrollmentPage />} />
                 <Route path="/authority" element={<AuthorityPage />} />
                 <Route path="/account/accounts" element={<AccountPage />} />

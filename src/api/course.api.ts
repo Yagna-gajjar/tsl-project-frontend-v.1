@@ -15,6 +15,7 @@ export interface CourseQuery {
   entityId?: number;
   classification?: string;
   suspenspedCourse?: boolean;
+  age?: number;
 }
 
 const COURSE_BASE = import.meta.env.VITE_APP_API_URL + "/course";
@@ -35,6 +36,7 @@ export function getCourses(
     entityId: params.entityId ?? undefined,
     classification: params.classification ?? undefined,
     suspenspedCourse: params.suspenspedCourse ?? undefined,
+    age: params.age ?? undefined,
   });
 
   return request<Response<Course[]>>(`${COURSE_BASE}${qs}`);

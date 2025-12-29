@@ -403,25 +403,25 @@ const EnrollmentFormNew = ({
       const C = A * (B / 100);
       const X = Math.ceil(C);
       const E = X - C;
-      const roundedAmount = ((100 * E) / B) / billingDaysSessions;
-      const billingRate = baseRateD + roundedAmount;
-      const costToMember = ((rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions)) + roundedAmount;
+      const roundedAmount = ((100 * E) / B);
+      const billingRate = baseRateD;
+      const costToMember = ((rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions));
       const billingAmount = billingRate * billingDaysSessions * membersEnrolled;
-      const cgstAmount = (billingAmount + processingCharge) * (cgstRate / 100);
-      const sgstAmount = (billingAmount + processingCharge) * (sgstRate / 100);
-      const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + processingCharge;
+      const cgstAmount = (billingAmount + processingCharge + roundedAmount) * (cgstRate / 100);
+      const sgstAmount = (billingAmount + processingCharge + roundedAmount) * (sgstRate / 100);
+      const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + processingCharge + roundedAmount;
 
       setValues((prev) => ({
         ...prev,
         courseRateId: selectedRate.courseRateId,
         rackPrice: parseFloat(rackPrice.toFixed(4)),
-        patternDiscount: parseFloat(patternDiscount.toFixed(4)),
-        roundedAmount: parseFloat(roundedAmount.toFixed(4)),
-        billingRate: parseFloat(billingRate.toFixed(4)),
-        costToMember: parseFloat(costToMember.toFixed(4)),
-        billingAmount: parseFloat(billingAmount.toFixed(4)),
-        cgstAmount: parseFloat(cgstAmount.toFixed(4)),
-        sgstAmount: parseFloat(sgstAmount.toFixed(4)),
+        patternDiscount: parseFloat(patternDiscount.toFixed(2)),
+        roundedAmount: parseFloat(roundedAmount.toFixed(2)),
+        billingRate: parseFloat(billingRate.toFixed(2)),
+        costToMember: parseFloat(costToMember.toFixed(2)),
+        billingAmount: parseFloat(billingAmount.toFixed(2)),
+        cgstAmount: parseFloat(cgstAmount.toFixed(2)),
+        sgstAmount: parseFloat(sgstAmount.toFixed(2)),
         totalDebitAmount: parseFloat(totalDebitAmount.toFixed(4)),
         membershipMasterId: selectedRate.membershipMasterId,
         membershipId: selectedRate.membershipId,
@@ -586,7 +586,7 @@ const EnrollmentFormNew = ({
     },
     {
       name: "activityId",
-      label: "Activity Filter",
+      label: "Activity",
       type: "select",
       options: options.activities.map((a) => ({ label: a.activityName, value: a.activityId })),
       onSearch: async (query: string) => await fetchBaseOptions("activity", true, query),
@@ -605,6 +605,7 @@ const EnrollmentFormNew = ({
       label: "Services Provider Name",
       type: "select",
       options: availableEntities.map((e) => ({ label: e.name, value: e.id })),
+      disabled: !values.activityId,
     },
     {
       name: "courseId",
@@ -615,13 +616,6 @@ const EnrollmentFormNew = ({
         value: c.courseId,
       })),
       disabled: !values.activityType || filteredCourses.length === 0,
-    },
-    {
-      name: "chargingPattern",
-      label: "Charging Pattern",
-      type: "text",
-      disabled: true,
-      colSpan: 1,
     },
     {
       name: "attendingPattern",
@@ -636,7 +630,7 @@ const EnrollmentFormNew = ({
     },
     {
       name: "permittedDays",
-      label: "Duration in Days",
+      label: "Duration(permitted) in Days",
       type: "number",
       hidden: pattern !== "day",
       disabled: pattern !== "day",
@@ -655,26 +649,20 @@ const EnrollmentFormNew = ({
       colSpan: 1
     },
     {
-      name: "endDate",
-      label: "End Date",
-      type: "date",
-      disabled: true
-    },
-    {
       name: "membersEnrolled",
       label: "Members Being Enrolled",
       type: "number",
       disabled: values.chargingPattern?.toLowerCase() !== "school",
       colSpan: 1
     },
-    {
-      name: "batchId",
-      label: "Batch",
-      type: "select",
-      disabled: !values.activityId || options.batches.length === 0,
-      options: options.batches.map((b) => ({ label: `${b.batchName} (${b.startTime} - ${b.endTime})`, value: b.batchId })),
-      colSpan: "full"
-    },
+    // {
+    //   name: "batchId",
+    //   label: "Batch",
+    //   type: "select",
+    //   disabled: !values.activityId || options.batches.length === 0,
+    //   options: options.batches.map((b) => ({ label: `${b.batchName} (${b.startTime} - ${b.endTime})`, value: b.batchId })),
+    //   colSpan: "full"
+    // },
     {
       name: "dnAccountId",
       label: "DN Account",
@@ -683,33 +671,6 @@ const EnrollmentFormNew = ({
     },
     {
       name: "dnOrDiscount", label: "Adjustment Amount", type: "number"
-    },
-    {
-      name: "billingRate", label: "Billing Rate", type: "number", disabled: true, colSpan: 1
-    },
-    {
-      name: "costToMember", label: "Cost to Member", type: "number", disabled: true, colSpan: 1
-    },
-    {
-      name: "billingAmount", label: "Total Bill Amount", type: "number", disabled: true, colSpan: 1
-    },
-    {
-      name: "roundedAmount", label: "Rounded Amount", type: "number", disabled: true, colSpan: 1
-    },
-    {
-      name: "cgstAmount",
-      label: `CGST (${currentCgst}%)`,
-      type: "number",
-      disabled: true, colSpan: 1
-    },
-    {
-      name: "sgstAmount",
-      label: `SGST (${currentSgst}%)`,
-      type: "number",
-      disabled: true, colSpan: 1
-    },
-    {
-      name: "totalDebitAmount", label: "Payment to be Made By Client", type: "number", disabled: true,
     },
     {
       name: "processingCharge", label: "TSL Processing Charges", type: "number"
