@@ -570,6 +570,7 @@ const EnrollmentFormNew = ({
           label: item.value,
           value: item.enumCase
         })),
+        colSpan: 1,
     },
     {
       name: "activityType",
@@ -581,6 +582,7 @@ const EnrollmentFormNew = ({
           .map((item) => ({ label: item.value, value: item.value }))
         : [],
       disabled: !values.activityClassification,
+      colSpan: 1,
     },
     {
       name: "activityId",
@@ -590,17 +592,19 @@ const EnrollmentFormNew = ({
       onSearch: async (query: string) => await fetchBaseOptions("activity", true, query),
       onLoadMore: () => fetchBaseOptions("activity"),
       isLoadingMore: pagination.activity.loading,
+      colSpan: 1,
+    },
+    {
+      name: "startTime",
+      label: "Desired Start Time",
+      type: "time",
+      colSpan: 1,
     },
     {
       name: "academyEntityId",
       label: "Services Provider Name",
       type: "select",
       options: availableEntities.map((e) => ({ label: e.name, value: e.id })),
-    },
-    {
-      name: "startTime",
-      label: "Desired Start Time",
-      type: "time",
     },
     {
       name: "courseId",
@@ -617,6 +621,7 @@ const EnrollmentFormNew = ({
       label: "Charging Pattern",
       type: "text",
       disabled: true,
+      colSpan: 1,
     },
     {
       name: "attendingPattern",
@@ -624,16 +629,18 @@ const EnrollmentFormNew = ({
       type: "multiselect",
       options: allowedWeekDays,
       description: values.courseId ? "Course restricted days." : "Select course first.",
+      colSpan: 2,
     },
     {
-      name: "attendingStartDate", label: "Desired Start Date", type: "date"
+      name: "attendingStartDate", label: "Desired Start Date", type: "date", colSpan: 1
     },
     {
       name: "permittedDays",
       label: "Duration in Days",
       type: "number",
       hidden: pattern !== "day",
-      disabled: pattern !== "day"
+      disabled: pattern !== "day",
+      colSpan: 1
     },
     {
       name: "billingDaysSessions",
@@ -644,7 +651,8 @@ const EnrollmentFormNew = ({
           : "Billing Days/Sessions",
       type: "number",
       hidden: pattern === "day",
-      disabled: pattern === "day"
+      disabled: pattern === "day",
+      colSpan: 1
     },
     {
       name: "endDate",
@@ -653,20 +661,19 @@ const EnrollmentFormNew = ({
       disabled: true
     },
     {
+      name: "membersEnrolled",
+      label: "Members Being Enrolled",
+      type: "number",
+      disabled: values.chargingPattern?.toLowerCase() !== "school",
+      colSpan: 1
+    },
+    {
       name: "batchId",
       label: "Batch",
       type: "select",
       disabled: !values.activityId || options.batches.length === 0,
       options: options.batches.map((b) => ({ label: `${b.batchName} (${b.startTime} - ${b.endTime})`, value: b.batchId })),
-    },
-    {
-      name: "membersEnrolled",
-      label: "Members Being Enrolled",
-      type: "number",
-      disabled: values.chargingPattern?.toLowerCase() !== "school"
-    },
-    {
-      name: "dnOrDiscount", label: "Adjustment Amount", type: "number"
+      colSpan: "full"
     },
     {
       name: "dnAccountId",
@@ -675,31 +682,34 @@ const EnrollmentFormNew = ({
       options: availableEntities.map((e) => ({ label: e.name, value: e.id })),
     },
     {
-      name: "billingRate", label: "Billing Rate / Unit / Member", type: "number", disabled: true
+      name: "dnOrDiscount", label: "Adjustment Amount", type: "number"
     },
     {
-      name: "costToMember", label: "Cost to Member / Unit / Member", type: "number", disabled: true
+      name: "billingRate", label: "Billing Rate", type: "number", disabled: true, colSpan: 1
     },
     {
-      name: "billingAmount", label: "Total Bill Amount", type: "number", disabled: true
+      name: "costToMember", label: "Cost to Member", type: "number", disabled: true, colSpan: 1
     },
     {
-      name: "roundedAmount", label: "Rounded Amount", type: "number", disabled: true
+      name: "billingAmount", label: "Total Bill Amount", type: "number", disabled: true, colSpan: 1
+    },
+    {
+      name: "roundedAmount", label: "Rounded Amount", type: "number", disabled: true, colSpan: 1
     },
     {
       name: "cgstAmount",
       label: `CGST (${currentCgst}%)`,
       type: "number",
-      disabled: true,
+      disabled: true, colSpan: 1
     },
     {
       name: "sgstAmount",
       label: `SGST (${currentSgst}%)`,
       type: "number",
-      disabled: true,
+      disabled: true, colSpan: 1
     },
     {
-      name: "totalDebitAmount", label: "Payment to be Made By Client", type: "number", disabled: true
+      name: "totalDebitAmount", label: "Payment to be Made By Client", type: "number", disabled: true,
     },
     {
       name: "processingCharge", label: "TSL Processing Charges", type: "number"
