@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -12,10 +12,13 @@ import { CourseRateTab } from "./enrollment-tabs/course-rate-tab"
 import { BatchTab } from "./enrollment-tabs/batch-tab"
 import { ConfirmTab } from "./enrollment-tabs/confirm-tab"
 import { EnrollmentDetails } from "./enrollment-details"
-import type { EnrollmentData } from "@/types/enrollment"
+import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "confirm"] as const
 type TabValue = (typeof TAB_ORDER)[number]
+
+// --- ADJUST WIDTH HERE ---
+const SIDEBAR_WIDTH = "lg:w-[180px] xl:w-[250px]";
 
 const tabLabels: Record<TabValue, string> = {
 	member: "Member",
@@ -58,7 +61,7 @@ export function EnrollmentFlow() {
 	const handleBack = () => {
 		if (currentTabIndex > 0) {
 			const tabsToReset = TAB_ORDER.slice(currentTabIndex)
-			setEnrollmentData((prev) => {
+			setEnrollmentData((prev: any) => {
 				const updated = { ...prev }
 				tabsToReset.forEach((tab) => {
 					if (tab === "member") delete updated.member
@@ -84,45 +87,51 @@ export function EnrollmentFlow() {
 
 	const handleCreateEnrollment = () => {
 		console.log("Creating enrollment with data:", enrollmentData)
-		alert("Enrollment created successfully! Check console for details.")
+		alert("Enrollment created successfully!")
 	}
 
 	const canProceedToNext = completedTabs.has(currentTabValue)
 	const allTabsComplete = TAB_ORDER.every((tab) => completedTabs.has(tab))
 
+	useEffect(()=>{
+		console.log("Enrollment Data Updated:", enrollmentData)
+	},[enrollmentData])
+
 	return (
 		<div className="flex min-h-screen flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-8 bg-background">
-			{/* Left Side - Tabs */}
-			<div className="flex-1 lg:max-w-3xl">
+
+			{/* Left Side - Flexible Content Area */}
+			<div className="flex-1 min-w-0">
+				{/* min-w-0 is crucial to prevent flex items from breaking layout on small screens */}
 				<motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
 					<div className="mb-8">
-						<h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Sports Academy Enrollment</h1>
+						<h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight">Sports Academy Enrollment</h1>
 						<p className="text-muted-foreground">Complete your enrollment in {TAB_ORDER.length} simple steps</p>
 					</div>
 
 					<Tabs value={currentTabValue} onValueChange={handleTabChange} className="w-full">
-						<TabsList className="grid w-full grid-cols-5 mb-8 bg-secondary/50 gap-1 h-auto p-1">
+						<TabsList className="grid w-full grid-cols-5 mb-8 bg-secondary/30 gap-1 h-auto p-1 rounded-xl">
 							{TAB_ORDER.map((tab, index) => (
 								<TabsTrigger
 									key={tab}
 									value={tab}
 									disabled={index > currentTabIndex}
-									className="relative text-xs md:text-sm data-[state=inactive]:opacity-50 flex flex-col py-2"
+									className="relative text-xs md:text-sm data-[state=inactive]:opacity-50 flex flex-col py-3 rounded-lg"
 								>
-									<motion.div className="flex flex-col items-center gap-1 w-full">
-										{completedTabs.has(tab) && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-										{!completedTabs.has(tab) && index === currentTabIndex && (
+									<div className="flex flex-col items-center gap-1.5 w-full">
+										{completedTabs.has(tab) ? (
+											<CheckCircle2 className="w-4 h-4 text-green-500" />
+										) : index === currentTabIndex ? (
 											<motion.div
 												className="w-2 h-2 bg-primary rounded-full"
-												animate={{ scale: [1, 1.2, 1] }}
-												transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}
+												animate={{ scale: [1, 1.4, 1] }}
+												transition={{ repeat: Infinity, duration: 2 }}
 											/>
+										) : (
+											<div className="w-2 h-2 bg-muted-foreground/30 rounded-full" />
 										)}
-										{!completedTabs.has(tab) && index !== currentTabIndex && (
-											<div className="w-2 h-2 bg-muted-foreground rounded-full" />
-										)}
-										<span className="text-[10px] md:text-xs">{tabLabels[tab]}</span>
-									</motion.div>
+										<span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider">{tabLabels[tab]}</span>
+									</div>
 								</TabsTrigger>
 							))}
 						</TabsList>
@@ -130,15 +139,15 @@ export function EnrollmentFlow() {
 						<AnimatePresence mode="wait">
 							<motion.div
 								key={currentTabValue}
-								initial={{ opacity: 0, y: 20 }}
+								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: -20 }}
-								transition={{ duration: 0.3 }}
+								exit={{ opacity: 0, y: -10 }}
+								transition={{ duration: 0.2 }}
 							>
-								<Card className="p-6 md:p-8 bg-card border border-border shadow-lg">
+								<Card className="p-4 md:p-6 bg-card border border-border shadow-xl rounded-2xl">
 									<TabsContent value="member" className="mt-0">
 										<MemberTab
-											data={enrollmentData?.member ?? {}}
+											data={enrollmentData?.member}
 											onUpdate={(data) => updateEnrollmentData({ member: data }, "member")}
 										/>
 									</TabsContent>
@@ -170,34 +179,34 @@ export function EnrollmentFlow() {
 						</AnimatePresence>
 
 						{/* Navigation Buttons */}
-						<div className="flex gap-3 mt-8 flex-col sm:flex-row">
+						<div className="flex gap-3 mt-6 flex-col sm:flex-row">
 							<Button
-								variant="outline"
+								variant="ghost"
 								onClick={handleBack}
 								disabled={currentTabIndex === 0}
-								className="flex items-center gap-2 bg-transparent"
+								className="flex items-center gap-2"
 							>
 								<ChevronLeft className="w-4 h-4" />
-								Back
+								Previous Step
 							</Button>
 
 							{currentTabIndex < TAB_ORDER.length - 1 ? (
 								<Button
 									onClick={handleNext}
 									disabled={!canProceedToNext}
-									className="flex-1 sm:flex-initial flex items-center gap-2"
+									className="flex-1 sm:flex-initial min-w-[140px] flex items-center gap-2 shadow-lg"
 								>
-									Next
+									Continue
 									<ChevronRight className="w-4 h-4" />
 								</Button>
 							) : (
 								<Button
 									onClick={handleCreateEnrollment}
 									disabled={!allTabsComplete}
-									className="flex-1 sm:flex-initial bg-green-600 hover:bg-green-700 text-white"
+									className="flex-1 sm:flex-initial bg-green-600 hover:bg-green-700 text-white shadow-lg px-8"
 								>
 									<CheckCircle2 className="w-4 h-4 mr-2" />
-									Create Enrollment
+									Finalize Enrollment
 								</Button>
 							)}
 						</div>
@@ -205,14 +214,15 @@ export function EnrollmentFlow() {
 				</motion.div>
 			</div>
 
-			{/* Right Side - Details Panel */}
-			<div className="w-full lg:w-80 xl:w-96">
+			{/* Right Side - Adjustable Width Side Panel */}
+			<div className={`w-full shrink-0 transition-all duration-300 ${SIDEBAR_WIDTH}`}>
 				<motion.div
 					initial={{ opacity: 0, x: 20 }}
 					animate={{ opacity: 1, x: 0 }}
 					transition={{ duration: 0.5, delay: 0.2 }}
+					className="sticky top-8"
 				>
-					<EnrollmentDetails data={enrollmentData} currentTab={currentTabValue} />
+					<EnrollmentDetails data={enrollmentData as any} currentTab={currentTabValue} />
 				</motion.div>
 			</div>
 		</div>

@@ -3,16 +3,15 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Virtuoso } from "react-virtuoso"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen, CheckCircle2, Clock, Loader2, MapPin, Search, Target, Users, Building2, ChevronRight } from "lucide-react"
+import { BookOpen, CheckCircle2, Clock, Loader2, MapPin, Search, Target, Users, Building2 } from "lucide-react"
 
 import { getCourses } from "@/api/course.api"
 import { getEnumsByCategory } from "@/api/enums.api"
 import { getActivities } from "@/api/activity.api"
 import { toast } from "@/hooks/use-toast"
-import type { Course, EnrollmentData } from "@/types/enrollment"
+import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import type { Enums } from "@/types/enums"
 import type { Activity } from "@/types/activity"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -23,6 +22,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import type { Course } from "@/types/course"
 
 interface CourseTabProps {
 	data?: EnrollmentData

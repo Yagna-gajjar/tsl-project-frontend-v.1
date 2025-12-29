@@ -57,7 +57,7 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						</div>
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">DOB:</span>
-							<span className="font-medium">{format(data.member.dob,"yyyy-MMM-dd")}</span>
+							<span className="font-medium">{format(data?.member?.dob as Date,"yyyy-MMM-dd")}</span>
 						</div>
 					</div>
 				) : (
@@ -75,16 +75,20 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						{data.activity && (
 							<div className="flex justify-between">
 								<span className="text-muted-foreground">Activity:</span>
-								<span className="font-medium">{data.activity.activityName}</span>
+								<span className="font-medium">{data?.activity?.activityName ?? "No Name Found"}</span>
 							</div>
 						)}
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">Days/Week:</span>
-							<span className="font-medium">{data.course.noOfDaysInWeek}</span>
+							<span className="font-medium">{data?.course?.noOfDaysInWeek}</span>
 						</div>
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">Duration:</span>
-							<span className="font-medium">{data.course.sessionMinutes} min</span>
+							<span className="font-medium">{data.course?.sessionMinutes ?? "N/A"} min</span>
+						</div>
+						<div className="flex justify-between">
+							<span className="text-muted-foreground">Charging Pattern:</span>
+							<span className="font-medium">{data.course?.chargingPattern ?? "N/A"}</span>
 						</div>
 					</div>
 				) : (
