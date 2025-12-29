@@ -24,6 +24,7 @@ import type { Response } from "@/types/response";
 import { getAuthorities } from "@/api/authority.api";
 import type { Authority } from "@/types/authority";
 import { useAuth } from "@/contexts/authContext";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 const ALL_WEEK_DAYS = [
   { label: "Monday", value: 1 },
@@ -557,7 +558,13 @@ const EnrollmentFormNew = ({
     }
   };
 
-  const fields = [
+  const selectedCourseData = allCourse.find(c => c.courseId === values.courseId);
+  const currentCgst = Number(selectedCourseData?.cgstRate) || 0;
+  const currentSgst = Number(selectedCourseData?.sgstRate) || 0;
+
+  const pattern = String(values.chargingPattern || "").toLowerCase();
+
+  const fields: FormFieldConfig<Enrollment>[] = [
     {
       name: "activityClassification",
       label: "Activity Classification",
@@ -585,7 +592,7 @@ const EnrollmentFormNew = ({
       label: "Activity Filter",
       type: "select",
       options: options.activities.map((a) => ({ label: a.activityName, value: a.activityId })),
-      onSearch: (q: string) => fetchBaseOptions("activity", true, q),
+      onSearch: async (query: string) => await fetchBaseOptions("activity", true, query),
       onLoadMore: () => fetchBaseOptions("activity"),
       isLoadingMore: pagination.activity.loading,
     },
@@ -598,7 +605,7 @@ const EnrollmentFormNew = ({
     {
       name: "startTime",
       label: "Desired Start Time",
-      type: "Time",
+      type: "time",
     },
     {
       name: "courseId",
@@ -630,13 +637,19 @@ const EnrollmentFormNew = ({
       name: "permittedDays",
       label: "Duration in Days",
       type: "number",
-      disabled: values.chargingPattern?.toLowerCase() === "session"
+      hidden: pattern !== "day",
+      disabled: pattern !== "day"
     },
     {
       name: "billingDaysSessions",
-      label: "Billing Days/Sessions",
+      label: pattern === "session"
+        ? "No of Sessions"
+        : (pattern === "unit" || pattern === "school")
+          ? "No of Units"
+          : "Billing Days/Sessions",
       type: "number",
-      disabled: ["day", "unit"].includes(values.chargingPattern?.toLowerCase() as string)
+      hidden: pattern === "day",
+      disabled: pattern === "day"
     },
     {
       name: "endDate",
@@ -679,10 +692,16 @@ const EnrollmentFormNew = ({
       name: "roundedAmount", label: "Rounded Amount", type: "number", disabled: true
     },
     {
-      name: "cgstAmount", label: "CGST", type: "number", disabled: true
+      name: "cgstAmount",
+      label: `CGST (${currentCgst}%)`,
+      type: "number",
+      disabled: true,
     },
     {
-      name: "sgstAmount", label: "SGST", type: "number", disabled: true
+      name: "sgstAmount",
+      label: `SGST (${currentSgst}%)`,
+      type: "number",
+      disabled: true,
     },
     {
       name: "totalDebitAmount", label: "Payment to be Made By Client", type: "number", disabled: true
@@ -761,7 +780,7 @@ const EnrollmentFormNew = ({
               )}
             </div>
           </div>
-          <FormContent fields={fields as any} values={values} errors={{}} loading={false} error={null} isSubmitting={false} onChange={onChange} layout="grid" />
+          <FormContent fields={fields} values={values} errors={{}} loading={false} error={null} isSubmitting={false} onChange={onChange} layout="grid" />
           {values.totalDebitAmount != 0 &&
             <Button className="ml-5" onClick={() => { setPaymentFormOpen(true) }}>Pay ({values.totalDebitAmount}) Now</Button>
           }        </div>

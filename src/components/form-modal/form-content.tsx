@@ -103,6 +103,7 @@ export function FormContent<T extends Record<string, any>>({
             maxDate={field.maxDate}
             isLoadingMore={field.isLoadingMore}
             onLoadMore={field.onLoadMore}
+            hidden={field.hidden}
           />
         ))}
       </div>

@@ -237,6 +237,7 @@ export default function FormFieldInput(props: any) {
     className,
     onLoadMore,
     isLoadingMore,
+    hidden
   } = props
 
   const baseInputClass = error ? "border-destructive focus-visible:ring-destructive" : ""
@@ -331,14 +332,18 @@ export default function FormFieldInput(props: any) {
   }
 
   return (
-    <div className={`grid w-full items-center gap-1.5 ${className ?? ""}`}>
-      {type !== "checkbox" && (
-        <Label htmlFor={name} className={`${error ? "text-destructive" : ""} font-semibold text-sm`}>
-          {label} {required && <span className="text-destructive">*</span>}
-        </Label>
-      )}
-      {renderField()}
-      {error && <p className="text-[0.75rem] font-medium text-destructive">{error}</p>}
-    </div>
+    <>
+      {!hidden &&
+        <div className={`grid w-full items-center gap-1.5 ${className ?? ""}`}>
+          {type !== "checkbox" && (
+            <Label htmlFor={name} className={`${error ? "text-destructive" : ""} font-semibold text-sm`}>
+              {label} {required && <span className="text-destructive">*</span>}
+            </Label>
+          )}
+          {renderField()}
+          {error && <p className="text-[0.75rem] font-medium text-destructive">{error}</p>}
+        </div>
+      }
+    </>
   )
 }

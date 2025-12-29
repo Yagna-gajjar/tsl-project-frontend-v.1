@@ -32,6 +32,8 @@ export interface FormFieldConfig<T extends Record<string, any>> {
   onLoadMore?: () => void
   isLoadingMore?: boolean
   colSpan?: 1 | 2 | 3 | 4 | "full"
+  onSearch?: (query: string) => Promise<void>
+  hidden?: boolean
 }
 
 export interface FormModalProps<T extends Record<string, any>> {
@@ -43,6 +45,7 @@ export interface FormModalProps<T extends Record<string, any>> {
   initialData?: Partial<T>
   onSubmit: (data: T) => Promise<void> | void
   submitLabel?: string
+  onSearch?: (query: string) => void
   layout?: "grid" | "list"
 }
 

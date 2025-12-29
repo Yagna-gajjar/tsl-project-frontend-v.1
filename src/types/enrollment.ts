@@ -60,5 +60,6 @@ export interface Enrollment {
   activityClassification?: number | null;
   activityType?: string | null;
   chargingPattern: "",
-  payment: Transaction
+  payment: Transaction,
+  batchId: number | null;
 }
