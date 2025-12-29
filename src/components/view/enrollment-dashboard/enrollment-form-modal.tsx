@@ -155,12 +155,63 @@ const EnrollmentFormNew = ({
     });
   }, [allCourse, values.activityType, values.academyEntityId, values.startTime]);
 
-  const allowedWeekDays = useMemo(() => {
-    const selectedCourse = filteredCourses.find((c) => c.courseId === values.courseId);
-    if (!selectedCourse || !selectedCourse.daysPattern) return ALL_WEEK_DAYS;
-    const pattern = String(selectedCourse.daysPattern);
-    return ALL_WEEK_DAYS.filter((day) => pattern.includes(String(day.value)));
-  }, [values.courseId, filteredCourses]);
+  const selectedCourse = useMemo(() =>
+    filteredCourses.find((c) => c.courseId === values.courseId),
+    [values.courseId, filteredCourses]
+  );
+
+  useEffect(() => {
+    if (values.courseId) {
+      // 1. Fetch new rates
+      getCourseRates({ courseId: values.courseId, limit: 1000 }).then((res) => {
+        if (res?.data) setRateTableData(res.data);
+      });
+
+      const resetFinancials = {
+        rackPrice: 0, patternDiscount: 0, dnOrDiscount: 0, billingDaysSessions: 0,
+        billingRate: 0, billingAmount: 0, cgstAmount: 0, sgstAmount: 0,
+        totalDebitAmount: 0, roundedAmount: 0, costToMember: 0,
+        processingCharge: 0, courseRateId: 0,
+      };
+
+      if (selectedCourse) { // Using the memo here
+        const pattern = String(selectedCourse.chargingPattern || "").toLowerCase();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let updates: any = {
+          ...resetFinancials,
+          attendingPattern: String(selectedCourse.daysPattern || "").split(""),
+          attendingPatternDays: selectedCourse.noOfDaysInWeek,
+          chargingPattern: selectedCourse.chargingPattern,
+        };
+
+        if (pattern === "unit" || pattern === "school") {
+          const introDate = new Date(selectedCourse.introduceDate);
+          const suspDate = new Date(selectedCourse?.suspensionDate as any);
+          const finalStart = introDate < today ? today : introDate;
+          const diffTime = suspDate.getTime() - finalStart.getTime();
+          const calcPermittedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+          updates = {
+            ...updates,
+            billingDaysSessions: 1,
+            attendingStartDate: format(finalStart, "yyyy-MM-dd"),
+            endDate: format(suspDate, "yyyy-MM-dd"),
+            permittedDays: calcPermittedDays,
+          };
+          setSelectedNoOfDays(calcPermittedDays);
+          setEnableCourseView(true);
+        }
+
+        setActualDaysInWeek(selectedCourse.noOfDaysInWeek);
+        setSelectedCourseDayInWeek(selectedCourse.noOfDaysInWeek);
+        setValues((prev: any) => ({ ...prev, ...updates }));
+      } else {
+        setValues((prev: any) => ({ ...prev, ...resetFinancials }));
+      }
+    }
+  }, [values.courseId, selectedCourse]);
 
   const getVisibilityValueByName = (name: string): boolean => {
     const item = options.visibility.find(
@@ -311,71 +362,6 @@ const EnrollmentFormNew = ({
       fetchMemberAuthority();
     }
   }, [values.accountId]);
-
-  useEffect(() => {
-    if (values.courseId) {
-      getCourseRates({ courseId: values.courseId, limit: 1000 }).then((res) => {
-        if (res?.data) setRateTableData(res.data);
-      });
-
-      const course = filteredCourses.find((c) => c.courseId === values.courseId);
-
-      const resetFinancials = {
-        rackPrice: 0,
-        patternDiscount: 0,
-        dnOrDiscount: 0,
-        billingDaysSessions: 0,
-        billingRate: 0,
-        billingAmount: 0,
-        cgstAmount: 0,
-        sgstAmount: 0,
-        totalDebitAmount: 0,
-        roundedAmount: 0,
-        costToMember: 0,
-        processingCharge: 0,
-        courseRateId: 0,
-      };
-
-      if (course) {
-        const pattern = String(course.chargingPattern || "").toLowerCase();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        let updates: any = {
-          ...resetFinancials,
-          attendingPattern: String(course.daysPattern || "").split(""),
-          attendingPatternDays: course.noOfDaysInWeek,
-          chargingPattern: course.chargingPattern,
-        };
-
-        if (pattern === "unit" || pattern === "school") {
-          const introDate = new Date(course.introduceDate);
-          const suspDate = new Date(course?.suspensionDate as any);
-          const finalStart = introDate < today ? today : introDate;
-          const diffTime = suspDate.getTime() - finalStart.getTime();
-          const calcPermittedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-          updates = {
-            ...updates,
-            billingDaysSessions: 1, // Set to 1 for calculation triggers
-            attendingStartDate: format(finalStart, "yyyy-MM-dd"),
-            endDate: format(suspDate, "yyyy-MM-dd"),
-            permittedDays: calcPermittedDays,
-          };
-
-          setSelectedNoOfDays(calcPermittedDays);
-          setEnableCourseView(true);
-        }
-
-        setActualDaysInWeek(course.noOfDaysInWeek);
-        setSelectedCourseDayInWeek(course.noOfDaysInWeek);
-
-        setValues((prev: any) => ({ ...prev, ...updates }));
-      } else {
-        setValues((prev: any) => ({ ...prev, ...resetFinancials }));
-      }
-    }
-  }, [values.courseId, filteredCourses]);
 
   useEffect(() => {
     const pattern = String(values.chargingPattern || "").toLowerCase();
@@ -562,9 +548,14 @@ const EnrollmentFormNew = ({
     }
   };
 
-  const selectedCourseData = allCourse.find(c => c.courseId === values.courseId);
-  const currentCgst = Number(selectedCourseData?.cgstRate) || 0;
-  const currentSgst = Number(selectedCourseData?.sgstRate) || 0;
+  const allowedWeekDays = useMemo(() => {
+    if (!selectedCourse || !selectedCourse.daysPattern) return ALL_WEEK_DAYS;
+    const pattern = String(selectedCourse.daysPattern);
+    return ALL_WEEK_DAYS.filter((day) => pattern.includes(String(day.value)));
+  }, [selectedCourse]);
+
+  const currentCgst = Number(selectedCourse?.cgstRate) || 0;
+  const currentSgst = Number(selectedCourse?.sgstRate) || 0;
 
   const pattern = String(values.chargingPattern || "").toLowerCase();
 
