@@ -15,6 +15,7 @@ export function FormFooter({
   onSubmit,
   isSubmitting,
   submitLabel = "Submit",
+  disabled = false,
 }: FormFooterProps) {
   return (
     <motion.div
@@ -32,7 +33,7 @@ export function FormFooter({
       </Button>
       <Button
         onClick={onSubmit}
-        disabled={isSubmitting}
+        disabled={isSubmitting || disabled}
         className="bg-blue-600 hover:bg-blue-700 text-white"
       >
         {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

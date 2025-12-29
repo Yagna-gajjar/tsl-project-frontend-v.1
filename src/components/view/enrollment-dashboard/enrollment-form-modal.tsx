@@ -724,16 +724,19 @@ const EnrollmentFormNew = ({
       label: "Status",
       type: "select",
       options: [
-        { label: "created", value: "Created" },
-        { label: "billGenerated", value: "BillGenerated" },
-        { label: "billingComplete", value: "BillingComplete" },
-        { label: "draft", value: "Draft" },
-        { label: "history", value: "History" },
-        { label: "locked", value: "Locked" },
+        { label: "Created", value: "created" },
+        { label: "BillingComplete", value: "billingComplete" },
+        { label: "Draft", value: "draft" },
+        { label: "BillGenerated", value: "billGenerated" },
+        { label: "History", value: "history" },
+        { label: "Locked", value: "locked" },
       ],
     },
   ];
 
+  useEffect(()=>{
+    console.log(values.status," status changed");
+  },[values.status]);
   return (
     <>
       <div className="flex flex-col w-full h-[83vh] max-w-6xl mx-auto bg-background border rounded-xl overflow-hidden shadow-2xl">
@@ -779,7 +782,20 @@ const EnrollmentFormNew = ({
           {values.totalDebitAmount != 0 &&
             <Button className="ml-5" onClick={() => { setPaymentFormOpen(true) }}>Pay ({values.totalDebitAmount}) Now</Button>
           }        </div>
-        <FormFooter onClose={() => setValues({})} onSubmit={handleFinalSubmit} submitLabel="Complete Enrollment" isSubmitting={false} />
+        <FormFooter
+          onClose={() => setValues({})}
+          onSubmit={handleFinalSubmit}
+          submitLabel={
+            values.status === "created"
+              ? "Complete Enrollment"
+              : values.status === "draft"
+                ? "Save as Draft"
+                : `${values.status} enrollment`
+          }
+          isSubmitting={false}
+          disabled={values.totalDebitAmount === 0}
+        />
+
       </div>
 
       {values.totalDebitAmount && <EnrollmentReceiptModal
