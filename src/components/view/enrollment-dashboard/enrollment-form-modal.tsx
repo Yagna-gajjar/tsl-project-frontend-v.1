@@ -94,6 +94,7 @@ const EnrollmentFormNew = ({
     printRemarks: "",
     officeRemarks: "",
     walkingName: "",
+    attendingPattern: [],
     walkingContact: "",
     costToMember: 0,
     memberApprovalStatus: null,
@@ -178,7 +179,8 @@ const EnrollmentFormNew = ({
         const res =
           type === "member"
             ? await getMembers({ limit: PAGE_SIZE, page, search, status: getVisibilityValueByName("member") == false ? "active" : "inactive" })
-            : await getActivities({ limit: PAGE_SIZE, page, search });
+            // Use 'classification' as the key if that's what your API expects for Activity Type
+            : await getActivities({ limit: PAGE_SIZE, page, search, activityType: values.activityType ?? undefined });
 
         const items = res?.data || [];
         setOptions((prev) => ({
@@ -194,7 +196,7 @@ const EnrollmentFormNew = ({
         setPagination((prev) => ({ ...prev, [type]: { ...prev[type], loading: false } }));
       }
     },
-    [pagination]
+    [pagination, values.activityType, options.visibility] // Added dependencies
   );
 
   useEffect(() => {
@@ -214,10 +216,17 @@ const EnrollmentFormNew = ({
 
   useEffect(() => {
     if (values.activityType) {
-      getCourses({ classification: values.activityType, limit: 10000, suspenspedCourse: getVisibilityValueByName("course") }).then((res) => {
+      getCourses({
+        classification: values.activityType,
+        limit: 10000,
+        suspenspedCourse: getVisibilityValueByName("course")
+      }).then((res) => {
         if (res.success) setAllCourse(res?.data || []);
         else toast({ title: "Error", description: "Failed to load courses", variant: "destructive" });
       });
+
+      fetchBaseOptions("activity", true);
+      setValues(prev => ({ ...prev, activityId: undefined }));
     }
   }, [values.activityType, values.activityClassification]);
 
@@ -246,14 +255,12 @@ const EnrollmentFormNew = ({
       const [startHours, startMins] = startTime.split(":").map(Number);
       const sessionMinutes = selectedCourse.sessionMinutes || 0;
 
-      // Convert to total minutes, add session, then convert back to HH:mm
       const totalMinutes = (startHours * 60) + startMins + sessionMinutes;
       const endHours = Math.floor(totalMinutes / 60) % 24; // Use % 24 to handle midnight wrap
       const endMins = totalMinutes % 60;
 
       const formattedEndTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
 
-      // 2. Pass both startTime and calculated endTime to the API
       getBatch({
         activityId,
         entityId: academyEntityId,
@@ -384,11 +391,10 @@ const EnrollmentFormNew = ({
   }, [values.attendingStartDate, values.permittedDays, values.chargingPattern]);
 
   useEffect(() => {
-    if (selectedRate && values.billingDaysSessions && values.billingDaysSessions > 0) {
-      // 0. Find the selected course to get tax rates
-      const selectedCourse = allCourse.find(c => c.courseId === values.courseId);
+    const selectedCourse = allCourse.find(c => c.courseId === values.courseId);
 
-      // Fallback to 9% if rates are not defined in the course object
+    if (selectedRate && selectedCourse && values.billingDaysSessions && values.billingDaysSessions > 0) {
+
       const cgstRate = Number(selectedCourse?.cgstRate) ?? 0;
       const sgstRate = Number(selectedCourse?.sgstRate) ?? 0;
 
@@ -400,7 +406,6 @@ const EnrollmentFormNew = ({
       const membersEnrolled = Number(values.membersEnrolled) || 1;
       const hasDnAccount = values.dnAccountId !== null && values.dnAccountId !== 0;
 
-      // 1. Calculate Base Rate (D)
       let baseRateD = 0;
       if (!hasDnAccount) {
         baseRateD = (rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions);
@@ -419,7 +424,6 @@ const EnrollmentFormNew = ({
       const cgstAmount = (billingAmount + processingCharge) * (cgstRate / 100);
       const sgstAmount = (billingAmount + processingCharge) * (sgstRate / 100);
       const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + processingCharge;
-
 
       setValues((prev) => ({
         ...prev,

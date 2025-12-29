@@ -22,7 +22,7 @@ export interface Enrollment {
   attendingStartDate?: string;
   endDate?: string;
   membersEnrolled?: number;
-  attendingPattern?: string;
+  attendingPattern?: string | string[] | number[];
   attendingPatternDays?: number;
   billingDaysSessions?: number;
   courseRateId?: number;
