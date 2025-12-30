@@ -21,6 +21,7 @@ import { toast } from "@/hooks/use-toast"
 import type { Response } from "@/types/response"
 import { createEnrollment } from "@/api/enrollment.api"
 import { useAuth } from "@/contexts/authContext"
+import { useNavigate } from "react-router-dom"
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"] as const
 type TabValue = (typeof TAB_ORDER)[number]
@@ -41,7 +42,7 @@ export function EnrollmentFlow() {
 	const [currentTabIndex, setCurrentTabIndex] = useState(0)
 	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>()
 	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set())
-
+	const navigate = useNavigate();
 	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue
 
 	const updateEnrollmentData = useCallback((data: Partial<EnrollmentData>, tabKey?: TabValue) => {
@@ -157,6 +158,7 @@ export function EnrollmentFlow() {
 					enrollmentData.course.sessionMinutes
 				)
 				: null,
+			chargingPattern: enrollmentData?.course?.chargingPattern
 		}
 
 		try {
@@ -166,7 +168,8 @@ export function EnrollmentFlow() {
 					title: "Success",
 					description: "Enrollment craeted successfully.",
 					variant: "success"
-				})
+				});
+				navigate(0);
 			}
 			else {
 				toast({
@@ -197,7 +200,7 @@ export function EnrollmentFlow() {
 			case "member": return !!enrollmentData?.member;
 			case "course": return !!enrollmentData?.course;
 			case "courseRate": return !!enrollmentData?.courseRate;
-			case "batch": return !!enrollmentData?.batch;
+			case "batch": return !!enrollmentData?.batch || enrollmentData?.course?.chargingPattern?.toLowerCase() == 'session';
 			case "bill": return !!enrollmentData?.status; // Check if status is set in Bill tab
 			default: return false;
 		}
