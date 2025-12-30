@@ -4,7 +4,7 @@ import type React from "react"
 
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
-import { User, BookOpen, DollarSign, Calendar, FileCheck } from "lucide-react"
+import { User, BookOpen, DollarSign, Calendar, FileCheck, Badge } from "lucide-react"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import type { JSX } from "react/jsx-runtime"
 import { format } from "date-fns"
@@ -57,7 +57,7 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						</div>
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">DOB:</span>
-							<span className="font-medium">{format(data?.member?.dob as Date,"yyyy-MMM-dd")}</span>
+							<span className="font-medium">{format(data?.member?.dob as Date, "yyyy-MMM-dd")}</span>
 						</div>
 					</div>
 				) : (
@@ -144,26 +144,61 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 				)}
 			</AnimatedDetailCard>
 
-			<AnimatedDetailCard title="Confirmation" icon={getSectionIcon("confirm")} isActive={currentTab === "confirm"}>
-				{data?.confirmation ? (
-					<div className="space-y-2 text-sm">
-						<div className="flex justify-between">
-							<span className="text-muted-foreground">Name:</span>
-							<span className="font-medium">{data?.confirmation.walkingName || "—"}</span>
+			<AnimatedDetailCard
+				title="Billing & Status"
+				icon={getSectionIcon("bill")}
+				isActive={currentTab === "bill" || currentTab === "confirm"}
+			>
+				{data?.bill ? (
+					<div className="space-y-2.5 text-[11px]">
+						{/* Walking Details - Only show if name exists */}
+						{data.bill.walkingName && (
+							<div className="flex flex-col border-b border-border/40 pb-2">
+								<span className="text-[9px] font-black uppercase text-muted-foreground mb-0.5">Walking Info</span>
+								<div className="flex justify-between items-center">
+									<span className="font-bold truncate pr-2">{data.bill.walkingName}</span>
+									<span className="text-muted-foreground font-mono text-[10px]">{data.bill.walkingContact}</span>
+								</div>
+							</div>
+						)}
+
+						{/* Financial Adjustments */}
+						<div className="space-y-1">
+							<div className="flex justify-between items-center">
+								<span className="text-muted-foreground">Adjustment:</span>
+								<span className="font-mono font-bold text-red-500">
+									-₹{Number(data.bill.dnOrDiscount || 0).toFixed(2)}
+								</span>
+							</div>
+							<div className="flex justify-between items-center">
+								<span className="text-muted-foreground">Proc. Charge:</span>
+								<span className="font-mono font-bold text-green-600">
+									+₹{Number(data.bill.processingCharge || 0).toFixed(2)}
+								</span>
+							</div>
 						</div>
-						<div className="flex justify-between">
-							<span className="text-muted-foreground">Contact:</span>
-							<span className="font-medium text-xs">{data?.confirmation.walkingContact || "—"}</span>
-						</div>
-						<div className="flex justify-between">
-							<span className="text-muted-foreground">Terms:</span>
-							<span className={`font-medium ${data.confirmation.agreedTerms ? "text-green-600" : "text-red-600"}`}>
-								{data.confirmation.agreedTerms ? "✓ Agreed" : "✗ Not agreed"}
-							</span>
+
+						{/* Workflow Status */}
+						<div className="pt-2 border-t border-dashed border-border/60">
+							<div className="flex justify-between items-center mb-1">
+								<span className="text-muted-foreground">Approval:</span>
+								<span className="font-bold uppercase text-[9px] px-1.5 py-0.5 bg-muted rounded">
+									{data.bill.academyApprovalStatus?.replace('_', ' ')}
+								</span>
+							</div>
+							<div className="flex justify-between items-center">
+								<span className="text-muted-foreground">Action:</span>
+								<Badge className="h-4 px-1.5 text-[9px] font-black uppercase bg-primary/10 text-primary border-primary/20 hover:bg-primary/10">
+									{data.bill.status}
+								</Badge>
+							</div>
 						</div>
 					</div>
 				) : (
-					<p className="text-xs text-muted-foreground italic">Not completed yet</p>
+					<div className="flex items-center gap-2 text-muted-foreground italic text-[10px] py-1">
+						<div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+						Waiting for billing selection
+					</div>
 				)}
 			</AnimatedDetailCard>
 		</motion.div>

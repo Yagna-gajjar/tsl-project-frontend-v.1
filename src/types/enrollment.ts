@@ -72,5 +72,6 @@ export interface Enrollment {
   courseRate?: CourseRate;
   activity?: Activity;
   batch?: Batch;
-  confirmation?: any;
+  bill?: any;
+  confirm?: any;
 }
