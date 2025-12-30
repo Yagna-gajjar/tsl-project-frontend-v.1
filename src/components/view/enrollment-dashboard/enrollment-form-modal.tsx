@@ -554,8 +554,8 @@ const EnrollmentFormNew = ({
     return ALL_WEEK_DAYS.filter((day) => pattern.includes(String(day.value)));
   }, [selectedCourse]);
 
-  const currentCgst = Number(selectedCourse?.cgstRate) || 0;
-  const currentSgst = Number(selectedCourse?.sgstRate) || 0;
+  // const currentCgst = Number(selectedCourse?.cgstRate) || 0;
+  // const currentSgst = Number(selectedCourse?.sgstRate) || 0;
 
   const pattern = String(values.chargingPattern || "").toLowerCase();
 

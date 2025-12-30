@@ -1,248 +1,261 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+	Calendar, Users, Clock, MapPin,
+	CheckCircle2, Loader2, AlertCircle, Search
+} from "lucide-react"
+
+// API and Types
+import { getBatch } from "@/api/batch.api"
+import type { Enrollment as EnrollmentData } from "@/types/enrollment"
+import type { Batch } from "@/types/batch"
+
+// UI Components
 import { Card } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calendar, Users } from "lucide-react"
-import type { Batch, EnrollmentData } from "@/types/enrollment"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { toast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface BatchTabProps {
 	data?: EnrollmentData
 	onUpdate: (data: Partial<EnrollmentData>) => void
 }
 
-// Mock batch data
-const MOCK_BATCHES: Batch[] = [
-	{
-		batchId: 1,
-		batchName: "Morning Batch A",
-		courseId: 1,
-		activityId: 1,
-		entityId: 1,
-		batchType: "Regular",
-		startTime: "06:00",
-		endTime: "07:00",
-		sessionMinutes: 60,
-		daysPerWeek: 3,
-		daysPattern: "135",
-		maxCapacity: 20,
-		activeMemberCount: 15,
-		introduceDate: "2024-01-01",
-		status: "Active",
-		courseName: "Cricket Basics",
-		activityName: "Cricket",
-		entityName: "Main Ground",
-	},
-	{
-		batchId: 2,
-		batchName: "Afternoon Batch A",
-		courseId: 1,
-		activityId: 1,
-		entityId: 1,
-		batchType: "Regular",
-		startTime: "14:00",
-		endTime: "15:00",
-		sessionMinutes: 60,
-		daysPerWeek: 3,
-		daysPattern: "246",
-		maxCapacity: 20,
-		activeMemberCount: 18,
-		introduceDate: "2024-01-01",
-		status: "Active",
-		courseName: "Cricket Basics",
-		activityName: "Cricket",
-		entityName: "Main Ground",
-	},
-	{
-		batchId: 3,
-		batchName: "Evening Batch A",
-		courseId: 1,
-		activityId: 1,
-		entityId: 1,
-		batchType: "Regular",
-		startTime: "18:00",
-		endTime: "19:30",
-		sessionMinutes: 90,
-		daysPerWeek: 4,
-		daysPattern: "1245",
-		maxCapacity: 15,
-		activeMemberCount: 12,
-		introduceDate: "2024-01-01",
-		status: "Active",
-		courseName: "Cricket Basics",
-		activityName: "Cricket",
-		entityName: "Main Ground",
-	},
-]
-
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function BatchTab({ data, onUpdate }: BatchTabProps) {
-	const [selectedBatch, setSelectedBatch] = useState<Batch | null>(data?.batch || null)
-	const [batches, setBatches] = useState<Batch[]>(MOCK_BATCHES)
+	const [batches, setBatches] = useState<Batch[]>([])
+	const [isLoading, setIsLoading] = useState(false)
+	const [searchQuery, setSearchQuery] = useState("")
 
+	// We initialize this from props, but keep it local to avoid trigger loops
+	const [selectedBatchId, setSelectedBatchId] = useState<number | undefined>(data?.batch?.batchId)
+
+	// 1. Memoized API Parameters to avoid unnecessary re-renders
+	const apiParams = useMemo(() => {
+		const activityId = data?.course?.activityId || data?.activityId;
+		const entityId = data?.course?.entityId || data?.academyEntityId;
+		const patternStr = data?.attendingPattern;
+		const startTime = data?.startTime;
+
+		if (!activityId || !entityId || !patternStr || !startTime) return null;
+
+		// Calculate formatted end time
+		const [hours, minutes] = String(startTime).split(":").map(Number);
+		const sessionMins = data?.course?.sessionMinutes || 0;
+		const totalMinutes = hours * 60 + minutes + sessionMins;
+		const endHours = Math.floor(totalMinutes / 60) % 24;
+		const endMins = totalMinutes % 60;
+		const formattedEndTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
+
+		return {
+			activityId: Number(activityId),
+			entityId: Number(entityId),
+			daysPattern: String(patternStr),
+			startTime: String(startTime),
+			endTime: formattedEndTime
+		};
+	}, [
+		data?.course?.activityId,
+		data?.activityId,
+		data?.course?.entityId,
+		data?.academyEntityId,
+		data?.attendingPattern,
+		data?.startTime,
+		data?.course?.sessionMinutes
+	]);
+
+	// 2. Fetch Batches - ONLY triggers when API parameters change
+	useEffect(() => {
+		if (!apiParams) return;
+
+		const fetchAvailableBatches = async () => {
+			setIsLoading(true);
+			try {
+				const res = await getBatch({
+					...apiParams,
+					limit: 1000,
+				});
+				if (res?.success) {
+					setBatches(res.data || []);
+				}
+			} catch (err) {
+				toast({ title: "Error", description: "Failed to fetch batches", variant: "destructive" });
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchAvailableBatches();
+	}, [apiParams]); // SelectedBatchId is NOT a dependency here
+
+	// 3. Local Search Filter (Does not hit API)
 	const filteredBatches = useMemo(() => {
-		if (!data?.course?.courseId || !data?.activity?.activityId) return batches
-		return batches.filter(
-			(batch) => batch.courseId === data.course?.courseId && batch.activityId === data.activity?.activityId,
-		)
-	}, [data?.course?.courseId, data?.activity?.activityId, batches])
+		if (!searchQuery.trim()) return batches;
+		const query = searchQuery.toLowerCase();
+		return batches.filter(b =>
+			b.batchName.toLowerCase().includes(query) ||
+			b.entityName?.toLowerCase().includes(query)
+		);
+	}, [batches, searchQuery]);
 
-	const handleSelectBatch = (batch: Batch) => {
-		setSelectedBatch(batch)
-		onUpdate({
-			batch,
-		})
+	const handleSelect = (batch: Batch) => {
+		setSelectedBatchId(batch.batchId);
+		onUpdate({ batch });
+	};
+
+	function convertTo12HourFormat(time: any) {
+		const [hours, minutes] = time.split(':'); // Split the time into hours and minutes
+		let hour = parseInt(hours, 10);
+		const ampm = hour >= 12 ? 'PM' : 'AM';
+		hour = hour % 12; // Convert to 12-hour format
+		hour = hour ? hour : 12; // Handle the 12-hour case for midnight and noon
+		return `${hour}:${minutes} ${ampm}`;
 	}
 
 	return (
-		<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-			<div className="space-y-6">
-				<div>
-					<h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
-						<Calendar className="w-6 h-6" />
+		<motion.div
+			initial={{ opacity: 0, y: 10 }}
+			animate={{ opacity: 1, y: 0 }}
+			className="space-y-4 h-full flex flex-col"
+		>
+			<header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+				<div className="space-y-1">
+					<h2 className="text-2xl font-bold flex items-center gap-2 dark:text-slate-100">
+						<Calendar className="w-6 h-6 text-primary" />
 						Select Batch
 					</h2>
-					<p className="text-muted-foreground">Choose your preferred batch and schedule</p>
+					<p className="text-xs text-muted-foreground">
+						Schedule: <span className="font-bold text-foreground">{convertTo12HourFormat(data?.startTime)}</span> | Pattern: <span className="font-bold text-foreground">{data?.attendingPattern}</span>
+					</p>
 				</div>
 
-				{/* Course & Activity Info */}
-				{data?.course && data?.activity && (
-					<Card className="p-4 bg-muted/50 border-border">
-						<div className="grid grid-cols-2 gap-4 text-sm">
-							<div>
-								<p className="text-muted-foreground text-xs">Course</p>
-								<p className="font-semibold">{data.course.courseName}</p>
-							</div>
-							<div>
-								<p className="text-muted-foreground text-xs">Activity</p>
-								<p className="font-semibold">{data.activity.activityName}</p>
-							</div>
-						</div>
-					</Card>
-				)}
+				{/* Local Search Bar */}
+				<div className="relative w-full md:w-72">
+					<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+					<Input
+						placeholder="Search batches..."
+						className="pl-9 bg-muted/20"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+				</div>
+			</header>
 
-				{/* Batches Table */}
-				{filteredBatches.length > 0 ? (
-					<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 overflow-x-auto">
-						<p className="text-sm font-semibold">Available Batches</p>
-						<div className="border border-border rounded-lg overflow-hidden">
-							<Table className="min-w-full">
-								<TableHeader className="bg-muted/50">
-									<TableRow>
-										<TableHead className="font-semibold">Batch Name</TableHead>
-										<TableHead className="font-semibold">Time</TableHead>
-										<TableHead className="font-semibold">Days</TableHead>
-										<TableHead className="font-semibold text-right">Members</TableHead>
-										<TableHead className="font-semibold text-center">Action</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{filteredBatches.map((batch, index) => (
-										<motion.tr
-											key={batch.batchId}
-											initial={{ opacity: 0, y: 10 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ delay: index * 0.05 }}
-											className={`border-t border-border transition-colors ${selectedBatch?.batchId === batch.batchId ? "bg-primary/10" : "hover:bg-muted/50"
-												}`}
+			{/* Main Content Area */}
+			<div className="flex-1 min-h-[400px] relative">
+				{isLoading ? (
+					<div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm z-10 rounded-xl">
+						<Loader2 className="w-10 h-10 animate-spin text-primary mb-2" />
+						<p className="text-sm font-medium animate-pulse">Syncing schedules...</p>
+					</div>
+				) : filteredBatches.length > 0 ? (
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-y-auto pr-2 max-h-[520px] custom-scrollbar pb-4">
+						<AnimatePresence mode="popLayout">
+							{filteredBatches.map((batch, index) => {
+								const isSelected = selectedBatchId === batch.batchId;
+								const capacityReached = Number(batch.activeMemberCount) >= batch.maxCapacity;
+
+								return (
+									<motion.div
+										key={batch.batchId}
+										initial={{ opacity: 0, scale: 0.98 }}
+										animate={{ opacity: 1, scale: 1 }}
+										transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.2) }}
+										layout
+									>
+										<Card
+											onClick={() => !capacityReached && handleSelect(batch)}
+											className={cn(
+												"relative p-3 cursor-pointer transition-all border-2 group",
+												isSelected
+													? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/20"
+													: "hover:border-primary/40 border-border bg-card",
+												capacityReached && "opacity-50 grayscale cursor-not-allowed"
+											)}
 										>
-											<TableCell className="py-3">
-												<div className="flex flex-col gap-1">
-													<span className="font-medium">{batch.batchName}</span>
-													<span className="text-xs text-muted-foreground">{batch.entityName}</span>
+											<div className="flex justify-between items-start mb-2">
+												<div className="space-y-0.5 min-w-0">
+													<h4 className="font-bold text-sm flex items-center gap-1.5 dark:text-slate-200 truncate">
+														{batch.batchName}
+														{isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />}
+													</h4>
+													<div className="flex justify-between pt-1 border-t border-muted/30">
+														{WEEK_DAYS
+															.map((day, i) => ({
+																day,
+																index: i + 1,
+																isActive: String(batch.daysPattern)?.includes(String(i + 1)),
+															}))
+															.filter(d => d.isActive) // ✅ only active days
+															.map(({ day, index }) => (
+																<div key={index} className="flex flex-col items-center">
+																	<span className="text-[7px] font-bold uppercase text-primary">
+																		{day[0]}
+																	</span>
+																	<div className="w-1 h-1 rounded-full mt-0.5 bg-primary shadow-[0_0_3px_rgba(var(--primary),1)]" />
+																</div>
+															))}
+													</div>
 												</div>
-											</TableCell>
-											<TableCell className="font-mono text-sm">
-												{batch.startTime} - {batch.endTime}
-											</TableCell>
-											<TableCell>
-												<div className="flex gap-1">
-													{DAYS.map((day, i) => (
-														<div
-															key={i}
-															className={`w-6 h-6 rounded text-xs font-bold flex items-center justify-center ${batch.daysPattern?.includes(String(i))
-																	? "bg-primary text-primary-foreground"
-																	: "bg-muted text-muted-foreground"
-																}`}
-														>
-															{day[0]}
-														</div>
-													))}
+												<Badge variant={capacityReached ? "destructive" : "outline"} className="text-[8px] h-4 px-1 shrink-0 font-black">
+													{capacityReached ? "FULL" : batch.batchType}
+												</Badge>
+											</div>
+
+											<div className="grid grid-cols-2 gap-2 mb-2 border-t border-dashed pt-2">
+												<div className="space-y-0">
+													<p className="text-[8px] font-black uppercase text-muted-foreground opacity-60">Timing</p>
+													<div className="flex items-center gap-1 text-[11px] font-mono font-bold text-primary">
+														<Clock className="w-3 h-3" />
+														{convertTo12HourFormat(batch.startTime).replace(':00 ', ' ')} - {convertTo12HourFormat(batch.endTime).replace(':00 ', ' ')}
+													</div>
 												</div>
-											</TableCell>
-											<TableCell className="text-right">
-												<div className="flex items-center justify-end gap-2">
-													<Users className="w-4 h-4 text-muted-foreground" />
-													<span className="text-sm">
+												<div className="space-y-0 text-right">
+													<p className="text-[8px] font-black uppercase text-muted-foreground opacity-60">Occupancy</p>
+													<div className="flex items-center justify-end gap-1 text-[11px] font-bold">
+														<Users className="w-3 h-3 text-muted-foreground" />
 														{batch.activeMemberCount}/{batch.maxCapacity}
-													</span>
+													</div>
 												</div>
-											</TableCell>
-											<TableCell className="text-center">
-												<motion.button
-													whileHover={{ scale: 1.05 }}
-													whileTap={{ scale: 0.95 }}
-													onClick={() => handleSelectBatch(batch)}
-													className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedBatch?.batchId === batch.batchId
-															? "bg-primary text-primary-foreground"
-															: "bg-muted hover:bg-muted/80"
-														}`}
-												>
-													Select
-												</motion.button>
-											</TableCell>
-										</motion.tr>
-									))}
-								</TableBody>
-							</Table>
-						</div>
-					</motion.div>
+											</div>
+
+											{/* Weekly Days visualization - Compact Version */}
+											{/* <div className="flex justify-between pt-1 border-t border-muted/30">
+												{WEEK_DAYS.map((day, i) => {
+													const isActive = String(batch.daysPattern)?.includes(String(i + 1));
+													return (
+														<div key={day} className="flex flex-col items-center">
+															<span className={cn("text-[7px] font-bold uppercase", isActive ? "text-primary" : "text-muted-foreground/30")}>
+																{day[0]}
+															</span>
+															<div className={cn("w-1 h-1 rounded-full mt-0.5", isActive ? "bg-primary shadow-[0_0_3px_rgba(var(--primary),1)]" : "bg-muted-foreground/20")} />
+														</div>
+													)
+												})}
+											</div> */}
+										</Card>
+									</motion.div>
+								)
+							})}
+						</AnimatePresence>
+					</div>
 				) : (
-					<Card className="p-8 text-center bg-muted/50 border-border">
-						<p className="text-muted-foreground">
-							No batches available for selected course. Please select a different course.
+					<div className="h-full flex flex-col items-center justify-center text-muted-foreground p-12 border-2 border-dashed rounded-2xl bg-muted/5">
+						<AlertCircle className="w-12 h-12 mb-4 opacity-20" />
+						<h3 className="text-lg font-semibold dark:text-slate-300">No Batches Found</h3>
+						<p className="max-w-xs text-center text-sm">
+							{searchQuery ? `No results for "${searchQuery}"` : "Try adjusting your filters in previous steps."}
 						</p>
-					</Card>
+						{searchQuery && <Button variant="link" onClick={() => setSearchQuery("")}>Clear Search</Button>}
+					</div>
 				)}
-
-				{/* Selected Batch Summary */}
-				{selectedBatch && (
-					<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-						<Card className="p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800">
-							<div className="space-y-3">
-								<p className="text-sm font-medium text-green-900 dark:text-green-100">Batch Selected</p>
-								<div className="space-y-2 text-sm">
-									<div className="flex justify-between">
-										<span className="text-muted-foreground">Batch:</span>
-										<span className="font-semibold">{selectedBatch.batchName}</span>
-									</div>
-									<div className="flex justify-between">
-										<span className="text-muted-foreground">Time:</span>
-										<span className="font-semibold font-mono">
-											{selectedBatch.startTime} - {selectedBatch.endTime}
-										</span>
-									</div>
-									<div className="flex justify-between">
-										<span className="text-muted-foreground">Availability:</span>
-										<span className="font-semibold">
-											{selectedBatch.maxCapacity - (selectedBatch.activeMemberCount || 0)} spots left
-										</span>
-									</div>
-								</div>
-							</div>
-						</Card>
-					</motion.div>
-				)}
-
-				<motion.div whileHover={{ scale: selectedBatch ? 1.02 : 1 }} whileTap={{ scale: selectedBatch ? 0.98 : 1 }}>
-					<Button disabled={!selectedBatch} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-						Continue to Confirmation
-					</Button>
-				</motion.div>
 			</div>
+
 		</motion.div>
 	)
 }

@@ -48,6 +48,7 @@ export default function BatchExcelUpload({ isOpen, onClose, onSuccess }: BatchEx
 	], []);
 
 	const handleValidateRow = useCallback((row: BatchImportRow) => {
+		console.log(row,"kkk");
 		if (!row.batchName) return "Batch Name is required";
 		if (!row.entityId || isNaN(Number(row.entityId))) return "Valid Entity ID is required";
 		if (!row.startTime) return "Start Time is required";

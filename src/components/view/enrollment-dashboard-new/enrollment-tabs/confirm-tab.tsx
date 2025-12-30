@@ -1,210 +1,276 @@
-"use client"
+	"use client"
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card } from "@/components/ui/card"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
-import type { EnrollmentData } from "@/types/enrollment"
+	import { useEffect, useState } from "react"
+	import { motion } from "framer-motion"
+	import {
+		UserPlus,
+		ShieldCheck,
+		Settings2,
+		Coins,
+		MessageSquareQuote,
+		ChevronRight,
+		Loader2,
+		Building2
+	} from "lucide-react"
 
-interface ConfirmTabProps {
-	data?: EnrollmentData
-	onUpdate: (data: Partial<EnrollmentData>) => void
-}
+	// UI Components
+	import { Button } from "@/components/ui/button"
+	import { Input } from "@/components/ui/input"
+	import { Label } from "@/components/ui/label"
+	import { Textarea } from "@/components/ui/textarea"
+	import { Card } from "@/components/ui/card"
+	import {
+		Select,
+		SelectContent,
+		SelectItem,
+		SelectTrigger,
+		SelectValue,
+	} from "@/components/ui/select"
+	import type { Enrollment as EnrollmentData } from "@/types/enrollment"
+	import { cn } from "@/lib/utils"
+	import { toast } from "@/hooks/use-toast"
+	import type { Response } from "@/types/response"
+	import { getAccounts } from "@/api/account.api"
+	import type { Account } from "@/types/account"
 
-export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
-	const [formData, setFormData] = useState({
-		walkingName: "",
-		walkingContact: "",
-		officeRemarks: "",
-		printRemarks: "",
-		memberEnrolled: false,
-		agreedTerms: false,
-	})
+	interface ConfirmTabProps {
+		data?: EnrollmentData
+		onUpdate: (data: Partial<EnrollmentData>) => void
+	}
 
-	useEffect(() => {
-		if (data?.confirmation) {
-			setFormData(data.confirmation)
+	export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
+		const [formData, setFormData] = useState({
+			walkingName: data?.walkingName || "",
+			walkingContact: data?.walkingContact || "",
+			officeRemarks: data?.officeRemarks || "",
+			printRemarks: data?.printRemarks || "",
+			dnAccountId: data?.dnAccountId ? String(data.dnAccountId) : "",
+			dnOrDiscount: data?.dnOrDiscount || 0,
+			processingCharge: data?.processingCharge || 0,
+			academyApprovalStatus: data?.academyApprovalStatus || "not_required",
+			status: data?.status || "create",
+		});
+
+		const [dnAccounts, setDnAccounts] = useState<Account[]>([]);
+		const [isAccountsLoading, setIsAccountsLoading] = useState(false);
+
+		// Handle standard input changes
+		const handleChange = (name: string, value: string | number) => {
+			const updated = { ...formData, [name]: value }
+			setFormData(updated)
+			onUpdate(updated)
 		}
-	}, [data?.confirmation])
 
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-		const { name, value } = e.target
-		const updated = { ...formData, [name]: value }
-		setFormData(updated)
-		onUpdate({ confirmation: updated })
-	}
+		// Determine Button Text based on Status
+		const getSubmitLabel = () => {
+			switch (formData.status) {
+				case "draft": return "Save as Draft"
+				case "approveRequired": return "Submit for Approval"
+				default: return "Create Enrollment"
+			}
+		}
 
-	const handleCheckboxChange = (checked: boolean, field: "memberEnrolled" | "agreedTerms") => {
-		const updated = { ...formData, [field]: checked }
-		setFormData(updated)
-		onUpdate({ confirmation: updated })
-	}
+		const fetchAccountsForDN = async () => {
+			setIsAccountsLoading(true);
+			try {
+				const aRes: Response<Account[]> = await getAccounts({
+					accountType: "Expences"
+				});
+				if (aRes.success) {
+					setDnAccounts(aRes?.data || []);
+				} else {
+					throw new Error("failed to fetch accounts");
+				}
+			} catch {
+				toast({
+					title: "Error",
+					description: "Failed to fetch expense accounts.",
+					variant: "destructive"
+				})
+			} finally {
+				setIsAccountsLoading(false);
+			}
+		}
 
-	const isValid = formData.agreedTerms && formData.walkingName.trim() && formData.walkingContact.trim()
+		useEffect(() => {
+			fetchAccountsForDN();
+		}, []);
 
-	return (
-		<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-			<div className="space-y-6">
-				<div>
-					<h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
-						<CheckCircle2 className="w-6 h-6" />
-						Confirm Enrollment
-					</h2>
-					<p className="text-muted-foreground">Review and complete your enrollment</p>
-				</div>
+		return (
+			<motion.div
+				initial={{ opacity: 0, y: 10 }}
+				animate={{ opacity: 1, y: 0 }}
+				className="space-y-6 pb-10"
+			>
+				<header className="flex items-center gap-3">
+					<div className="p-2 bg-primary/10 rounded-lg text-primary">
+						<ShieldCheck className="w-6 h-6" />
+					</div>
+					<div>
+						<h2 className="text-2xl font-bold dark:text-slate-100">Final Confirmation</h2>
+						<p className="text-sm text-muted-foreground">Review internal remarks and set enrollment status</p>
+					</div>
+				</header>
 
-				<div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
-					<h3 className="font-semibold text-sm">Walking Information</h3>
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div className="space-y-2">
-							<Label htmlFor="walking-name" className="text-sm font-medium">
-								Walking Name *
-							</Label>
-							<Input
-								id="walking-name"
-								name="walkingName"
-								placeholder="Enter name for walking"
-								value={formData.walkingName}
-								onChange={handleInputChange}
-								className="bg-background border-border"
-							/>
+					{/* SECTION 1: WALKING INFO */}
+					<Card className="p-5 space-y-4 shadow-sm border-border/60 bg-card/50">
+						<div className="flex items-center gap-2 border-b pb-2">
+							<UserPlus className="w-4 h-4 text-primary" />
+							<h3 className="font-bold text-sm uppercase tracking-wider">Walking Information</h3>
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="walking-contact" className="text-sm font-medium">
-								Walking Contact *
-							</Label>
-							<Input
-								id="walking-contact"
-								name="walkingContact"
-								placeholder="Enter contact number"
-								value={formData.walkingContact}
-								onChange={handleInputChange}
-								className="bg-background border-border"
-							/>
-						</div>
-					</div>
-				</div>
-
-				<div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
-					<h3 className="font-semibold text-sm">Remarks & Notes</h3>
-
-					<div className="space-y-2">
-						<Label htmlFor="office-remarks" className="text-sm font-medium">
-							Office Remarks
-						</Label>
-						<Textarea
-							id="office-remarks"
-							name="officeRemarks"
-							placeholder="Internal office notes..."
-							value={formData.officeRemarks}
-							onChange={handleInputChange}
-							className="bg-background border-border resize-none"
-							rows={3}
-						/>
-					</div>
-
-					<div className="space-y-2">
-						<Label htmlFor="print-remarks" className="text-sm font-medium">
-							Print Remarks
-						</Label>
-						<Textarea
-							id="print-remarks"
-							name="printRemarks"
-							placeholder="Remarks to be printed on documents..."
-							value={formData.printRemarks}
-							onChange={handleInputChange}
-							className="bg-background border-border resize-none"
-							rows={3}
-						/>
-					</div>
-				</div>
-
-				{/* Enrollment Status */}
-				<Card className="p-4 bg-card border border-border">
-					<div className="space-y-3">
-						<div className="flex items-start gap-3">
-							<Checkbox
-								id="member-enrolled"
-								checked={formData.memberEnrolled}
-								onCheckedChange={(checked) => handleCheckboxChange(checked as boolean, "memberEnrolled")}
-								className="mt-1"
-							/>
-							<Label htmlFor="member-enrolled" className="flex-1 text-sm cursor-pointer">
-								<span className="font-medium">Member Enrollment Confirmed</span>
-								<p className="text-xs text-muted-foreground mt-1">
-									Confirm that the member details and selections are correct and ready for enrollment.
-								</p>
-							</Label>
-						</div>
-					</div>
-				</Card>
-
-				{/* Terms & Conditions */}
-				<Card className="p-4 bg-card border border-border">
-					<div className="space-y-4">
-						<div className="flex items-start gap-3">
-							<Checkbox
-								id="terms"
-								checked={formData.agreedTerms}
-								onCheckedChange={(checked) => handleCheckboxChange(checked as boolean, "agreedTerms")}
-								className="mt-1"
-							/>
-							<Label htmlFor="terms" className="flex-1 text-sm cursor-pointer">
-								<span className="font-medium">I agree to the Terms & Conditions *</span>
-								<p className="text-xs text-muted-foreground mt-1">
-									By enrolling, you agree to our terms of service, cancellation policy, and code of conduct at the
-									academy.
-								</p>
-							</Label>
-						</div>
-
-						{!formData.agreedTerms && (
-							<motion.div
-								initial={{ opacity: 0, y: -10 }}
-								animate={{ opacity: 1, y: 0 }}
-								className="flex gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md"
-							>
-								<AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
-								<p className="text-xs text-yellow-700 dark:text-yellow-500">
-									You must accept the terms and conditions to complete enrollment.
-								</p>
-							</motion.div>
-						)}
-					</div>
-				</Card>
-
-				{/* Summary Card */}
-				{formData.agreedTerms && formData.memberEnrolled && (
-					<motion.div
-						initial={{ opacity: 0, y: 10 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
-					>
-						<div className="flex gap-3">
-							<CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-500 flex-shrink-0" />
-							<div>
-								<p className="font-medium text-sm text-green-900 dark:text-green-100">Ready to create enrollment!</p>
-								<p className="text-xs text-green-700 dark:text-green-300 mt-1">
-									All information is complete. Click "Create Enrollment" to finalize.
-								</p>
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label className="text-xs">Walking Name</Label>
+								<Input
+									placeholder="Full Name"
+									value={formData.walkingName}
+									onChange={(e) => handleChange("walkingName", e.target.value)}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label className="text-xs">Walking Contact</Label>
+								<Input
+									placeholder="Phone Number"
+									value={formData.walkingContact}
+									onChange={(e) => handleChange("walkingContact", e.target.value)}
+								/>
 							</div>
 						</div>
-					</motion.div>
-				)}
+					</Card>
 
-				<motion.div whileHover={{ scale: isValid ? 1.02 : 1 }} whileTap={{ scale: isValid ? 0.98 : 1 }}>
-					<Button disabled={!isValid} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-						Ready to Submit
+					{/* SECTION 2: FINANCIAL ADJUSTMENTS */}
+					<Card className="p-5 space-y-4 shadow-sm border-border/60 bg-card/50">
+						<div className="flex items-center gap-2 border-b pb-2">
+							<Coins className="w-4 h-4 text-amber-500" />
+							<h3 className="font-bold text-sm uppercase tracking-wider">Adjustments & Charges</h3>
+						</div>
+						<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+							<div className="space-y-2">
+								<Label className="text-xs">Credit Note</Label>
+								<Select
+									value={formData.dnAccountId}
+									onValueChange={(v) => handleChange("dnAccountId", v)}
+									disabled={isAccountsLoading}
+								>
+									<SelectTrigger className="w-full">
+										<div className="flex items-center gap-2 truncate">
+											{isAccountsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Building2 className="w-3 h-3" />}
+											<SelectValue placeholder={isAccountsLoading ? "Loading..." : "Select Account"} />
+										</div>
+									</SelectTrigger>
+									<SelectContent>
+										{dnAccounts.length > 0 ? (
+											dnAccounts.map((acc) => (
+												<SelectItem key={acc.accountId} value={String(acc.accountId)}>
+													{acc.accountName}
+												</SelectItem>
+											))
+										) : (
+											<SelectItem value="none" disabled>No accounts found</SelectItem>
+										)}
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="space-y-2">
+								<Label className="text-xs">Amount (₹)</Label>
+								<Input
+									type="number"
+									value={formData.dnOrDiscount}
+									onChange={(e) => handleChange("dnOrDiscount", Number(e.target.value))}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label className="text-xs">Proc. Charge (₹)</Label>
+								<Input
+									type="number"
+									value={formData.processingCharge}
+									onChange={(e) => handleChange("processingCharge", Number(e.target.value))}
+								/>
+							</div>
+						</div>
+					</Card>
+
+					{/* SECTION 3: WORKFLOW & STATUS */}
+					<Card className="p-5 space-y-4 shadow-sm border-border/60 bg-card/50">
+						<div className="flex items-center gap-2 border-b pb-2 text-blue-500">
+							<Settings2 className="w-4 h-4" />
+							<h3 className="font-bold text-sm uppercase tracking-wider">Workflow Configuration</h3>
+						</div>
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label className="text-xs">Academy Approval</Label>
+								<Select value={formData?.academyApprovalStatus as string} onValueChange={(v) => handleChange("academyApprovalStatus", v)}>
+									<SelectTrigger><SelectValue /></SelectTrigger>
+									<SelectContent>
+										<SelectItem value="required">Required</SelectItem>
+										<SelectItem value="not_required">Not Required</SelectItem>
+										<SelectItem value="approved">Approved</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="space-y-2">
+								<Label className="text-xs font-bold text-primary">Enrollment Status</Label>
+								<Select value={formData.status} onValueChange={(v) => handleChange("status", v)}>
+									<SelectTrigger className="border-primary/40 bg-primary/5 font-semibold text-primary">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="create">Create Enrollment</SelectItem>
+										<SelectItem value="draft">Save as Draft</SelectItem>
+										<SelectItem value="approveRequired">Approval Required</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+						</div>
+					</Card>
+
+					{/* SECTION 4: REMARKS */}
+					<Card className="p-5 space-y-4 shadow-sm border-border/60 bg-card/50 lg:col-span-1">
+						<div className="flex items-center gap-2 border-b pb-2 text-emerald-500">
+							<MessageSquareQuote className="w-4 h-4" />
+							<h3 className="font-bold text-sm uppercase tracking-wider">Remarks</h3>
+						</div>
+						<div className="space-y-4">
+							<div className="space-y-2">
+								<Label className="text-xs">Print Remarks (On Invoice)</Label>
+								<Textarea
+									className="resize-none h-20 bg-background"
+									placeholder="Notes for the member..."
+									value={formData.printRemarks}
+									onChange={(e) => handleChange("printRemarks", e.target.value)}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label className="text-xs">Office Remarks (Internal)</Label>
+								<Textarea
+									className="resize-none h-20 bg-background"
+									placeholder="Internal processing notes..."
+									value={formData.officeRemarks}
+									onChange={(e) => handleChange("officeRemarks", e.target.value)}
+								/>
+							</div>
+						</div>
+					</Card>
+				</div>
+
+				{/* ACTION FOOTER */}
+				<motion.div
+					whileHover={{ scale: 1.01 }}
+					whileTap={{ scale: 0.99 }}
+					className="pt-4"
+				>
+					<Button
+						className={cn(
+							"w-full h-14 text-lg font-bold shadow-xl transition-all rounded-xl",
+							formData.status === "draft" ? "bg-slate-700 hover:bg-slate-800" : "bg-primary hover:bg-primary/90"
+						)}
+					>
+						{getSubmitLabel()}
+						<ChevronRight className="ml-2 w-6 h-6" />
 					</Button>
 				</motion.div>
-			</div>
-		</motion.div>
-	)
-}
+			</motion.div>
+		)
+	}

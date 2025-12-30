@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Virtuoso } from "react-virtuoso"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookOpen, CheckCircle2, Clock, Loader2, MapPin, Search, Target, Users, Building2 } from "lucide-react"
@@ -36,6 +36,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 	const [loading, setLoading] = useState(true)
 	const [refreshing, setRefreshing] = useState(false)
 	const [selectedId, setSelectedId] = useState<number | undefined>(data?.course?.courseId)
+	const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
 	const [options, setOptions] = useState({
 		activityClassification: [] as Enums[],
@@ -69,6 +70,20 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		});
 		return Array.from(entityMap.entries()).map(([id, name]) => ({ id, name }));
 	}, [courses]);
+
+	const handleSearchDebounced = (value: string) => {
+		if (searchDebounceRef.current) {
+			clearTimeout(searchDebounceRef.current)
+		}
+
+		searchDebounceRef.current = setTimeout(() => {
+			setFilters(f => ({
+				...f,
+				search: value,
+			}))
+		}, 400)
+	}
+
 
 	useEffect(() => {
 		const loadEnums = async () => {
@@ -137,9 +152,18 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 			courseId: Number(course.courseId),
 			activityId: course.activityId,
 			academyEntityId: course.entityId,
-			chargingPattern: course.chargingPattern
+			chargingPattern: course.chargingPattern as any
 		});
 	};
+
+	useEffect(() => {
+		return () => {
+			if (searchDebounceRef.current) {
+				clearTimeout(searchDebounceRef.current)
+			}
+		}
+	}, [])
+
 
 	return (
 		<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-[800px] space-y-4">
@@ -149,7 +173,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 					<Input
 						placeholder="Search by course name..."
 						className="pl-9"
-						onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
+						onChange={(e) => handleSearchDebounced(e.target.value)}
 					/>
 				</div>
 

@@ -1,20 +1,16 @@
-"use client"
-
 import { useState, useEffect, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle2, Loader2,
-	Calculator, Calendar as CalendarIcon, Clock, Users as UsersIcon, Info, ChevronRight,
-	Lock
+import { motion } from "framer-motion"
+import {
+	CheckCircle2, Loader2,
+	Calculator, Calendar as CalendarIcon, Clock, Users as UsersIcon, Lock
 } from "lucide-react"
 import { format, addDays, isAfter, parseISO, startOfToday } from "date-fns"
 
-// API and Types
 import { getCourseRates } from "@/api/courseRate.api"
 import { getMembershipsByMember } from "@/api/member.api"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import type { CourseRate } from "@/types/courseRate"
 
-// Shadcn UI Components
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -198,10 +194,10 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 					<Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><Calculator size={12} /> Units</Label>
 					<Input type="number" className="h-10 text-xs font-mono" value={billingDaysSessions} onChange={(e) => setBillingDaysSessions(Number(e.target.value))} />
 				</div>
-				<div className="space-y-1.5">
-					<Label className="text-[10px] font-bold uppercase text-muted-foreground"><UsersIcon size={12} /> Members</Label>
+				{activeCourse?.chargingPattern?.toLowerCase() === "school" && <div className="space-y-1.5">
+					<Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><UsersIcon size={12} /> Members</Label>
 					<Input type="number" className="h-10 text-xs" disabled={activeCourse?.chargingPattern?.toLowerCase() !== "school"} value={membersEnrolled} onChange={(e) => setMembersEnrolled(Number(e.target.value))} />
-				</div>
+				</div>}
 			</div>
 
 			{/* ATTENDANCE PATTERN */}
@@ -287,25 +283,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 					</div>
 				)}
 			</div>
-
-			{/* CONFIRMATION SUMMARY */}
-			<AnimatePresence>
-				{selectedRate && (
-					<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-						<Card className="p-4 border-2 border-primary bg-primary/5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
-							<div className="flex items-center gap-4">
-								<div className="bg-primary text-primary-foreground p-3 rounded-xl shadow-lg shadow-primary/20"><Calculator size={24} /></div>
-								<div className="space-y-1">
-									<p className="text-[10px] font-black uppercase text-primary tracking-widest leading-none">Selection Calculation</p>
-									<h4 className="text-xl font-black">{selectedRate.membershipType} Plan • ₹{(Number(selectedRate.unitRate) * getDiscountFactor(selectedRate.minDaysInEnr || 0, selectedRate.discountOnDayReduce || 0) * billingDaysSessions * (activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1)).toFixed(2)}</h4>
-									<p className="text-[10px] text-muted-foreground font-medium uppercase">Linked Account: {getAccountMapping(selectedRate?.membershipType, groupedData[selectedRate.membershipType]?.masterId)?.accountName || "N/A"}</p>
-								</div>
-							</div>
-							<Button className="h-12 px-10 font-bold rounded-xl shadow-lg w-full md:w-auto text-lg transition-transform active:scale-95">Continue <ChevronRight className="ml-2 w-5 h-5" /></Button>
-						</Card>
-					</motion.div>
-				)}
-			</AnimatePresence>
 		</motion.div>
 	)
 }

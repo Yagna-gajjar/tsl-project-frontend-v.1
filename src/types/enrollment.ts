@@ -1,4 +1,5 @@
 import type { Activity } from "./activity";
+import type { Batch } from "./batch";
 import type { Course } from "./course";
 import type { CourseRate } from "./courseRate";
 import type { Member } from "./member";
@@ -70,4 +71,6 @@ export interface Enrollment {
   course?: Course;
   courseRate?: CourseRate;
   activity?: Activity;
+  batch?: Batch;
+  confirmation?: any;
 }

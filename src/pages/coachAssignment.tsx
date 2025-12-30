@@ -4,6 +4,8 @@ import CoachAssignmentFormModal from "@/components/view/coachAssignment/coachAss
 import CoachAssignmentViewModal from "@/components/view/coachAssignment/coachAssignment-view-modal";
 import { Button } from "@/components/ui/button";
 import type { CoachAssignment } from "@/types/coachAssignment";
+import { Upload } from "lucide-react";
+import CoachAssignmentExcelUpload from "@/components/view/coachAssignment/coachAssignment-excel-upload";
 
 export default function CoachAssignmentsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -13,6 +15,15 @@ export default function CoachAssignmentsPage() {
     undefined
   );
   const [viewingId, setViewingId] = useState<number | undefined>(undefined);
+  const [excelOpen, setExcelOpen] = useState(false);
+
+  const bumpRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleSaved = () => {
+    bumpRefresh();
+  }
 
   const openCreate = () => {
     setEditing(undefined);
@@ -25,6 +36,15 @@ export default function CoachAssignmentsPage() {
         <h2 className="text-xl font-semibold">Coach Assignments</h2>
         <div className="flex items-center gap-2">
           <Button onClick={() => setRefreshKey((k) => k + 1)}>Refresh</Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setExcelOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+          >
+            <Upload className="w-5 h-5" />
+            Upload Excel
+          </Button>
           <Button onClick={openCreate}>New Assignment</Button>
         </div>
       </div>
@@ -55,6 +75,14 @@ export default function CoachAssignmentsPage() {
         isOpen={viewOpen}
         coachAssignmentId={viewingId}
         onClose={() => setViewOpen(false)}
+      />
+
+      <CoachAssignmentExcelUpload
+        isOpen={excelOpen}
+        onClose={() => setExcelOpen(false)}
+        onSuccess={() => {
+          handleSaved();
+        }}
       />
     </div>
   );
