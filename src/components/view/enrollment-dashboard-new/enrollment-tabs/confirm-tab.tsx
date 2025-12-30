@@ -44,8 +44,8 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		dnAccountId: data?.dnAccountId ? String(data.dnAccountId) : "",
 		dnOrDiscount: data?.dnOrDiscount || 0,
 		processingCharge: data?.processingCharge || 0,
-		academyApprovalStatus: data?.academyApprovalStatus || "not_required",
-		status: data?.status || "create",
+	academyApprovalStatus: data?.academyApprovalStatus || "not required",
+		status: data?.status || "created",
 	});
 
 	const [dnAccounts, setDnAccounts] = useState<Account[]>([]);
@@ -140,7 +140,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 								<SelectTrigger><SelectValue /></SelectTrigger>
 								<SelectContent>
 									<SelectItem value="required">Required</SelectItem>
-									<SelectItem value="not_required">Not Required</SelectItem>
+									<SelectItem value="not required">Not Required</SelectItem>
 									<SelectItem value="approved">Approved</SelectItem>
 								</SelectContent>
 							</Select>
@@ -152,7 +152,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="create">Create Enrollment</SelectItem>
+									<SelectItem value="created">Create Enrollment</SelectItem>
 									<SelectItem value="draft">Save as Draft</SelectItem>
 									<SelectItem value="approveRequired">Approval Required</SelectItem>
 								</SelectContent>

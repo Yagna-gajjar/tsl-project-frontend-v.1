@@ -74,6 +74,24 @@ export function EnrollmentFlow() {
 		}
 	}
 
+	function calculateEndTime(startTime: string, sessionMinutes: number): string {
+		if (!startTime || !sessionMinutes) return startTime;
+
+		const [h, m, s = "0"] = startTime.split(":");
+		const date = new Date();
+
+		date.setHours(Number(h));
+		date.setMinutes(Number(m));
+		date.setSeconds(Number(s));
+
+		// add session minutes
+		date.setMinutes(date.getMinutes() + Number(sessionMinutes));
+
+		// return HH:mm:ss
+		return date.toTimeString().slice(0, 8);
+	}
+
+
 	const handleCreateEnrollment = async () => {
 		const enrollmentPayload = {
 			// IDs
@@ -131,7 +149,14 @@ export function EnrollmentFlow() {
 
 			// Audit
 			createdBy: user?.memberId ?? null,
-			batchId: enrollmentData?.batch?.batchId
+			batchId: enrollmentData?.batch?.batchId,
+			startTime: enrollmentData?.startTime,
+			endTime: enrollmentData?.startTime && enrollmentData?.course?.sessionMinutes
+				? calculateEndTime(
+					enrollmentData.startTime,
+					enrollmentData.course.sessionMinutes
+				)
+				: null,
 		}
 
 		try {
