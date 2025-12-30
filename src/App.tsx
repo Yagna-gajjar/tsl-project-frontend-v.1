@@ -52,6 +52,7 @@ import AccessAndDetails from "./pages/access-details";
 import UserAccessPage from "./components/view/user/UserAccessPage";
 import StatusVisible from "./pages/status-visible";
 import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrollment-flow";
+import SessionBooking from "./pages/SessionBooking";
 
 export default function App() {
   return (
@@ -138,6 +139,7 @@ export default function App() {
                   path="/staff-management/coach-assignment"
                   element={<CoachAssignmentsPage />}
                 />
+                <Route path="/bookings/session" element={<SessionBooking />} />
                 <Route path="/course/courses" element={<CoursePage />} />
                 <Route
                   path="course/course-share"

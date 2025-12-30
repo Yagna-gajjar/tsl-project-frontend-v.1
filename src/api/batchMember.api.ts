@@ -3,7 +3,8 @@ import { request, toQueryString } from "./helper";
 import type { Response } from "@/types/response";
 
 export interface BatchMemberQuery {
-  enrollmentId?: number;
+  memberId?: number;
+  enrollmentNo?: number;
 }
 
 const BATCH_MEMBER_BASE = import.meta.env.VITE_APP_API_URL + "/batch-member";
@@ -12,7 +13,8 @@ export function getBatchMember(
   params: BatchMemberQuery = {}
 ): Promise<Response<BatchMember[]>> {
   const qs = toQueryString({
-    enrollmentId: params.enrollmentId ?? undefined,
+    enrollmentNo: params.enrollmentNo ?? undefined,
+    memberId: params.memberId ?? undefined
   });
 
   return request<Response<BatchMember[]>>(`${BATCH_MEMBER_BASE}${qs}`);
@@ -22,6 +24,15 @@ export function changeBatch(
   payload: BatchMember
 ): Promise<Response<BatchMember>> {
   return request<Response<BatchMember>>(`${BATCH_MEMBER_BASE}/change-batch`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createSession(
+  payload: BatchMember
+): Promise<Response<BatchMember>> {
+  return request<Response<BatchMember>>(`${BATCH_MEMBER_BASE}`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

@@ -18,6 +18,7 @@ export interface EnrollmentQuery {
   courseName?: string;
   billingRate?: number;
   cndn?: number;
+  enrollmentNo?: number;
 }
 
 const ENROLLMENT_BASE = import.meta.env.VITE_APP_API_URL + "/enrollment";
@@ -38,6 +39,7 @@ export function getEnrollments(
     memberFirstName: params.memberFirstName ?? undefined,
     academyName: params.academyName ?? undefined,
     courseName: params.courseName ?? undefined,
+    enrollmentNo: params.enrollmentNo ?? undefined
   });
 
   return request<Response<Enrollment[]>>(`${ENROLLMENT_BASE}${qs}`);

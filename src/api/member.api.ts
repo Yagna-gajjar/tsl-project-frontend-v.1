@@ -84,6 +84,10 @@ export function checkDuplicateContact(contact: string): Promise<Response<boolean
 	})
 }
 
+export function getMembersForSession(name: string): Promise<Response<any>> {
+	return request<Response<any>>(`${MEMBER_BASE}/session?name=${name}`);
+}
+
 export function checkDuplicateIdProof(
 	idProofType: string,
 	idProofNumber: string

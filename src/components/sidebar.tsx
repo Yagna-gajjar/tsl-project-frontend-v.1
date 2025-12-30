@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +23,9 @@ import {
   CircleSlash,
   Banknote,
   Shield,
+  Pen,
+  TimerReset,
+  Ticket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,15 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   { name: "Authority", href: "/authority", icon: CircleSlash },
+  {
+    name: "Bookings",
+    href: "/bookings",
+    icon: Pen,
+    submenu: [
+      { label: "Session", href: "/bookings/session", icon: TimerReset },
+      { label: "Booking", href: "/bookings/booking", icon: Ticket },
+    ],
+  },
   {
     name: "Courses",
     href: "/course",
