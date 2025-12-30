@@ -6,12 +6,10 @@ import {
 	Calendar, Users, Clock, MapPin, Loader2, AlertCircle, Search, User,
 } from "lucide-react"
 
-// API and Types
 import { getBatch } from "@/api/batch.api"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import type { Batch } from "@/types/batch"
 
-// UI Components
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/hooks/use-toast"
@@ -30,7 +28,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 	const [searchQuery, setSearchQuery] = useState("")
 	const [selectedBatchId, setSelectedBatchId] = useState<number | undefined>(data?.batch?.batchId)
 
-	// 1. Memoized API Params (Prevents re-fetch on selection)
 	const apiParams = useMemo(() => {
 		const activityId = data?.course?.activityId || data?.activityId;
 		const entityId = data?.course?.entityId || data?.academyEntityId;
@@ -55,7 +52,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 		};
 	}, [data?.course?.activityId, data?.activityId, data?.course?.entityId, data?.academyEntityId, data?.attendingPattern, data?.startTime, data?.course?.sessionMinutes]);
 
-	// 2. API Fetching
 	useEffect(() => {
 		if (!apiParams) return;
 		const fetchAvailableBatches = async () => {
@@ -72,7 +68,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 		fetchAvailableBatches();
 	}, [apiParams]);
 
-	// 3. Local Search
 	const filteredBatches = useMemo(() => {
 		const query = searchQuery.toLowerCase().trim();
 		if (!query) return batches;
@@ -155,7 +150,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 												isFull && "opacity-60 grayscale-[0.5] cursor-not-allowed bg-muted"
 											)}
 										>
-											{/* HEADER: Name & Occupancy */}
 											<div className="flex justify-between items-start">
 												<div className="min-w-0 flex-1">
 													<h4 className="font-black text-base truncate dark:text-slate-100 group-hover:text-primary transition-colors">
@@ -171,7 +165,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 												</div>
 											</div>
 
-											{/* CENTER: High Contrast Days & Time */}
 											<div className="bg-muted/30 dark:bg-slate-800/50 p-2.5 rounded-lg border border-border/50">
 												<div className="flex items-center gap-2 mb-1.5 text-primary">
 													<Clock size={14} />
@@ -184,7 +177,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 												</div>
 											</div>
 
-											{/* FOOTER: Coach & Area */}
 											<div className="grid grid-cols-2 gap-2 pt-2 border-t border-dashed border-border/80 text-[11px] font-semibold">
 												<div className="flex items-center gap-2 truncate text-muted-foreground">
 													<User size={13} className="shrink-0 text-foreground/40" />
@@ -195,12 +187,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 													<span className="truncate">{batch.areaName || "Main Area"}</span>
 												</div>
 											</div>
-											{/* 
-											{isSelected && (
-												<div className="absolute top-2 right-2">
-													<CheckCircle2 className="w-5 h-5 text-primary fill-primary/10 animate-in zoom-in duration-300" />
-												</div>
-											)} */}
 										</Card>
 									</motion.div>
 								)

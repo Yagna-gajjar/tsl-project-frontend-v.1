@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ChevronRight, ChevronLeft, CheckCircle2 } from "lucide-react"
 
-// Tab Components
 import { MemberTab } from "./enrollment-tabs/member-tab"
 import { CourseTab } from "./enrollment-tabs/course-tab"
 import { CourseRateTab } from "./enrollment-tabs/course-rate-tab"
@@ -57,7 +56,6 @@ export function EnrollmentFlow() {
 
 	const handleTabChange = (newTabValue: string) => {
 		const newIndex = TAB_ORDER.indexOf(newTabValue as TabValue)
-		// Allow clicking back to any previously visited tab
 		if (newIndex <= currentTabIndex) {
 			setCurrentTabIndex(newIndex)
 		}
@@ -84,18 +82,13 @@ export function EnrollmentFlow() {
 		date.setHours(Number(h));
 		date.setMinutes(Number(m));
 		date.setSeconds(Number(s));
-
-		// add session minutes
 		date.setMinutes(date.getMinutes() + Number(sessionMinutes));
-
-		// return HH:mm:ss
 		return date.toTimeString().slice(0, 8);
 	}
 
 
 	const handleCreateEnrollment = async () => {
 		const enrollmentPayload = {
-			// IDs
 			firstEnrollmentId: enrollmentData?.firstEnrollmentId ?? null,
 			enrollmentNo: enrollmentData?.enrollmentNo ?? null,
 			membershipMasterId: enrollmentData?.membershipMasterId ?? null,
@@ -108,7 +101,6 @@ export function EnrollmentFlow() {
 			dnAccountId: enrollmentData?.dnAccountId ?? null,
 			academyEntityId: enrollmentData?.academyEntityId ?? null,
 
-			// Dates & schedule
 			enrollmentDate: enrollmentData?.enrollmentDate ?? new Date(),
 			attendingStartDate: enrollmentData?.attendingStartDate ?? null,
 			endDate: enrollmentData?.endDate ?? null,
@@ -118,7 +110,6 @@ export function EnrollmentFlow() {
 			permittedDays: enrollmentData?.permittedDays ?? 0,
 			membersEnrolled: enrollmentData?.membersEnrolled ?? 1,
 
-			// Pricing & tax
 			patternDiscount: enrollmentData?.patternDiscount ?? 0,
 			rackPrice: enrollmentData?.rackPrice ?? 0,
 			dnOrDiscount: enrollmentData?.dnOrDiscount ?? 0,
@@ -131,24 +122,20 @@ export function EnrollmentFlow() {
 			totalDebitAmount: enrollmentData?.totalDebitAmount ?? 0,
 			processingCharge: enrollmentData?.processingCharge ?? 0,
 
-			// Flags & status
 			openEnrollment: enrollmentData?.openEnrollment ?? false,
 			status: enrollmentData?.status ?? "active",
 			changeNo: enrollmentData?.changeNo ?? 0,
 			previousCourseID: enrollmentData?.previousCourseID ?? null,
 
-			// Remarks & walking
 			printRemarks: enrollmentData?.printRemarks ?? null,
 			officeRemarks: enrollmentData?.officeRemarks ?? null,
 			walkingName: enrollmentData?.walkingName ?? null,
 			walkingContact: enrollmentData?.walkingContact ?? null,
 
-			// Approvals
 			memberApprovalStatus: enrollmentData?.memberApprovalStatus ?? null,
 			academyApprovalStatus: enrollmentData?.academyApprovalStatus ?? null,
 			finalTSLApproval: enrollmentData?.finalTSLApproval ?? null,
 
-			// Audit
 			createdBy: user?.memberId ?? null,
 			batchId: enrollmentData?.batch?.batchId,
 			startTime: enrollmentData?.startTime,
@@ -186,29 +173,23 @@ export function EnrollmentFlow() {
 				variant: "destructive"
 			})
 		}
-
-		console.log("Creating enrollment with final payload:", enrollmentPayload)
-		alert("Enrollment submitted successfully!")
 	}
 
-	// Improved Validation Logic to prevent getting stuck
 	const canProceedToNext = useMemo(() => {
 		if (completedTabs.has(currentTabValue)) return true;
 
-		// Fallback: Check if the necessary data for the current tab actually exists
 		switch (currentTabValue) {
 			case "member": return !!enrollmentData?.member;
 			case "course": return !!enrollmentData?.course;
 			case "courseRate": return !!enrollmentData?.courseRate;
 			case "batch": return !!enrollmentData?.batch || enrollmentData?.course?.chargingPattern?.toLowerCase() == 'session';
-			case "bill": return !!enrollmentData?.status; // Check if status is set in Bill tab
+			case "bill": return !!enrollmentData?.status;
 			default: return false;
 		}
 	}, [currentTabValue, completedTabs, enrollmentData]);
 
 	return (
 		<div className="flex min-h-screen flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-8 bg-background">
-			{/* Left Side - Flexible Content Area */}
 			<div className="flex-1 min-w-0">
 				<motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
 					<div className="mb-8">
@@ -304,7 +285,6 @@ export function EnrollmentFlow() {
 							</motion.div>
 						</AnimatePresence>
 
-						{/* Navigation Footer */}
 						<div className="flex gap-3 mt-6 flex-col sm:flex-row">
 							<Button
 								variant="ghost"
@@ -342,7 +322,6 @@ export function EnrollmentFlow() {
 				</motion.div>
 			</div>
 
-			{/* Right Side - Info Sidebar */}
 			<div className={`w-full shrink-0 transition-all duration-300 ${SIDEBAR_WIDTH}`}>
 				<motion.div
 					initial={{ opacity: 0, x: 20 }}

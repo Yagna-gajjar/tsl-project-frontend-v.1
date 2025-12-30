@@ -45,7 +45,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	const [isLoading, setIsLoading] = useState(false)
 	const [selectedRate, setSelectedRate] = useState<CourseRate | null>(data?.courseRate || null)
 
-	// Form States
 	const [billingDaysSessions, setBillingDaysSessions] = useState(data?.billingDaysSessions || 1)
 	const [startDate, setStartDate] = useState<Date>(data?.attendingStartDate ? parseISO(data.attendingStartDate) : startOfToday())
 	const [endDate, setEndDate] = useState<string>(data?.endDate || "")
@@ -59,7 +58,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	const [casualAccount, setCasualAccount] = useState<number | null>(null);
 	const [walkingAccount, setWalkingAccount] = useState<number | null>(null);
 
-	// 1. Logic for Factor & Account Mapping
 	const actualDaysInWeek = selectedDays.length;
 	const selectedCourseDayInWeek = allowedPattern.length;
 
@@ -70,21 +68,14 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 
 	const getAccountMapping = (category: string, membershipMasterId: number) => {
 		const catLower = category.toLowerCase();
-
-		// Check standard memberships
 		const match = membershipData.find(m => m.membershipMasterId === membershipMasterId);
 		if (match) return { accountId: match.accountId, accountName: match.accountName, membershipId: match.membershipId };
-
-		// Check Casual
 		if (catLower.includes("casual")) return { accountId: casualAccount, accountName: "Casual Account", membershipId: null };
-
-		// Check Walk in
 		if (catLower.includes("walk in")) return { accountId: walkingAccount, accountName: "Walk-in Account", membershipId: null };
 
-		return null; // Not eligible
+		return null;
 	};
 
-	// 2. Fetch Data
 	useEffect(() => {
 		if (activeCourse?.courseId) {
 			setIsLoading(true)
@@ -107,7 +98,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 		if (w.success) setWalkingAccount(Number(w.data?.[0].value));
 	};
 
-	// 3. Auto Date & Multiplier Logic
 	useEffect(() => {
 		if (!activeCourse) return;
 		const pattern = activeCourse.chargingPattern?.toLowerCase();
@@ -121,7 +111,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 		}
 	}, [activeCourse, startDate, billingDaysSessions]);
 
-	// 4. Matrix Prep
 	const { sortedTiers, groupedData } = useMemo(() => {
 		const tiers = Array.from(new Set(rates.map(r => Number(r.aboveUnits)))).sort((a, b) => a - b)
 		const grouped = rates.reduce((acc: any, rate) => {
@@ -173,7 +162,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 
 	return (
 		<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full space-y-4 pb-10">
-			{/* CONFIGURATION BAR */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted/20 p-4 rounded-xl border border-border">
 				<div className="space-y-1.5">
 					<Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><CalendarIcon size={12} /> Start Date</Label>
@@ -200,7 +188,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 				</div>}
 			</div>
 
-			{/* ATTENDANCE PATTERN */}
 			<Card className="p-4 border-2 border-primary/20 bg-primary/5">
 				<ToggleGroup type="multiple" variant="outline" className="justify-start gap-2" value={selectedDays} onValueChange={(val) => val.length > 0 && setSelectedDays(val)}>
 					{WEEK_DAYS.map((day) => {
@@ -214,7 +201,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 				</ToggleGroup>
 			</Card>
 
-			{/* PRICING MATRIX */}
 			<div className="flex-1 rounded-xl border border-border bg-card overflow-hidden relative min-h-[350px] shadow-inner">
 				{isLoading ? (
 					<div className="absolute inset-0 flex items-center justify-center bg-background/50 z-20"><Loader2 className="animate-spin text-primary" /></div>

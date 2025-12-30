@@ -151,7 +151,6 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 			>
 				{data?.bill ? (
 					<div className="space-y-2.5 text-[11px]">
-						{/* Walking Details - Only show if name exists */}
 						{data.bill.walkingName && (
 							<div className="flex flex-col border-b border-border/40 pb-2">
 								<span className="text-[9px] font-black uppercase text-muted-foreground mb-0.5">Walking Info</span>
@@ -162,7 +161,6 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 							</div>
 						)}
 
-						{/* Financial Adjustments */}
 						<div className="space-y-1">
 							<div className="flex justify-between items-center">
 								<span className="text-muted-foreground">Adjustment:</span>
@@ -178,7 +176,6 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 							</div>
 						</div>
 
-						{/* Workflow Status */}
 						<div className="pt-2 border-t border-dashed border-border/60">
 							<div className="flex justify-between items-center mb-1">
 								<span className="text-muted-foreground">Approval:</span>

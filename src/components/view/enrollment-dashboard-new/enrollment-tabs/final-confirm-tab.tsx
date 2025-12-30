@@ -7,12 +7,10 @@ import {
 } from "lucide-react"
 import { format, parseISO, addMinutes } from "date-fns"
 
-// UI Components
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
-import { EnrollmentDataDebugger } from "./EnrollmentDataDebugger"
 
 interface FinalConfirmTabProps {
 	data?: EnrollmentData,
@@ -22,13 +20,11 @@ interface FinalConfirmTabProps {
 const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	const lastCalculatedRef = useRef<string>("");
 
-	// 1. High-Precision Calculation Logic
 	const results = useMemo(() => {
 		if (!data?.course || !data?.courseRate) return null;
 
 		const { course, courseRate: selectedRate } = data;
 
-		// Inputs (Force 5 decimal precision for math)
 		const cgstRate = Number(parseFloat(String(course.cgstRate)).toFixed(5));
 		const sgstRate = Number(parseFloat(String(course.sgstRate)).toFixed(5));
 		const rackPrice = Number(parseFloat(String(selectedRate.unitRate)).toFixed(5));
@@ -39,7 +35,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		const membersEnrolled = Number(data.membersEnrolled) || 1;
 		const hasDnAccount = !!data.dnAccountId && data.dnAccountId !== 0;
 
-		// Base Logic
 		let baseRateD = hasDnAccount
 			? (rackPrice * patternDiscount)
 			: (rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions);
@@ -61,7 +56,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 
 		const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + (processingCharge * membersEnrolled) + roundedAmount;
 
-		// Date logic: Session End Calculation
 		let calculatedEndTime = data.startTime || "";
 		if (data.attendingStartDate && data.startTime && course.sessionMinutes) {
 			const startDateTime = parseISO(`${data.attendingStartDate}T${data.startTime}`);
@@ -86,7 +80,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		};
 	}, [data]);
 
-	// Sync to parent state
 	useEffect(() => {
 		if (results) {
 			const signature = JSON.stringify(results.display);
@@ -100,18 +93,12 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	if (!data || !results) return null;
 	const { display, internal } = results;
 
-	// Log calculation details for audit
-	console.group("%c📊 Financial Audit (5-Digit)", "color: #2563eb; font-weight: bold;");
-	console.table(internal);
-	console.groupEnd();
-
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 10 }}
 			animate={{ opacity: 1, y: 0 }}
 			className="space-y-6 max-w-6xl mx-auto pb-10"
 		>
-			{/* 1. PRIMARY BILLING CARD (White Colored) */}
 			<Card className="border-2 border-border shadow-xl bg-card rounded-[2rem] overflow-hidden">
 				<div className="bg-muted/50 px-8 py-5 flex justify-between items-center border-b">
 					<div className="flex items-center gap-4">
@@ -169,10 +156,8 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 				</div>
 			</Card>
 
-			{/* 2. DETAILS GRID */}
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-				{/* Member Details */}
 				<Card className="p-6 border border-border shadow-sm rounded-3xl space-y-4 bg-card">
 					<div className="flex items-center gap-2 text-blue-600 font-black text-[10px] uppercase tracking-widest">
 						<User size={18} /> Member Info
@@ -188,7 +173,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 					</p>
 				</Card>
 
-				{/* Training Program */}
 				<Card className="p-6 border border-border shadow-sm rounded-3xl space-y-4 bg-card">
 					<div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest">
 						<BookOpen size={18} /> Program Details
@@ -206,7 +190,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 					</div>
 				</Card>
 
-				{/* Logistics */}
 				<Card className="p-6 border border-border shadow-sm rounded-3xl space-y-4 bg-card">
 					<div className="flex items-center gap-2 text-orange-600 font-black text-[10px] uppercase tracking-widest">
 						<Clock size={18} /> Schedule
@@ -223,7 +206,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 					</div>
 				</Card>
 
-				{/* Remarks */}
 				<Card className="md:col-span-3 p-6 bg-muted/20 border-2 border-dashed rounded-[2rem] grid grid-cols-1 md:grid-cols-2 gap-8">
 					<div className="space-y-2">
 						<p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">

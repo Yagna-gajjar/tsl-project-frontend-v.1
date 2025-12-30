@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Member } from "@/types/member"
 import { getMembers } from "@/api/member.api"
+import { toast } from "@/hooks/use-toast"
 
 export function MemberTab({
 	data,
@@ -48,7 +49,11 @@ export function MemberTab({
 				})
 				setMembers(response.data || [])
 			} catch (err) {
-				console.error("Member search failed", err)
+				toast({
+					title: "Error",
+					description: "failed to search members",
+					variant: "destructive"
+				})
 			} finally {
 				setLoading(false)
 			}
@@ -106,8 +111,8 @@ export function MemberTab({
 										>
 											<Check
 												className={`mr-2 h-4 w-4 ${selectedMember?.memberId === member.memberId
-														? "opacity-100"
-														: "opacity-0"
+													? "opacity-100"
+													: "opacity-0"
 													}`}
 											/>
 											<div>

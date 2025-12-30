@@ -24,7 +24,6 @@ export function EnrollmentDataDebugger({ data }: DebuggerProps) {
 		</div>
 	);
 
-	// Helper to render a field with "Missing" validation
 	const Field = ({ label, value, highlight = false }: { label: string, value: any, highlight?: boolean }) => {
 		const isMissing = value === undefined || value === null || value === "";
 		return (
@@ -58,7 +57,6 @@ export function EnrollmentDataDebugger({ data }: DebuggerProps) {
 				</div>
 			</div>
 
-			{/* FINANCIALS - HIGHLIGHTED AS REQUESTED */}
 			<div className="space-y-4">
 				<div className="flex items-center gap-2 text-primary font-black text-sm uppercase tracking-[0.2em]">
 					<Calculator size={18} /> Tax & Rounding Engine
@@ -73,7 +71,6 @@ export function EnrollmentDataDebugger({ data }: DebuggerProps) {
 
 			<div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
-				{/* PRIMARY IDENTIFIERS */}
 				<section className="space-y-4">
 					<h3 className="flex items-center gap-2 text-blue-600 font-black text-sm uppercase tracking-widest">
 						<Tag size={18} /> Identifiers & IDs
@@ -92,7 +89,6 @@ export function EnrollmentDataDebugger({ data }: DebuggerProps) {
 					</div>
 				</section>
 
-				{/* SCHEDULING DATA */}
 				<section className="space-y-4">
 					<h3 className="flex items-center gap-2 text-orange-600 font-black text-sm uppercase tracking-widest">
 						<Clock size={18} /> Schedule & Logistics
@@ -109,7 +105,6 @@ export function EnrollmentDataDebugger({ data }: DebuggerProps) {
 					</div>
 				</section>
 
-				{/* TEXT & REMARKS */}
 				<section className="space-y-4 lg:col-span-2">
 					<h3 className="flex items-center gap-2 text-emerald-600 font-black text-sm uppercase tracking-widest">
 						<FileText size={18} /> Strings & Remarks
@@ -137,7 +132,6 @@ export function EnrollmentDataDebugger({ data }: DebuggerProps) {
 					</div>
 				</section>
 
-				{/* COMPLEX OBJECTS (JSON PREVIEW) */}
 				<section className="space-y-4 lg:col-span-2">
 					<h3 className="flex items-center gap-2 text-slate-500 font-black text-sm uppercase tracking-widest">
 						<FileJson size={18} /> Nested Object Objects

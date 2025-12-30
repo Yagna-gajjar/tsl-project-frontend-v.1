@@ -48,7 +48,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		classification: "all",
 		activityType: "all",
 		activityId: "all",
-		entityId: "all" // New filter state
+		entityId: "all"
 	})
 
 	const memberAge = useMemo(() => {
@@ -60,7 +60,6 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		return age;
 	}, [member]);
 
-	// Derived unique entities from fetched courses to populate the dropdown
 	const availableEntities = useMemo(() => {
 		const entityMap = new Map();
 		courses.forEach((c) => {
@@ -112,7 +111,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 				search: filters.search || undefined,
 				classification: filters.activityType !== "all" ? filters.activityType : undefined,
 				activityId: filters.activityId !== "all" ? filters.activityId : undefined,
-				entityId: filters.entityId !== "all" ? filters.entityId : undefined, // Send entityId to API
+				entityId: filters.entityId !== "all" ? filters.entityId : undefined,
 				age: memberAge
 			};
 
@@ -208,7 +207,6 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 						</SelectContent>
 					</Select>
 
-					{/* NEW: Select Entity Filter */}
 					<Select value={filters.entityId} onValueChange={(v) => setFilters(f => ({ ...f, entityId: v }))}>
 						<SelectTrigger>
 							<div className="flex items-center gap-2 truncate">

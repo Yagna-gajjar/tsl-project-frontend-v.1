@@ -12,7 +12,6 @@ import {
 	Building2
 } from "lucide-react"
 
-// UI Components
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -101,7 +100,6 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-				{/* SECTION 1: WALKING INFO */}
 				<Card className="p-5 space-y-4 shadow-sm border-border/60 bg-card/50">
 					<div className="flex items-center gap-2 border-b pb-2">
 						<UserPlus className="w-4 h-4 text-primary" />
@@ -127,7 +125,6 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 					</div>
 				</Card>
 
-				{/* SECTION 2: WORKFLOW & STATUS */}
 				<Card className="p-5 space-y-4 shadow-sm border-border/60 bg-card/50">
 					<div className="flex items-center gap-2 border-b pb-2 text-blue-500">
 						<Settings2 className="w-4 h-4" />
@@ -161,7 +158,6 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 					</div>
 				</Card>
 
-				{/* SECTION 3: FINANCIAL ADJUSTMENTS - DROPDOWN IS BIGGER HERE */}
 				<Card className="lg:col-span-2 p-5 space-y-4 shadow-sm border-border/60 bg-card/50">
 					<div className="flex items-center gap-2 border-b pb-2">
 						<Coins className="w-4 h-4 text-amber-500" />
@@ -169,7 +165,6 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 					</div>
 
 					<div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
-						{/* Credit Note Dropdown - Occupies 3 columns (60%) */}
 						<div className="space-y-2 sm:col-span-3">
 							<Label className="text-xs font-semibold">Credit Note</Label>
 							<Select
@@ -197,7 +192,6 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 							</Select>
 						</div>
 
-						{/* Amount - Occupies 1 column (20%) */}
 						<div className="space-y-2 sm:col-span-1">
 							<Label className="text-xs font-semibold">Amount (₹)</Label>
 							<Input
@@ -208,7 +202,6 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 							/>
 						</div>
 
-						{/* Proc. Charge - Occupies 1 column (20%) */}
 						<div className="space-y-2 sm:col-span-1">
 							<Label className="text-xs font-semibold whitespace-nowrap">Proc. Charge (₹)</Label>
 							<Input
@@ -221,7 +214,6 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 					</div>
 				</Card>
 
-				{/* SECTION 4: REMARKS - FULL WIDTH */}
 				<Card className="lg:col-span-2 p-5 space-y-4 shadow-sm border-border/60 bg-card/50">
 					<div className="flex items-center gap-2 border-b pb-2 text-emerald-500">
 						<MessageSquareQuote className="w-4 h-4" />
