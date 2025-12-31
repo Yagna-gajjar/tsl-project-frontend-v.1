@@ -50,6 +50,7 @@ export interface Enrollment {
   walkingContact?: string;
   memberApprovalStatus?: number | null;
   academyApprovalStatus?: number | null;
+  membershipType?: string;
   finalTSLApproval?: number | null;
   changeNo?: number;
   previousCourseID?: number;
