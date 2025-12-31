@@ -147,7 +147,6 @@ export function EnrollmentFlow() {
 				: null,
 			chargingPattern: enrollmentData?.course?.chargingPattern
 		}
-
 		try {
 			const eRes: Response<any> = await createEnrollment(enrollmentPayload as any);
 			if (eRes.success) {

@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
+import ExcelInvoice from "../EnrollmentPreview"
 
 interface FinalConfirmTabProps {
 	data?: EnrollmentData,
@@ -19,6 +20,67 @@ interface FinalConfirmTabProps {
 
 const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	const lastCalculatedRef = useRef<string>("");
+
+	const excelEnrollmentData = {
+		member: {
+			memberId: data?.member?.memberId,
+			memberFirstName: data?.member?.memberFirstName,
+			dob: data?.member?.dob,
+		},
+
+		course: {
+			entityId: data?.course?.entityId,
+			entityName: data?.course?.entityName,
+			courseName: data?.course?.courseName,
+			chargingPattern: data?.course?.chargingPattern,
+			sessionMinutes: data?.course?.sessionMinutes,
+			activityId: data?.course?.activityId,
+		},
+
+		batch: {
+			batchName: data?.batch?.batchName,
+		},
+
+		enrollmentNo: "Not Generated",
+		enrollmentDate: format(Date.now(), "dd-MMM-yyyy"),
+		enrollmentId: "Not Generated",
+
+		walkingName: data?.walkingName,
+		walkingContact: data?.walkingContact,
+
+		accountName: data?.accountName,
+		accountId: data?.accountId,
+
+		membershipMasterId: data?.membershipMasterId,
+
+		attendingPattern: data?.attendingPattern,
+		attendingPatternDays: data?.attendingPatternDays,
+
+		billingDaysSessions: data?.billingDaysSessions,
+		permittedDays: data?.permittedDays,
+
+		attendingStartDate: data?.attendingStartDate,
+		endDate: data?.endDate,
+
+		startTime: data?.startTime,
+		endTime: data?.batch?.endTime,
+
+		rackPrice: data?.courseRate?.unitRate,                  // string "58.00"
+		billingRate: data?.billingRate,
+		billingAmount: data?.billingAmount,
+
+		processingCharge: data?.processingCharge,
+		dnOrDiscount: data?.dnOrDiscount,
+
+		cgstAmount: data?.cgstAmount,
+		sgstAmount: data?.sgstAmount,
+
+		roundedAmount: data?.roundedAmount,
+		totalDebitAmount: data?.totalDebitAmount,
+
+		memberApprovalStatus: data?.academyApprovalStatus,
+		printRemarks: data?.printRemarks,
+	};
 
 	const results = useMemo(() => {
 		if (!data?.course || !data?.courseRate) return null;
@@ -224,6 +286,12 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 						</p>
 					</div>
 				</Card>
+			</div>
+
+			<div className="overflow-auto">
+				<ExcelInvoice
+					enrollmentData={excelEnrollmentData as any}
+				/>
 			</div>
 
 			{/* Developer Debugger */}
