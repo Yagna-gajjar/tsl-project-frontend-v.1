@@ -174,7 +174,7 @@ const SignupForm = () => {
 
 
 		const { confirmPassword, ...payload } = formData;
-		const response: Response<UserType> = await signup(payload);
+		const response: Response<UserType> = await signup(payload as any);
 
 		if (!response.success) {
 			toast({

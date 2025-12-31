@@ -69,7 +69,7 @@ const emptyCourse: Partial<Course> = {
   totalParallelBatches: 1,
   minAge: 1,
   maxAge: 100,
-  gender: "Any",
+  gender: "O",
   balanceUsable: "",
   enrApprovalRequired: false,
   cgstRate: 0,

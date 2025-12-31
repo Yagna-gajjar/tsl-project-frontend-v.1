@@ -37,7 +37,7 @@ interface CourseImportRow {
 	maxPerson?: number | string;
 	minAge: number | string;
 	maxAge: number | string;
-	gender: 'Male' | 'Female' | 'Any';
+	gender: 'A' | 'F' | 'O' | 'M';
 
 	// Financials & IDs
 	entityId: number | string;
@@ -122,7 +122,7 @@ export default function CourseExcelUpload({ isOpen, onClose, onSuccess }: Course
 
 			minAge: Number(row.minAge || 1),
 			maxAge: Number(row.maxAge || 150),
-			gender: row.gender || 'Any',
+			gender: row.gender || 'O',
 			balanceUsable: row.balanceUsable || null,
 
 			entityId: Number(row.entityId),

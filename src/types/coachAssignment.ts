@@ -6,8 +6,8 @@ export interface CoachAssignment {
   designation?: string | null;
   responsibilities?: string | null;
   cost?: number | null;
-  startDate?: string | null;
-  endDate?: string | null;
+  startDate?: string | null | undefined;
+  endDate?: string | null | undefined;
   remarks?: string | null;
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;

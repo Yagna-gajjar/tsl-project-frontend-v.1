@@ -46,12 +46,12 @@ export default function AcceptBatchRequest({
   };
 
   const handleAccept = async (item: BatchMember) => {
-    if (acceptingIds[item.batchMemberId]) return;
-    setAcceptingIds((s) => ({ ...s, [item.batchMemberId]: true }));
+    if (acceptingIds[item.batchMemberId as any]) return;
+    setAcceptingIds((s) => ({ ...s, [item.batchMemberId as any]: true }));
 
     try {
       const enrollmentRes: Response | any = await getEnrollmentById(
-        item.enrollmentId
+        item.enrollmentNo as any
       );
 
       if (!enrollmentRes.success) {
@@ -154,19 +154,19 @@ export default function AcceptBatchRequest({
   const handleReject = (item: BatchMember) => {
     setExpandedRejectIds((s) => ({
       ...s,
-      [item.batchMemberId]: !s[item.batchMemberId],
+      [item.batchMemberId as any]: !s[item.batchMemberId as any],
     }));
-    if (!rejectReasons[item.batchMemberId]) {
-      setRejectReasons((s) => ({ ...s, [item.batchMemberId]: "" }));
+    if (!rejectReasons[item.batchMemberId as any]) {
+      setRejectReasons((s) => ({ ...s, [item.batchMemberId as any]: "" }));
     }
   };
 
   const submitReject = async (item: BatchMember) => {
     const id = item.batchMemberId;
-    const reason = rejectReasons[id] || "";
+    const reason = rejectReasons[id as any] || "";
 
-    if (rejectingIds[id]) return;
-    setRejectingIds((s) => ({ ...s, [id]: true }));
+    if (rejectingIds[id as any]) return;
+    setRejectingIds((s) => ({ ...s, [id as any]: true }));
 
     try {
       const oldReason =  "";
@@ -181,7 +181,7 @@ export default function AcceptBatchRequest({
         reason: finalReason,
       };
 
-      const res = await updateBatchMember(id, body);
+      const res = await updateBatchMember(Number(id), body);
 
       if (!res.success) {
         throw new Error(`Failed to update`);
@@ -204,12 +204,12 @@ export default function AcceptBatchRequest({
 
       setExpandedRejectIds((s) => {
         const copy = { ...s };
-        delete copy[id];
+        delete copy[id as any];
         return copy;
       });
       setRejectReasons((s) => {
         const copy = { ...s };
-        delete copy[id];
+        delete copy[id as any];
         return copy;
       });
     } catch (err) {
@@ -268,11 +268,11 @@ export default function AcceptBatchRequest({
               ) : (
                 <div className="space-y-3">
                   {requests.map((item) => {
-                    const isAccepting = !!acceptingIds[item.batchMemberId];
-                    const isRejecting = !!rejectingIds[item.batchMemberId];
-                    const isExpanded = !!expandedRejectIds[item.batchMemberId];
+                    const isAccepting = !!acceptingIds[item.batchMemberId as any];
+                    const isRejecting = !!rejectingIds[item.batchMemberId as any];
+                    const isExpanded = !!expandedRejectIds[item.batchMemberId as any];
                     const rejectReason =
-                      rejectReasons[item.batchMemberId] || "";
+                      rejectReasons[item.batchMemberId as any] || "";
                     const start = item.startDate
                       ? new Date(item.startDate).toLocaleDateString()
                       : "-";
@@ -368,7 +368,7 @@ export default function AcceptBatchRequest({
                                     onChange={(e) =>
                                       setRejectReasons((s) => ({
                                         ...s,
-                                        [item.batchMemberId]: e.target.value,
+                                        [item.batchMemberId as any]: e.target.value,
                                       }))
                                     }
                                     className="w-full border rounded-md p-2 text-sm bg-background resize-none"

@@ -63,6 +63,7 @@ export interface Enrollment {
 
   //support
   startTime?: string;
+  endTime?: string;
   activityClassification?: number | null;
   activityType?: string | null;
   chargingPattern: "",

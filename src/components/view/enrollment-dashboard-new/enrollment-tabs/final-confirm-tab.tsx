@@ -153,7 +153,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	}, [results, onUpdate]);
 
 	if (!data || !results) return null;
-	const { display, internal } = results;
+	const { display } = results;
 
 	return (
 		<motion.div

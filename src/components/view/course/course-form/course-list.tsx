@@ -108,7 +108,7 @@ export function CourseForm({
 				<Input
 					id="suspensionDate"
 					type="date"
-					value={course.suspensionDate || ""}
+					value={course.suspensionDate as string || ""}
 					onChange={(e) => onChange("suspensionDate", e.target.value)}
 				/>
 			</div>

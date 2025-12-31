@@ -144,8 +144,8 @@ const AttendanceSheet = () => {
     fetchAttendance();
   }, [id, selectedDate]);
 
-  const members = batchData?.members ?? [];
-  const filteredMembers = members.filter((member) =>
+  const members = (batchData as any)?.members ?? [];
+  const filteredMembers = members.filter((member: any) =>
     member.memberName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -366,8 +366,8 @@ const AttendanceSheet = () => {
                 <span className="font-semibold text-gray-900 dark:text-gray-200">
                   {batchData
                     ? `${formatTime(batchData.startTime)} - ${formatTime(
-                        batchData.endTime
-                      )}`
+                      batchData.endTime
+                    )}`
                     : "-"}
                 </span>
               </span>
@@ -466,11 +466,10 @@ const AttendanceSheet = () => {
                             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
                           >
                             <div
-                              className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                                col.enabled
+                              className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${col.enabled
                                   ? "bg-blue-600 border-blue-600 text-white"
                                   : "border-gray-300 dark:border-gray-600"
-                              }`}
+                                }`}
                             >
                               {col.enabled && <Check className="w-3 h-3" />}
                             </div>
@@ -541,11 +540,10 @@ const AttendanceSheet = () => {
                       key={member.batchMemberId || index}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`transition-colors group border-b dark:border-gray-800 last:border-0 ${
-                        selectedIds.has(getMemberId(member as any) as number)
+                      className={`transition-colors group border-b dark:border-gray-800 last:border-0 ${selectedIds.has(getMemberId(member as any) as number)
                           ? "bg-blue-50/50 dark:bg-blue-900/10"
                           : "bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
+                        }`}
                     >
                       <td className="px-4 py-4 text-center">
                         <input
@@ -566,20 +564,18 @@ const AttendanceSheet = () => {
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
-                                ${
-                                  selectedIds.has(getMemberId(member))
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "bg-gray-100 text-gray-500"
-                                }`}
+                                ${selectedIds.has(getMemberId(member))
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-gray-100 text-gray-500"
+                              }`}
                           >
                             {member.memberName?.charAt(0) || "U"}
                           </div>
                           <span
-                            className={`font-medium ${
-                              selectedIds.has(getMemberId(member))
+                            className={`font-medium ${selectedIds.has(getMemberId(member))
                                 ? "text-gray-900 dark:text-gray-100"
                                 : "text-gray-600 dark:text-gray-400"
-                            }`}
+                              }`}
                           >
                             {member.memberName}
                           </span>

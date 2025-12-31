@@ -41,14 +41,14 @@ const fields: FieldConfig<Course>[] = [
   { key: "batchCapacity", label: "Batch Capacity", icon: Hash },
   { key: "totalParallelBatches", label: "Parallel Batches", icon: Hash },
   { key: "unitsMultipleOf", label: "Units Multiple Of", icon: Hash },
-  { key: "maxPerson", label: "Max Persons", icon: Hash, render: (v) => v ?? "Unlimited" },
+  { key: "maxPerson", label: "Max Persons", icon: Hash, render: (v) => v as string ?? "Unlimited" },
   { key: "minAge", label: "Min Age", icon: Hash },
   { key: "maxAge", label: "Max Age", icon: Hash },
   {
     key: "gender",
     label: "Gender",
     icon: Info,
-    render: (v) => v === 'O' ? "Others/All" : v === 'M' ? "Male" : v === 'F' ? "Female" : v
+    render: (v) => v as string === 'O' ? "Others/All" : v === 'M' ? "Male" : v === 'F' ? "Female" : v as string
   },
   {
     key: "enrApprovalRequired",
@@ -62,7 +62,7 @@ const fields: FieldConfig<Course>[] = [
     key: "balanceUsable",
     label: "Balance Usable",
     icon: Info,
-    render: (v) => v === 'F' ? "Full" : v === 'C' ? "Credit Only" : v
+    render: (v) => v as string === 'F' ? "Full" : v === 'C' ? "Credit Only" : v as string
   },
   {
     key: "createdAt",

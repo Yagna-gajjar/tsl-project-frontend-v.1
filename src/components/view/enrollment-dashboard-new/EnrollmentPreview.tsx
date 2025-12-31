@@ -218,7 +218,7 @@ const ExcelInvoice = ({
 
 					<div style={labelStyle}>Discount</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>Receivable</div><div style={cellStyle}>{n(enrollmentData?.cgstAmount) + n(enrollmentData?.sgstAmount) + n(enrollmentData?.billingAmount) + n(enrollmentData?.roundedAmount)}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Total Debited Amount</div><div style={cellStyle}>>>>>></div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Total Debited Amount</div><div style={cellStyle}>Not Defined Yet</div>
 
 					{/* FOOTER */}
 					<div style={{ gridColumn: 'span 10', height: '15px' }}></div>

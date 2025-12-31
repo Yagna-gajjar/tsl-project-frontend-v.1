@@ -9,6 +9,7 @@ import { format } from "date-fns";
 
 export interface EnrollmentSummary {
   enrollmentId: number;
+  enrollmentNo: number;
   courseName?: string | null;
   academyName?: string | null;
   sessionUnits?: number[] | number;
@@ -81,13 +82,13 @@ export default function AppointmentModal({
   const fetchBatchMembers = useCallback(async () => {
     setError(null);
     setBatchMembers([]);
-    const enrollmentId = selectedEnrollment?.enrollmentId;
-    if (!enrollmentId) return;
+    const enrollmentNo = selectedEnrollment?.enrollmentNo;
+    if (!enrollmentNo) return;
 
     setLoading(true);
     try {
       const res = await getBatchMember({
-        enrollmentId: enrollmentId,
+        enrollmentNo: enrollmentNo,
       });
       let members: any = [];
       if (Array.isArray(res)) members = res;
