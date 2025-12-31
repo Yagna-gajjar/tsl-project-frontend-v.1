@@ -18,7 +18,7 @@ import { EnrollmentDetails } from "./enrollment-details"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import { toast } from "@/hooks/use-toast"
 import type { Response } from "@/types/response"
-import { createEnrollment } from "@/api/enrollment.api"
+import { createEnrollment, deleteEnrollment } from "@/api/enrollment.api"
 import { useAuth } from "@/contexts/authContext"
 import { useNavigate } from "react-router-dom"
 
@@ -49,8 +49,13 @@ export function EnrollmentFlow() {
 			...prev,
 			...data,
 		}))
+
 		if (tabKey) {
 			setCompletedTabs((prev) => new Set([...prev, tabKey]))
+		}
+
+		if (data.enrollmentId) {
+			setCurrentTabIndex(2);
 		}
 	}, [])
 
@@ -85,7 +90,6 @@ export function EnrollmentFlow() {
 		date.setMinutes(date.getMinutes() + Number(sessionMinutes));
 		return date.toTimeString().slice(0, 8);
 	}
-
 
 	const handleCreateEnrollment = async () => {
 		const enrollmentPayload = {
@@ -146,6 +150,22 @@ export function EnrollmentFlow() {
 				)
 				: null,
 			chargingPattern: enrollmentData?.course?.chargingPattern
+		}
+		if (enrollmentData?.isDraft) {
+			try {
+				const dRes: Response<EnrollmentData> = await deleteEnrollment(enrollmentData.enrollmentId);
+				if (!dRes.success) {
+					throw new Error("failed to delete");
+				}
+			}
+			catch {
+				toast({
+					title: "Error",
+					description: "Failed to delete Enrollment",
+					variant: "destructive"
+				});
+				return;
+			}
 		}
 		try {
 			const eRes: Response<any> = await createEnrollment(enrollmentPayload as any);
@@ -241,7 +261,8 @@ export function EnrollmentFlow() {
 									<TabsContent value="member" className="mt-0 h-full">
 										<MemberTab
 											data={enrollmentData?.member}
-											onUpdate={(data) => updateEnrollmentData({ member: data }, "member")}
+											// onUpdate={(data) => updateEnrollmentData({ member: data }, "member")}
+											onUpdate={(data) => updateEnrollmentData(data, "member")}
 										/>
 									</TabsContent>
 

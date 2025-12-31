@@ -49,6 +49,10 @@ export function getEnrollmentById(id: number): Promise<Response<Enrollment>> {
   return request<Response<Enrollment>>(`${ENROLLMENT_BASE}/${id}`);
 }
 
+export function loadEnrollmentById(id: number): Promise<Response<any>> {
+  return request<Response<any>>(`${ENROLLMENT_BASE}/load/${id}`);
+}
+
 export function createEnrollment(
   payload: Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">
 ): Promise<Response<Enrollment>> {

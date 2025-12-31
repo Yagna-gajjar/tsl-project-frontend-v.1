@@ -13,7 +13,8 @@ import {
 	Search,
 	Filter,
 	Clock,
-	Info
+	Info,
+	Trash2
 } from "lucide-react"
 import { Virtuoso } from "react-virtuoso"
 import { Button } from "@/components/ui/button"
@@ -45,14 +46,14 @@ import type { Member } from "@/types/member"
 import type { Enrollment } from "@/types/enrollment"
 import type { Response } from "@/types/response"
 import { getMembers } from "@/api/member.api"
-import { getEnrollments } from "@/api/enrollment.api"
+import { deleteEnrollment, getEnrollments, loadEnrollmentById } from "@/api/enrollment.api"
 
 export function MemberTab({
 	data,
 	onUpdate,
 }: {
 	data?: Member
-	onUpdate: (m: Member) => void
+	onUpdate: (data: Partial<Enrollment>) => void
 }) {
 	const [open, setOpen] = useState(false)
 	const [members, setMembers] = useState<Member[]>([])
@@ -82,6 +83,32 @@ export function MemberTab({
 		}
 	}
 
+	const deleteDraftEnrollment = async (enrollmentId: number) => {
+		// Basic confirmation to prevent accidental clicks
+		if (!confirm("Are you sure you want to delete this draft?")) return;
+
+		try {
+			const eRes: Response<Enrollment> = await deleteEnrollment(enrollmentId);
+			if (eRes.success) {
+				// Update UI by filtering the local state
+				setEnrollments((prev) => prev.filter((enr) => enr.enrollmentId !== enrollmentId));
+
+				toast({
+					title: "Deleted",
+					description: "Draft enrollment removed successfully.",
+				});
+			} else {
+				throw new Error("Failed to delete");
+			}
+		} catch {
+			toast({
+				title: "Error",
+				description: "Failed to delete Enrollment",
+				variant: "destructive"
+			});
+		}
+	}
+
 	useEffect(() => {
 		if (data?.memberId) {
 			fetchEnrollmentsOfMember(Number(data.memberId));
@@ -97,6 +124,28 @@ export function MemberTab({
 			return matchesSearch && matchesStatus;
 		});
 	}, [enrollments, searchTerm, statusFilter]);
+
+	const loadDateToVariables = async (enrollmentId: number) => {
+		try {
+			const lRes = await loadEnrollmentById(enrollmentId);
+			if (lRes.success) {
+				onUpdate(lRes.data || {});
+
+				toast({
+					title: "Success",
+					description: "Enrollment details loaded.",
+				});
+			} else {
+				throw new Error();
+			}
+		} catch {
+			toast({
+				title: "Error",
+				variant: "destructive",
+				description: "Failed to load Enrollment details."
+			});
+		}
+	}
 
 	const fetchMembersDebounced = (query: string) => {
 		if (!query || query.trim().length < 2) {
@@ -147,7 +196,8 @@ export function MemberTab({
 											key={member.memberId}
 											onSelect={() => {
 												setSelectedMember(member);
-												onUpdate(member);
+												// Important: wrap it in the member key so it matches the state structure
+												onUpdate({ member: member });
 												setOpen(false);
 												fetchEnrollmentsOfMember(Number(member.memberId));
 											}}
@@ -249,7 +299,11 @@ export function MemberTab({
 									data={filteredEnrollments}
 									itemContent={(_, enrollment) => (
 										<div className="px-3 py-1.5">
-											<EnrollmentCard enrollment={enrollment} />
+											<EnrollmentCard
+												enrollment={enrollment}
+												loadDateToVariables={loadDateToVariables}
+												onDelete={deleteDraftEnrollment} // Pass the delete function here
+											/>
 										</div>
 									)}
 								/>
@@ -267,7 +321,7 @@ export function MemberTab({
 	)
 }
 
-function EnrollmentCard({ enrollment }: { enrollment: Enrollment }) {
+function EnrollmentCard({ enrollment, loadDateToVariables, onDelete }: { enrollment: Enrollment, loadDateToVariables: (x: number) => void, onDelete: (x: number) => void }) {
 	const getDaysFromPattern = (pattern: string | null) => {
 		if (!pattern) return "N/A";
 		const daysMap: Record<string, string> = { "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun" };
@@ -276,16 +330,46 @@ function EnrollmentCard({ enrollment }: { enrollment: Enrollment }) {
 
 	const renderActionButton = () => {
 		const status = enrollment.status?.toLowerCase();
-		if (status === "draft" || status === "approvalpending") {
+
+		if (status === "draft") {
 			return (
-				<Button size="sm" className="h-7 px-4 bg-blue-600 hover:bg-blue-700 text-[10px] font-black uppercase shadow-sm" onClick={() => console.log(enrollment)}>
+				<div className="flex items-center gap-2">
+					{/* Delete Button - Only for Drafts */}
+					<Button
+						size="sm"
+						variant="ghost"
+						className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+						onClick={() => onDelete(enrollment.enrollmentId)}
+					>
+						<Trash2 className="w-4 h-4" />
+					</Button>
+
+					<Button
+						size="sm"
+						className="h-7 px-4 bg-blue-600 hover:bg-blue-700 text-[10px] font-black uppercase shadow-sm"
+						onClick={() => loadDateToVariables(enrollment.enrollmentId)}
+					>
+						Load Enr
+					</Button>
+				</div>
+			);
+		}
+
+		if (status === "approvalpending") {
+			return (
+				<Button
+					size="sm"
+					className="h-7 px-4 bg-blue-600 hover:bg-blue-700 text-[10px] font-black uppercase shadow-sm"
+					onClick={() => loadDateToVariables(enrollment.enrollmentId)}
+				>
 					Load Enr
 				</Button>
 			);
 		}
+
 		if (status === "created" || status === "create") {
 			return (
-				<Button size="sm" variant="outline" className="h-7 px-4 border-blue-200 text-blue-700 hover:bg-blue-50 text-[10px] font-black uppercase" onClick={() => console.log(enrollment)}>
+				<Button size="sm" variant="outline" className="h-7 px-4 border-blue-200 text-blue-700 hover:bg-blue-50 text-[10px] font-black uppercase">
 					Change
 				</Button>
 			);

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { User, BookOpen, DollarSign, Calendar, FileCheck, Badge } from "lucide-react"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import type { JSX } from "react/jsx-runtime"
-import { format } from "date-fns"
+import { format, isValid, parseISO } from "date-fns"
 
 interface EnrollmentDetailsProps {
 	data: EnrollmentData
@@ -57,7 +57,11 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						</div>
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">DOB:</span>
-							<span className="font-medium">{format(data?.member?.dob as Date, "yyyy-MMM-dd")}</span>
+							<span className="font-medium">
+								{data?.member?.dob && isValid(parseISO(data?.member?.dob as any))
+									? format(parseISO(data?.member?.dob as any), "yyyy-MMM-dd")
+									: "-"}
+							</span>
 						</div>
 					</div>
 				) : (

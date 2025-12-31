@@ -76,4 +76,5 @@ export interface Enrollment {
   batch?: Batch;
   bill?: any;
   confirm?: any;
+  isDraft?: boolean;
 }
