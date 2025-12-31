@@ -47,6 +47,7 @@ import type { Enrollment } from "@/types/enrollment"
 import type { Response } from "@/types/response"
 import { getMembers } from "@/api/member.api"
 import { deleteEnrollment, getEnrollments, loadEnrollmentById } from "@/api/enrollment.api"
+import { EnrollmentActionModal } from "../enrollment-action-modal"
 
 export function MemberTab({
 	data,
@@ -56,6 +57,7 @@ export function MemberTab({
 	onUpdate: (data: Partial<Enrollment>) => void
 }) {
 	const [open, setOpen] = useState(false)
+	const [isActionModalOpen, setIsActionModalOpen] = useState(false)
 	const [members, setMembers] = useState<Member[]>([])
 	const [selectedMember, setSelectedMember] = useState<Member | null>(data || null)
 	const [loading, setLoading] = useState(false)
@@ -302,7 +304,9 @@ export function MemberTab({
 											<EnrollmentCard
 												enrollment={enrollment}
 												loadDateToVariables={loadDateToVariables}
-												onDelete={deleteDraftEnrollment} // Pass the delete function here
+												onDelete={deleteDraftEnrollment}
+												isActionModalOpen={isActionModalOpen}
+												setIsActionModalOpen={setIsActionModalOpen}
 											/>
 										</div>
 									)}
@@ -321,7 +325,7 @@ export function MemberTab({
 	)
 }
 
-function EnrollmentCard({ enrollment, loadDateToVariables, onDelete }: { enrollment: Enrollment, loadDateToVariables: (x: number) => void, onDelete: (x: number) => void }) {
+function EnrollmentCard({ enrollment, loadDateToVariables, onDelete, isActionModalOpen, setIsActionModalOpen }: { enrollment: Enrollment, loadDateToVariables: (x: number) => void, onDelete: (x: number) => void, isActionModalOpen: boolean, setIsActionModalOpen: any }) {
 	const getDaysFromPattern = (pattern: string | null) => {
 		if (!pattern) return "N/A";
 		const daysMap: Record<string, string> = { "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun" };
@@ -369,10 +373,24 @@ function EnrollmentCard({ enrollment, loadDateToVariables, onDelete }: { enrollm
 
 		if (status === "created" || status === "create") {
 			return (
-				<Button size="sm" variant="outline" className="h-7 px-4 border-blue-200 text-blue-700 hover:bg-blue-50 text-[10px] font-black uppercase">
-					Change
-				</Button>
-			);
+				<>
+					<Button
+						size="sm"
+						variant="outline"
+						className="h-7 px-4 border-blue-200 text-blue-700 hover:bg-blue-50 text-[10px] font-black uppercase"
+						onClick={() => setIsActionModalOpen(true)} // Open the modal
+					>
+						Change
+					</Button>
+
+					{/* Render the modal component here */}
+					<EnrollmentActionModal
+						isOpen={isActionModalOpen}
+						onClose={() => setIsActionModalOpen(false)}
+						enrollment={enrollment}
+					/>
+				</>
+			)
 		}
 		return null;
 	};

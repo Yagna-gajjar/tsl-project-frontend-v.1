@@ -53,6 +53,7 @@ import UserAccessPage from "./components/view/user/UserAccessPage";
 import StatusVisible from "./pages/status-visible";
 import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrollment-flow";
 import SessionBooking from "./pages/SessionBooking";
+import ChangeEnrollment from "./pages/Change";
 
 export default function App() {
   return (
@@ -76,6 +77,7 @@ export default function App() {
                   element={<EnrollmentDashboard />}
                 /> */}
                 <Route path="/enrollment" element={<EnrollmentPage />} />
+                <Route path="/enrollment/change" element={<ChangeEnrollment />} />
                 <Route path="/authority" element={<AuthorityPage />} />
                 <Route path="/account/accounts" element={<AccountPage />} />
                 <Route
