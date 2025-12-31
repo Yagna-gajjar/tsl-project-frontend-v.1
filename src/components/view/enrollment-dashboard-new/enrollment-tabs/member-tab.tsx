@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Member } from "@/types/member"
 import { getMembers } from "@/api/member.api"
 import { toast } from "@/hooks/use-toast"
+import ExcelPreview from "../EnrollmentPreview"
 
 export function MemberTab({
 	data,
@@ -228,6 +229,9 @@ export function MemberTab({
 					</div>
 				</Card>
 			)}
+			<div className="overflow-auto">
+				<ExcelPreview />
+			</div>
 		</div>
 	)
 }
