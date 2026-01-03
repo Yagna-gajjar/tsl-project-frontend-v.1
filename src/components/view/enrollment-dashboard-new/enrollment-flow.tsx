@@ -101,7 +101,7 @@ export function EnrollmentFlow() {
 			memberId: enrollmentData?.member?.memberId ?? null,
 			activityId: enrollmentData?.activityId ?? null,
 			courseId: enrollmentData?.courseId ?? null,
-			courseRateId: enrollmentData?.courseRateId ?? null,
+			courseRateId: enrollmentData?.courseRate?.courseRateId,
 			dnAccountId: enrollmentData?.dnAccountId ?? null,
 			academyEntityId: enrollmentData?.academyEntityId ?? null,
 
@@ -115,7 +115,7 @@ export function EnrollmentFlow() {
 			membersEnrolled: enrollmentData?.membersEnrolled ?? 1,
 
 			patternDiscount: enrollmentData?.patternDiscount ?? 0,
-			rackPrice: enrollmentData?.rackPrice ?? 0,
+			rackPrice: enrollmentData?.courseRate?.unitRate ?? 0,
 			dnOrDiscount: enrollmentData?.dnOrDiscount ?? 0,
 			billingRate: enrollmentData?.billingRate ?? 0,
 			costToMember: enrollmentData?.costToMember ?? 0,

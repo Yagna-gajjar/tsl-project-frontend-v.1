@@ -5,6 +5,7 @@ import type { Response } from "@/types/response";
 export interface BatchMemberQuery {
   memberId?: number;
   enrollmentNo?: number;
+  date?: Date | string;
 }
 
 const BATCH_MEMBER_BASE = import.meta.env.VITE_APP_API_URL + "/batch-member";
@@ -14,7 +15,8 @@ export function getBatchMember(
 ): Promise<Response<BatchMember[]>> {
   const qs = toQueryString({
     enrollmentNo: params.enrollmentNo ?? undefined,
-    memberId: params.memberId ?? undefined
+    memberId: params.memberId ?? undefined,
+    date: params.date ?? undefined,
   });
 
   return request<Response<BatchMember[]>>(`${BATCH_MEMBER_BASE}${qs}`);
