@@ -33,6 +33,8 @@ const getSectionIcon = (iconType: string): JSX.Element => {
 }
 
 export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) {
+	console.log(data);
+
 	return (
 		<motion.div className="sticky top-8 space-y-4">
 			<div>
@@ -113,12 +115,12 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						</div>
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">Days:</span>
-							<span className="font-medium">{(data?.courseRate as any)?.numberOfDays}</span>
+							<span className="font-medium">{(data as any)?.billingDaysSessions}</span>
 						</div>
 						<div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
 							<span>Total:</span>
 							<span className="text-primary">
-								₹{((data.courseRate.unitRate || 0) * ((data?.courseRate as any)?.numberOfDays)).toFixed(2)}
+								₹{((data.courseRate.unitRate || 0) * ((data as any)?.billingDaysSessions)).toFixed(2)}
 							</span>
 						</div>
 					</div>

@@ -207,6 +207,9 @@ export function EnrollmentFlow() {
 		}
 	}, [currentTabValue, completedTabs, enrollmentData]);
 
+	console.log(enrollmentData, " = enrollmentData");
+
+
 	return (
 		<div className="flex min-h-screen flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-8 bg-background">
 			<div className="flex-1 min-w-0">

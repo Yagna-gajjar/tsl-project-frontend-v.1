@@ -179,7 +179,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-3">
+      <div className="mb-4 flex gap-3 text-">
         <SearchableMultiselect
           isSingle
           placeholder="Entity Classification"

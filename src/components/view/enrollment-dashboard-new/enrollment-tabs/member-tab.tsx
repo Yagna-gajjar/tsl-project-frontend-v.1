@@ -86,13 +86,11 @@ export function MemberTab({
 	}
 
 	const deleteDraftEnrollment = async (enrollmentId: number) => {
-		// Basic confirmation to prevent accidental clicks
 		if (!confirm("Are you sure you want to delete this draft?")) return;
 
 		try {
 			const eRes: Response<Enrollment> = await deleteEnrollment(enrollmentId);
 			if (eRes.success) {
-				// Update UI by filtering the local state
 				setEnrollments((prev) => prev.filter((enr) => enr.enrollmentId !== enrollmentId));
 
 				toast({
