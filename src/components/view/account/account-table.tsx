@@ -35,6 +35,8 @@ export default function AccountTable({ onView, onEdit, refreshKey, entityType, e
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
+      console.log(entityId);
+
       const res: Response<Account[]> = await getAccounts({
         page,
         limit,
@@ -42,7 +44,7 @@ export default function AccountTable({ onView, onEdit, refreshKey, entityType, e
         sortOrder,
         search: search || undefined,
         entityType: entityType !== "all" ? entityType : undefined,
-        entityId: String(entityId) !== "all" ? entityId : undefined
+        entityId: entityId
       });
 
       setTotal(res.pagination.total);

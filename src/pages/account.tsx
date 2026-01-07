@@ -255,7 +255,7 @@ export default function AccountPage() {
           setViewOpen(true);
         }}
         entityType={selectedEntityType}
-        entityId={Number(selectedEntityId)}
+        entityId={selectedEntityId !== 'all' ? Number(selectedEntityId) : undefined}
       />
       {formOpen &&
         <AccountFormModal
