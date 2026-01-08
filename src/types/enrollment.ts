@@ -107,7 +107,7 @@ export interface EnrollmentData {
   billingDaysSessions?: number;
   courseRateId?: number;
   unitRate?: number;
-  noOfDaysInWeek?:number;
+  noOfDaysInWeek?: number;
   patternDiscount?: number;
   rackPrice?: number;
   dnOrDiscount?: number;
@@ -134,8 +134,8 @@ export interface EnrollmentData {
   status?: string;
   createdBy?: number;
   createdByUser?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 
   //support
   startTime?: string;
