@@ -79,12 +79,10 @@ export async function process1(
 
 	billingDaysSessions = toFixed2(billingDaysSessions);
 
-	console.log("old billing rate ", base?.billingRate);
 	let newBillingAmount = billingDaysSessions * (base?.billingRate ?? 0);
 
 	let selectedCourseRate: any = null;
 	let newVersion: any = {};
-	console.log("Base", base);
 	let newRoundedAmount;
 	if (applyNewRates) {
 
@@ -105,7 +103,6 @@ export async function process1(
 
 		for (const type of membershipPriority) {
 			filteredRates = rates.filter(r => r.membershipType === type);
-			console.log(filteredRates, " filteredRates");
 			if (filteredRates.length) break;
 		}
 
@@ -137,7 +134,6 @@ export async function process1(
 		let Y = Math.ceil(X);
 
 		newRoundedAmount = (((Y - X) * 100) / (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100))) + E;
-		console.log(newRoundedAmount, " roundedOf")
 	}
 	else {
 		let tax = (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100) / 100);
@@ -146,7 +142,6 @@ export async function process1(
 		let Y = Math.ceil(X);
 
 		newRoundedAmount = (((Y - X) * 100) / (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100)));
-		console.log(newRoundedAmount, " without roundedOf")
 	}
 
 	const newCgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.cgstRate) ?? 0)) / 100);

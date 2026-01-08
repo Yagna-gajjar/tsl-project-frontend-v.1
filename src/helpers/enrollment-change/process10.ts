@@ -13,8 +13,8 @@ const nowISO = (): string => new Date().toISOString();
 export async function process10(
 	enrollmentData: EnrollmentData,
 	batchData: BatchMember,
-	givenattendingPattern: any,
-	givenattendingPatternDays: number,
+	// givenattendingPattern: any,
+	// givenattendingPatternDays: number,
 	givenProcessingCharge: number,
 	startDate: Date
 ): Promise<Process1Result> {
