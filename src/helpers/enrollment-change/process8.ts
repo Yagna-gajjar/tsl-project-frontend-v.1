@@ -1,6 +1,6 @@
 import type { EnrollmentData } from "@/types/enrollment";
 
-export interface Process1Result {
+export interface Process8Result {
 	modify: EnrollmentData;
 	newVersion: EnrollmentData;
 	newEnrollment: any;
@@ -15,7 +15,7 @@ export async function process8(
 	givenPrintRemarks: string,
 	givenWalkingName: string,
 	givenWalkingContact: string
-): Promise<Process1Result> {
+): Promise<Process8Result> {
 
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	const modify: EnrollmentData = {
@@ -24,22 +24,47 @@ export async function process8(
 		updatedAt: nowISO(),
 		status: "cancelled"
 	};
-	let calculatedCostToMember = 0;
-	// calculatedCostToMember = ((base?.rackPrice ?? 0) * (base?.patternDiscount ?? 1)) - (dnOrDiscount / billingDaysSessions)
-	let calculatedTotalDebitedAmount = 0;
+
+	//calculation here
+	const hasDnAccount = !!base?.dnAccountId && base?.dnAccountId !== 0;
+	const sgstRate = Number(parseFloat(String(base?.sgstRate)).toFixed(5));
+	const cgstRate = Number(parseFloat(String(base?.cgstRate)).toFixed(5));
+	const rackPrice = Number(parseFloat(String(base?.rackPrice)).toFixed(5));
+	const patternDiscount = Number(parseInt(String(base?.patternDiscount) ?? 1))
+	const membersEnrolled = Number(base?.membersEnrolled) || 1;
+	const billingDaysSessions = Number(base?.billingDaysSessions) || 1;
+	const processingCharge = Number(base?.processingCharge);
+	let baseRateD = hasDnAccount
+		? (rackPrice * patternDiscount)
+		: (rackPrice * patternDiscount) - (givenDNOrDiscount / billingDaysSessions);
+
+
+	const A = ((baseRateD * billingDaysSessions) + processingCharge);
+	const B = 100 + sgstRate + cgstRate;
+	const C = A * (B / 100);
+	const X = Math.ceil(Number(C.toFixed(5)));
+	const E = X - C;
+	const roundedAmount = ((100 * E) / B);
+
+	const billingAmount = baseRateD * billingDaysSessions * membersEnrolled;
+	const cgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (cgstRate / 100);
+	const sgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (sgstRate / 100);
+	const calculatedCostToMember = ((rackPrice * patternDiscount) - (givenDNOrDiscount / billingDaysSessions));
+	const totalDebitAmount = (calculatedCostToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + (processingCharge * membersEnrolled) + roundedAmount;
+
 	const newVersion: EnrollmentData = {
 		...base,
 		dnAccountId: givenDNAccountId,
 		dnOrDiscount: givenDNOrDiscount,
 		costToMember: calculatedCostToMember,
-		totalDebitAmount: calculatedTotalDebitedAmount,
+		totalDebitAmount: totalDebitAmount,
 		printRemarks: givenPrintRemarks,
 		officeRemarks: base?.officeRemarks + " Debit Account and Amount Changed on " + nowISO(),
 		walkingName: givenWalkingName,
 		walkingContact: givenWalkingContact,
 		academyApprovalStatus: "required",
 		finalTSLApproval: "required",
-		status: "created",
+		status: "created"
 	};
 
 	return {
