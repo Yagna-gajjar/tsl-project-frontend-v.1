@@ -30,6 +30,7 @@ import { format } from "date-fns";
 // Importing your config object
 import { ENROLLMENT_WORKFLOW_CONFIG } from "@/helpers/enrollment-change/workflow";
 import { process1 } from "@/helpers/enrollment-change/process1";
+import { process7 } from "@/helpers/enrollment-change/process7";
 
 const ChangeEnrollment = () => {
 	const location = useLocation();
@@ -66,12 +67,20 @@ const ChangeEnrollment = () => {
 			if (enrollmentData) {
 				setIsLoading(true);
 				try {
-					const result = await process1(
+					const result = await process7(
 						enrollmentData,
-						new Date(changeDate),
+						new Date(changeDate).toString(),
+						"nothing here for now",
+						"walkign name is here",
+						"234567890",
 						processingCharge,
-						applyNewRates
 					);
+					// const result = await process1(
+					// 	enrollmentData,
+					// 	new Date(changeDate),
+					// 	processingCharge,
+					// 	applyNewRates
+					// );
 					setProcessedData(result);
 				} catch (error) {
 					console.error("Error processing enrollment data:", error);

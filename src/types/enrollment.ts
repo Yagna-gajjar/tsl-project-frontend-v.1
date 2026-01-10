@@ -140,6 +140,7 @@ export interface EnrollmentData {
   //support
   startTime?: string;
   endTime?: string;
+  suspensionDate?: string | Date | null;
   activityClassification?: number | null;
   activityType?: string | null;
   chargingPattern: string,
