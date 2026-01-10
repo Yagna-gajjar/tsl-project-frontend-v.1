@@ -12,7 +12,7 @@ export async function process5(
 	givenPrintRemarks?: string,
 	givenWalkingName?: string,
 	givenWalkingContact?: string,
-	givenProcessingCharge?: number
+	givenProcessingCharge?: number,
 ): Promise<Process5Result> {
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	const newEnrollment = {
