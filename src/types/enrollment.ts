@@ -49,9 +49,9 @@ export interface Enrollment {
   walkingName?: string;
   walkingContact?: string;
   memberApprovalStatus?: number | null;
-  academyApprovalStatus?: number | null;
+  academyApprovalStatus?: string | null;
   membershipType?: string;
-  finalTSLApproval?: number | null;
+  finalTSLApproval?: string;
   changeNo?: number;
   previousCourseID?: number;
   processingCharge?: number;
@@ -62,6 +62,7 @@ export interface Enrollment {
   updatedAt?: string;
 
   //support
+  noOfDaysInWeek?: number;
   startTime?: string;
   endTime?: string;
   activityClassification?: number | null;
@@ -77,4 +78,82 @@ export interface Enrollment {
   bill?: any;
   confirm?: any;
   isDraft?: boolean;
+}
+
+export interface EnrollmentData {
+  enrollmentId: number;
+  firstEnrollmentId?: number;
+  enrollmentNo?: number;
+  enrollmentDate?: string;
+  membershipMasterId?: number;
+  membershipId?: number;
+  accountId?: number;
+  accountName?: string;
+  memberId?: number;
+  memberFirstName?: string;
+  memberLastName?: string;
+  activityId?: number;
+  activityName?: string;
+  courseId?: number;
+  courseName?: string;
+  academyEntityId?: number;
+  academyEntityName?: string;
+  permittedDays?: number;
+  attendingStartDate?: string;
+  endDate?: string;
+  membersEnrolled?: number;
+  attendingPattern?: string | string[] | number[];
+  attendingPatternDays?: number;
+  billingDaysSessions?: number;
+  courseRateId?: number;
+  unitRate?: number;
+  noOfDaysInWeek?: number;
+  patternDiscount?: number;
+  rackPrice?: number;
+  dnOrDiscount?: number;
+  dnAccountId?: number | null;
+  billingRate?: number;
+  costToMember?: number;
+  roundedAmount?: number;
+  billingAmount?: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
+  totalDebitAmount?: number;
+  openEnrollment?: boolean;
+  printRemarks?: string;
+  officeRemarks?: string;
+  walkingName?: string;
+  walkingContact?: string;
+  memberApprovalStatus?: number | null;
+  academyApprovalStatus?: string | null;
+  membershipType?: string;
+  finalTSLApproval?: string;
+  changeNo?: number;
+  previousCourseID?: number;
+  processingCharge?: number;
+  status?: string;
+  createdBy?: number;
+  createdByUser?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+
+  //support
+  startTime?: string;
+  endTime?: string;
+  suspensionDate?: string | Date | null;
+  activityClassification?: number | null;
+  activityType?: string | null;
+  chargingPattern: string,
+  payment: Transaction,
+  batchId: number | null;
+  member?: Member;
+  course?: Course;
+  courseRate?: CourseRate;
+  activity?: Activity;
+  batch?: Batch;
+  bill?: any;
+  confirm?: any;
+  isDraft?: boolean;
+  cgstRate?: number;
+  sgstRate?: number;
 }
