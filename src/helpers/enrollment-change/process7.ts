@@ -1,10 +1,15 @@
+import { getBatchMember } from "@/api/batchMember.api";
 import { toast } from "@/hooks/use-toast";
+import type { BatchMember } from "@/types/batchMember";
 import type { EnrollmentData } from "@/types/enrollment";
+import type { Response } from "@/types/response";
 
 export interface Process7Result {
 	modify: EnrollmentData;
 	newVersion: EnrollmentData;
 	newEnrollment: any;
+	modifyBatch: BatchMember;
+	newVersionBatch: BatchMember;
 }
 
 const nowISO = (): string => new Date().toISOString();
@@ -17,6 +22,19 @@ export async function process7(
 	givenWalkingContact?: string,
 	givenProcessingCharge?: number
 ): Promise<Process7Result> {
+	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
+
+	const batchMember: BatchMember = await getBatchMember({
+		enrollmentNo: Number(base?.enrollmentNo)
+	}).then((res: Response<BatchMember[]>) => res.success ? res.data?.[0] : [] as any);
+
+	if (!batchMember) {
+		toast({
+			title: "Error",
+			description: "No Batch Data Found",
+			variant: "destructive"
+		})
+	}
 
 	function daysBetween(date1: string | Date, date2: string | Date): number {
 		const d1 = date1 instanceof Date ? date1 : new Date(date1);
@@ -41,7 +59,6 @@ export async function process7(
 		return `${day}/${month}/${year}`;
 	}
 
-	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	const calculatedCgstAmount = ((base?.processingCharge ?? 0) + (base?.roundedAmount ?? 0)) * ((base?.cgstRate ?? 0) / 100)
 	const calculatedSgstAmount = ((base?.processingCharge ?? 0) + (base?.roundedAmount ?? 0)) * ((base?.sgstRate ?? 0) / 100)
 	const modify: EnrollmentData = {
@@ -96,7 +113,7 @@ export async function process7(
 	const billingAmount = baseRateD * billingDaysSessions * membersEnrolled;
 	const cgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (cgstRate / 100);
 	const sgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (sgstRate / 100);
-	const calculatedCostToMember = ((rackPrice * patternDiscount) - ((base?.dnOrDiscount ?? 0)/ billingDaysSessions));
+	const calculatedCostToMember = ((rackPrice * patternDiscount) - ((base?.dnOrDiscount ?? 0) / billingDaysSessions));
 	const totalDebitAmount = (calculatedCostToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + (processingCharge * membersEnrolled) + roundedAmount;
 
 	const newVersion: EnrollmentData = {
@@ -110,16 +127,29 @@ export async function process7(
 		sgstAmount: sgstAmount,
 		totalDebitAmount: totalDebitAmount,
 		printRemarks: givenPrintRemarks,
-		officeRemarks: "Start Date Change on "+nowISO(),
+		officeRemarks: "Start Date Change on " + nowISO(),
 		walkingName: givenWalkingName,
 		walkingContact: givenWalkingContact,
-		finalTSLApproval:"required",
+		finalTSLApproval: "required",
 		status: "created"
 	};
+
+	const modifyBatch: BatchMember = {
+		...batchMember,
+		startDate: givenStartDate,
+		endDate: calculatedEndDate,
+		updatedAt: nowISO(),
+	}
+	const newVersionBatch: BatchMember = {
+		...batchMember,
+		status: "cancelled"
+	}
 
 	return {
 		modify,
 		newVersion,
-		newEnrollment: null
+		newEnrollment: null,
+		modifyBatch: modifyBatch,
+		newVersionBatch: newVersionBatch
 	};
 }
