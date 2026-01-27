@@ -99,7 +99,7 @@ const EnrollmentFormNew = ({
     costToMember: 0,
     memberApprovalStatus: null,
     academyApprovalStatus: null,
-    finalTSLApproval: null,
+    // finalTSLApproval: null,
   });
 
   const { user } = useAuth();

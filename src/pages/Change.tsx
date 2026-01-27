@@ -39,7 +39,7 @@ const ChangeEnrollment = () => {
 
 	const currentConfig = ENROLLMENT_WORKFLOW_CONFIG[actionType];
 
-	const [processedData, setProcessedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null>(null);
+	const [processedData, setProcessedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null | any>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
 	const [changeDate, setChangeDate] = useState("2025-12-31");

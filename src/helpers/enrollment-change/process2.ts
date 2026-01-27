@@ -4,7 +4,7 @@ export interface Process2Result {
     newEnrollment: any;
 }
 
-const nowISO = (): string => new Date().toISOString();
+// const nowISO = (): string => new Date().toISOString();
 
 export async function process2(
     enrollmentData: EnrollmentData,
@@ -14,6 +14,11 @@ export async function process2(
     givenWalkingContact?: string,
     givenProcessingCharge?: number
 ): Promise<Process2Result> {
+    console.log(givenStartDate,
+givenPrintRemarks,
+givenWalkingName,
+givenWalkingContact,
+givenProcessingCharge);
     const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
     const newEnrollment = {
         ...base,
