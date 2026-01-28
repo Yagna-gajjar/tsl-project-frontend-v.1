@@ -15,6 +15,8 @@ export async function process2(
     givenProcessingCharge?: number
 ): Promise<Process2Result> {
     const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
+    console.log(base);
+
     const newEnrollment = {
         ...base,
     }

@@ -5,7 +5,6 @@ import { getCourseRates } from "@/api/courseRate.api";
 export interface Process1Result {
 	modify: EnrollmentData;
 	newVersion: EnrollmentData;
-	newEnrollment: any;
 }
 
 const toNumber = (v: string | number | null | undefined): number =>
@@ -175,7 +174,6 @@ export async function process1(
 
 	return {
 		modify,
-		newVersion,
-		newEnrollment: null,
+		newVersion
 	};
 }

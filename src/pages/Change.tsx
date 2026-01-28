@@ -139,26 +139,55 @@ const ChangeEnrollment = () => {
 			processingCharge,
 			new Date(changeDate)
 		)];
-	const currentProcess = PROCESSES[currentConfig.existingEnrollment.process - 1]
+
+	const [modification, setModification] = useState<any>(null);
+	const [newVersion, setNewVersion] = useState<any>(null);
+	const [newEnrollment, setNewEnrollment] = useState<any>(null);
 
 	useEffect(() => {
-		const fetchData = async () => {
-			if (enrollmentData) {
-				setIsLoading(true);
-				try {
-					const result = await currentProcess()
-					console.log(result);
+		if (!enrollmentData || !currentConfig) return;
 
-					setProcessedData(result);
-				} catch (error) {
-					console.error("Error processing enrollment data:", error);
-				} finally {
-					setIsLoading(false);
+		const runProcesses = async () => {
+			setIsLoading(true);
+			try {
+				// Existing Enrollment → Modification
+				const existingResult =
+					await PROCESSES[currentConfig.existingEnrollment.process - 1]();
+
+				setModification(existingResult?.modify || null);
+
+				// New Version
+				if (currentConfig.newVersion?.process) {
+					const nv =
+						await PROCESSES[currentConfig.newVersion.process - 1]();
+					setNewVersion(nv?.newVersion || nv || null);
+				} else {
+					setNewVersion(null);
 				}
+
+				// New Enrollment
+				if (currentConfig.newEnrollment?.process) {
+					const ne =
+						await PROCESSES[currentConfig.newEnrollment.process - 1]();
+					setNewEnrollment(ne?.newEnrollment || ne || null);
+				} else {
+					setNewEnrollment(null);
+				}
+			} catch (err) {
+				console.error("Process execution failed:", err);
+			} finally {
+				setIsLoading(false);
 			}
 		};
-		fetchData();
-	}, [enrollmentData, changeDate, processingCharge, applyNewRates]);
+
+		runProcesses();
+	}, [
+		enrollmentData,
+		changeDate,
+		processingCharge,
+		applyNewRates,
+		actionType,
+	]);
 
 	if (!enrollmentId) {
 		return (
@@ -179,8 +208,6 @@ const ChangeEnrollment = () => {
 			</div>
 		);
 	}
-
-
 
 	return (
 		<div className="w-full bg-white dark:bg-slate-900 min-h-screen">
@@ -394,7 +421,7 @@ const ChangeEnrollment = () => {
 								</div>
 								{enrollmentFields.map((field, idx) => (
 									<div key={field} className={`px-3 py-2 text-[10px] font-bold border-b border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 min-h-10 flex items-center ${idx % 2 === 0 ? 'bg-blue-50/30 dark:bg-slate-800/40' : 'bg-blue-50/10 dark:bg-slate-800'}`}>
-										{processedData?.modify?.[field] ?? "—"}
+										{modification?.[field] ?? "—"}
 									</div>
 								))}
 							</div>
@@ -406,7 +433,7 @@ const ChangeEnrollment = () => {
 								</div>
 								{enrollmentFields.map((field, idx) => (
 									<div key={field} className={`px-3 py-2 text-[10px] font-bold border-b border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 min-h-10 flex items-center ${idx % 2 === 0 ? 'bg-emerald-50/30 dark:bg-slate-800/40' : 'bg-emerald-50/10 dark:bg-slate-800'}`}>
-										{processedData?.newVersion?.[field] ?? "—"}
+										{newVersion?.[field] ?? "—"}
 									</div>
 								))}
 							</div>
@@ -418,7 +445,7 @@ const ChangeEnrollment = () => {
 								</div>
 								{enrollmentFields.map((field, idx) => (
 									<div key={field} className={`px-3 py-2 text-[10px] font-bold border-b border-slate-200 dark:border-slate-700 text-purple-600 dark:text-purple-400 min-h-10 flex items-center ${idx % 2 === 0 ? 'bg-purple-50/30 dark:bg-slate-800/40' : 'bg-purple-50/10 dark:bg-slate-800'}`}>
-										{processedData?.newEnrollment?.[field] ?? "—"}
+										{newEnrollment?.[field] ?? "—"}
 									</div>
 								))}
 							</div>
