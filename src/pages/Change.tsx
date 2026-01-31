@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,7 @@ import { process7 } from "@/helpers/enrollment-change/process7";
 import { process8 } from "@/helpers/enrollment-change/process8";
 import { process9 } from "@/helpers/enrollment-change/process9";
 import { process10 } from "@/helpers/enrollment-change/process10";
+import type { EnrollmentData } from "@/types/enrollment";
 
 
 const ChangeEnrollment = () => {
@@ -45,6 +48,11 @@ const ChangeEnrollment = () => {
 	const [changeDate, setChangeDate] = useState("2025-12-31");
 	const [processingCharge, setProcessingCharge] = useState(enrollmentData?.processingCharge || "0");
 	const [applyNewRates, setApplyNewRates] = useState(false);
+
+
+	const [modification, setModification] = useState<Partial<EnrollmentData> | null>(null);
+	const [newVersion, setNewVersion] = useState<Partial<EnrollmentData> | null>(null);
+	const [newEnrollment, setNewEnrollment] = useState<Partial<EnrollmentData> | null>(null);
 
 	const enrollmentFields = [
 		"enrollmentId", "firstEnrollmentId", "enrollmentNo", "enrollmentDate",
@@ -69,6 +77,7 @@ const ChangeEnrollment = () => {
 		),
 		() => process2(
 			enrollmentData,
+			newVersion,
 			new Date(changeDate).toString(),
 			"",
 			"walkingName",
@@ -140,9 +149,6 @@ const ChangeEnrollment = () => {
 			new Date(changeDate)
 		)];
 
-	const [modification, setModification] = useState<any>(null);
-	const [newVersion, setNewVersion] = useState<any>(null);
-	const [newEnrollment, setNewEnrollment] = useState<any>(null);
 
 	useEffect(() => {
 		if (!enrollmentData || !currentConfig) return;
@@ -157,19 +163,22 @@ const ChangeEnrollment = () => {
 				setModification(existingResult?.modify || null);
 
 				// New Version
+				let newVersionResult = null;
 				if (currentConfig.newVersion?.process) {
 					const nv =
 						await PROCESSES[currentConfig.newVersion.process - 1]();
-					setNewVersion(nv?.newVersion || nv || null);
+					newVersionResult = nv?.newVersion || nv || null;
+					setNewVersion(newVersionResult);
 				} else {
 					setNewVersion(null);
 				}
 
-				// New Enrollment
+				// New Enrollment - Pass newVersion data as parameter
 				if (currentConfig.newEnrollment?.process) {
 					const ne =
 						await PROCESSES[currentConfig.newEnrollment.process - 1]();
 					setNewEnrollment(ne?.newEnrollment || ne || null);
+
 				} else {
 					setNewEnrollment(null);
 				}
@@ -186,7 +195,7 @@ const ChangeEnrollment = () => {
 		changeDate,
 		processingCharge,
 		applyNewRates,
-		actionType,
+		actionType
 	]);
 
 	if (!enrollmentId) {
@@ -207,6 +216,7 @@ const ChangeEnrollment = () => {
 				</p>
 			</div>
 		);
+
 	}
 
 	return (

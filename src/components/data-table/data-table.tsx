@@ -35,6 +35,8 @@ export function DataTable<T>({
   exportFileName,
   onExport,
 }: DynamicTableProps<T>) {
+  console.log(data);
+
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(columns.filter((c) => !c.hidden).map((c) => String(c.key)))
   );
@@ -212,7 +214,7 @@ export function DataTable<T>({
     return (
       <div className="w-full space-y-4">
         <TableToolbar
-          onSearch={onSearchChange || (() => {})}
+          onSearch={onSearchChange || (() => { })}
           columns={columns}
           visibleColumns={visibleColumns}
           onColumnToggle={handleColumnToggle}
@@ -235,7 +237,7 @@ export function DataTable<T>({
     <>
       <div className="space-y-4 w-full">
         <TableToolbar
-          onSearch={onSearchChange || (() => {})}
+          onSearch={onSearchChange || (() => { })}
           columns={columns}
           visibleColumns={visibleColumns}
           onColumnToggle={handleColumnToggle}
