@@ -3,13 +3,14 @@ import { request, toQueryString, type SortOrder } from './helper';
 import type { Response } from '@/types/response';
 
 export interface ActivityQuery {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    sorting?: SortOrder;
-    search?: string;
-    activityName?: string;
-    activityType?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sorting?: SortOrder;
+  search?: string;
+  activityName?: string;
+  activity?: string;
+  activityType?: string;
 }
 
 const ACTIVITY_BASE = import.meta.env.VITE_APP_API_URL + '/activity';
@@ -24,6 +25,7 @@ export function getActivities(
     sorting: params.sorting ?? params.sorting ?? "ASC",
     search: params.search ?? params.activityName,
     activityName: params.activityName ?? undefined,
+    activity: params.activity ?? undefined,
     activityType: params.activityType ?? undefined,
   });
 

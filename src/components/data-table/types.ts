@@ -3,15 +3,15 @@ import type { ReactNode } from "react"
 export type FilterType = "text" | "number" | "select" | "date" | null
 
 export interface Column<T> {
-	key: keyof T | string
-	header: string
-	sortable?: boolean
-	filterType?: FilterType
-	filterOptions?: { label: string; value: string | number }[]
-	render?: (row: T) => ReactNode
-	width?: number | string
-	align?: "left" | "center" | "right"
-	hidden?: boolean
+  key: keyof T | string
+  header: string
+  sortable?: boolean
+  filterType?: FilterType
+  filterOptions?: { label: string; value: string | number }[]
+  render?: (row: T) => ReactNode
+  width?: number | string
+  align?: "left" | "center" | "right"
+  hidden?: boolean
 }
 
 export interface PaginationState {
@@ -38,7 +38,7 @@ export interface DynamicTableProps<T> {
   onDelete?: (id: any) => void;
 
   idKey?: keyof T;
-  
+
   onExport?: () => Promise<T[]>;
   exportFileName?: string;
 }

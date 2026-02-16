@@ -222,7 +222,7 @@ export default function AccountFormModal({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
+      <Dialog open={isOpeDialogContentn} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
           <div className="flex flex-col max-h-[90vh] overflow-hidden">
             <FormHeader title={initialData ? "Edit Account" : "Add Account"} onClose={onClose} />

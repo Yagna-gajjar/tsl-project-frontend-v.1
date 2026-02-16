@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { data, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,27 +32,154 @@ import { process8 } from "@/helpers/enrollment-change/process8";
 import { process9 } from "@/helpers/enrollment-change/process9";
 import { process10 } from "@/helpers/enrollment-change/process10";
 import type { EnrollmentData } from "@/types/enrollment";
-
+import { getCourseRates } from "@/api/courseRate.api";
+import type { CourseRate } from "@/types/courseRate";
+import type { Response } from "@/types/response";
 
 const ChangeEnrollment = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
 
-	const { enrollmentId, actionType, enrollmentData } = location.state || {};
-
+	const { enrollmentId, actionType, activity, enrollmentData } = location.state || {};
 	const currentConfig = ENROLLMENT_WORKFLOW_CONFIG[actionType];
 
-	const [processedData, setProcessedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
+	const [values, setValues] = useState();
 
-	const [changeDate, setChangeDate] = useState("2025-12-31");
-	const [processingCharge, setProcessingCharge] = useState(enrollmentData?.processingCharge || "0");
+	const [processedData, setProcessedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null>(null);
+
+	const [isLoading, setIsLoading] = useState(false);
+
+	const [changeDate, setChangeDate] = useState("2026-01-17");
+	const [processingCharge, setProcessingCharge] = useState(
+		enrollmentData?.processingCharge || "0"
+	);
 	const [applyNewRates, setApplyNewRates] = useState(false);
 
+	const [courseRateData, setCourseRateData] = useState<CourseRate | null>();
 
-	const [modification, setModification] = useState<Partial<EnrollmentData> | null>(null);
-	const [newVersion, setNewVersion] = useState<Partial<EnrollmentData> | null>(null);
-	const [newEnrollment, setNewEnrollment] = useState<Partial<EnrollmentData> | null>(null);
+	const [modification, setModification] =
+		useState<Partial<EnrollmentData> | null>(null);
+	const [newVersion, setNewVersion] =
+		useState<Partial<EnrollmentData> | null>(null);
+	const [newEnrollment, setNewEnrollment] =
+		useState<Partial<EnrollmentData> | null>(null);
+
+	useEffect(() => {
+		async function fetchCourseRate() {
+			if (newVersion?.membershipMasterId && activity.courseId) {
+				const res: Response<CourseRate[]> = await getCourseRates({ membershipMasterId: Number(newVersion?.membershipMasterId), courseId: activity.courseId })
+				if (res?.success) {
+					console.log(res?.data[0]);
+
+					setCourseRateData(res?.data[0] ? res?.data[0] : null);
+				}
+			}
+		}
+		fetchCourseRate()
+	}, [newVersion])
+
+	const PROCESS_MAP = {
+		1: async (ctx: any) =>
+			process1(
+				ctx.enrollmentData,
+				ctx.changeDate,
+				ctx.processingCharge,
+				ctx.applyNewRates
+			),
+
+		2: async (ctx: any) =>
+			process2(
+				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				courseRateData ? courseRateData : null,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		3: async (ctx: any) =>
+			process3(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		4: async (ctx: any) =>
+			process4(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		5: async (ctx: any) =>
+			process5(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		6: async (ctx: any) =>
+			process6(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		7: async (ctx: any) =>
+			process7(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		8: async (ctx: any) =>
+			process8(
+				ctx.enrollmentData,
+				1,
+				1,
+				"",
+				"walkingName",
+				"1234567890"
+			),
+
+		9: async (ctx: any) =>
+			process9(
+				ctx.enrollmentData,
+				1,
+				ctx.processingCharge,
+				"changeType",
+				"",
+				"walkingName",
+				"1234567890"
+			),
+
+		10: async (ctx: any) =>
+			process10(
+				ctx.enrollmentData,
+				currentConfig?.existingEnrollment?.batchUpdate,
+				ctx.processingCharge,
+				ctx.changeDate
+			)
+	};
 
 	const enrollmentFields = [
 		"enrollmentId", "firstEnrollmentId", "enrollmentNo", "enrollmentDate",
@@ -68,120 +195,56 @@ const ChangeEnrollment = () => {
 		"changeNo", "previousCourseID", "processingCharge", "status"
 	];
 
-	const PROCESSES = [
-		() => process1(
-			enrollmentData,
-			new Date(changeDate),
-			processingCharge,
-			applyNewRates
-		),
-		() => process2(
-			enrollmentData,
-			newVersion,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process3(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process4(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process5(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process6(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process7(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process8(
-			enrollmentData,
-			1, // DNAccountId
-			1, // DNOrDiscount
-			"",
-			"walkingName",
-			"1234567890",
-
-		),
-		() => process9(
-			enrollmentData,
-			1, // DNOrDiscount,
-			processingCharge,
-			"changeType",
-			"",
-			"walkingName",
-			"1234567890",
-		),
-		() => process10(
-			enrollmentData,
-			currentConfig?.existingEnrollment?.batchUpdate,
-			processingCharge,
-			new Date(changeDate)
-		)];
-
-
 	useEffect(() => {
 		if (!enrollmentData || !currentConfig) return;
 
 		const runProcesses = async () => {
 			setIsLoading(true);
+
 			try {
-				// Existing Enrollment → Modification
-				const existingResult =
-					await PROCESSES[currentConfig.existingEnrollment.process - 1]();
+				const ctx: any = {
+					enrollmentData,
+					changeDate: new Date(changeDate),
+					processingCharge,
+					applyNewRates,
+					newVersion: null
+				};
 
-				setModification(existingResult?.modify || null);
+				if (currentConfig.existingEnrollment?.process) {
+					const result =
+						await PROCESS_MAP[
+							currentConfig.existingEnrollment.process as keyof typeof PROCESS_MAP
+						](ctx);
+					setModification(result?.modify || null);
+				}
 
-				// New Version
-				let newVersionResult = null;
 				if (currentConfig.newVersion?.process) {
-					const nv =
-						await PROCESSES[currentConfig.newVersion.process - 1]();
-					newVersionResult = nv?.newVersion || nv || null;
-					setNewVersion(newVersionResult);
+					const result =
+						await PROCESS_MAP[
+							currentConfig.newVersion.process as keyof typeof PROCESS_MAP
+						](ctx);
+					ctx.values = result?.values || null;
+					ctx.newVersion = result?.newVersion || result || null;
+					console.log(courseRateData);
+
+					// ctx.courseRateData = courseRateData
+					setValues(ctx.values);
+					setNewVersion(ctx.newVersion);
 				} else {
 					setNewVersion(null);
 				}
 
-				// New Enrollment - Pass newVersion data as parameter
 				if (currentConfig.newEnrollment?.process) {
-					const ne =
-						await PROCESSES[currentConfig.newEnrollment.process - 1]();
-					setNewEnrollment(ne?.newEnrollment || ne || null);
+					const result =
+						await PROCESS_MAP[
+							currentConfig.newEnrollment.process as keyof typeof PROCESS_MAP
+						](ctx);
 
+					setNewEnrollment(result?.newEnrollment || result || null);
 				} else {
 					setNewEnrollment(null);
 				}
+
 			} catch (err) {
 				console.error("Process execution failed:", err);
 			} finally {
@@ -190,19 +253,25 @@ const ChangeEnrollment = () => {
 		};
 
 		runProcesses();
+
 	}, [
 		enrollmentData,
 		changeDate,
 		processingCharge,
 		applyNewRates,
-		actionType
+		actionType,
+		currentConfig
 	]);
 
 	if (!enrollmentId) {
 		return (
 			<div className="flex flex-col items-center justify-center min-h-[400px]">
-				<p className="text-slate-500 font-medium">No enrollment data found.</p>
-				<Button className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
+				<p className="text-slate-500 font-medium">
+					No enrollment data found.
+				</p>
+				<Button className="mt-4" onClick={() => navigate(-1)}>
+					Go Back
+				</Button>
 			</div>
 		);
 	}
@@ -216,7 +285,6 @@ const ChangeEnrollment = () => {
 				</p>
 			</div>
 		);
-
 	}
 
 	return (
@@ -465,6 +533,7 @@ const ChangeEnrollment = () => {
 			</div>
 		</div>
 	);
+
 };
 
 export default ChangeEnrollment;

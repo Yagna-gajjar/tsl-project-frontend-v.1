@@ -189,10 +189,9 @@ export default function LoginForm() {
                     onClick={() => handleRoleChange(role)}
                     className={`
                       flex-1 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all duration-200
-                      ${
-                        formData.role === role
-                          ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                      ${formData.role === role
+                        ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                       }
                     `}
                   >

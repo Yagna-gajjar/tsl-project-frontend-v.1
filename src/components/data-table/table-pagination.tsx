@@ -23,7 +23,6 @@ export function TablePagination({ pagination }: TablePaginationProps) {
   const { page, limit, total, onPageChange, onPageSizeChange } = pagination;
   const totalPages = Math.ceil(total / limit);
 
-  // ✅ Hooks must ALWAYS be called
   useEffect(() => {
     if (!onPageChange) return;
 
@@ -46,7 +45,6 @@ export function TablePagination({ pagination }: TablePaginationProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [page, totalPages, onPageChange]);
 
-  // ⛔ return AFTER hooks
   if (!onPageChange) return null;
 
   return (

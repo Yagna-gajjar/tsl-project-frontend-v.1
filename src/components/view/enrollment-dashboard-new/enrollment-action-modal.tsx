@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom"
 import type { Enrollment } from "@/types/enrollment"
 // Import your workflow configuration
 import { ENROLLMENT_WORKFLOW_CONFIG } from "@/helpers/enrollment-change/workflow"
+import { getCourses } from "@/api/course.api"
+import { getActivities } from "@/api/activity.api"
 
 // Comprehensive list of all 16 action scenarios
 const ACTIONS = [
@@ -20,7 +22,7 @@ const ACTIONS = [
 	{ id: "PERMITTED_EXIT", label: "Permitted Exit", icon: UserMinus, color: "text-slate-600", bg: "bg-slate-100" },
 
 	// Group 2: Pause/Break
-	{ id: "FREEZE", label: "Freeze", icon: Snowflake, color: "text-cyan-600", bg: "bg-cyan-50" },
+	{ id: "FREEZER", label: "Freezer", icon: Snowflake, color: "text-cyan-600", bg: "bg-cyan-50" },
 	{ id: "BREAK", label: "Break", icon: Coffee, color: "text-amber-600", bg: "bg-amber-50" },
 	{ id: "SUSPEND", label: "Suspend", icon: Settings2, color: "text-zinc-600", bg: "bg-zinc-50" },
 	{ id: "MEDICAL_BREAK", label: "Medical Break", icon: Stethoscope, color: "text-rose-600", bg: "bg-rose-50" },
@@ -47,14 +49,16 @@ interface ActionModalProps {
 export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionModalProps) {
 	const navigate = useNavigate()
 
-	const handleActionClick = (actionId: string) => {
-		// Retrieve the specific configuration for this action
+	const handleActionClick = async (actionId: string, actionName: string) => {
+
+		const res = await getCourses({ activityName: actionName });
+
 		const config = ENROLLMENT_WORKFLOW_CONFIG[actionId];
 
-		// Navigate passing full property names in state
 		navigate(`/enrollment/change`, {
 			state: {
 				enrollmentId: enrollment.enrollmentId,
+				activity: res.data ? res.data[0] : null,
 				actionType: actionId,
 				enrollmentData: enrollment,
 				existingEnrollment: config.existingEnrollment,
@@ -80,7 +84,10 @@ export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionMod
 					{ACTIONS.map((action) => (
 						<button
 							key={action.id}
-							onClick={() => handleActionClick(action.id)}
+							onClick={() => {
+
+								handleActionClick(action.id, action.label)
+							}}
 							className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all group bg-white"
 						>
 							<div className={`p-2.5 rounded-full ${action.bg} ${action.color} mb-2 group-hover:scale-110 transition-transform`}>

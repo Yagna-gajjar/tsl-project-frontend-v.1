@@ -10,6 +10,7 @@ export interface CourseRateQuery {
 	search?: string;
 	courseId?: number;
 	entityType?: string;
+	membershipMasterId: number;
 	courseName?: string;
 }
 
@@ -25,6 +26,7 @@ export function getCourseRates(
 		sortOrder: params.sortOrder ?? "ASC",
 		search: params.search ?? undefined,
 		courseId: params.courseId ?? undefined,
+		membershipMasterId: params.membershipMasterId ?? undefined,
 		entityType: params.entityType ?? undefined,
 		courseName: params.courseName ?? undefined
 	});
