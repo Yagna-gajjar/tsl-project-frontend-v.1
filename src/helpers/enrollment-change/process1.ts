@@ -1,11 +1,13 @@
 import type { EnrollmentData } from "@/types/enrollment";
 import { getBatchMember } from "@/api/batchMember.api";
 import { getCourseRates } from "@/api/courseRate.api";
+import { useState } from "react";
+import { setDate } from "date-fns";
 
 export interface Process1Result {
 	modify: EnrollmentData;
 	newVersion: EnrollmentData;
-	newEnrollment: any;
+	values: any;
 }
 
 const toNumber = (v: string | number | null | undefined): number =>
@@ -173,9 +175,28 @@ export async function process1(
 		updatedAt: nowISO(),
 	};
 
+	let v1 = (Number(base.billingAmount) + Number(base.billingAmount) + processingCharge) * (1 + ((Number(base?.cgstRate) + Number(base?.sgstRate)) / 100));
+	let v2 = totalDebit;
+	let v3 = newTotalDebitAmount;
+	let v4 = v1 - v2 - v3;
+	function addDays(date: Date, days: number): Date {
+		const result = new Date(date);
+		result.setDate(result.getDate() + days);
+		return result;
+	}
+
+	const values = {
+		value1: v1,
+		value2: v2,
+		value3: v3,
+		value4: v4,
+		value5: billingDaysSessions,
+		vlaue6: addDays(newVersion.endDate, 1)
+	}
+
 	return {
 		modify,
 		newVersion,
-		newEnrollment: null,
+		values
 	};
 }

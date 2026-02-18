@@ -1,5 +1,7 @@
+'use client';
+
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { data, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,22 +31,155 @@ import { process7 } from "@/helpers/enrollment-change/process7";
 import { process8 } from "@/helpers/enrollment-change/process8";
 import { process9 } from "@/helpers/enrollment-change/process9";
 import { process10 } from "@/helpers/enrollment-change/process10";
-
+import type { EnrollmentData } from "@/types/enrollment";
+import { getCourseRates } from "@/api/courseRate.api";
+import type { CourseRate } from "@/types/courseRate";
+import type { Response } from "@/types/response";
 
 const ChangeEnrollment = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
 
-	const { enrollmentId, actionType, enrollmentData } = location.state || {};
-
+	const { enrollmentId, actionType, activity, enrollmentData } = location.state || {};
 	const currentConfig = ENROLLMENT_WORKFLOW_CONFIG[actionType];
 
-	const [processedData, setProcessedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null | any>(null);
-	const [isLoading, setIsLoading] = useState(true);
+	const [values, setValues] = useState();
 
-	const [changeDate, setChangeDate] = useState("2025-12-31");
-	const [processingCharge, setProcessingCharge] = useState(enrollmentData?.processingCharge || "0");
+	const [processedData, setProcessedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null>(null);
+
+	const [isLoading, setIsLoading] = useState(false);
+
+	const [changeDate, setChangeDate] = useState("2026-01-17");
+	const [processingCharge, setProcessingCharge] = useState(
+		enrollmentData?.processingCharge || "0"
+	);
 	const [applyNewRates, setApplyNewRates] = useState(false);
+
+	const [courseRateData, setCourseRateData] = useState<CourseRate | null>();
+
+	const [modification, setModification] =
+		useState<Partial<EnrollmentData> | null>(null);
+	const [newVersion, setNewVersion] =
+		useState<Partial<EnrollmentData> | null>(null);
+	const [newEnrollment, setNewEnrollment] =
+		useState<Partial<EnrollmentData> | null>(null);
+
+	useEffect(() => {
+		async function fetchCourseRate() {
+			if (newVersion?.membershipMasterId && activity.courseId) {
+				const res: Response<CourseRate[]> = await getCourseRates({ membershipMasterId: Number(newVersion?.membershipMasterId), courseId: activity.courseId })
+				if (res?.success) {
+					console.log(res?.data[0]);
+
+					setCourseRateData(res?.data[0] ? res?.data[0] : null);
+				}
+			}
+		}
+		fetchCourseRate()
+	}, [newVersion])
+
+	const PROCESS_MAP = {
+		1: async (ctx: any) =>
+			process1(
+				ctx.enrollmentData,
+				ctx.changeDate,
+				ctx.processingCharge,
+				ctx.applyNewRates
+			),
+
+		2: async (ctx: any) =>
+			process2(
+				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				ctx.courseRateData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		3: async (ctx: any) =>
+			process3(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		4: async (ctx: any) =>
+			process4(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		5: async (ctx: any) =>
+			process5(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		6: async (ctx: any) =>
+			process6(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		7: async (ctx: any) =>
+			process7(
+				ctx.enrollmentData,
+				ctx.changeDate.toString(),
+				"",
+				"walkingName",
+				"1234567890",
+				ctx.processingCharge
+			),
+
+		8: async (ctx: any) =>
+			process8(
+				ctx.enrollmentData,
+				1,
+				1,
+				"",
+				"walkingName",
+				"1234567890"
+			),
+
+		9: async (ctx: any) =>
+			process9(
+				ctx.enrollmentData,
+				1,
+				ctx.processingCharge,
+				"changeType",
+				"",
+				"walkingName",
+				"1234567890"
+			),
+
+		10: async (ctx: any) =>
+			process10(
+				ctx.enrollmentData,
+				currentConfig?.existingEnrollment?.batchUpdate,
+				ctx.processingCharge,
+				ctx.changeDate
+			)
+	};
 
 	const enrollmentFields = [
 		"enrollmentId", "firstEnrollmentId", "enrollmentNo", "enrollmentDate",
@@ -60,111 +195,94 @@ const ChangeEnrollment = () => {
 		"changeNo", "previousCourseID", "processingCharge", "status"
 	];
 
-	const PROCESSES = [
-		() => process1(
-			enrollmentData,
-			new Date(changeDate),
-			processingCharge,
-			applyNewRates
-		),
-		() => process2(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process3(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process4(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process5(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process6(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process7(
-			enrollmentData,
-			new Date(changeDate).toString(),
-			"",
-			"walkingName",
-			"1234567890",
-			processingCharge
-		),
-		() => process8(
-			enrollmentData,
-			1, // DNAccountId
-			1, // DNOrDiscount
-			"",
-			"walkingName",
-			"1234567890",
-
-		),
-		() => process9(
-			enrollmentData,
-			1, // DNOrDiscount,
-			processingCharge,
-			"changeType",
-			"",
-			"walkingName",
-			"1234567890",
-		),
-		() => process10(
-			enrollmentData,
-			currentConfig?.existingEnrollment?.batchUpdate,
-			processingCharge,
-			new Date(changeDate)
-		)];
-	const currentProcess = PROCESSES[currentConfig.existingEnrollment.process - 1]
-
 	useEffect(() => {
-		const fetchData = async () => {
-			if (enrollmentData) {
-				setIsLoading(true);
-				try {
-					const result = await currentProcess()
-					console.log(result);
+		if (!enrollmentData || !currentConfig) return;
 
-					setProcessedData(result);
-				} catch (error) {
-					console.error("Error processing enrollment data:", error);
-				} finally {
-					setIsLoading(false);
+		const runProcesses = async () => {
+			setIsLoading(true);
+
+			try {
+				const ctx: any = {
+					enrollmentData,
+					changeDate: new Date(changeDate),
+					processingCharge,
+					applyNewRates,
+					newVersion: null
+				};
+
+				if (currentConfig.existingEnrollment?.process) {
+					const result =
+						await PROCESS_MAP[
+							currentConfig.existingEnrollment.process as keyof typeof PROCESS_MAP
+						](ctx);
+					setModification(result?.modify || null);
 				}
+
+				if (currentConfig.newVersion?.process) {
+					const result =
+						await PROCESS_MAP[
+							currentConfig.newVersion.process as keyof typeof PROCESS_MAP
+						](ctx);
+
+					ctx.values = result?.values || null;
+					ctx.newVersion = result?.newVersion || result || null;
+
+					setValues(ctx.values);
+					setNewVersion(ctx.newVersion);
+
+					if (ctx.newVersion?.membershipMasterId && activity?.courseId) {
+						const res: Response<CourseRate[]> = await getCourseRates({
+							membershipMasterId: Number(ctx.newVersion.membershipMasterId),
+							courseId: activity.courseId
+						});
+
+						if (res?.success && res?.data?.length) {
+							ctx.courseRateData = res.data[0];
+						} else {
+							ctx.courseRateData = null;
+						}
+					}
+				}
+
+
+				if (currentConfig.newEnrollment?.process) {
+					const result =
+						await PROCESS_MAP[
+							currentConfig.newEnrollment.process as keyof typeof PROCESS_MAP
+						](ctx);
+
+					setNewEnrollment(result?.newEnrollment || result || null);
+				} else {
+					setNewEnrollment(null);
+				}
+
+			} catch (err) {
+				console.error("Process execution failed:", err);
+			} finally {
+				setIsLoading(false);
 			}
 		};
-		fetchData();
-	}, [enrollmentData, changeDate, processingCharge, applyNewRates]);
+
+		runProcesses();
+
+	}, [
+		enrollmentData,
+		changeDate,
+		processingCharge,
+		applyNewRates,
+		actionType,
+		currentConfig
+	]);
 
 	if (!enrollmentId) {
 		return (
 			<div className="flex flex-col items-center justify-center min-h-[400px]">
-				<p className="text-slate-500 font-medium">No enrollment data found.</p>
-				<Button className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
+				<p className="text-slate-500 font-medium">
+					No enrollment data found.
+				</p>
+				<Button className="mt-4" onClick={() => navigate(-1)}>
+					Go Back
+				</Button>
 			</div>
 		);
 	}
@@ -179,8 +297,6 @@ const ChangeEnrollment = () => {
 			</div>
 		);
 	}
-
-
 
 	return (
 		<div className="w-full bg-white dark:bg-slate-900 min-h-screen">
@@ -394,7 +510,7 @@ const ChangeEnrollment = () => {
 								</div>
 								{enrollmentFields.map((field, idx) => (
 									<div key={field} className={`px-3 py-2 text-[10px] font-bold border-b border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 min-h-10 flex items-center ${idx % 2 === 0 ? 'bg-blue-50/30 dark:bg-slate-800/40' : 'bg-blue-50/10 dark:bg-slate-800'}`}>
-										{processedData?.modify?.[field] ?? "—"}
+										{modification?.[field] ?? "—"}
 									</div>
 								))}
 							</div>
@@ -406,7 +522,7 @@ const ChangeEnrollment = () => {
 								</div>
 								{enrollmentFields.map((field, idx) => (
 									<div key={field} className={`px-3 py-2 text-[10px] font-bold border-b border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 min-h-10 flex items-center ${idx % 2 === 0 ? 'bg-emerald-50/30 dark:bg-slate-800/40' : 'bg-emerald-50/10 dark:bg-slate-800'}`}>
-										{processedData?.newVersion?.[field] ?? "—"}
+										{newVersion?.[field] ?? "—"}
 									</div>
 								))}
 							</div>
@@ -418,7 +534,7 @@ const ChangeEnrollment = () => {
 								</div>
 								{enrollmentFields.map((field, idx) => (
 									<div key={field} className={`px-3 py-2 text-[10px] font-bold border-b border-slate-200 dark:border-slate-700 text-purple-600 dark:text-purple-400 min-h-10 flex items-center ${idx % 2 === 0 ? 'bg-purple-50/30 dark:bg-slate-800/40' : 'bg-purple-50/10 dark:bg-slate-800'}`}>
-										{processedData?.newEnrollment?.[field] ?? "—"}
+										{newEnrollment?.[field] ?? "—"}
 									</div>
 								))}
 							</div>
@@ -428,6 +544,7 @@ const ChangeEnrollment = () => {
 			</div>
 		</div>
 	);
+
 };
 
 export default ChangeEnrollment;

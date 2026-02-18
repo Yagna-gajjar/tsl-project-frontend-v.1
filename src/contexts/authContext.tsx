@@ -85,7 +85,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				logout()
 			}
 		}
-
 		validateToken()
 	}, [token])
 

@@ -11,6 +11,7 @@ export interface CourseQuery {
   academyId?: number;
   activityId?: number;
   courseName?: string;
+  activityName?: string;
   status?: string;
   entityId?: number;
   classification?: string;
@@ -32,6 +33,7 @@ export function getCourses(
     academyId: params.academyId ?? undefined,
     activityId: params.activityId ?? undefined,
     courseName: params.courseName ?? undefined,
+    activityName: params.activityName ?? undefined,
     status: params.status ?? undefined,
     entityId: params.entityId ?? undefined,
     classification: params.classification ?? undefined,

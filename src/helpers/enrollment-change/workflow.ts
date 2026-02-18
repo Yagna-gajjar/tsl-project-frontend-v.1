@@ -19,7 +19,7 @@ export const ENROLLMENT_WORKFLOW_CONFIG: Record<string, any> = {
 		newVersion: { process: 1, batchUpdate: false },
 		newEnrollment: null
 	},
-	FREEZE: {
+	FREEZER: {
 		existingEnrollment: { process: 1, batchUpdate: true },
 		newVersion: { process: 1, batchUpdate: false },
 		newEnrollment: { process: 2, batchUpdate: true }
