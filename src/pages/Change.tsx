@@ -93,7 +93,7 @@ const ChangeEnrollment = () => {
 				ctx.newVersion,
 				ctx.values,
 				activity,
-				courseRateData ? courseRateData : null,
+				ctx.courseRateData,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
@@ -223,16 +223,27 @@ const ChangeEnrollment = () => {
 						await PROCESS_MAP[
 							currentConfig.newVersion.process as keyof typeof PROCESS_MAP
 						](ctx);
+
 					ctx.values = result?.values || null;
 					ctx.newVersion = result?.newVersion || result || null;
-					console.log(courseRateData);
 
-					// ctx.courseRateData = courseRateData
 					setValues(ctx.values);
 					setNewVersion(ctx.newVersion);
-				} else {
-					setNewVersion(null);
+
+					if (ctx.newVersion?.membershipMasterId && activity?.courseId) {
+						const res: Response<CourseRate[]> = await getCourseRates({
+							membershipMasterId: Number(ctx.newVersion.membershipMasterId),
+							courseId: activity.courseId
+						});
+
+						if (res?.success && res?.data?.length) {
+							ctx.courseRateData = res.data[0];
+						} else {
+							ctx.courseRateData = null;
+						}
+					}
 				}
+
 
 				if (currentConfig.newEnrollment?.process) {
 					const result =

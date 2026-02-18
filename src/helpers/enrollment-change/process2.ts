@@ -1,8 +1,6 @@
 import type { Course } from "@/types/course";
 import type { CourseRate } from "@/types/courseRate";
 import type { EnrollmentData } from "@/types/enrollment";
-import { setDate } from "date-fns";
-import { useState } from "react";
 
 export interface Process2Result {
     newEnrollment: any;
@@ -23,9 +21,6 @@ export async function process2(
     givenProcessingCharge?: number
 ): Promise<Process2Result> {
     const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
-    const activityIs = course.accountId
-
-
     function addDays(date: Date, days: number): Date {
         const result = new Date(date);
         result.setDate(result.getDate() + Number(days));
@@ -35,6 +30,7 @@ export async function process2(
     const permittedDays = Math.floor(((values.value4 * 100) / (100 + Number(course.sgstRate) + Number(course.cgstRate))) / Number(newVersion?.billingRate))
     const attendingStartDate = new Date(values.vlaue6)
     const endDate = addDays(new Date(givenStartDate), (permittedDays - 1))
+    console.log(courseRateData);
 
     const newEnrollment = {
         ...base,
@@ -44,9 +40,9 @@ export async function process2(
         attendingPattern: 0,
         attendingPatternDays: 0,
         billingDaysSessions: permittedDays,
-        // courseRateId: ,
+        courseRateId: courseRateData?.courseRateId,
         patternDiscount: 1,
-        // rackPrice: courseRa,
+        rackPrice: courseRateData?.unitRate,
         finalTSLApproval: "required",
         firstEnrollmentId: newVersion?.firstEnrollmentId,
         membershipMasterId: newVersion?.membershipMasterId,
