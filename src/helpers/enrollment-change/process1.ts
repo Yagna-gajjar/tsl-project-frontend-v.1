@@ -1,8 +1,6 @@
 import type { EnrollmentData } from "@/types/enrollment";
 import { getBatchMember } from "@/api/batchMember.api";
 import { getCourseRates } from "@/api/courseRate.api";
-import { useState } from "react";
-import { setDate } from "date-fns";
 
 export interface Process1Result {
 	modify: EnrollmentData;
@@ -191,7 +189,7 @@ export async function process1(
 		value3: v3,
 		value4: v4,
 		value5: billingDaysSessions,
-		vlaue6: addDays(newVersion.endDate, 1)
+		value6: addDays(newVersion.endDate, 1)
 	}
 
 	return {

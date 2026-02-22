@@ -94,6 +94,7 @@ const ChangeEnrollment = () => {
 				ctx.values,
 				activity,
 				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
@@ -104,6 +105,11 @@ const ChangeEnrollment = () => {
 		3: async (ctx: any) =>
 			process3(
 				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
@@ -114,6 +120,11 @@ const ChangeEnrollment = () => {
 		4: async (ctx: any) =>
 			process4(
 				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
