@@ -25,17 +25,6 @@ export async function process4(
 	givenWalkingContact?: string,
 	givenProcessingCharge?: number,
 ): Promise<Process4Result> {
-<<<<<<< HEAD
-	console.log(
-		givenStartDate,
-		givenPrintRemarks,
-		givenWalkingName,
-		givenWalkingContact,
-		givenProcessingCharge,
-	);
-=======
-
->>>>>>> 8fdbd74404d0efbbd06476ffeda90afe3dad288b
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	function addDays(date: Date, days: number): Date {
 		const result = new Date(date);
