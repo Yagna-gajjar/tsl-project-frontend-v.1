@@ -44,20 +44,19 @@ export async function process2(
         result.setDate(result.getDate() + Number(days));
         return result;
     }
-
+    console.log(values.value4, " = values4");
+    
     const permittedDays = Math.floor(((values.value4 * 100) / (100 + Number(course.sgstRate) + Number(course.cgstRate))) / Number(newVersion?.billingRate))
     const attendingStartDate = new Date(values.value6)
     const endDate = addDays(new Date(givenStartDate), (permittedDays - 1))
     console.log(givenStartDate, "given start date");
-
-    // copy from process1
 
     if (!base.attendingStartDate) {
         throw new Error("attendingStartDate is required");
     }
 
     const startDate = new Date(base.attendingStartDate);
-    const calculatedPermittedDays = diffDaysInclusive(startDate, endDate); // 20
+    const calculatedPermittedDays = diffDaysInclusive(startDate, endDate);
     console.log(calculatedPermittedDays);
 
     let billingDaysSessions = 0;
@@ -77,12 +76,11 @@ export async function process2(
 
     billingDaysSessions = toFixed2(billingDaysSessions);
 
-    let newBillingAmount = billingDaysSessions * (base?.billingRate ?? 0);
+    let newBillingAmount = billingDaysSessions * (newVersion?.billingRate ?? 0);
 
     // let selectedCourseRate: any = null;
     let newRoundedAmount;
     if (applyNewRates) {
-
         // const res = await getCourseRates({
         //     courseId: enrollmentData.courseId,
         //     limit: 10000,
@@ -107,17 +105,16 @@ export async function process2(
         //     .filter(r => toNumber(r.aboveUnits) <= calculatedPermittedDays)
         //     .sort((a, b) => toNumber(b.aboveUnits) - toNumber(a.aboveUnits))[0] || null;
 
-        let P = base?.noOfDaysInWeek ?? 0;//5
-        let Q = base?.attendingPatternDays ?? 0;//5
-        let R = courseRateData?.discountOnDayReduce ?? 1;//10
-        let S = courseRateData?.minDaysInEnr ?? 0;//1
+        let P = base?.noOfDaysInWeek ?? 0;
+        let Q = base?.attendingPatternDays ?? 0;
+        let R = courseRateData?.discountOnDayReduce ?? 1;
+        let S = courseRateData?.minDaysInEnr ?? 0;
 
         let A;
         if (P - Q <= S) {
             A = (1 - ((P - Q) * (R / 100)));
         }
         else {
-            // 1 - ((4)*0.1) //mistake here
             A = (1 - ((P - S) * (R / 100)));
         }
 
@@ -127,10 +124,8 @@ export async function process2(
         console.log(billingDaysSessions, "new billingAmount");
 
         let E = D - newBillingAmount;
-
         let tax = (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100) / 100);
         let X = (Number(newBillingAmount) + Number(givenProcessingCharge) + Number(E)) * tax;
-
         let Y = Math.ceil(X);
 
         newRoundedAmount = (((Y - X) * 100) / (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100))) + E;
@@ -138,9 +133,7 @@ export async function process2(
     else {
         let tax = (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100) / 100);
         let X = (Number(newBillingAmount) + Number(givenProcessingCharge)) * tax;
-
         let Y = Math.ceil(X);
-
         newRoundedAmount = (((Y - X) * 100) / (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100)));
     }
 
@@ -154,11 +147,7 @@ export async function process2(
     console.log(Number(givenProcessingCharge));
     console.log(Number(newRoundedAmount));
 
-
     const newTotalDebitAmount = Number(newBillingAmount) + Number(newCgstAmount) + Number(newSgstAmount) + Number(givenProcessingCharge) + Number(newRoundedAmount);
-
-
-    // copy from process1
 
     const newEnrollment = {
         ...base,

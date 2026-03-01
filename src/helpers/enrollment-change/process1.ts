@@ -31,6 +31,9 @@ export async function process1(
 	applyNewRates: boolean
 ): Promise<Process1Result> {
 
+	console.log(enrollmentData);
+
+
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 
 	const roundedAmount = toNumber(base.roundedAmount);
@@ -158,9 +161,9 @@ export async function process1(
 		billingDaysSessions,
 		billingAmount: newBillingAmount,
 		roundedAmount: Number(newRoundedAmount),
-		cgstAmount: Number(newCgstAmount),
-		sgstAmount: Number(newSgstAmount),
-		totalDebitAmount: newTotalDebitAmount,
+		cgstAmount: Number(newCgstAmount).toFixed(2),
+		sgstAmount: Number(newSgstAmount).toFixed(2),
+		totalDebitAmount: Number(newTotalDebitAmount).toFixed(2),
 		status: "locked",
 		printRemarks:
 			(base.printRemarks || "") +
