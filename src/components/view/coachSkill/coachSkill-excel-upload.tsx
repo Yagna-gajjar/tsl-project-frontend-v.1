@@ -75,7 +75,6 @@ export default function CoachSkillExcelUpload({
 		};
 
 		await createCoachSkill(payload);
-		console.log(`✅ Imported Skill: Member ${payload.memberId} for Activity ${payload.activityId}`);
 	}, []);
 
 	return (

@@ -137,7 +137,6 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
   const handleMemberToggle = async (member: Member) => {
     if (entityType == "Family") {
       try {
-        console.log(member.memberId, " memberId")
         const res: Response<any> = await isMemberAlreadyLinked(Number(member?.memberId));
         if (res.success) {
           if ((res as any)?.isLinked) {

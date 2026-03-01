@@ -64,7 +64,6 @@ export default function FacilityExcelUpload({ isOpen, onClose, onSuccess }: Faci
 		};
 
 		await createFacility(payload);
-		console.log(`✅ Imported Facility: ${payload.facilityName}`);
 	}, []);
 
 	return (

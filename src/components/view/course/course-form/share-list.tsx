@@ -34,7 +34,6 @@ export const SharesList = ({
   onRemove,
   roleInCourse,
 }: SharesListProps) => {
-  console.log(shares, " sjdf");
   const [authorityMap, setAuthorityMap] = useState<Record<number, Authority[]>>(
     {}
   );

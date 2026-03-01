@@ -126,7 +126,6 @@ export default function MembershipExcelUpload({
       };
 
       await createMembershipMaster(payload);
-      console.log(`✅ Imported Membership: ${payload.membershipType}`);
     },
     []
   );

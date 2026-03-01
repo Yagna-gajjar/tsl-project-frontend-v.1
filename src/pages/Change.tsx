@@ -69,8 +69,6 @@ const ChangeEnrollment = () => {
 			if (newVersion?.membershipMasterId && activity.courseId) {
 				const res: Response<CourseRate[]> = await getCourseRates({ membershipMasterId: Number(newVersion?.membershipMasterId), courseId: activity.courseId })
 				if (res?.success) {
-					console.log(res?.data[0]);
-
 					setCourseRateData(res?.data[0] ? res?.data[0] : null);
 				}
 			}

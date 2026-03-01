@@ -57,7 +57,6 @@ export async function process3(
 
 	const startDate = new Date(base.attendingStartDate);
 	const calculatedPermittedDays = diffDaysInclusive(startDate, endDate);
-	console.log(calculatedPermittedDays);
 
 	let billingDaysSessions = 0;
 	const chargingPattern = (base.chargingPattern || "").toLowerCase();
@@ -124,7 +123,6 @@ export async function process3(
 		let B = Number(courseRateData?.unitRate);
 		let C = A * B;
 		let D = C * billingDaysSessions;
-		console.log(billingDaysSessions, "new billingAmount");
 
 		let E = D - newBillingAmount;
 
@@ -147,14 +145,6 @@ export async function process3(
 	const newCgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.cgstRate) ?? 0)) / 100);
 
 	const newSgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.sgstRate) ?? 0)) / 100);
-
-	console.log(newBillingAmount);
-	console.log(Number(newCgstAmount));
-	console.log(Number(newSgstAmount));
-	console.log(Number(givenProcessingCharge));
-	console.log(Number(newRoundedAmount));
-
-
 	const newTotalDebitAmount = Number(newBillingAmount) + Number(newCgstAmount) + Number(newSgstAmount) + Number(givenProcessingCharge) + Number(newRoundedAmount);
 
 
@@ -185,9 +175,6 @@ export async function process3(
 		memberApprovalStatus: newVersion?.memberApprovalStatus,
 		academyApprovalStatus: newVersion?.academyApprovalStatus,
 	}
-
-	console.log(newEnrollment);
-
 
 	return {
 		newEnrollment

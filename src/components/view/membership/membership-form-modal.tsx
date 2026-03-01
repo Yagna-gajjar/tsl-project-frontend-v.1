@@ -268,10 +268,6 @@ export default function MembershipFormModal({
     const durationMultiplier = Math.floor(
       Number(selectedMembership.durationDays ?? 0) / 30
     );
-    console.log(appDisc, "app")
-    console.log(perMemberPerMonthCharge, "perMemberPerMonthCharge")
-    console.log(durationMultiplier, "durationMultiplier")
-    console.log(members, "members")
     const intermediate = Number(
       (
         appDisc *
@@ -282,8 +278,6 @@ export default function MembershipFormModal({
     );
     /* 4. Total F Balance */
     const fBalPrInCa = (selectedMembership?.fBalPrInCa as number) / 100;
-    console.log("intermediate", intermediate);
-    console.log("fBalPrInCa", fBalPrInCa);
     const tfBal = Math.floor((intermediate * fBalPrInCa) / 100) * 100;
 
     /* 5. Total C Balance */
@@ -391,7 +385,6 @@ export default function MembershipFormModal({
     }
 
     if (field === "members") {
-      console.log(selectedMembership?.memberLimit, " limits");
       if (Number(value) > Number(selectedMembership?.memberLimit)) {
         toast({
           title: "Error",

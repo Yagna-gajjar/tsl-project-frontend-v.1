@@ -526,7 +526,6 @@ const EnrollmentFormNew = ({
         ? Number(values.attendingPattern.sort().join(""))
         : values.attendingPattern,
     };
-    console.log(submissionData);
     return;
     try {
       const eRes: Response<Enrollment> = await createEnrollment(submissionData as any);
@@ -570,7 +569,7 @@ const EnrollmentFormNew = ({
           label: item.value,
           value: item.enumCase
         })),
-        colSpan: 1,
+      colSpan: 1,
     },
     {
       name: "activityType",
@@ -705,9 +704,8 @@ const EnrollmentFormNew = ({
     },
   ];
 
-  useEffect(()=>{
-    console.log(values.status," status changed");
-  },[values.status]);
+  useEffect(() => {
+  }, [values.status]);
   return (
     <>
       <div className="flex flex-col w-full h-[83vh] max-w-6xl mx-auto bg-background border rounded-xl overflow-hidden shadow-2xl">

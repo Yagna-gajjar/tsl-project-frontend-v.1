@@ -83,7 +83,6 @@ export default function CourseRateExcelUpload({ isOpen, onClose, onSuccess }: Co
 		};
 
 		await createCourseRate(payload);
-		console.log(`✅ Imported Rate: ${payload.unitRate} for Course ${payload.courseId}`);
 	}, []);
 
 	return (

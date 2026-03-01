@@ -218,7 +218,6 @@ export default function AccountFormModal({
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
     { name: "country", label: "Country", type: "text" },
   ];
-  console.log(initialData);
 
   return (
     <>

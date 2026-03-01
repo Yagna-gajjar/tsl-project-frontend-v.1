@@ -44,12 +44,10 @@ export async function process2(
         result.setDate(result.getDate() + Number(days));
         return result;
     }
-    console.log(values.value4, " = values4");
-    
+
     const permittedDays = Math.floor(((values.value4 * 100) / (100 + Number(course.sgstRate) + Number(course.cgstRate))) / Number(newVersion?.billingRate))
     const attendingStartDate = new Date(values.value6)
     const endDate = addDays(new Date(givenStartDate), (permittedDays - 1))
-    console.log(givenStartDate, "given start date");
 
     if (!base.attendingStartDate) {
         throw new Error("attendingStartDate is required");
@@ -57,7 +55,6 @@ export async function process2(
 
     const startDate = new Date(base.attendingStartDate);
     const calculatedPermittedDays = diffDaysInclusive(startDate, endDate);
-    console.log(calculatedPermittedDays);
 
     let billingDaysSessions = 0;
     const chargingPattern = (base.chargingPattern || "").toLowerCase();
@@ -121,7 +118,6 @@ export async function process2(
         let B = Number(courseRateData?.unitRate);
         let C = A * B;
         let D = C * billingDaysSessions;
-        console.log(billingDaysSessions, "new billingAmount");
 
         let E = D - newBillingAmount;
         let tax = (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100) / 100);
@@ -140,13 +136,6 @@ export async function process2(
     const newCgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.cgstRate) ?? 0)) / 100);
 
     const newSgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.sgstRate) ?? 0)) / 100);
-
-    console.log(newBillingAmount);
-    console.log(Number(newCgstAmount));
-    console.log(Number(newSgstAmount));
-    console.log(Number(givenProcessingCharge));
-    console.log(Number(newRoundedAmount));
-
     const newTotalDebitAmount = Number(newBillingAmount) + Number(newCgstAmount) + Number(newSgstAmount) + Number(givenProcessingCharge) + Number(newRoundedAmount);
 
     const newEnrollment = {
@@ -176,10 +165,6 @@ export async function process2(
         memberApprovalStatus: newVersion?.memberApprovalStatus,
         academyApprovalStatus: newVersion?.academyApprovalStatus,
     }
-
-    console.log(newEnrollment);
-
-
     return {
         newEnrollment
     };

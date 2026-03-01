@@ -31,9 +31,6 @@ export async function process1(
 	applyNewRates: boolean
 ): Promise<Process1Result> {
 
-	console.log(enrollmentData);
-
-
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 
 	const roundedAmount = toNumber(base.roundedAmount);

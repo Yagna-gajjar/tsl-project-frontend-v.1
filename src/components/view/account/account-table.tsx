@@ -35,7 +35,6 @@ export default function AccountTable({ onView, onEdit, refreshKey, entityType, e
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log(entityId);
 
       const res: Response<Account[]> = await getAccounts({
         page,

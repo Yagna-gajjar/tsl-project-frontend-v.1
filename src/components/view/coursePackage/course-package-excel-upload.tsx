@@ -50,7 +50,6 @@ export default function CoursePackageExcelUpload({ isOpen, onClose, onSuccess }:
 		};
 
 		await createCoursePackage(payload);
-		console.log(`✅ Linked Course ${payload.courseId} to Batch ${payload.batchId} as ${payload.linkType}`);
 	}, []);
 
 	return (

@@ -33,7 +33,6 @@ const getSectionIcon = (iconType: string): JSX.Element => {
 }
 
 export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) {
-	console.log(data);
 
 	return (
 		<motion.div className="sticky top-8 space-y-4">

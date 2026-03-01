@@ -59,8 +59,6 @@ export default function EntityFormModal({
   const [entityNatureEnum, setEntityNatureEnum] = useState<Enums[]>([]);
   const [entityRoleEnum, setEntityRoleEnum] = useState<Enums[]>([]);
   const [entityStatusEnum, setEntityStatusEnum] = useState<Enums[]>([]);
-  console.log(entityType);
-
 
   useEffect(() => {
     if (initialData) {
@@ -153,7 +151,6 @@ export default function EntityFormModal({
           ? new Date(values.suspensionDate)
           : undefined,
       };
-      console.log(payload);
 
       if (initialData?.entityId) {
         const res: Response<Entity> = await updateEntity(

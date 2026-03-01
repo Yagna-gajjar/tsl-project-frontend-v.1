@@ -26,14 +26,12 @@ export async function process4(
 	givenProcessingCharge?: number,
 ): Promise<Process4Result> {
 
-	console.log(course, " = course");
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	function addDays(date: Date, days: number): Date {
 		const result = new Date(date);
 		result.setDate(result.getDate() + Number(days));
 		return result;
 	}
-	console.log(values, " =valuessssssssssss");
 
 	const permittedDays = Math.floor(((values.value4) / (100 + Number(course.sgstRate) + Number(course.cgstRate)) - Number(givenProcessingCharge)) / Number(newVersion?.billingRate))
 	const attendingStartDate = new Date(values.value6)
@@ -47,7 +45,6 @@ export async function process4(
 
 	const startDate = new Date(base.attendingStartDate);
 	const calculatedPermittedDays = diffDaysInclusive(startDate, endDate);
-	console.log(calculatedPermittedDays);
 
 	let billingDaysSessions = 0;
 
@@ -100,7 +97,6 @@ export async function process4(
 		let B = Number(courseRateData?.unitRate);
 		let C = A * B;
 		let D = C * billingDaysSessions;
-		console.log(billingDaysSessions, "new billingAmount");
 
 		let E = D - newBillingAmount;
 
@@ -124,18 +120,7 @@ export async function process4(
 
 	const newSgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.sgstRate) ?? 0)) / 100);
 
-	console.log(newBillingAmount);
-	console.log(Number(newCgstAmount));
-	console.log(Number(newSgstAmount));
-	console.log(Number(givenProcessingCharge));
-	console.log(Number(newRoundedAmount));
-
-
 	const newTotalDebitAmount = Number(newBillingAmount) + Number(newCgstAmount) + Number(newSgstAmount) + Number(givenProcessingCharge) + Number(newRoundedAmount);
-
-
-	// copy from process1
-	console.log(attendingStartDate, " = attendingStartDate");
 
 	const newEnrollment = {
 		...base,
@@ -162,9 +147,6 @@ export async function process4(
 		memberApprovalStatus: newVersion?.memberApprovalStatus,
 		academyApprovalStatus: newVersion?.academyApprovalStatus,
 	}
-
-	console.log(newEnrollment);
-
 
 	return {
 		newEnrollment
