@@ -40,4 +40,4 @@ export interface Member {
   country?: string;
   pinCode?: string;
   address?: string;
-}	
+}

@@ -69,7 +69,7 @@ export default function AccountTable({ onView, onEdit, refreshKey, entityType, e
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, sortBy, sortOrder, search]);
+  }, [page, limit, sortBy, sortOrder, search, entityType, entityId]);
 
   useEffect(() => {
     loadData();

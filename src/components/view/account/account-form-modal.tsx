@@ -135,10 +135,14 @@ export default function AccountFormModal({
     }
 
     const entityInfo = getSelectedEntityInfo();
+    const updatedValues = {
+      ...values,
+      entityType: entityInfo?.entityType,
+    };
     const isRestricted = RESTRICTED_ENUM_CASES.includes(entityInfo?.enumCase ?? 0);
 
     if (isRestricted && !initialData) {
-      const existing = await getAccounts({ entityId: values.entityId });
+      const existing = await getAccounts({ entityId: updatedValues.entityId });
       const count = existing.data?.length ?? 0;
 
       if (count === 0) {
@@ -146,14 +150,13 @@ export default function AccountFormModal({
         setIsSubmitting(false);
         return;
       } else {
-        values.accountType = "Transaction";
+        updatedValues.accountType = "Transaction";
       }
     } else if (!isRestricted) {
-      values.accountType = "Transaction";
+      updatedValues.accountType = "Transaction";
     }
-
     try {
-      await executeCreation(values);
+      await executeCreation(updatedValues);
       toast({ title: "Account saved successfully" });
       onSave();
       onClose();
@@ -172,6 +175,7 @@ export default function AccountFormModal({
       for (const type of SYSTEM_ACCOUNT_TYPES) {
         await createAccount({
           ...values,
+          entityType: entityInfo?.entityType,
           accountType: type,
           accountName: `${entityInfo?.entityName} - ${type}`,
         });
@@ -221,7 +225,7 @@ export default function AccountFormModal({
 
   return (
     <>
-      <Dialog open={isOpeDialogContentn} onOpenChange={(o) => !o && onClose()}>
+      <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
           <div className="flex flex-col max-h-[90vh] overflow-hidden">
             <FormHeader title={initialData ? "Edit Account" : "Add Account"} onClose={onClose} />

@@ -33,6 +33,12 @@ export function getAccountMembers(
     { method: "GET" }
   );
 }
+export function getAccountsWithAllMembersByMemberId(memberId: string): Promise<Response<AccountMember[]>> {
+  return request<Response<AccountMember[]>>(
+    `${BASE_URL}/by-member/${memberId}`,
+    { method: "GET" }
+  );
+}
 
 export function getAccountMemberById(
   id: number
@@ -57,6 +63,27 @@ export function createAccountMember(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+export interface CreateAndLinkMemberPayload {
+  // Member fields
+  memberFirstName: string;
+  memberLastName: string;
+  // AccountMember link fields
+  accountId: number;
+  relationship: string;
+  linkBilling?: boolean;
+}
+
+export function createAndLinkMember(
+  payload: CreateAndLinkMemberPayload
+): Promise<Response<{ member: AccountMember; accountMember: AccountMember }>> {
+  return request<Response<{ member: AccountMember; accountMember: AccountMember }>>(
+    `${BASE_URL}/create-and-link`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }
+  );
 }
 
 export function updateAccountMember(

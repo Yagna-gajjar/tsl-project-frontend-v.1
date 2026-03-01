@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ChevronRight, ChevronLeft, CheckCircle2 } from "lucide-react"
 
-import { MemberTab } from "./enrollment-tabs/member-tab"
+import { MemberTab } from "./enrollment-tabs/member-tab/member-tab"
 import { CourseTab } from "./enrollment-tabs/course-tab"
 import { CourseRateTab } from "./enrollment-tabs/course-rate-tab"
 import { BatchTab } from "./enrollment-tabs/batch-tab"

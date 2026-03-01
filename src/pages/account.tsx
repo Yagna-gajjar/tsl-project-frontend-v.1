@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { Plus, Upload } from "lucide-react";
 
 import type { Account } from "@/types/account";
@@ -33,9 +33,8 @@ export default function AccountPage() {
   const [entityTypeEnums, setEntityTypeEnums] = useState<Enums[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<string>("all");
 
-  const [selectedEntityId, setSelectedEntityId] = useState<number | "all">(
-    "all"
-  );
+  const [selectedEntityId, setSelectedEntityId] = useState<number | "all">("all");
+  const [selectedMemberId, setSelectedMemberId] = useState<number | "all">("all");
 
   const [entities, setEntities] = useState<Entity[]>([]);
   const [entitiesPage, setEntitiesPage] = useState(1);
@@ -47,10 +46,11 @@ export default function AccountPage() {
   const [hasMoreMembers, setHasMoreMembers] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
-  const [selectedMemberId, setSelectedMemberId] = useState<number | "all">("all");
-
+  const [entitySearch, setEntitySearch] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
 
   const PAGE_SIZE = 20;
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchEntityTypes = async (enumCase: number) => {
     try {
@@ -64,7 +64,7 @@ export default function AccountPage() {
   };
 
   const fetchEntities = useCallback(
-    async (isInitial = false) => {
+    async (isInitial = false, searchStr = entitySearch) => {
       if (loadingEntities || (!isInitial && !hasMoreEntities)) return;
 
       setLoadingEntities(true);
@@ -73,8 +73,8 @@ export default function AccountPage() {
         const res: Response<Entity[]> = await getEntities({
           limit: PAGE_SIZE,
           page,
-          entityType:
-            selectedEntityType === "all" ? undefined : selectedEntityType,
+          search: searchStr || undefined,
+          entityType: selectedEntityType === "all" ? undefined : selectedEntityType,
         });
 
         const data = res?.data ?? [];
@@ -91,11 +91,11 @@ export default function AccountPage() {
         setLoadingEntities(false);
       }
     },
-    [loadingEntities, hasMoreEntities, entitiesPage, selectedEntityType]
+    [loadingEntities, hasMoreEntities, entitiesPage, selectedEntityType, entitySearch]
   );
 
   const fetchMembers = useCallback(
-    async (isInitial = false) => {
+    async (isInitial = false, searchStr = memberSearch) => {
       if (loadingMembers || (!isInitial && !hasMoreMembers)) return;
 
       setLoadingMembers(true);
@@ -104,7 +104,8 @@ export default function AccountPage() {
         const res: Response<AccountMember[]> = await getAccountMembers({
           limit: PAGE_SIZE,
           page,
-          entityType: selectedEntityType
+          search: searchStr || undefined,
+          entityType: selectedEntityType,
         });
 
         const data = res?.data ?? [];
@@ -121,17 +122,21 @@ export default function AccountPage() {
         setLoadingMembers(false);
       }
     },
-    [loadingMembers, hasMoreMembers, membersPage, selectedEntityType]
+    [loadingMembers, hasMoreMembers, membersPage, selectedEntityType, memberSearch]
   );
 
+  // Effect: Entity Classification changes
   useEffect(() => {
     fetchEntityTypes(entityClassification);
     setSelectedEntityType("all");
   }, [entityClassification]);
 
+  // Effect: Reset and Initial Load when Type changes
   useEffect(() => {
     setSelectedEntityId("all");
     setSelectedMemberId("all");
+    setEntitySearch("");
+    setMemberSearch("");
 
     setEntities([]);
     setEntitiesPage(1);
@@ -141,13 +146,35 @@ export default function AccountPage() {
     setMembersPage(1);
     setHasMoreMembers(true);
 
-    if (selectedEntityType === "Family") {
-      fetchMembers(true);
+    if (selectedEntityType.toLowerCase() === "family") {
+      fetchMembers(true, "");
     } else {
-      fetchEntities(true);
+      fetchEntities(true, "");
     }
   }, [selectedEntityType]);
 
+  // Handle Search Input with Debounce
+  const handleEntitySearch = (val: string) => {
+    setEntitySearch(val);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(() => {
+      setEntitiesPage(1);
+      setHasMoreEntities(true);
+      fetchEntities(true, val);
+    }, 500);
+  };
+
+  const handleMemberSearch = (val: string) => {
+    setMemberSearch(val);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(() => {
+      setMembersPage(1);
+      setHasMoreMembers(true);
+      fetchMembers(true, val);
+    }, 500);
+  };
 
   const bumpRefresh = () => setRefreshKey((p) => p + 1);
 
@@ -179,7 +206,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-3 text-">
+      <div className="mb-4 flex gap-3">
         <SearchableMultiselect
           isSingle
           placeholder="Entity Classification"
@@ -204,14 +231,10 @@ export default function AccountPage() {
               value: e.value,
             })),
           ]}
-          onChange={(v) => {
-            const selectedValue = v ?? "all";
-            setSelectedEntityType(selectedValue);
-          }}
+          onChange={(v) => setSelectedEntityType(v ?? "all")}
         />
 
-
-        {selectedEntityType.toLocaleLowerCase() == "Family".toLocaleLowerCase() ? (
+        {selectedEntityType.toLowerCase() === "family" ? (
           <SearchableMultiselect
             isSingle
             placeholder="Member Name"
@@ -223,8 +246,8 @@ export default function AccountPage() {
             onChange={(v) => setSelectedMemberId(v ?? "all")}
             onLoadMore={() => fetchMembers()}
             isLoadingMore={loadingMembers}
+            onSearch={handleMemberSearch}
           />
-
         ) : (
           <SearchableMultiselect
             isSingle
@@ -240,6 +263,7 @@ export default function AccountPage() {
             onChange={(v) => setSelectedEntityId(v ?? "all")}
             onLoadMore={() => fetchEntities()}
             isLoadingMore={loadingEntities}
+            onSearch={handleEntitySearch}
           />
         )}
       </div>
@@ -257,14 +281,15 @@ export default function AccountPage() {
         entityType={selectedEntityType}
         entityId={selectedEntityId !== 'all' ? Number(selectedEntityId) : undefined}
       />
-      {formOpen &&
+
+      {formOpen && (
         <AccountFormModal
           isOpen={formOpen}
           initialData={editRow}
           onClose={() => setFormOpen(false)}
           onSave={bumpRefresh}
         />
-      }
+      )}
 
       <AccountViewModal
         isOpen={viewOpen}
