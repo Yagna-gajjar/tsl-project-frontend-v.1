@@ -11,7 +11,6 @@ import {
   EyeOff,
   LayoutDashboard,
   Database,
-  Plus,
   CheckCircle2,
   type LucideIcon
 } from 'lucide-react';
@@ -341,16 +340,6 @@ export default function LoginForm() {
                     <CheckCircle2 size={18} className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  onClick={() => {/* Trigger your Create DB API here */ }}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-600 transition-all font-semibold"
-                >
-                  <Plus size={18} />
-                  New Experiment
-                </button>
               </div>
             </motion.div>
           </div>
