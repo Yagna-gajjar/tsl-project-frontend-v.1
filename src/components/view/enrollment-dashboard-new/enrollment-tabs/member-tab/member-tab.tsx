@@ -48,7 +48,6 @@ import { getAccountsWithAllMembersByMemberId } from "@/api/accountMember.api"
 
 // ── Split components ──────────────────────────────────────────────────────────
 import { EnrollmentCard, DetailItem } from "./enrollment-card"
-import { AccountAccordion } from "./add-member"
 
 // ─── MemberTab ────────────────────────────────────────────────────────────────
 
@@ -409,13 +408,13 @@ export function MemberTab({
 							</div>
 						) : accountsArray.length > 0 ? (
 							<div className="space-y-3">
-								{accountsArray.map((account) => (
+								{/* {accountsArray.map((account) => (
 									<AccountAccordion
 										key={account?.accountId}
 										account={account as Account & { members: any[] }}
 										onMemberAdded={fetchFamilyMembers}
 									/>
-								))}
+								))} */}	
 							</div>
 						) : (
 							<div className="flex flex-col items-center justify-center h-48 text-center space-y-3">

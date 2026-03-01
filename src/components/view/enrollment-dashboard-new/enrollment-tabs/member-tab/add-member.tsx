@@ -7,13 +7,13 @@ import { FormContent } from "@/components/form-modal/form-content";
 import { createMember, updateMember } from "@/api/member.api";
 import type { Member } from "@/types/member";
 import { toast } from "@/hooks/use-toast";
-import type { FormFieldConfig } from "../../form-modal/types";
 import type { Address } from "@/types/address";
 import { createAccountMember } from "@/api/accountMember.api";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
 import { format } from "date-fns";
+import type { FormFieldConfig } from "@/components/form-modal/types";
 
 type Props = {
   isOpen: boolean;
@@ -496,5 +496,3 @@ export function AddMemberModal({
     </Dialog>
   );
 }
-
-export default MemberFormModal;
