@@ -137,7 +137,6 @@ export default function CourseExcelUpload({ isOpen, onClose, onSuccess }: Course
 		};
 
 		await createCourse(payload);
-		console.log(`✅ Imported Course: ${payload.courseName}`);
 	}, []);
 
 	return (

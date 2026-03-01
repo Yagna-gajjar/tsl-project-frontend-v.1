@@ -57,17 +57,15 @@ export function updateMembershipLink(
   id: number,
   payload: Partial<MembershipLink>
 ): Promise<Response<MembershipLink>> {
-  console.log(payload);
-  
+
   return request<Response<MembershipLink>>(`${BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
-}       
+}
 
 export function deleteMembershipLink(id: number): Promise<Response> {
-  console.log(id);
-  
+
   return request<Response>(`${BASE}/${id}`, {
     method: "DELETE",
   });

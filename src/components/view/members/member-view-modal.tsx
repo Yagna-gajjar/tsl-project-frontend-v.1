@@ -70,7 +70,6 @@ export default function MemberViewModal({ isOpen, onClose, item }: Props) {
     },
     [item]
   );
-  console.log(item);
 
   return (
     <ViewModal<Member>

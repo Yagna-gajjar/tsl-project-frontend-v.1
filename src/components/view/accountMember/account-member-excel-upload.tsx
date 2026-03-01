@@ -72,7 +72,6 @@ export default function AccountMemberExcelUpload({ isOpen, onClose, onSuccess }:
 		};
 
 		await createAccountMember(payload);
-		console.log(`✅ Linked Member ${payload.memberId} to Account ${payload.accountId} (${payload.relationship})`);
 	}, []);
 
 	return (

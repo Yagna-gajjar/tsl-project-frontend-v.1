@@ -106,7 +106,6 @@ export function BatchFormModal({
     if (isOpen) {
       fetchOptions();
       if (initialData) {
-        console.log(initialData," init");
         setValues({
           ...initialData,
           daysPattern: numberToWeekArray(initialData.daysPattern) as any,
@@ -182,7 +181,6 @@ export function BatchFormModal({
         courseId: values.courseId ? Number(values.courseId) : null,
         membershipMasterId: values.membershipMasterId ? Number(values.membershipMasterId) : null,
       };
-      console.log(payload);
       const res = isEdit
         ? await editBatch(Number(values.batchId), payload as Batch)
         : await createBatch(payload as Batch);

@@ -10,11 +10,21 @@ export interface AccountMemberQuery {
   search?: string;
   memberId?: number;
   accountId?: number;
-  entityType?: string
+  entityType?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
+  // --- New Filter Params ---
+  accountName?: string;
+  memberFirstName?: string;
+  memberLastName?: string;
+  status?: string;
 }
 
+/**
+ * Fetches account members with optional pagination, sorting, and filtering.
+ * The `toQueryString` helper will automatically convert the object into 
+ * ?page=1&limit=10&accountName=... etc.
+ */
 export function getAccountMembers(
   params: AccountMemberQuery = {}
 ): Promise<Response<AccountMember[]>> {

@@ -35,7 +35,6 @@ export function DataTable<T>({
   exportFileName,
   onExport,
 }: DynamicTableProps<T>) {
-  console.log(data);
 
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(columns.filter((c) => !c.hidden).map((c) => String(c.key)))

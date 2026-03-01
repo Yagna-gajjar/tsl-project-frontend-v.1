@@ -394,7 +394,6 @@ export function MemberFormModal({
         adminInstruction: values.adminInstruction ?? "",
         status: values.status ?? "active",
       };
-      console.log(payload);
 
       let res: Response<Member>;
       if (isEdit && initialData?.memberId) {

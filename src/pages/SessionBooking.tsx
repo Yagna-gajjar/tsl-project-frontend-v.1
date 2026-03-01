@@ -71,7 +71,6 @@ const SessionBooking = () => {
 	const sessionStats = useMemo(() => {
 		if (!selectedMember) return { total: 0, used: 0, available: 0 };
 		const total = Number(selectedMember.billingDaysSessions) || 0;
-		console.log(total, " totla possible");
 		const used = pastSession.reduce((acc, curr) => acc + (curr.sessions || 0), 0);
 		return { total, used, available: total - used };
 	}, [selectedMember, pastSession]);
@@ -164,9 +163,6 @@ const SessionBooking = () => {
 			daysPattern: Number(calculatedPattern),
 			createdBy: user?.memberId ?? null
 		};
-
-		console.log("Booking Payload:", payload);
-
 		try {
 			const sRes: Response<BatchMember> = await createSession(payload);
 			if (sRes.success) {

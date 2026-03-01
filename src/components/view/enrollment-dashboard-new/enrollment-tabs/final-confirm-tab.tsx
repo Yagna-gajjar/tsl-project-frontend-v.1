@@ -65,7 +65,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		startTime: data?.startTime,
 		endTime: data?.batch?.endTime,
 
-		rackPrice: data?.courseRate?.unitRate,                  // string "58.00"
+		rackPrice: data?.courseRate?.unitRate,
 		billingRate: data?.billingRate,
 		billingAmount: data?.billingAmount,
 

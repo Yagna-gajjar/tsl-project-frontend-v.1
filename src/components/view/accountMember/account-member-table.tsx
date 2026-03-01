@@ -22,10 +22,23 @@ export default function AccountMemberTable({ onView, accountId }: Props) {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(1);
 
+  // 1. Add Filter State
+  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [sortBy, setSortBy] = useState<string>("accountMemberId");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAccountMembers({ page, limit: 10, accountId: accountId });
+      // 2. Pass filters and sorting to the API
+      const res = await getAccountMembers({
+        page,
+        limit: 10,
+        accountId: accountId,
+        sortBy,
+        sortOrder,
+        ...filters,
+      });
       setData(res?.data ?? []);
       setTotal(res.pagination.total);
     } catch {
@@ -33,20 +46,38 @@ export default function AccountMemberTable({ onView, accountId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [page, accountId]);
+  }, [page, accountId, filters, sortBy, sortOrder]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // 3. Handle Filter Changes
+  const handleFilterChange = (key: string, value: any) => {
+    setPage(1); // Always reset to page 1 when filtering
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSortChange = (key: string, direction: "ASC" | "DESC") => {
+    setSortBy(key);
+    setSortOrder(direction);
+    setPage(1);
+  };
 
   const columns: Column<AccountMember>[] = [
     {
       key: "memberFirstName",
       header: "Member",
       sortable: true,
+      filterType: "text", // Added Filter
       render: (v) => v.memberFirstName + " " + v.memberLastName,
     },
-    { key: "accountName", header: "Account", sortable: true },
+    {
+      key: "accountName",
+      header: "Account",
+      sortable: true,
+      filterType: "text", // Added Filter
+    },
     {
       key: "relationship",
       header: "Relationship",
@@ -60,20 +91,30 @@ export default function AccountMemberTable({ onView, accountId }: Props) {
       key: "linkDate",
       header: "Linked On",
       render: (r) =>
-        r.linkDate ? format(new Date(r.linkDate).toLocaleDateString(), "dd-MMM-yyyy") : "-",
+        r.linkDate ? format(new Date(r.linkDate), "dd-MMM-yyyy") : "-",
     },
     {
       key: "dlinkDate",
       header: "DeLinked On",
       render: (r) =>
-        r.dlinkDate ? format(new Date(r.dlinkDate).toLocaleDateString(), "dd-MMM-yyyy") : <i>Linked</i>,
+        r.dlinkDate ? (
+          format(new Date(r.dlinkDate), "dd-MMM-yyyy")
+        ) : (
+          <i>Linked</i>
+        ),
     },
   ];
 
   const [delId, setDelId] = useState<number | null>(null);
 
   const handleExport = async (): Promise<AccountMember[]> => {
-    const res = await getAccountMembers({ page: 1, limit: data.length });
+    // Ensure export respects current filters
+    const res = await getAccountMembers({
+      page: 1,
+      limit: total,
+      accountId,
+      ...filters
+    });
     return Array.isArray(res?.data) ? res.data : [];
   };
 
@@ -89,9 +130,10 @@ export default function AccountMemberTable({ onView, accountId }: Props) {
           total: total,
           onPageChange: setPage,
         }}
+        onFilterChange={handleFilterChange} // Added Handler
+        onSortChange={handleSortChange}     // Added Handler
         onView={onView}
-        // onEdit={onEdit}
-        onDelete={(id) => setDelId(id ?? null)}
+        onDelete={(id) => setDelId(id ? Number(id) : null)}
         idKey="accountMemberId"
         exportFileName="AccountMember"
         onExport={handleExport}

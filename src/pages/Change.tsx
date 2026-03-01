@@ -49,7 +49,7 @@ const ChangeEnrollment = () => {
 
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [changeDate, setChangeDate] = useState("2026-01-17");
+	const [changeDate, setChangeDate] = useState("2026-03-13");
 	const [processingCharge, setProcessingCharge] = useState(
 		enrollmentData?.processingCharge || "0"
 	);
@@ -69,8 +69,6 @@ const ChangeEnrollment = () => {
 			if (newVersion?.membershipMasterId && activity.courseId) {
 				const res: Response<CourseRate[]> = await getCourseRates({ membershipMasterId: Number(newVersion?.membershipMasterId), courseId: activity.courseId })
 				if (res?.success) {
-					console.log(res?.data[0]);
-
 					setCourseRateData(res?.data[0] ? res?.data[0] : null);
 				}
 			}
@@ -94,6 +92,7 @@ const ChangeEnrollment = () => {
 				ctx.values,
 				activity,
 				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
@@ -104,6 +103,11 @@ const ChangeEnrollment = () => {
 		3: async (ctx: any) =>
 			process3(
 				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
@@ -114,6 +118,11 @@ const ChangeEnrollment = () => {
 		4: async (ctx: any) =>
 			process4(
 				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",

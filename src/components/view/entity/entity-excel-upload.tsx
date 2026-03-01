@@ -86,7 +86,6 @@ export default function EntityExcelUpload({ isOpen, onClose, onSuccess }: Entity
 		};
 
 		await createEntity(payload);
-		console.log(`✅ Imported Entity: ${payload.entityName}`);
 	}, []);
 
 	return (
