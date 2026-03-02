@@ -4,11 +4,11 @@ import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 
-import { createMember, updateMember } from "@/api/member.api";
+import { updateMember } from "@/api/member.api";
+import { createAccountMemberWithMember } from "@/api/accountMember.api";
 import type { Member } from "@/types/member";
 import { toast } from "@/hooks/use-toast";
 import type { Address } from "@/types/address";
-import { createAccountMember } from "@/api/accountMember.api";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Response } from "@/types/response";
 import type { Enums } from "@/types/enums";
@@ -21,6 +21,7 @@ type Props = {
   initialData?: (Partial<Member> & Partial<Address>) | null;
   onSaved?: (row: Member) => void;
   layout?: "grid" | "list";
+  accountId: string;
 };
 
 type MemberFormState = Partial<Member> & {
@@ -52,6 +53,7 @@ export function AddMemberModal({
   initialData = null,
   onSaved,
   layout = "grid",
+  accountId
 }: Props) {
   const isEdit = Boolean(initialData && initialData.memberId);
   const empty: MemberFormState = {
@@ -187,6 +189,8 @@ export function AddMemberModal({
     },
     { name: "memberMiddleName", label: "Middle Name", type: "text" },
     { name: "memberLastName", label: "Last Name", type: "text" },
+    { name: "relationship", label: "Relationship", type: "text" },
+    { name: "linkBilling", label: "linkBilling", type: "checkbox" },
     { name: "dob", label: "DOB", type: "Date", required: true },
     { name: "email", label: "Email", type: "text" },
     {
@@ -334,6 +338,8 @@ export function AddMemberModal({
     if (!values.memberFirstName || String(values.memberFirstName).trim() === "")
       newFieldErrors.memberFirstName = "First name is required";
     if (!values.dob) newFieldErrors.dob = "Date of birth is required";
+    if (!values.relationship) newFieldErrors.relationship = "Relationship is required";
+    if (!values.linkBilling) newFieldErrors.linkBilling = "linkBilling is required";
     if (!values.gender) newFieldErrors.gender = "Gender is required";
     if (!values.transportMode)
       newFieldErrors.transportMode = "Transport mode is required";
@@ -370,6 +376,8 @@ export function AddMemberModal({
         memberFirstName: String(values.memberFirstName ?? "").trim(),
         memberMiddleName: values.memberMiddleName ?? "",
         memberLastName: values.memberLastName ?? "",
+        relationship: values.relationship ?? "",
+        linkBilling: values.linkBilling ?? "",
         dob: values.dob ? new Date(values.dob) : undefined,
         email: emailVal || undefined,
         bloodGroup: values.bloodGroup,
@@ -393,22 +401,20 @@ export function AddMemberModal({
         maritialStatus: values.maritialStatus ?? "",
         adminInstruction: values.adminInstruction ?? "",
         status: values.status ?? "active",
+
+        accountId: accountId
       };
 
-      let res: Response<Member>;
-      if (isEdit && initialData?.memberId) {
-        res = await updateMember(Number(initialData.memberId), payload);
-      } else {
-        if (defaultAccount === 0) {
-          toast({
-            title: "Error",
-            description: "Can't Add Member, please define",
-            variant: "destructive",
-          });
-        }
-
-        res = await createMember(payload as Member);
+      if (defaultAccount === 0) {
+        toast({
+          title: "Error",
+          description: "Can't Add Member, please define",
+          variant: "destructive",
+        });
       }
+
+      const res = await createAccountMemberWithMember(payload);
+      console.log(res);
 
       const ok =
         typeof res?.success !== "undefined"
@@ -429,15 +435,6 @@ export function AddMemberModal({
 
         return;
       }
-      const linkPayload: any = {
-        accountId: Number(defaultAccount),
-        linkBilling: false,
-        memberId: Number(res?.data?.memberId),
-        relationship: "casual member",
-      };
-
-      await createAccountMember(linkPayload);
-
       toast({
         title: isEdit ? "Member updated" : "Member created",
         description: `${String(payload.memberFirstName)} saved successfully.`,
@@ -496,3 +493,5 @@ export function AddMemberModal({
     </Dialog>
   );
 }
+
+export default AddMemberModal;

@@ -188,7 +188,8 @@ export default function MemberPage() {
           setRefreshKey(k => k + 1);
           setIsCleared(false);
         }}
-      />      <MemberViewModal isOpen={viewOpen} onClose={() => setViewOpen(false)} item={viewData} />
+      />
+      <MemberViewModal isOpen={viewOpen} onClose={() => setViewOpen(false)} item={viewData} />
       <MemberExcelUpload isOpen={excelOpen} onClose={() => setExcelOpen(false)} onSuccess={() => setRefreshKey(k => k + 1)} />
     </div>
   );

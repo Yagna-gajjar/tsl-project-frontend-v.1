@@ -5,6 +5,8 @@ export interface Member {
   memberFirstName: string;
   memberMiddleName?: string;
   memberLastName: string;
+  relationship?: string;
+  linkBilling?: string;
   dob: Date | string | undefined;
   email: string | undefined;
   bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";

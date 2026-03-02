@@ -64,26 +64,11 @@ export function createAccountMember(
     body: JSON.stringify(payload),
   });
 }
-export interface CreateAndLinkMemberPayload {
-  // Member fields
-  memberFirstName: string;
-  memberLastName: string;
-  // AccountMember link fields
-  accountId: number;
-  relationship: string;
-  linkBilling?: boolean;
-}
-
-export function createAndLinkMember(
-  payload: CreateAndLinkMemberPayload
-): Promise<Response<{ member: AccountMember; accountMember: AccountMember }>> {
-  return request<Response<{ member: AccountMember; accountMember: AccountMember }>>(
-    `${BASE_URL}/create-and-link`,
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }
-  );
+export function createAccountMemberWithMember(payload: AccountMember): Promise<Response<AccountMember>> {
+  return request<Response<AccountMember>>(`${BASE_URL}/account-with-member`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
 }
 
 export function updateAccountMember(

@@ -48,6 +48,9 @@ import { getAccountsWithAllMembersByMemberId } from "@/api/accountMember.api"
 
 // ── Split components ──────────────────────────────────────────────────────────
 import { EnrollmentCard, DetailItem } from "./enrollment-card"
+import { AddMemberModal } from "./add-member"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+// import { AccountAccordion } from "./add-member"
 
 // ─── MemberTab ────────────────────────────────────────────────────────────────
 
@@ -73,6 +76,10 @@ export function MemberTab({
 	const [searchTerm, setSearchTerm] = useState("")
 	const [statusFilter, setStatusFilter] = useState<string>("all")
 
+	const [formOpen, setFormOpen] = useState(false)
+	const [selectedAccount, setSelectedAccount] = useState()
+	const [refreshKey, setRefreshKey] = useState(0)
+
 	// ─── API ─────────────────────────────────────────────────────────────────────
 
 	const fetchFamilyMembers = useCallback(async () => {
@@ -80,6 +87,8 @@ export function MemberTab({
 		setLoading(true)
 		try {
 			const res = await getAccountsWithAllMembersByMemberId(String(selectedMember.memberId))
+			console.log(res?.data);
+
 			setFamilyMembers(res.data || [])
 		} catch {
 			toast({ title: "Error", description: "Failed to fetch family members", variant: "destructive" })
@@ -139,7 +148,7 @@ export function MemberTab({
 		}
 	}
 
-	// ─── Derived Data ─────────────────────────────────────────────────────────────
+	// ─── Derived Data ───────────────────────────────────────────────────────────── 
 
 	const groupedAccounts = familyMembers.reduce(
 		(acc, item) => {
@@ -157,6 +166,7 @@ export function MemberTab({
 	)
 
 	const accountsArray: Account[] = Object.values(groupedAccounts)
+	console.log(accountsArray, " = account array");
 
 	const filteredEnrollments = useMemo(() => {
 		return enrollments.filter((enr) => {
@@ -177,7 +187,7 @@ export function MemberTab({
 
 	useEffect(() => {
 		if (openShowFamily) fetchFamilyMembers()
-	}, [openShowFamily, fetchFamilyMembers])
+	}, [openShowFamily, fetchFamilyMembers, refreshKey])
 
 	// ─── Render ───────────────────────────────────────────────────────────────────
 
@@ -408,13 +418,69 @@ export function MemberTab({
 							</div>
 						) : accountsArray.length > 0 ? (
 							<div className="space-y-3">
-								{/* {accountsArray.map((account) => (
-									<AccountAccordion
-										key={account?.accountId}
-										account={account as Account & { members: any[] }}
-										onMemberAdded={fetchFamilyMembers}
-									/>
-								))} */}	
+								{accountsArray.map((account) => (
+									<div key={account.accountId} className="rounded-xl border border-slate-100 p-4 bg-slate-50 space-y-2">
+										<div className="flex items-center justify-between">
+											<h4 className="font-black text-sm text-slate-800">{account.accountName}</h4>
+											<Button
+												size="sm"
+												variant="outline"
+												className="h-7 text-[10px] font-black uppercase border-blue-200 text-blue-600 hover:bg-blue-50"
+												onClick={() => {
+													setFormOpen(true)
+													setSelectedAccount(account?.accountId)
+												}}
+											>
+												<UserPlus className="w-3 h-3 mr-1.5" />
+												Add Member
+											</Button>
+										</div>
+										{/* Replace the member mapping section inside your accountsArray.map with this: */}
+
+										<div className="mt-3">
+											<Accordion type="single" collapsible className="w-full">
+												<AccordionItem value="members" className="border-none">
+													<AccordionTrigger className="py-2 hover:no-underline group">
+														<div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 group-hover:text-blue-600 transition-colors">
+															<Users className="w-3 h-3" />
+															<span>View {account.members?.length || 0} Members</span>
+														</div>
+													</AccordionTrigger>
+
+													<AccordionContent className="pt-1 pb-3">
+														<div className="space-y-1 pl-2 border-l-2 border-slate-100 ml-1.5">
+															{account.members?.map((m: any) => (
+																<div
+																	key={m.memberId}
+																	className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-white hover:shadow-sm transition-all group/item"
+																>
+																	<div className="w-1.5 h-1.5 rounded-full bg-slate-300 group-hover/item:bg-blue-400 transition-colors" />
+																	<span className="text-xs font-medium text-slate-600 group-hover/item:text-slate-900">
+																		{m.memberFirstName} {m.memberLastName}
+																	</span>
+																</div>
+															))}
+
+															{(!account.members || account.members.length === 0) && (
+																<p className="text-[10px] text-slate-400 italic pl-2">No members assigned.</p>
+															)}
+														</div>
+													</AccordionContent>
+												</AccordionItem>
+											</Accordion>
+										</div>
+									</div>
+								))}
+								{selectedAccount && <AddMemberModal
+									isOpen={formOpen}
+									onClose={() => {
+										setFormOpen(false)
+									}}
+									onSaved={() => {
+										setRefreshKey(k => k + 1)
+									}}
+									accountId={selectedAccount}
+								/>}
 							</div>
 						) : (
 							<div className="flex flex-col items-center justify-center h-48 text-center space-y-3">
@@ -440,17 +506,6 @@ export function MemberTab({
 								</Button>
 							</div>
 						)}
-					</div>
-
-					<div className="flex justify-end px-5 py-3 border-t border-slate-100">
-						<Button
-							size="sm"
-							variant="ghost"
-							className="text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 h-7 px-3"
-							onClick={() => setOpenShowFamily(false)}
-						>
-							Close
-						</Button>
 					</div>
 				</DialogContent>
 			</Dialog>
