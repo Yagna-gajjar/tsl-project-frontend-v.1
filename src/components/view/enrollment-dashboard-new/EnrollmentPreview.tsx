@@ -117,9 +117,54 @@ const ExcelInvoice = ({
 	const gutterStyle: React.CSSProperties = { border: '1px solid #eee', background: '#f9f9f9' };
 
 	return (
-		<div style={{ backgroundColor: '#f0f2f5', width:'100%',minHeight: '100vh', fontFamily: 'sans-serif' }}>
-			<div style={{ background: '#fff', borderRadius: '8px', width: 'fit-content', margin: 'auto', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-				<div style={{ display: 'grid', gridTemplateColumns: colWidths.map(w => `${w}px`).join(' '), border: '2px dotted #333' }}>
+		<div style={{ backgroundColor: '#f0f2f5', width: '100%', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+
+			{/* Print Isolation Styles */}
+			<style>
+				{`
+                    @media print {
+                        /* 1. Setup physical page and strip out browser headers/footers (URLs) */
+                        @page {
+                            size: A4 portrait;
+                            margin: 0mm; /* This removes the website URL and title */
+                        }
+                        
+                        /* 2. Hide everything on the webpage */
+                        body * {
+                            visibility: hidden;
+                        }
+                        
+                        /* 3. Make ONLY the invoice area visible */
+                        #invoice-isolated-print-area, #invoice-isolated-print-area * {
+                            visibility: visible;
+                        }
+                        
+                        /* 4. Force background colors and reposition the scaled invoice */
+                        body {
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                            background-color: white !important;
+                        }
+                        #invoice-isolated-print-area {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            margin-top: 15mm !important; /* Pushes content down slightly so it's not cut off by printer hardware */
+                            margin-left: 10mm !important;
+                            padding: 0 !important;
+                            box-shadow: none !important;
+                            /* Scale up to 1.1 (110%) to make everything larger, including fonts */
+                            transform: scale(1.1); 
+                            transform-origin: top left;
+                        }
+                    }
+                `}
+			</style>
+
+			<div style={{ background: '#fff', borderRadius: '8px', width: 'fit-content', margin: 'auto', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+
+				{/* ID applied strictly to the table layout so buttons are ignored */}
+				<div id="invoice-isolated-print-area" style={{ display: 'grid', gridTemplateColumns: colWidths.map(w => `${w}px`).join(' '), border: '2px dotted #333' }}>
 
 					{/* HEADER */}
 					<div style={{ gridColumn: '1 / span 2', gridRow: '1 / span 3', ...cellStyle, justifyContent: 'center' }}>
@@ -233,6 +278,7 @@ const ExcelInvoice = ({
 					</div>
 				</div>
 
+				{/* Because the ID is placed ONLY on the grid above, these buttons are automatically ignored during print */}
 				<button onClick={handleExport} style={{ marginTop: '20px', padding: '15px 30px', width: '100%', background: '#107c41', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
 					Download Complete Excel Report
 				</button>
