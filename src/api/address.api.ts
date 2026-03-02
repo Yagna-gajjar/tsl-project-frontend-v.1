@@ -3,17 +3,17 @@ import { request, toQueryString, type SortOrder } from './helper'
 import type { Response } from '@/types/response'
 
 export interface AddressesQuery {
-	page?: number
-	limit?: number
-	sortBy?: string
-	sortOrder?: SortOrder
-	search?: string
+  page?: number
+  limit?: number
+  sortBy?: string
+  sortOrder?: SortOrder
+  search?: string
 
-	line1?: string
-	city?: string
-	state?: string
-	pinCode?: string
-	country?: string
+  line1?: string
+  city?: string
+  state?: string
+  pinCode?: string
+  country?: string
 }
 
 const ADDRESS_BASE = import.meta.env.VITE_APP_API_URL + '/address'
