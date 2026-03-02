@@ -507,17 +507,6 @@ export function MemberTab({
 							</div>
 						)}
 					</div>
-
-					<div className="flex justify-end px-5 py-3 border-t border-slate-100">
-						<Button
-							size="sm"
-							variant="ghost"
-							className="text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 h-7 px-3"
-							onClick={() => setOpenShowFamily(false)}
-						>
-							Close
-						</Button>
-					</div>
 				</DialogContent>
 			</Dialog>
 		</div>
