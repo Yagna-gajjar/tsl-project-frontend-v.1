@@ -25,6 +25,7 @@ type Props = {
 const fields: FieldConfig<Transaction>[] = [
 	{ key: "transactionId", label: "Tx ID", icon: Hash },
 	{ key: "transactionType", label: "Type", icon: Tag },
+	{ key: "transactionDate", label: "Date", icon: Calendar, render: (v) => (v ? new Date(v as string).toLocaleDateString() : "-") },
 	{ key: "status", label: "Status", icon: Info },
 	{ key: "amount", label: "Amount", icon: DollarSign, render: (v) => `₹${Number(v).toLocaleString('en-IN')}` },
 

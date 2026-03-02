@@ -37,6 +37,7 @@ const empty: Transaction = {
 	drAccountId: null,
 	drMemberId: null,
 	drMsNo: null,
+	transactionDate: new Date(),
 	transactionDetails: "",
 	entrySource: "Admin Office",
 	enrollmentId: null,
@@ -182,6 +183,7 @@ export default function TransactionFormModal({ isOpen, initialData, onClose, onS
 	const validate = useCallback(() => {
 		const errs: Record<string, string> = {};
 		if (!values.transactionType) errs.transactionType = "Type is required";
+		if (!values.transactionDate) errs.transactionDate = "Date is required";
 		if (!values.amount || Number(values.amount) <= 0) errs.amount = "Valid amount is required";
 		if (!values.crAccountId) errs.crAccountId = "Credit Account is required";
 		if (!values.drAccountId) errs.drAccountId = "Debit Account is required";
@@ -243,6 +245,7 @@ export default function TransactionFormModal({ isOpen, initialData, onClose, onS
 			name: "transactionType", label: "Transaction Type", type: "select", required: true,
 			options: [{ label: "Receipt", value: "receipt" }, { label: "Payment", value: "payment" }]
 		},
+		{ name: "transactionDate", label: "Transaction Date", type: "Date", required: true },
 		{ name: "amount", label: "Amount", type: "number", required: true },
 		{ name: "formReferenceNo", label: "Reference No", type: "text" },
 		{

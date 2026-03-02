@@ -14,6 +14,7 @@ export interface TransactionsQuery {
 	status?: string;
 	startDate?: string;
 	endDate?: string;
+	transactionDate?: string | Date;
 }
 
 const TRANSACTION_BASE = import.meta.env.VITE_APP_API_URL + "/transaction";
@@ -28,6 +29,7 @@ export function getTransactions(params: TransactionsQuery = {}): Promise<Respons
 		transactionType: params.transactionType,
 		crEntityId: params.crEntityId,
 		drEntityId: params.drEntityId,
+		transactionDate: params.transactionDate,
 		status: params.status,
 		startDate: params.startDate,
 		endDate: params.endDate,
@@ -59,4 +61,8 @@ export function deleteTransaction(id: number | string): Promise<Response> {
 	return request<Response>(`${TRANSACTION_BASE}/${id}`, {
 		method: "DELETE",
 	});
+}
+
+export function getLedgerEntriesByAccount(accountId: number): Promise<Response<Transaction[]>> {
+	return request<Response<Transaction[]>>(`${TRANSACTION_BASE}/ledger/${accountId}`);
 }
