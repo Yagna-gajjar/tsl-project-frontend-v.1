@@ -21,6 +21,9 @@ interface FinalConfirmTabProps {
 const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	const lastCalculatedRef = useRef<string>("");
 
+	console.log(data, " = data");
+
+
 	const excelEnrollmentData = {
 		member: {
 			memberId: data?.member?.memberId,
@@ -81,7 +84,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		memberApprovalStatus: data?.academyApprovalStatus,
 		printRemarks: data?.printRemarks,
 	};
-
 	const results = useMemo(() => {
 		if (!data?.course || !data?.courseRate) return null;
 

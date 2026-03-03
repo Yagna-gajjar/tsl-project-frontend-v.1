@@ -414,7 +414,6 @@ export function AddMemberModal({
       }
 
       const res = await createAccountMemberWithMember(payload);
-      console.log(res);
 
       const ok =
         typeof res?.success !== "undefined"

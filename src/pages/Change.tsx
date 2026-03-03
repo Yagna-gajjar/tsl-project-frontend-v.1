@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect } from "react";
-import { data, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,13 +33,15 @@ import type { EnrollmentData } from "@/types/enrollment";
 import { getCourseRates } from "@/api/courseRate.api";
 import type { CourseRate } from "@/types/courseRate";
 import type { Response } from "@/types/response";
+import { changeEnrollment } from "@/api/enrollment.api";
 
 const ChangeEnrollment = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
 
-	const { enrollmentId, actionType, activity, enrollmentData } = location.state || {};
+	const { enrollmentId, actionType, activity, firstEnrPattern, firstEnrPatternDays, enrollmentData } = location.state || {};
 	const currentConfig = ENROLLMENT_WORKFLOW_CONFIG[actionType];
+
 
 	const [values, setValues] = useState();
 
@@ -49,7 +49,7 @@ const ChangeEnrollment = () => {
 
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [changeDate, setChangeDate] = useState("2026-03-13");
+	const [changeDate, setChangeDate] = useState("2026-05-01");
 	const [processingCharge, setProcessingCharge] = useState(
 		enrollmentData?.processingCharge || "0"
 	);
@@ -133,6 +133,11 @@ const ChangeEnrollment = () => {
 		5: async (ctx: any) =>
 			process5(
 				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
@@ -143,6 +148,11 @@ const ChangeEnrollment = () => {
 		6: async (ctx: any) =>
 			process6(
 				ctx.enrollmentData,
+				ctx.newVersion,
+				ctx.values,
+				activity,
+				ctx.courseRateData,
+				false,
 				ctx.changeDate.toString(),
 				"",
 				"walkingName",
@@ -192,6 +202,7 @@ const ChangeEnrollment = () => {
 
 	const enrollmentFields = [
 		"enrollmentId", "firstEnrollmentId", "enrollmentNo", "enrollmentDate",
+		"batchId",
 		"membershipMasterId", "membershipId", "accountId", "memberId",
 		"activityId", "permittedDays", "attendingStartDate", "endDate",
 		"membersEnrolled", "academyEntityId", "courseId", "attendingPattern",
@@ -307,6 +318,32 @@ const ChangeEnrollment = () => {
 		);
 	}
 
+	const handleSave = async () => {
+		if (newEnrollment && newVersion) {
+			console.log(enrollmentData, " = existingEnrollment");
+			console.log({ ...newVersion, firstEnrollmentId: enrollmentData.enrollmentId }, " = new version");
+			console.log({
+				...newEnrollment,
+				firstEnrollmentId: enrollmentData.enrollmentId,
+				attendingPattern: firstEnrPattern,
+				attendingPatternDays: firstEnrPatternDays,
+			}, " = new Enrollment");
+
+			const res = await changeEnrollment({
+				existingEnrollmentId: enrollmentData.enrollmentId,
+				existingEnrollmentNo: enrollmentData.enrollmentNo,
+				newVersion: { ...newVersion, firstEnrollmentId: enrollmentData.enrollmentId },
+				newEnrollment: {	
+					...newEnrollment,
+					firstEnrollmentId: enrollmentData.enrollmentId,
+					attendingPattern: firstEnrPattern,
+					attendingPatternDays: firstEnrPatternDays,
+				},
+			});
+			console.log(res);
+		}
+	}
+
 	return (
 		<div className="w-full bg-white dark:bg-slate-900 min-h-screen">
 			{/* Header Section */}
@@ -322,7 +359,7 @@ const ChangeEnrollment = () => {
 						</div>
 					</div>
 
-					<Button className="bg-blue-600 hover:bg-blue-700 font-black uppercase text-xs px-6 h-9 shadow-lg text-white">
+					<Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 font-black uppercase text-xs px-6 h-9 shadow-lg text-white">
 						<Save className="w-4 h-4 mr-2" /> Save Changes
 					</Button>
 				</div>

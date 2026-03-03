@@ -51,7 +51,7 @@ export interface Enrollment {
   memberApprovalStatus?: number | null;
   academyApprovalStatus?: string | null;
   membershipType?: string;
-  finalTSLApproval?: string;
+  finalTSLApproval?: number;
   changeNo?: number;
   previousCourseID?: number;
   processingCharge?: number;
@@ -79,7 +79,6 @@ export interface Enrollment {
   confirm?: any;
   isDraft?: boolean;
 }
-
 export interface EnrollmentData {
   enrollmentId: number;
   firstEnrollmentId?: number;
@@ -127,7 +126,7 @@ export interface EnrollmentData {
   memberApprovalStatus?: number | null;
   academyApprovalStatus?: string | null;
   membershipType?: string;
-  finalTSLApproval?: string;
+  finalTSLApproval?: number;
   changeNo?: number;
   previousCourseID?: number;
   processingCharge?: number;

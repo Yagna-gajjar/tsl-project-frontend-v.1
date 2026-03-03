@@ -113,7 +113,7 @@ export async function process7(
 		officeRemarks: "Start Date Change on "+nowISO(),
 		walkingName: givenWalkingName,
 		walkingContact: givenWalkingContact,
-		finalTSLApproval:"required",
+		finalTSLApproval:1,
 		status: "created"
 	};
 

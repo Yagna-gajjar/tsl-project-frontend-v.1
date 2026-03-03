@@ -74,7 +74,7 @@ export async function process9(
 		officeRemarks: `Add to Remarks "Discount Amount Changed" on ${format(Date.now(), "dd-MMM-yyyy")}`,
 		walkingContact: givenWalkingContact,
 		walkingName: givenWalkingName,
-		finalTSLApproval: "required",
+		finalTSLApproval: 1,
 		createdAt: new Date().toISOString(),
 		updatedAt: new Date().toISOString()
 	};

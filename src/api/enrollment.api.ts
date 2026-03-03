@@ -1,4 +1,4 @@
-import type { Enrollment } from "@/types/enrollment";
+import type { Enrollment, EnrollmentData } from "@/types/enrollment";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";
 
@@ -57,6 +57,20 @@ export function createEnrollment(
   payload: Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">
 ): Promise<Response<Enrollment>> {
   return request<Response<Enrollment>>(ENROLLMENT_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function changeEnrollment(
+  payload: {
+    existingEnrollmentId: string,
+    existingEnrollmentNo: string,
+    newVersion: Partial<EnrollmentData>,
+    newEnrollment: Partial<EnrollmentData>,
+  }
+): Promise<Response<Enrollment>> {
+  return request<Response<Enrollment>>(`${ENROLLMENT_BASE}/change-enrollment`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

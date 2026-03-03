@@ -1,6 +1,4 @@
-"use client"
-
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -20,7 +18,7 @@ import { toast } from "@/hooks/use-toast"
 import type { Response } from "@/types/response"
 import { createEnrollment, deleteEnrollment } from "@/api/enrollment.api"
 import { useAuth } from "@/contexts/authContext"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"] as const
 type TabValue = (typeof TAB_ORDER)[number]
@@ -38,11 +36,21 @@ const tabLabels: Record<TabValue, string> = {
 
 export function EnrollmentFlow() {
 	const { user } = useAuth();
+	const location = useLocation()
+
 	const [currentTabIndex, setCurrentTabIndex] = useState(0)
 	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>()
 	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set())
 	const navigate = useNavigate();
 	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue
+
+	useEffect(() => {
+		if (location.state) {
+			if (location.state.tabIndex) {
+				setCurrentTabIndex(location.state.tabIndex)
+			}
+		}
+	}, [location.state])
 
 	const updateEnrollmentData = useCallback((data: Partial<EnrollmentData>, tabKey?: TabValue) => {
 		setEnrollmentData((prev: any) => ({
@@ -267,11 +275,17 @@ export function EnrollmentFlow() {
 									</TabsContent>
 
 									<TabsContent value="course" className="mt-0 h-full">
-										<CourseTab
-											data={enrollmentData}
-											onUpdate={(data) => updateEnrollmentData(data, "course")}
-											member={enrollmentData?.member}
-										/>
+										{location.state ?
+											<CourseTab
+												data={enrollmentData}
+												onUpdate={(data) => updateEnrollmentData(data, "course")}
+												member={location.state.memberId}
+											/>
+											: <CourseTab
+												data={enrollmentData}
+												onUpdate={(data) => updateEnrollmentData(data, "course")}
+												member={enrollmentData?.member}
+											/>}
 									</TabsContent>
 
 									<TabsContent value="courseRate" className="mt-0 h-full">

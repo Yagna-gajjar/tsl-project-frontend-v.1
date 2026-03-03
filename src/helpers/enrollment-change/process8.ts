@@ -63,7 +63,7 @@ export async function process8(
 		walkingName: givenWalkingName,
 		walkingContact: givenWalkingContact,
 		academyApprovalStatus: "required",
-		finalTSLApproval: "required",
+		finalTSLApproval: 1,
 		status: "created"
 	};
 

@@ -1,6 +1,7 @@
 import type { Course } from "@/types/course";
 import type { CourseRate } from "@/types/courseRate";
 import type { EnrollmentData } from "@/types/enrollment";
+import { calsPermittedDays } from "../calculatePermittedDays";
 
 export interface Process2Result {
     newEnrollment: any;
@@ -20,33 +21,9 @@ export async function process2(
     givenProcessingCharge?: number,
 ): Promise<Process2Result> {
     const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
-    function addDays(date: Date, days: number): Date {
-        const result = new Date(date);
-        result.setDate(result.getDate() + Number(days));
-        return result;
-    }
 
-    const pc = 100
-
-    const oldBillingAmount = values.value4
-    const oldBillingAmountAfGst = (((oldBillingAmount * 100) / (Number(course?.cgstRate) + Number(course?.sgstRate) + 100)) - pc)
-
-    const unitRate = courseRateData?.unitRate;
-    const permittedDays = Math.floor(oldBillingAmountAfGst / Number(courseRateData?.unitRate))
-
-    const billable = (permittedDays * Number(unitRate) + pc);
-
-    const billWithGst = ((billable * (Number(course?.cgstRate) + Number(course?.sgstRate) + 100)) / 100)
-
-    const diff = oldBillingAmount - billWithGst
-
-    const roundedAmount = ((diff * 100) / (Number(course?.cgstRate) + Number(course?.sgstRate) + 100))
-
-    const finalBillingAmount = ((Number(courseRateData?.unitRate) * permittedDays) + pc)
-
-    const newTotalDebitAmount = values.value4;
+    const result = await calsPermittedDays({ oldBillingAmount: values.value4, pc: Number(givenProcessingCharge), cgst: Number(course.cgstRate), sgst: Number(course.cgstRate), unitRate: Number(courseRateData?.unitRate), startDays: givenStartDate })
     const attendingStartDate = new Date(values.value6)
-    const endDate = addDays(new Date(givenStartDate), (permittedDays - 1))
 
     if (!base.attendingStartDate) {
         throw new Error("attendingStartDate is required");
@@ -56,23 +33,23 @@ export async function process2(
         ...base,
         activityId: course.activityId,
         courseId: course.courseId,
-        permittedDays: permittedDays,
+        permittedDays: result.permittedDays,
         attendingStartDate: attendingStartDate.toISOString(),
-        endDate: endDate.toISOString(),
+        endDate: result.endDate.toISOString(),
         attendingPattern: 0,
-        roundedAmount: roundedAmount,
+        roundedAmount: result.roundedAmount.toFixed(2),
         attendingPatternDays: 0,
-        billingDaysSessions: permittedDays,
+        billingDaysSessions: result.permittedDays,
         courseRateId: courseRateData?.courseRateId,
-        totalDebitAmount: newTotalDebitAmount,
+        totalDebitAmount: result.totalDebitedAmmount.toFixed(2),
         patternDiscount: 1,
         costToMember: courseRateData?.unitRate,
         rackPrice: courseRateData?.unitRate,
         billingRate: courseRateData?.unitRate,
-        billingAmount: finalBillingAmount,
-        cgstAmount: finalBillingAmount * (Number(course.cgstRate) / 100),
-        sgstAmount: finalBillingAmount * (Number(course.sgstRate) / 100),
-        finalTSLApproval: "required",
+        billingAmount: result.finalBillingAmount.toFixed(2),
+        cgstAmount: (result.finalBillingAmount * (Number(course.cgstRate) / 100)).toFixed(2),
+        sgstAmount: (result.finalBillingAmount * (Number(course.sgstRate) / 100)).toFixed(2),
+        finalTSLApproval: 1,
         firstEnrollmentId: newVersion?.firstEnrollmentId,
         membershipMasterId: newVersion?.membershipMasterId,
         membershipId: newVersion?.membershipId,

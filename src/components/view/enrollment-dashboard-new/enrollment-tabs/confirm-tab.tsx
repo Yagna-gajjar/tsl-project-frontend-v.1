@@ -52,7 +52,9 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 
 	const handleChange = (name: string, value: string | number) => {
 		const updated = { ...formData, [name]: value }
+		console.log(updated);
 		setFormData(updated)
+		
 		onUpdate(updated as any)
 	}
 

@@ -87,7 +87,6 @@ export function MemberTab({
 		setLoading(true)
 		try {
 			const res = await getAccountsWithAllMembersByMemberId(String(selectedMember.memberId))
-			console.log(res?.data);
 
 			setFamilyMembers(res.data || [])
 		} catch {
@@ -99,7 +98,9 @@ export function MemberTab({
 
 	const fetchEnrollmentsOfMember = async (memberId: number) => {
 		try {
-			const eRes: Response<Enrollment[]> = await getEnrollments({ memberId })
+			const eRes: Response<Enrollment[]> = await getEnrollments({ memberId, page: 1, limit: 1000 })
+			console.log(eRes);
+
 			if (eRes.success) setEnrollments(eRes?.data || [])
 		} catch {
 			toast({ title: "Error", description: "Failed to fetch Enrollments", variant: "destructive" })
@@ -166,7 +167,6 @@ export function MemberTab({
 	)
 
 	const accountsArray: Account[] = Object.values(groupedAccounts)
-	console.log(accountsArray, " = account array");
 
 	const filteredEnrollments = useMemo(() => {
 		return enrollments.filter((enr) => {

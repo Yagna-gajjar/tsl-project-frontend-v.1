@@ -173,6 +173,7 @@ export async function process1(
 		updatedAt: nowISO(),
 	};
 
+	// billingAmount is without roundedAmount and
 	let v1 = (Number(base.billingAmount) + Number(base.roundedAmount) + processingCharge) * (1 + ((Number(base?.cgstRate) + Number(base?.sgstRate)) / 100));
 	let v2 = totalDebit;
 	let v3 = newTotalDebitAmount;
