@@ -39,7 +39,7 @@ interface ProcessValues {
 	value1?: number
 	value2?: number
 	value3?: number
-	value4?: number  // Available balance (money member has)
+	value4?: number
 	value5?: number
 	value6?: string
 }
@@ -49,8 +49,6 @@ interface CourseRateTabProps {
 	onUpdate: (data: Partial<EnrollmentData>) => void
 }
 
-// Delegates to calsPermittedDays — single source of truth for the permitted-days formula.
-// (oldBillingAmount = value4, pc = processing charge)
 function reverseCalcUnits(
 	availableAmount: number,
 	unitRate: number,
@@ -76,7 +74,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	const allowedPattern = activeCourse?.daysPattern || "1234567";
 	const location = useLocation()
 
-	// Process values coming from location state (e.g. CHANGE_COURSE)
 	const [processValues, setProcessValues] = useState<ProcessValues>({});
 
 	useEffect(() => {
@@ -113,12 +110,8 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	const [casualAccount, setCasualAccount] = useState<number | null>(null);
 	const [walkingAccount, setWalkingAccount] = useState<number | null>(null);
 
-	// The available balance from process values (value4)
 	const availableBalance = processValues.value4 ?? null;
 
-	// Tracks whether we've already applied the reverse-calc for the current
-	// (availableBalance + courseId) pair — prevents stale re-fires when
-	// unrelated state (membersEnrolled, selectedDays) changes
 	const reverseAppliedRef = useRef<{ balance: number | null; courseId: number | null }>({
 		balance: null,
 		courseId: null,
@@ -127,8 +120,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	const actualDaysInWeek = selectedDays.length;
 	const selectedCourseDayInWeek = allowedPattern.length;
 
-	// useCallback so it always captures the CURRENT selectedDays / allowedPattern
-	// and never goes stale inside the auto-select useEffect
 	const getDiscountFactor = useCallback((rateDaysInWeek: number, disc: number) => {
 		const finalDaysInWeek = Math.max(rateDaysInWeek || 0, actualDaysInWeek || 0);
 		return 1 - (selectedCourseDayInWeek - finalDaysInWeek) * (Number(disc) / 100);
@@ -191,22 +182,16 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 		return { sortedTiers: tiers, groupedData: grouped }
 	}, [rates])
 
-	// Find the "Walk In" category key (case-insensitive)
 	const walkInCategoryKey = useMemo(() => {
 		return Object.keys(groupedData).find(k => k.toLowerCase().includes("walk in")) || null;
 	}, [groupedData]);
 
-	// Auto-select Walk In row and reverse-calculate units when availableBalance + new course rates arrive.
-	// Guarded by reverseAppliedRef so it only fires ONCE per unique (availableBalance + courseId) pair.
-	// Without this guard the effect re-ran whenever membersEnrolled/selectedDays changed, which caused it
-	// to recalculate units using the OLD course's billingDaysSessions rather than the new course's rates.
 	useEffect(() => {
 		const currentCourseId = activeCourse?.courseId ?? null;
 
 		if (availableBalance == null || !walkInCategoryKey || !groupedData[walkInCategoryKey]) return;
 		if (sortedTiers.length === 0) return;
 
-		// Already ran reverse-calc for this exact balance+course — skip to avoid stale re-fires
 		if (
 			reverseAppliedRef.current.balance === availableBalance &&
 			reverseAppliedRef.current.courseId === currentCourseId
@@ -218,7 +203,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 
 		const isSchool = activeCourse?.chargingPattern?.toLowerCase() === "school";
 
-		// Use the lowest tier's unitRate for the reverse calc (tier is re-resolved after units are known)
 		const lowestTier = sortedTiers[0];
 		const lowestRate = row.tiers[lowestTier];
 		if (!lowestRate) return;
@@ -232,7 +216,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 			format(startDate, "yyyy-MM-dd"),
 		);
 
-		// Stamp ref before any state updates to prevent double-firing
 		reverseAppliedRef.current = { balance: availableBalance, courseId: currentCourseId };
 
 		setBillingDaysSessions(calculatedUnits);
@@ -266,9 +249,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 			membershipMasterId: row.masterId,
 			permittedDays: calculatedUnits * Number(activeCourse?.unitsMultipleOf || 1)
 		});
-		// membersEnrolled intentionally omitted: it changing must NOT re-trigger auto-select.
-		// activeCourse.cgstRate/sgstRate are stable once the course is loaded.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [availableBalance, walkInCategoryKey, sortedTiers]);
 
 	const getApplicableRateForRow = (category: string) => {
@@ -288,7 +268,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 		let units = billingDaysSessions;
 		let rawRate = getApplicableRateForRow(category);
 
-		// If we have an available balance, reverse-calc using calsPermittedDays GST formula
 		if (availableBalance != null && availableBalance > 0) {
 			const lowestTier = sortedTiers[0];
 			console.log(lowestTier, " = lowestTier");
@@ -308,7 +287,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 			);
 			setBillingDaysSessions(units);
 
-			// Recalculate applicable rate for newly computed units
 			const targetTier = sortedTiers.filter(t => t <= units).reverse()[0] || sortedTiers[0];
 			rawRate = row.tiers[targetTier]
 				|| (() => {
@@ -343,8 +321,6 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 
 	return (
 		<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full space-y-4 pb-10">
-
-			{/* Available Balance Banner */}
 			{availableBalance != null && (
 				<div className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
 					<span className="text-xs font-bold uppercase tracking-wide">Available Balance</span>
