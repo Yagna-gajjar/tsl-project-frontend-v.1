@@ -168,8 +168,8 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 						<div className="space-y-2 sm:col-span-3">
 							<Label className="text-xs font-semibold">Credit Note</Label>
 							<Select
-								value={formData.dnAccountId}
-								onValueChange={(v) => handleChange("dnAccountId", v)}
+								value={formData.dnAccountId || "none"}
+								onValueChange={(v) => handleChange("dnAccountId", v === "none" ? "" : v)}
 								disabled={isAccountsLoading}
 							>
 								<SelectTrigger className="w-full h-10 bg-background border-border/60">
@@ -183,6 +183,10 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 									</div>
 								</SelectTrigger>
 								<SelectContent>
+									<SelectItem value="none" className="text-muted-foreground italic font-medium">
+										-- Not Defined --
+									</SelectItem>
+
 									{dnAccounts.map((acc) => (
 										<SelectItem key={acc.accountId} value={String(acc.accountId)}>
 											{acc.accountName}
