@@ -117,7 +117,7 @@ const ExcelInvoice = ({
 	const gutterStyle: React.CSSProperties = { border: '1px solid #eee', background: '#f9f9f9' };
 
 	return (
-		<div style={{ backgroundColor: '#f0f2f5', width:'100%',minHeight: '100vh', fontFamily: 'sans-serif' }}>
+		<div style={{ backgroundColor: '#f0f2f5', width: '100%', minHeight: '100vh', fontFamily: 'sans-serif' }}>
 			<div style={{ background: '#fff', borderRadius: '8px', width: 'fit-content', margin: 'auto', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
 				<div style={{ display: 'grid', gridTemplateColumns: colWidths.map(w => `${w}px`).join(' '), border: '2px dotted #333' }}>
 
@@ -217,7 +217,7 @@ const ExcelInvoice = ({
 					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Walking Customer</div><div style={cellStyle}>{enrollmentData?.totalDebitAmount}</div>
 
 					<div style={labelStyle}>Discount</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div><div style={gutterStyle}></div>
-					<div style={labelStyle}>Receivable</div><div style={cellStyle}>{n(enrollmentData?.cgstAmount) + n(enrollmentData?.sgstAmount) + n(enrollmentData?.billingAmount) + n(enrollmentData?.roundedAmount)}</div><div style={gutterStyle}></div>
+					<div style={labelStyle}>Receivable</div><div style={cellStyle}>{n(enrollmentData?.cgstAmount) + n(enrollmentData?.sgstAmount) + n(enrollmentData?.billingAmount) + n(enrollmentData?.roundedAmount) + n(enrollmentData?.processingCharge)}</div><div style={gutterStyle}></div>
 					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Total Debited Amount</div><div style={cellStyle}>Not Defined Yet</div>
 
 					{/* FOOTER */}

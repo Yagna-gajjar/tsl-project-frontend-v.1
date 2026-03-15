@@ -47,6 +47,7 @@ interface ProcessValues {
 interface CourseRateTabProps {
 	data?: EnrollmentData
 	onUpdate: (data: Partial<EnrollmentData>) => void
+	setChangeVersions: any
 }
 
 function reverseCalcUnits(
@@ -69,7 +70,7 @@ function reverseCalcUnits(
 	return Math.max(1, permittedDays);
 }
 
-export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
+export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateTabProps) {
 	const activeCourse = data?.course;
 	const allowedPattern = activeCourse?.daysPattern || "1234567";
 	const location = useLocation()
@@ -79,9 +80,8 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	useEffect(() => {
 		const getProcessData = async (enrollment: Enrollment) => {
 			if (enrollment) {
-				console.log(enrollment);
 				const res = await process1(enrollment, new Date("2026-05-01"), 100, false);
-				console.log(res.values);
+				setChangeVersions(res);
 				setProcessValues(res.values || {});
 			}
 		}

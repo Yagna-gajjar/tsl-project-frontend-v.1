@@ -39,7 +39,12 @@ const ChangeEnrollment = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
 
-	const { enrollmentId, actionType, activity, firstEnrPattern, firstEnrPatternDays, enrollmentData } = location.state || {};
+	const { enrollmentId, actionType, activity, firstEnrPattern, firstEnrPatternDays, enrollmentData, passedModification, passedNewVersion,
+		passedNewEnrollment } = location.state || {};
+	console.log(passedModification, " = passed modification");
+	console.log(passedNewVersion, " = passed new version");
+	console.log(passedNewEnrollment, " = passed new enr");
+
 	const currentConfig = ENROLLMENT_WORKFLOW_CONFIG[actionType];
 
 
@@ -218,6 +223,13 @@ const ChangeEnrollment = () => {
 	useEffect(() => {
 		if (!enrollmentData || !currentConfig) return;
 
+		if (actionType === "CHANGE_COURSE") {
+			setModification(passedModification || null);
+			setNewVersion(passedNewVersion || null);
+			setNewEnrollment(passedNewEnrollment || null);
+			return;
+		}
+
 		const runProcesses = async () => {
 			setIsLoading(true);
 
@@ -333,7 +345,7 @@ const ChangeEnrollment = () => {
 				existingEnrollmentId: enrollmentData.enrollmentId,
 				existingEnrollmentNo: enrollmentData.enrollmentNo,
 				newVersion: { ...newVersion, firstEnrollmentId: enrollmentData.enrollmentId },
-				newEnrollment: {	
+				newEnrollment: {
 					...newEnrollment,
 					firstEnrollmentId: enrollmentData.enrollmentId,
 					attendingPattern: firstEnrPattern,

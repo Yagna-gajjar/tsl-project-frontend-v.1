@@ -1,5 +1,3 @@
-"use client"
-
 import { useMemo, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import {
@@ -89,12 +87,12 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 
 		const { course, courseRate: selectedRate } = data;
 
-		const cgstRate = Number(parseFloat(String(course.cgstRate)).toFixed(5));
-		const sgstRate = Number(parseFloat(String(course.sgstRate)).toFixed(5));
-		const rackPrice = Number(parseFloat(String(selectedRate.unitRate)).toFixed(5));
-		const patternDiscount = Number(parseFloat(String(data.patternDiscount)).toFixed(5)) || 1;
-		const dnOrDiscount = Number(parseFloat(String(data.dnOrDiscount)).toFixed(5)) || 0;
-		const processingCharge = Number(parseFloat(String(data.processingCharge)).toFixed(5)) || 0;
+		const cgstRate = Number(parseFloat(String(course.cgstRate)));
+		const sgstRate = Number(parseFloat(String(course.sgstRate)));
+		const rackPrice = Number(parseFloat(String(selectedRate.unitRate)));
+		const patternDiscount = Number(parseFloat(String(data.patternDiscount))) || 1;
+		const dnOrDiscount = Number(parseFloat(String(data.dnOrDiscount))) || 0;
+		const processingCharge = Number(parseFloat(String(data.processingCharge))) || 0;
 		const billingDaysSessions = Number(data.billingDaysSessions) || 1;
 		const membersEnrolled = Number(data.membersEnrolled) || 1;
 		const hasDnAccount = !!data.dnAccountId && data.dnAccountId !== 0;
@@ -103,22 +101,24 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 			? (rackPrice * patternDiscount)
 			: (rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions);
 
-		baseRateD = Number(baseRateD.toFixed(5));
+		baseRateD = Number(baseRateD);
 
-		const A = ((baseRateD * billingDaysSessions) + processingCharge);
+		const A = ((baseRateD * billingDaysSessions * membersEnrolled) + processingCharge);
 		const B = 100 + sgstRate + cgstRate;
 		const C = A * (B / 100);
-		const X = Math.ceil(Number(C.toFixed(5)));
+		const X = Math.ceil(Number(C));
 		const E = X - C;
 		const roundedAmount = ((100 * E) / B);
 
 		const costToMember = ((rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions));
 		const billingAmount = baseRateD * billingDaysSessions * membersEnrolled;
 
-		const cgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (cgstRate / 100);
-		const sgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (sgstRate / 100);
+		const cgstAmount = ((billingAmount * membersEnrolled) + processingCharge + roundedAmount) * (cgstRate / 100);
+		console.log();
 
-		const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + (processingCharge * membersEnrolled) + roundedAmount;
+		const sgstAmount = ((billingAmount * membersEnrolled) + processingCharge + roundedAmount) * (sgstRate / 100);
+
+		const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + processingCharge + roundedAmount;
 
 		let calculatedEndTime = data.startTime || "";
 		if (data.attendingStartDate && data.startTime && course.sessionMinutes) {
@@ -130,13 +130,13 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		return {
 			internal: { A, B, C, X, E, totalDebitAmount },
 			display: {
-				billingRate: Number(baseRateD.toFixed(2)),
-				billingAmount: Number(billingAmount.toFixed(2)),
-				roundedAmount: Number(roundedAmount.toFixed(2)),
-				cgstAmount: Number(cgstAmount.toFixed(2)),
-				sgstAmount: Number(sgstAmount.toFixed(2)),
+				billingRate: Number(baseRateD),
+				billingAmount: Number(billingAmount),
+				roundedAmount: Number(roundedAmount),
+				cgstAmount: Number(cgstAmount),
+				sgstAmount: Number(sgstAmount),
 				totalDebitAmount: Math.round(totalDebitAmount),
-				costToMember: Number(costToMember.toFixed(2)),
+				costToMember: Number(costToMember),
 				calculatedEndTime,
 				cgstRate,
 				sgstRate
@@ -187,7 +187,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 				<div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
 					<div className="space-y-2">
 						<p className="text-[11px] font-black text-muted-foreground uppercase flex items-center gap-2"><Coins size={16} className="text-amber-500" /> Unit Rate</p>
-						<p className="text-3xl font-black font-mono">₹{display.billingRate.toFixed(2)}</p>
+						<p className="text-3xl font-black font-mono">₹{display.billingRate}</p>
 						<p className="text-[10px] text-muted-foreground font-bold uppercase">Net per {data.chargingPattern}</p>
 					</div>
 
@@ -196,11 +196,11 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 						<div className="space-y-1">
 							<div className="flex justify-between text-xs font-bold">
 								<span className="text-muted-foreground">CGST ({display.cgstRate}%)</span>
-								<span>₹{display.cgstAmount.toFixed(2)}</span>
+								<span>₹{display.cgstAmount}</span>
 							</div>
 							<div className="flex justify-between text-xs font-bold">
 								<span className="text-muted-foreground">SGST ({display.sgstRate}%)</span>
-								<span>₹{display.sgstAmount.toFixed(2)}</span>
+								<span>₹{display.sgstAmount}</span>
 							</div>
 						</div>
 					</div>
@@ -208,7 +208,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 					<div className="space-y-2">
 						<p className="text-[11px] font-black text-muted-foreground uppercase flex items-center gap-2"><ArrowDownToLine size={16} className="text-orange-500" /> Rounding</p>
 						<p className="text-2xl font-black font-mono text-orange-600">
-							{display.roundedAmount >= 0 ? "+" : ""}₹{display.roundedAmount.toFixed(2)}
+							{display.roundedAmount >= 0 ? "+" : ""}₹{display.roundedAmount}
 						</p>
 						<p className="text-[10px] text-muted-foreground font-bold uppercase">Final Adjustment</p>
 					</div>
@@ -295,12 +295,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 					enrollmentData={excelEnrollmentData as any}
 				/>
 			</div>
-
-			{/* Developer Debugger */}
-			{/* <div className="mt-12 pt-8 border-t">
-				<p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mb-4 text-center">System Data Inspect Mode</p>
-				<EnrollmentDataDebugger data={data as any} />
-			</div> */}
 		</motion.div>
 	)
 }

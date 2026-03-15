@@ -41,6 +41,7 @@ export function EnrollmentFlow() {
 	const [currentTabIndex, setCurrentTabIndex] = useState(0)
 	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>()
 	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set())
+	const [changeVersions, setChangeVersions] = useState<{}>();
 	const navigate = useNavigate();
 	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue
 
@@ -75,8 +76,31 @@ export function EnrollmentFlow() {
 	}
 
 	const handleNext = () => {
+
+		console.log(enrollmentData);
+
+
 		if (currentTabIndex < TAB_ORDER.length - 1) {
-			setCurrentTabIndex(currentTabIndex + 1)
+			if (currentTabIndex == 4 && location.state) {
+				console.log(enrollmentData, " = enrollmentData");
+				console.log(changeVersions, " = changeVersions");
+				console.log(location.state);
+
+				navigate("/enrollment/change",
+					{
+						state: {
+							enrollmentId: location.state.enrollment.enrollmentId,
+							actionType: "CHANGE_COURSE",
+							enrollmentData: enrollmentData,
+							passedModification: changeVersions?.modify,
+							passedNewVersion: changeVersions?.newVersion,
+							passedNewEnrollment: enrollmentData,
+						}
+					}
+				)
+			} else {
+				setCurrentTabIndex(currentTabIndex + 1)
+			}
 		}
 	}
 
@@ -292,6 +316,7 @@ export function EnrollmentFlow() {
 										<CourseRateTab
 											data={enrollmentData}
 											onUpdate={(data) => updateEnrollmentData(data, "courseRate")}
+											setChangeVersions={setChangeVersions}
 										/>
 									</TabsContent>
 
