@@ -5,6 +5,17 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ChevronRight, ChevronLeft, CheckCircle2, ReceiptIndianRupee } from "lucide-react"
 
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
 import { MemberTab } from "./enrollment-tabs/member-tab/member-tab"
 import { CourseTab } from "./enrollment-tabs/course-tab"
 import { CourseRateTab } from "./enrollment-tabs/course-rate-tab"
@@ -40,9 +51,10 @@ export function EnrollmentFlow() {
 	const { user } = useAuth();
 	const location = useLocation()
 
-	const [currentTabIndex, setCurrentTabIndex] = useState(0)
-	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>()
-	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set())
+	const [currentTabIndex, setCurrentTabIndex] = useState(0);
+	const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>();
+	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set());
 	const [changeVersions, setChangeVersions] = useState<{} | any>();
 	const navigate = useNavigate();
 	const [showTransModal, setShowTransModal] = useState(false);
@@ -70,7 +82,6 @@ export function EnrollmentFlow() {
 		adminRemarks: "",
 		status: "active",
 	}), [enrollmentData]);
-
 
 	const canProceedToNext = useMemo(() => {
 		if (completedTabs.has(currentTabValue)) return true;
@@ -422,7 +433,7 @@ export function EnrollmentFlow() {
 										Transaction Details
 									</Button>
 									<Button
-										onClick={handleCreateEnrollment}
+										onClick={() => setShowConfirmDialog(true)}
 										disabled={!canProceedToNext}
 										className="min-w-[200px] bg-green-600 hover:bg-green-700 text-white shadow-lg px-8"
 									>
@@ -440,6 +451,28 @@ export function EnrollmentFlow() {
 								setPaymentData={setTransactionData}
 							/>
 						)}
+						<AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Confirm Enrollment?</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to finalize this registration? Please verify that the course, batch, and billing details are correct.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>Review Again</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={() => {
+											handleCreateEnrollment();
+											setShowConfirmDialog(false);
+										}}
+										className="bg-green-600 hover:bg-green-700 text-white"
+									>
+										Yes, Finalize
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
 					</Tabs>
 				</motion.div>
 			</div>
