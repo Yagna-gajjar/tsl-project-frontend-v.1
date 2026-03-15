@@ -27,6 +27,7 @@ export async function process6(
 		givenWalkingName,
 		givenWalkingContact,
 		givenProcessingCharge,
+		applyNewRates
 	);
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	function addDays(date: Date, days: number): Date {

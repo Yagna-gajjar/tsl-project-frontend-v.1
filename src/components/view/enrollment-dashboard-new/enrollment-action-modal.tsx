@@ -14,8 +14,6 @@ import { getCourseById, getCourses } from "@/api/course.api"
 import type { Course } from "@/types/course"
 import { getEnrollmentById } from "@/api/enrollment.api"
 import type { Response } from "@/types/response"
-import { process4 } from "@/helpers/enrollment-change/process4"
-import { process1 } from "@/helpers/enrollment-change/process1"
 
 const ACTIONS = [
 	{ id: "QUIT", label: "Quit", icon: LogOut, color: "text-red-600", bg: "bg-red-50" },
@@ -81,7 +79,7 @@ export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionMod
 			if (res.data?.courseId) {
 				const courseRes: Response<Course> = await getCourseById(res.data?.courseId);
 				if (courseRes?.data) {
-					navigateToChange(actionId, actionLabel, res.data.attendingPattern, res.data.attendingPatternDays, courseRes.data)
+					navigateToChange(actionId, actionLabel, res.data.attendingPattern as any, res.data.attendingPatternDays as any, courseRes.data)
 				}
 			}
 			return

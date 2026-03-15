@@ -1,6 +1,6 @@
 import type { Course } from "@/types/course";
 import type { CourseRate } from "@/types/courseRate";
-import type { Enrollment, EnrollmentData } from "@/types/enrollment";
+import type { EnrollmentData } from "@/types/enrollment";
 
 export interface Process3Result {
 	newEnrollment: any;
@@ -21,6 +21,7 @@ export async function process3(
 ): Promise<Process3Result> {
 	console.log(
 		givenStartDate,
+		applyNewRates,
 		givenPrintRemarks,
 		givenWalkingName,
 		givenWalkingContact,

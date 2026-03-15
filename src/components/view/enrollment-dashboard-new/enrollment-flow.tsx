@@ -43,7 +43,7 @@ export function EnrollmentFlow() {
 	const [currentTabIndex, setCurrentTabIndex] = useState(0)
 	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>()
 	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set())
-	const [changeVersions, setChangeVersions] = useState<{}>();
+	const [changeVersions, setChangeVersions] = useState<{} | any>();
 	const navigate = useNavigate();
 	const [showTransModal, setShowTransModal] = useState(false);
 	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue;
