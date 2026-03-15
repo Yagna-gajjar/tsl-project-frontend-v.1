@@ -71,13 +71,45 @@ export function EnrollmentFlow() {
 		status: "active",
 	}), [enrollmentData]);
 
-	useEffect(() => {
-		if (location.state) {
-			if (location.state.tabIndex) {
-				setCurrentTabIndex(location.state.tabIndex)
-			}
+
+	const canProceedToNext = useMemo(() => {
+		if (completedTabs.has(currentTabValue)) return true;
+
+		switch (currentTabValue) {
+			case "member": return !!enrollmentData?.member;
+			case "course": return !!enrollmentData?.course;
+			case "courseRate": return !!enrollmentData?.courseRate;
+			case "batch": return !!enrollmentData?.batch || enrollmentData?.course?.chargingPattern?.toLowerCase() == 'session';
+			case "bill": return !!enrollmentData?.status;
+			default: return false;
 		}
-	}, [location.state])
+	}, [currentTabValue, completedTabs, enrollmentData]);
+
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			const activeElement = document.activeElement as HTMLElement;
+			const isInputActive = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement?.tagName) || activeElement?.isContentEditable;
+
+			if (isInputActive) return;
+
+			if (e.key === "ArrowRight") {
+				if (canProceedToNext) {
+					handleNext();
+				}
+			} else if (e.key === "ArrowLeft") {
+				if (currentTabIndex > 0) {
+					handleBack();
+				}
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [currentTabIndex, canProceedToNext, enrollmentData, changeVersions, location.state]);
 
 	const updateEnrollmentData = useCallback((data: Partial<EnrollmentData>, tabKey?: TabValue) => {
 		setEnrollmentData((prev: any) => ({
@@ -252,19 +284,6 @@ export function EnrollmentFlow() {
 			})
 		}
 	}
-
-	const canProceedToNext = useMemo(() => {
-		if (completedTabs.has(currentTabValue)) return true;
-
-		switch (currentTabValue) {
-			case "member": return !!enrollmentData?.member;
-			case "course": return !!enrollmentData?.course;
-			case "courseRate": return !!enrollmentData?.courseRate;
-			case "batch": return !!enrollmentData?.batch || enrollmentData?.course?.chargingPattern?.toLowerCase() == 'session';
-			case "bill": return !!enrollmentData?.status;
-			default: return false;
-		}
-	}, [currentTabValue, completedTabs, enrollmentData]);
 
 	return (
 		<div className="flex min-h-screen flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-8 bg-background">
