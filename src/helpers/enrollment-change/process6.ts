@@ -6,6 +6,8 @@ export interface Process2Result {
 	newEnrollment: any;
 }
 
+// const nowISO = (): string => new Date().toISOString();
+
 export async function process6(
 	enrollmentData: EnrollmentData,
 	newVersion: Partial<EnrollmentData> | null,
@@ -17,8 +19,15 @@ export async function process6(
 	givenPrintRemarks?: string,
 	givenWalkingName?: string,
 	givenWalkingContact?: string,
-	givenProcessingCharge?: number,
-): Promise<Process2Result> {
+	givenProcessingCharge?: number
+): Promise<Process6Result> {
+	console.log(
+		givenStartDate,
+		givenPrintRemarks,
+		givenWalkingName,
+		givenWalkingContact,
+		givenProcessingCharge,
+	);
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	function addDays(date: Date, days: number): Date {
 		const result = new Date(date);

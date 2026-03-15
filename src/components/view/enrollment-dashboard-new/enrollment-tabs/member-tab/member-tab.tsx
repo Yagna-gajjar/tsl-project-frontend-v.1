@@ -418,7 +418,7 @@ export function MemberTab({
 							</div>
 						) : accountsArray.length > 0 ? (
 							<div className="space-y-3">
-								{accountsArray.map((account) => (
+								{accountsArray.map((account:any) => (
 									<div key={account.accountId} className="rounded-xl border border-slate-100 p-4 bg-slate-50 space-y-2">
 										<div className="flex items-center justify-between">
 											<h4 className="font-black text-sm text-slate-800">{account.accountName}</h4>
@@ -443,7 +443,7 @@ export function MemberTab({
 													<AccordionTrigger className="py-2 hover:no-underline group">
 														<div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 group-hover:text-blue-600 transition-colors">
 															<Users className="w-3 h-3" />
-															<span>View {account.members?.length || 0} Members</span>
+															<span>View {account?.members?.length || 0} Members</span>
 														</div>
 													</AccordionTrigger>
 

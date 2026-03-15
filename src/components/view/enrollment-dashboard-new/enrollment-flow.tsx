@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ChevronRight, ChevronLeft, CheckCircle2 } from "lucide-react"
+import { ChevronRight, ChevronLeft, CheckCircle2, ReceiptIndianRupee } from "lucide-react"
 
 import { MemberTab } from "./enrollment-tabs/member-tab/member-tab"
 import { CourseTab } from "./enrollment-tabs/course-tab"
@@ -19,6 +19,9 @@ import type { Response } from "@/types/response"
 import { createEnrollment, deleteEnrollment } from "@/api/enrollment.api"
 import { useAuth } from "@/contexts/authContext"
 import { useLocation, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
+import { TransactionModalForEnrollment } from "./Transaction-modal-for-enrollment"
+import type { Transaction } from "@/types/transaction"
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"] as const
 type TabValue = (typeof TAB_ORDER)[number]
@@ -43,7 +46,31 @@ export function EnrollmentFlow() {
 	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set())
 	const [changeVersions, setChangeVersions] = useState<{}>();
 	const navigate = useNavigate();
-	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue
+	const [showTransModal, setShowTransModal] = useState(false);
+	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue;
+	const [transactionData, setTransactionData] = useState<Transaction>();
+	const emptyReceipt = useMemo(() => ({
+		transactionType: "receipt",
+		typeSerialNo: 0,
+		crEntityId: enrollmentData?.course?.entityId || null,
+		crAccountId: enrollmentData?.accountId || null,
+		crMemberId: enrollmentData?.member?.memberId || null,
+		crMsNo: enrollmentData?.membershipMasterId || null,
+		drEntityId: 1,
+		drAccountId: null,
+		drMemberId: null,
+		drMsNo: null,
+		transactionDetails: `Enrollment for ${enrollmentData?.course?.courseName || ''}`,
+		entrySource: "Admin Office",
+		enrollmentId: enrollmentData?.enrollmentId || null,
+		formReferenceNo: "",
+		amount: enrollmentData?.totalDebitAmount || 0,
+		accApproval: false,
+		auditRemarks: "",
+		printRemarks: "",
+		adminRemarks: "",
+		status: "active",
+	}), [enrollmentData]);
 
 	useEffect(() => {
 		if (location.state) {
@@ -181,7 +208,8 @@ export function EnrollmentFlow() {
 					enrollmentData.course.sessionMinutes
 				)
 				: null,
-			chargingPattern: enrollmentData?.course?.chargingPattern
+			chargingPattern: enrollmentData?.course?.chargingPattern,
+			transaction: transactionData ?? null
 		}
 		if (enrollmentData?.isDraft) {
 			try {
@@ -367,16 +395,33 @@ export function EnrollmentFlow() {
 									<ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
 								</Button>
 							) : (
-								<Button
-									onClick={handleCreateEnrollment}
-									disabled={!canProceedToNext}
-									className="min-w-[200px] bg-green-600 hover:bg-green-700 text-white shadow-lg px-8"
-								>
-									<CheckCircle2 className="w-4 h-4 mr-2" />
-									Finalize Registration
-								</Button>
+								<>
+										<Button
+											onClick={() => setShowTransModal(true)}
+											className="min-w-[180px] bg-amber-500 hover:bg-amber-600 text-white shadow-lg px-6 flex items-center gap-2"
+										>
+											<ReceiptIndianRupee className="w-5 h-5" />
+											Transaction Details
+										</Button>
+									<Button
+										onClick={handleCreateEnrollment}
+										disabled={!canProceedToNext}
+										className="min-w-[200px] bg-green-600 hover:bg-green-700 text-white shadow-lg px-8"
+									>
+										<CheckCircle2 className="w-4 h-4 mr-2" />
+										Finalize Registration
+									</Button>
+								</>
 							)}
 						</div>
+						{showTransModal && (
+							<TransactionModalForEnrollment
+								isOpen={showTransModal}
+								onClose={() => setShowTransModal(false)}
+								initialData={emptyReceipt}
+								setPaymentData={setTransactionData}
+							/>
+						)}
 					</Tabs>
 				</motion.div>
 			</div>

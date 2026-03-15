@@ -6,6 +6,7 @@ import TransactionFormModal from "@/components/view/transaction/transaction-form
 import TransactionViewModal from "@/components/view/transaction/transaction-view-modal";
 import TransactionExcelUpload from "@/components/view/transaction/transaction-excel-upload";
 import { Button } from "@/components/ui/button";
+import DipositeSlip from "@/components/view/transaction/DepositeSlip";
 
 export default function TransactionPage() {
 	const [viewOpen, setViewOpen] = useState(false);
@@ -90,6 +91,7 @@ export default function TransactionPage() {
 				onClose={() => setExcelOpen(false)}
 				onSuccess={handleSaved}
 			/>
+			<DipositeSlip />
 		</div>
 	);
 }

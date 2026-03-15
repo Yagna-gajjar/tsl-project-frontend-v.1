@@ -22,10 +22,11 @@ export interface Transaction {
 	drMemberLastName?: string;
 
 	transactionDetails: string;
+	transactionDate: string | Date;
 	entrySource: string;
 	enrollmentId: number | null;
 	formReferenceNo: string;
-	amount: string | number;
+	amount: number | string;
 	accApproval: boolean;
 
 	auditRemarks: string;

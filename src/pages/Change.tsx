@@ -49,8 +49,8 @@ const ChangeEnrollment = () => {
 
 
 	const [values, setValues] = useState();
-
-	const [processedData, setProcessedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null>(null);
+	const [processedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null>(null);
+	console.log(values);
 
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -60,21 +60,21 @@ const ChangeEnrollment = () => {
 	);
 	const [applyNewRates, setApplyNewRates] = useState(false);
 
-	const [courseRateData, setCourseRateData] = useState<CourseRate | null>();
+	const [_, setCourseRateData] = useState<CourseRate | null>();
 
 	const [modification, setModification] =
-		useState<Partial<EnrollmentData> | null>(null);
+		useState<Partial<EnrollmentData> | null | any>(null);
 	const [newVersion, setNewVersion] =
-		useState<Partial<EnrollmentData> | null>(null);
+		useState<Partial<EnrollmentData> | null | any>(null);
 	const [newEnrollment, setNewEnrollment] =
-		useState<Partial<EnrollmentData> | null>(null);
+		useState<Partial<EnrollmentData> | null | any>(null);
 
 	useEffect(() => {
 		async function fetchCourseRate() {
 			if (newVersion?.membershipMasterId && activity.courseId) {
 				const res: Response<CourseRate[]> = await getCourseRates({ membershipMasterId: Number(newVersion?.membershipMasterId), courseId: activity.courseId })
 				if (res?.success) {
-					setCourseRateData(res?.data[0] ? res?.data[0] : null);
+					setCourseRateData(res?.data?.[0] ? res?.data[0] : null);
 				}
 			}
 		}
@@ -243,7 +243,7 @@ const ChangeEnrollment = () => {
 				};
 
 				if (currentConfig.existingEnrollment?.process) {
-					const result =
+					const result: any =
 						await PROCESS_MAP[
 							currentConfig.existingEnrollment.process as keyof typeof PROCESS_MAP
 						](ctx);
@@ -251,7 +251,7 @@ const ChangeEnrollment = () => {
 				}
 
 				if (currentConfig.newVersion?.process) {
-					const result =
+					const result: any =
 						await PROCESS_MAP[
 							currentConfig.newVersion.process as keyof typeof PROCESS_MAP
 						](ctx);
@@ -278,7 +278,7 @@ const ChangeEnrollment = () => {
 
 
 				if (currentConfig.newEnrollment?.process) {
-					const result =
+					const result: any =
 						await PROCESS_MAP[
 							currentConfig.newEnrollment.process as keyof typeof PROCESS_MAP
 						](ctx);

@@ -18,7 +18,14 @@ export async function process3(
 	givenWalkingName?: string,
 	givenWalkingContact?: string,
 	givenProcessingCharge?: number,
-): Promise<Process2Result> {
+): Promise<Process3Result> {
+	console.log(
+		givenStartDate,
+		givenPrintRemarks,
+		givenWalkingName,
+		givenWalkingContact,
+		givenProcessingCharge
+	);
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	function addDays(date: Date, days: number): Date {
 		const result = new Date(date);

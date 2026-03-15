@@ -20,6 +20,12 @@ export async function process2(
     givenWalkingContact?: string,
     givenProcessingCharge?: number,
 ): Promise<Process2Result> {
+    console.log(givenStartDate,
+        givenPrintRemarks,
+        givenWalkingName,
+        givenWalkingContact,
+        givenProcessingCharge,
+        applyNewRates);
     const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 
     const result = await calsPermittedDays({ oldBillingAmount: values.value4, pc: Number(givenProcessingCharge), cgst: Number(course.cgstRate), sgst: Number(course.cgstRate), unitRate: Number(courseRateData?.unitRate), startDays: givenStartDate })

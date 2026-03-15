@@ -34,6 +34,7 @@ const emptyReceipt: Transaction = {
 	drMsNo: null,
 
 	amount: 0,
+	transactionDate: new Date(),
 	transactionDetails: "",
 	entrySource: "Admin Office",
 	formReferenceNo: "",
@@ -123,6 +124,12 @@ export default function EnrollmentReceiptModal({
 			type: "number",
 			required: true,
 			disabled: true
+		},
+		{
+			name: "transactionDate",
+			label: "Transaction Date",
+			type: "Date",
+			required: true,
 		},
 		{
 			name: "drAccountId",

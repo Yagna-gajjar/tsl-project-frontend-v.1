@@ -54,6 +54,7 @@ import StatusVisible from "./pages/status-visible";
 import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrollment-flow";
 import SessionBooking from "./pages/SessionBooking";
 import ChangeEnrollment from "./pages/Change";
+import Ledger from "./pages/ledger";
 
 export default function App() {
   return (
@@ -182,6 +183,7 @@ export default function App() {
                 />
                 <Route path="/transaction" element={<TransactionPage />} />
                 <Route path="/billing" element={<Billing />} />
+                <Route path="/ledger" element={<Ledger />} />
                 <Route path="/debit-note" element={<DebitNote />} />
                 <Route path="*" element={<NotFound />} />
               </Route>

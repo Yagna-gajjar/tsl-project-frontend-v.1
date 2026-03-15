@@ -131,6 +131,7 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   { name: "Billing", href: "/billing", icon: IndianRupee },
+  { name: "Ledger", href: "/ledger", icon: IndianRupee },
   {
     name: "Staff Management",
     href: "/staff-management",
