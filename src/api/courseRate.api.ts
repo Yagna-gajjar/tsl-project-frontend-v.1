@@ -10,14 +10,14 @@ export interface CourseRateQuery {
 	search?: string;
 	courseId?: number;
 	entityType?: string;
-	membershipMasterId: number;
+	membershipMasterId?: number;
 	courseName?: string;
 }
 
 const RATE_BASE = import.meta.env.VITE_APP_API_URL + "/course-rate";
 
 export function getCourseRates(
-	params: CourseRateQuery = {}
+	params: CourseRateQuery
 ): Promise<Response<CourseRate[]>> {
 	const qs = toQueryString({
 		page: params.page ?? 1,

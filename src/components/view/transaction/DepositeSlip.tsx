@@ -8,7 +8,7 @@ const CustomTable = () => {
 	const downloadPDF = async () => {
 		const element = tableRef.current;
 
-		const canvas = await html2canvas(element, {
+		const canvas = await html2canvas(element as any, {
 			scale: 2,
 			useCORS: true,
 			backgroundColor: "#ffffff"

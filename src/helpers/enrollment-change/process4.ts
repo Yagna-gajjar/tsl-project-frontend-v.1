@@ -6,10 +6,10 @@ export interface Process4Result {
 	newEnrollment: any;
 }
 
-const diffDaysInclusive = (start: Date, end: Date): number => {
-	const msPerDay = 24 * 60 * 60 * 1000;
-	return Math.floor((end.getTime() - start.getTime()) / msPerDay) + 1;
-};
+// const diffDaysInclusive = (start: Date, end: Date): number => {
+// 	const msPerDay = 24 * 60 * 60 * 1000;
+// 	return Math.floor((end.getTime() - start.getTime()) / msPerDay) + 1;
+// };
 
 
 export async function process4(
@@ -25,6 +25,9 @@ export async function process4(
 	givenWalkingContact?: string,
 	givenProcessingCharge?: number,
 ): Promise<Process4Result> {
+	console.log(givenPrintRemarks,
+		givenWalkingName,
+		givenWalkingContact);
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	function addDays(date: Date, days: number): Date {
 		const result = new Date(date);
@@ -42,8 +45,8 @@ export async function process4(
 		throw new Error("attendingStartDate is required");
 	}
 
-	const startDate = new Date(base.attendingStartDate);
-	const calculatedPermittedDays = diffDaysInclusive(startDate, endDate);
+	// const startDate = new Date(base.attendingStartDate);
+	// const calculatedPermittedDays = diffDaysInclusive(startDate, endDate);
 
 	let billingDaysSessions = 0;
 

@@ -26,7 +26,7 @@ export interface Transaction {
 	entrySource: string;
 	enrollmentId: number | null;
 	formReferenceNo: string;
-	amount: string | number;
+	amount: number | string;
 	accApproval: boolean;
 
 	auditRemarks: string;

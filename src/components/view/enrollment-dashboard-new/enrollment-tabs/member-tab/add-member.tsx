@@ -4,7 +4,6 @@ import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
 
-import { updateMember } from "@/api/member.api";
 import { createAccountMemberWithMember } from "@/api/accountMember.api";
 import type { Member } from "@/types/member";
 import { toast } from "@/hooks/use-toast";
@@ -441,7 +440,7 @@ export function AddMemberModal({
         variant: "success",
       });
 
-      onSaved?.(row as Member);
+      onSaved?.(row as any);
       onClose();
     } catch {
       const message = "Failed to save";

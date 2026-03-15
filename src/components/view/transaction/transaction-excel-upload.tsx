@@ -49,7 +49,7 @@ export default function TransactionExcelUpload({ isOpen, onClose, onSuccess }: T
 	}, []);
 
 	const handleCreateTransaction = useCallback(async (row: TransactionImportRow) => {
-		const payload: Transaction = {
+		const payload: Transaction | any = {
 			transactionType: String(row.transactionType),
 			typeSerialNo: 0,
 			amount: Number(row.amount),

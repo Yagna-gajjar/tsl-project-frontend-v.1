@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { getLedgerEntriesByAccount } from '@/api/transaction.api';
 import { getAccounts, type AccountQuery } from '@/api/account.api';
 import {
@@ -168,10 +168,10 @@ const Ledger = () => {
 		let credit = 0;
 
 		ledgerEntries.forEach((entry: Transaction) => {
-			const amount = parseFloat(entry?.amount) || 0;
-			if (entry?.drAccountId.toString() === selectedAccountId) {
+			const amount = parseFloat(entry?.amount as string) || 0;
+			if (entry?.drAccountId?.toString() === selectedAccountId) {
 				debit += amount;
-			} else if (entry?.crAccountId.toString() === selectedAccountId) {
+			} else if (entry?.crAccountId?.toString() === selectedAccountId) {
 				credit += amount;
 			}
 		});
@@ -189,7 +189,7 @@ const Ledger = () => {
 
 	// Find the selected account name for the button display
 	const selectedAccountName = useMemo(() => {
-		const found = accounts.find(acc => acc.accountId.toString() === selectedAccountId);
+		const found = accounts.find(acc => acc?.accountId?.toString() === selectedAccountId);
 		return found ? found.accountName : "Select an account...";
 	}, [selectedAccountId, accounts]);
 
@@ -367,7 +367,7 @@ const Ledger = () => {
 										</TableHeader>
 										<TableBody>
 											{ledgerEntries.map((entry:Transaction, idx:number) => {
-												const amount = parseFloat(entry?.amount) || 0;
+												const amount = parseFloat(entry?.amount as string) || 0;
 												const isDebit = entry.drAccountId?.toString() === selectedAccountId;
 												const isCredit = entry.crAccountId?.toString() === selectedAccountId;
 												const opposingAccount = isDebit ? entry.crAccountName : entry.drAccountName;

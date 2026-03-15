@@ -20,10 +20,11 @@ export async function process2(
     givenProcessingCharge?: number,
 ): Promise<Process2Result> {
     console.log(givenStartDate,
-givenPrintRemarks,
-givenWalkingName,
-givenWalkingContact,
-givenProcessingCharge);
+        givenPrintRemarks,
+        givenWalkingName,
+        givenWalkingContact,
+        givenProcessingCharge,
+        applyNewRates);
     const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
     function addDays(date: Date, days: number): Date {
         const result = new Date(date);

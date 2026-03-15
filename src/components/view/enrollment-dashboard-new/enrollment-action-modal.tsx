@@ -61,7 +61,7 @@ export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionMod
 
 	const navigateToChange = (actionId: string, actionLabel: string, activity: Course) => {
 		const config = ENROLLMENT_WORKFLOW_CONFIG[actionId]
-
+		console.log(actionLabel);
 		navigate(`/enrollment/change`, {
 			state: {
 				enrollmentId: enrollment.enrollmentId,
