@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  CreditCard,
   ChevronLeft,
   ChevronRight,
   User,
@@ -26,6 +25,9 @@ import {
   Pen,
   TimerReset,
   Ticket,
+  ScrollText,
+  Contact,
+  TicketPercent,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,11 +61,12 @@ const navigationItems: NavigationItem[] = [
     href: "/account",
     icon: User2,
     submenu: [
-      { label: "Accounts", href: "/account/accounts", icon: User },
-      { label: "Accounts Member", href: "/account/account-member", icon: User },
+      { label: "Accounts", href: "/account/accounts", icon: Contact },
+      { label: "Authority", href: "/account/authority", icon: CircleSlash },
+      { label: "Accounts Member", href: "/account/account-member", icon: Users },
+      { label: "Member", href: "/account/member", icon: User },
     ],
   },
-  { name: "Authority", href: "/authority", icon: CircleSlash },
   {
     name: "Bookings",
     href: "/bookings",
@@ -101,12 +104,7 @@ const navigationItems: NavigationItem[] = [
   {
     name: "Discount",
     href: "/discount",
-    icon: CreditCard,
-  },
-  {
-    name: "Member",
-    icon: User,
-    href: "/member",
+    icon: TicketPercent,
   },
   {
     name: "infrastructure & Configurations",
@@ -130,14 +128,28 @@ const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  { name: "Billing", href: "/billing", icon: IndianRupee },
-  { name: "Ledger", href: "/ledger", icon: IndianRupee },
+  {
+    name: "Finance",
+    href: "/finance",
+    icon: Banknote,
+    submenu: [
+      {
+        label: "Ledger",
+        icon: IndianRupee,
+        href: "/finance/ledger",
+      },
+      {
+        label: "Transaction",
+        icon: Banknote,
+        href: "/finance/transaction",
+      }
+    ],
+  },
   {
     name: "Staff Management",
     href: "/staff-management",
     icon: Users,
     submenu: [
-      // { label: "Coach", href: "/staff-management/coach", icon: Users },
       {
         label: "Access & Details",
         href: "/staff-management/access-details",
@@ -152,12 +164,10 @@ const navigationItems: NavigationItem[] = [
       {
         label: "Staff Attendance",
         href: "/staff-management/attendance",
-        icon: User,
+        icon: ScrollText,
       },
     ],
   },
-  { name: "Transaction", href: "/transaction", icon: Banknote },
-  { name: "Debit Note", href: "/debit-note", icon: CreditCard },
   {
     name: "Membership",
     icon: Crown,
@@ -329,8 +339,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
                       >
                         <ChevronDown
                           className={`h-4 w-4 ${location.pathname.startsWith(item.href + "/")
-                              ? "text-background"
-                              : "text-muted-foreground"
+                            ? "text-background"
+                            : "text-muted-foreground"
                             }`}
                         />
                       </motion.div>

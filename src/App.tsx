@@ -28,11 +28,7 @@ import CoursePage from "@/pages/course";
 import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
 import EnrollmentPage from "./pages/enrollment";
-// import EnrollmentDashboard from "./components/view/enrollment-dashboard/enrollment-dashboard";
 import AttendanceSheet from "./components/view/batch/attendance-sheet";
-import DebitNote from "./pages/debitNote";
-// import PaymentPage from "./pages/payment";
-import Billing from "./pages/billing";
 import RefundFormModal from "./components/view/enrollment-actions/Refund";
 import MembershipMasterPage from "./pages/membershipMaster";
 import MembershipPage from "./pages/membership";
@@ -79,7 +75,7 @@ export default function App() {
                 /> */}
                 <Route path="/enrollment" element={<EnrollmentPage />} />
                 <Route path="/enrollment/change" element={<ChangeEnrollment />} />
-                <Route path="/authority" element={<AuthorityPage />} />
+                <Route path="/account/authority" element={<AuthorityPage />} />
                 <Route path="/account/accounts" element={<AccountPage />} />
                 <Route
                   path="/account/account-member"
@@ -121,7 +117,7 @@ export default function App() {
                   path="/infrastructure-configurations/facility-allotment"
                   element={<FacilityAllotmentsPage />}
                 />
-                <Route path="/member" element={<MemberPage />} />
+                <Route path="/account/member" element={<MemberPage />} />
                 <Route
                   path="/staff-management/access-details"
                   element={<AccessAndDetails />}
@@ -181,10 +177,8 @@ export default function App() {
                   path="/membership/membership-link"
                   element={<MembershipLinkPage />}
                 />
-                <Route path="/transaction" element={<TransactionPage />} />
-                <Route path="/billing" element={<Billing />} />
-                <Route path="/ledger" element={<Ledger />} />
-                <Route path="/debit-note" element={<DebitNote />} />
+                <Route path="/finance/transaction" element={<TransactionPage />} />
+                <Route path="/finance/ledger" element={<Ledger />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route path="/setting" element={<Setting />}>
