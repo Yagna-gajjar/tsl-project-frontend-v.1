@@ -19,7 +19,6 @@ import type { Response } from "@/types/response"
 import { createEnrollment, deleteEnrollment } from "@/api/enrollment.api"
 import { useAuth } from "@/contexts/authContext"
 import { useLocation, useNavigate } from "react-router-dom"
-import { useNavigate } from "react-router-dom"
 import { TransactionModalForEnrollment } from "./Transaction-modal-for-enrollment"
 import type { Transaction } from "@/types/transaction"
 
@@ -235,7 +234,7 @@ export function EnrollmentFlow() {
 					description: "Enrollment craeted successfully.",
 					variant: "success"
 				});
-				navigate(0);
+				// navigate(0);
 			}
 			else {
 				toast({
@@ -396,13 +395,13 @@ export function EnrollmentFlow() {
 								</Button>
 							) : (
 								<>
-										<Button
-											onClick={() => setShowTransModal(true)}
-											className="min-w-[180px] bg-amber-500 hover:bg-amber-600 text-white shadow-lg px-6 flex items-center gap-2"
-										>
-											<ReceiptIndianRupee className="w-5 h-5" />
-											Transaction Details
-										</Button>
+									<Button
+										onClick={() => setShowTransModal(true)}
+										className="min-w-[180px] bg-amber-500 hover:bg-amber-600 text-white shadow-lg px-6 flex items-center gap-2"
+									>
+										<ReceiptIndianRupee className="w-5 h-5" />
+										Transaction Details
+									</Button>
 									<Button
 										onClick={handleCreateEnrollment}
 										disabled={!canProceedToNext}

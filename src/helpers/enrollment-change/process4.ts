@@ -2,7 +2,7 @@ import type { Course } from "@/types/course";
 import type { CourseRate } from "@/types/courseRate";
 import type { EnrollmentData } from "@/types/enrollment";
 
-export interface Process2Result {
+export interface Process4Result {
 	newEnrollment: any;
 }
 
@@ -51,7 +51,6 @@ export async function process4(
 
 	const finalBillingAmount = ((Number(courseRateData?.unitRate) * permittedDays) + Number(givenProcessingCharge ? givenProcessingCharge : 0))
 
-	const newTotalDebitAmount = values.value4;
 	const attendingStartDate = new Date(values.value6)
 	const endDate = addDays(new Date(givenStartDate), (permittedDays - 1))
 

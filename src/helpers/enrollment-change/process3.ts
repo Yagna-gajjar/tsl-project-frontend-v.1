@@ -2,7 +2,7 @@ import type { Course } from "@/types/course";
 import type { CourseRate } from "@/types/courseRate";
 import type { Enrollment, EnrollmentData } from "@/types/enrollment";
 
-export interface Process2Result {
+export interface Process3Result {
 	newEnrollment: any;
 }
 
