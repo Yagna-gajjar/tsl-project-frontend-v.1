@@ -13,7 +13,7 @@ import { ConfirmTab as BillTab } from "./enrollment-tabs/confirm-tab"
 import FinalConfirmTab from "./enrollment-tabs/final-confirm-tab"
 
 import { EnrollmentDetails } from "./enrollment-details"
-import type { Enrollment as EnrollmentData } from "@/types/enrollment"
+import type { Enrollment, Enrollment as EnrollmentData } from "@/types/enrollment"
 import { toast } from "@/hooks/use-toast"
 import type { Response } from "@/types/response"
 import { createEnrollment, deleteEnrollment } from "@/api/enrollment.api"
@@ -21,6 +21,8 @@ import { useAuth } from "@/contexts/authContext"
 import { useLocation, useNavigate } from "react-router-dom"
 import { TransactionModalForEnrollment } from "./Transaction-modal-for-enrollment"
 import type { Transaction } from "@/types/transaction"
+import { BalanceDaysTab, ChangeCourseRateTab } from "./enrollment-tabs/change-course-rate-tab"
+import { process1 } from "@/helpers/enrollment-change/process1"
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"] as const
 type TabValue = (typeof TAB_ORDER)[number]
@@ -36,6 +38,15 @@ const tabLabels: Record<TabValue, string> = {
 	confirm: "Confirm",
 }
 
+interface ProcessValues {
+	value1?: number
+	value2?: number
+	value3?: number
+	value4?: number
+	value5?: number
+	value6?: string
+}
+
 export function EnrollmentFlow() {
 	const { user } = useAuth();
 	const location = useLocation()
@@ -48,6 +59,7 @@ export function EnrollmentFlow() {
 	const [showTransModal, setShowTransModal] = useState(false);
 	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue;
 	const [transactionData, setTransactionData] = useState<Transaction>();
+
 	const emptyReceipt = useMemo(() => ({
 		transactionType: "receipt",
 		typeSerialNo: 0,
@@ -71,10 +83,25 @@ export function EnrollmentFlow() {
 		status: "active",
 	}), [enrollmentData]);
 
+	const [balance, setbalance] = useState<number>(0);
+
+
+	const getProcessData = async (enrollment: Enrollment) => {
+		if (enrollment) {
+			const res = await process1(enrollment, new Date("2026-04-15"), 100, false);
+			setChangeVersions(res);
+			setbalance(res.values.value4 || {});
+		}
+	}
 	useEffect(() => {
 		if (location.state) {
 			if (location.state.tabIndex) {
 				setCurrentTabIndex(location.state.tabIndex)
+			}
+			if (location.state) {
+				if (location.state.type == "CHANGE_COURSE" && location.state.enrollment) {
+					getProcessData({ ...location.state.enrollment })
+				}
 			}
 		}
 	}, [location.state])
@@ -104,7 +131,6 @@ export function EnrollmentFlow() {
 	const handleNext = () => {
 
 		console.log(enrollmentData);
-
 
 		if (currentTabIndex < TAB_ORDER.length - 1) {
 			if (currentTabIndex == 4 && location.state) {
@@ -340,11 +366,15 @@ export function EnrollmentFlow() {
 									</TabsContent>
 
 									<TabsContent value="courseRate" className="mt-0 h-full">
-										<CourseRateTab
-											data={enrollmentData}
+										{balance != 0 ? <ChangeCourseRateTab
+											balance={balance}
 											onUpdate={(data) => updateEnrollmentData(data, "courseRate")}
-											setChangeVersions={setChangeVersions}
-										/>
+											data={enrollmentData}
+										/> :
+											<CourseRateTab
+												data={enrollmentData}
+												onUpdate={(data) => updateEnrollmentData(data, "courseRate")}
+											/>}
 									</TabsContent>
 
 									<TabsContent value="batch" className="mt-0 h-full">

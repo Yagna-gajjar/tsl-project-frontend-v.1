@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import {
@@ -41,7 +43,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		dnAccountId: data?.dnAccountId ? String(data.dnAccountId) : "",
 		dnOrDiscount: data?.dnOrDiscount || 0,
 		processingCharge: data?.processingCharge || 0,
-		academyApprovalStatus: data?.academyApprovalStatus || "not required",
+	academyApprovalStatus: data?.academyApprovalStatus || "not required",
 		status: data?.status || "created",
 	});
 
@@ -50,9 +52,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 
 	const handleChange = (name: string, value: string | number) => {
 		const updated = { ...formData, [name]: value }
-		console.log(updated);
 		setFormData(updated)
-
 		onUpdate(updated as any)
 	}
 

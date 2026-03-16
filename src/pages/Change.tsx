@@ -54,7 +54,7 @@ const ChangeEnrollment = () => {
 
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [changeDate, setChangeDate] = useState("2026-05-01");
+	const [changeDate, setChangeDate] = useState("2026-04-15");
 	const [processingCharge, setProcessingCharge] = useState(
 		enrollmentData?.processingCharge || "0"
 	);

@@ -1,6 +1,7 @@
 import type { EnrollmentData } from "@/types/enrollment";
 import { getBatchMember } from "@/api/batchMember.api";
 import { getCourseRates } from "@/api/courseRate.api";
+import { addDays } from "date-fns";
 
 export interface Process1Result {
 	modify: EnrollmentData;
@@ -119,7 +120,6 @@ export async function process1(
 			A = (1 - ((P - Q) * (R / 100)));
 		}
 		else {
-			// 1 - ((4)*0.1) //mistake here
 			A = (1 - ((P - S) * (R / 100)));
 		}
 
@@ -173,16 +173,12 @@ export async function process1(
 		updatedAt: nowISO(),
 	};
 
-	// billingAmount is without roundedAmount and
 	let v1 = (Number(base.billingAmount) + Number(base.roundedAmount) + processingCharge) * (1 + ((Number(base?.cgstRate) + Number(base?.sgstRate)) / 100));
 	let v2 = totalDebit;
 	let v3 = newTotalDebitAmount;
 	let v4 = v1 - v2 - v3;
-	function addDays(date: Date, days: number): Date {
-		const result = new Date(date);
-		result.setDate(result.getDate() + days);
-		return result;
-	}
+
+	console.log(newVersion.endDate);
 
 	const values = {
 		value1: v1,

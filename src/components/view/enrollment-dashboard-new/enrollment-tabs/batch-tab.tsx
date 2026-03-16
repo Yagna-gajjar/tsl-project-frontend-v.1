@@ -27,7 +27,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 	const [isLoading, setIsLoading] = useState(false)
 	const [searchQuery, setSearchQuery] = useState("")
 	const [selectedBatchId, setSelectedBatchId] = useState<number | undefined>(data?.batch?.batchId)
-	console.log(data?.course?.activityId);
 
 	const apiParams = useMemo(() => {
 		const activityId = data?.course?.activityId || data?.activityId;
@@ -48,6 +47,7 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 			activityId: Number(activityId),
 			entityId: Number(entityId),
 			daysPattern: String(patternStr),
+			startTime: String(startTime),
 			endTime: formattedEndTime
 		};
 	}, [data?.course?.activityId, data?.activityId, data?.course?.entityId, data?.academyEntityId, data?.attendingPattern, data?.startTime, data?.course?.sessionMinutes]);
