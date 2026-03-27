@@ -23,6 +23,7 @@ import { TransactionModalForEnrollment } from "./Transaction-modal-for-enrollmen
 import type { Transaction } from "@/types/transaction"
 import { BalanceDaysTab, ChangeCourseRateTab } from "./enrollment-tabs/change-course-rate-tab"
 import { process1 } from "@/helpers/enrollment-change/process1"
+import { getCourseById } from "@/api/course.api"
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"] as const
 type TabValue = (typeof TAB_ORDER)[number]
@@ -128,28 +129,34 @@ export function EnrollmentFlow() {
 		}
 	}
 
-	const handleNext = () => {
+	const handleNext = async () => {
 
 		console.log(enrollmentData);
-
 		if (currentTabIndex < TAB_ORDER.length - 1) {
 			if (currentTabIndex == 4 && location.state) {
-				console.log(enrollmentData, " = enrollmentData");
-				console.log(changeVersions, " = changeVersions");
-				console.log(location.state);
+				const courseRes = await getCourseById(Number(enrollmentData?.courseId));
+				if (courseRes.success) {
+					console.log("courseRes.data: ", courseRes.data);
 
-				navigate("/enrollment/change",
-					{
-						state: {
-							enrollmentId: location.state.enrollment.enrollmentId,
-							actionType: "CHANGE_COURSE",
-							enrollmentData: enrollmentData,
-							passedModification: changeVersions?.modify,
-							passedNewVersion: changeVersions?.newVersion,
-							passedNewEnrollment: enrollmentData,
+					console.log(enrollmentData, " = enrollmentData");
+					console.log(changeVersions, " = changeVersions");
+					console.log(location.state, " = xxxxxxxxxxxxxxxxxxxxxxxxxx");
+					// enrollmentId, actionType, activity, firstEnrPattern, firstEnrPatternDays, enrollmentData, passedModification, passedNewVersion,
+					// passedNewEnrollment
+					navigate("/enrollment/change",
+						{
+							state: {
+								enrollmentId: location.state.enrollment.enrollmentId,
+								actionType: "CHANGE_COURSE",
+								// activity: ,
+								enrollmentData: enrollmentData,
+								passedModification: changeVersions?.modify,
+								passedNewVersion: changeVersions?.newVersion,
+								passedNewEnrollment: enrollmentData,
+							}
 						}
-					}
-				)
+					)
+				}
 			} else {
 				setCurrentTabIndex(currentTabIndex + 1)
 			}

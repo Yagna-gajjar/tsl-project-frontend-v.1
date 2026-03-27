@@ -95,7 +95,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 					activityClassification: enumClass?.data || [],
 					activityTypes: enumType?.data || [],
 				});
-			} catch (err) {
+			} catch {
 				toast({ title: "Error", description: "Failed to load filter options", variant: "destructive" });
 			}
 		};
