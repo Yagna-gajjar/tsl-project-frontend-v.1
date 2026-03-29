@@ -39,8 +39,8 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		officeRemarks: data?.officeRemarks || "",
 		printRemarks: data?.printRemarks || "",
 		dnAccountId: data?.dnAccountId ? String(data.dnAccountId) : "",
-		dnOrDiscount: data?.dnOrDiscount || 0,
-		processingCharge: data?.processingCharge || 0,
+		dnOrDiscount: data?.dnOrDiscount || 0 || "0",
+		processingCharge: data?.processingCharge || 100 || "100",
 		academyApprovalStatus: data?.academyApprovalStatus || "not required",
 		status: data?.status || "created",
 	});
@@ -50,9 +50,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 
 	const handleChange = (name: string, value: string | number) => {
 		const updated = { ...formData, [name]: value }
-		console.log(updated);
 		setFormData(updated)
-
 		onUpdate(updated as any)
 	}
 
@@ -202,7 +200,10 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 								type="number"
 								className="font-mono h-10 bg-background border-border/60"
 								value={formData.dnOrDiscount}
-								onChange={(e) => handleChange("dnOrDiscount", Number(e.target.value))}
+								onChange={(e) => {
+									const val = e.target.value;
+									handleChange("dnOrDiscount", val === "" ? "" : Number(val));
+								}}
 							/>
 						</div>
 
@@ -212,7 +213,10 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 								type="number"
 								className="font-mono h-10 bg-background border-border/60"
 								value={formData.processingCharge}
-								onChange={(e) => handleChange("processingCharge", Number(e.target.value))}
+								onChange={(e) => {
+									const val = e.target.value;
+									handleChange("processingCharge", val === "" ? "" : Number(val));
+								}}
 							/>
 						</div>
 					</div>

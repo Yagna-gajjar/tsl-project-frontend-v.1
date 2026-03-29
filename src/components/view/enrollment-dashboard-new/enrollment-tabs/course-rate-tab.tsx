@@ -97,7 +97,7 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 	const [isLoading, setIsLoading] = useState(false)
 	const [selectedRate, setSelectedRate] = useState<CourseRate | null>(data?.courseRate || null)
 
-	const [billingDaysSessions, setBillingDaysSessions] = useState(data?.billingDaysSessions || 1)
+	const [billingDaysSessions, setBillingDaysSessions] = useState(data?.billingDaysSessions || "1")
 	const [startDate, setStartDate] = useState<Date>(data?.attendingStartDate ? parseISO(data.attendingStartDate) : startOfToday())
 	const [endDate, setEndDate] = useState<string>(data?.endDate || "")
 	const [startTime, setStartTime] = useState(data?.startTime || (activeCourse?.avbFrom?.slice(0, 5) || "09:00"))
@@ -165,7 +165,7 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 			if (activeCourse.suspensionDate) setEndDate(format(parseISO(activeCourse.suspensionDate as string), "yyyy-MM-dd"));
 		} else {
 			const mult = pattern === "session" ? (activeCourse.unitsMultipleOf || 1) : 1;
-			setEndDate(format(addDays(startDate, (billingDaysSessions * mult) - 1), "yyyy-MM-dd"));
+			setEndDate(format(addDays(startDate, (Number(billingDaysSessions) * mult) - 1), "yyyy-MM-dd"));
 		}
 	}, [activeCourse, startDate, billingDaysSessions]);
 
@@ -177,7 +177,6 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 			acc[cat].tiers[rate.aboveUnits] = rate;
 			return acc
 		}, {})
-		console.log(tiers);
 
 		return { sortedTiers: tiers, groupedData: grouped }
 	}, [rates])
@@ -254,7 +253,7 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 	const getApplicableRateForRow = (category: string) => {
 		const row = groupedData[category];
 		if (!row) return null;
-		const targetTier = sortedTiers.filter(t => t <= billingDaysSessions).reverse()[0] || sortedTiers[0];
+		const targetTier = sortedTiers.filter(t => t <= Number(billingDaysSessions)).reverse()[0] || sortedTiers[0];
 		if (row.tiers[targetTier]) return row.tiers[targetTier];
 		const lower = Object.keys(row.tiers).map(Number).filter(t => t < targetTier).sort((a, b) => b - a);
 		return lower.length > 0 ? row.tiers[lower[0]] : null;
@@ -270,12 +269,9 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 
 		if (availableBalance != null && availableBalance > 0) {
 			const lowestTier = sortedTiers[0];
-			console.log(lowestTier, " = lowestTier");
 
 			const lowestRate = row.tiers[lowestTier];
-			console.log(lowestRate, ' = lowestRate');
 			const unitRateForCalc = lowestRate ? Number(lowestRate.unitRate) : 1;
-			console.log(unitRateForCalc, " = unitRateForCalc");
 
 			units = reverseCalcUnits(
 				availableBalance,
@@ -287,7 +283,7 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 			);
 			setBillingDaysSessions(units);
 
-			const targetTier = sortedTiers.filter(t => t <= units).reverse()[0] || sortedTiers[0];
+			const targetTier = sortedTiers.filter(t => t <= Number(units)).reverse()[0] || sortedTiers[0];
 			rawRate = row.tiers[targetTier]
 				|| (() => {
 					const lower = Object.keys(row.tiers).map(Number).filter(t => t < targetTier).sort((a, b) => b - a);
@@ -302,7 +298,7 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 
 		onUpdate({
 			courseRate: rawRate,
-			billingDaysSessions: units,
+			billingDaysSessions: Number(units),
 			attendingStartDate: format(startDate, "yyyy-MM-dd"),
 			endDate,
 			startTime,
@@ -315,7 +311,7 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 			accountName: mapping.accountName,
 			membershipId: mapping.membershipId,
 			membershipMasterId: row.masterId,
-			permittedDays: (units * Number(activeCourse?.unitsMultipleOf || 1))
+			permittedDays: (Number(units) * Number(activeCourse?.unitsMultipleOf || 1))
 		});
 	};
 
@@ -349,14 +345,31 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 				</div>
 				<div className="space-y-1.5">
 					<Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
-						<Calculator size={12} /> Units
+						<Calculator size={12} /> UNITS
 						{availableBalance != null && <span className="ml-1 text-emerald-600 font-normal normal-case">(from balance)</span>}
 					</Label>
 					<Input
 						type="number"
-						className={cn("h-10 text-xs font-mono", availableBalance != null && "border-emerald-400 bg-emerald-50/50 text-emerald-800 font-bold")}
+						className={cn(
+							"h-10 text-xs font-mono",
+							availableBalance != null &&
+							"border-emerald-400 bg-emerald-50/50 text-emerald-800 font-bold"
+						)}
 						value={billingDaysSessions}
-						onChange={(e) => setBillingDaysSessions(Number(e.target.value))}
+						onChange={(e) => {
+							const val = e.target.value;
+							const newUnits = val === "" ? "" : Number(val);
+							setBillingDaysSessions(newUnits);
+
+							if (selectedRate) {
+								setSelectedRate(null);
+								onUpdate({
+									courseRate: undefined,
+									billingRate: 0,
+									permittedDays: Number(newUnits) * Number(activeCourse?.unitsMultipleOf || 1)
+								});
+							}
+						}}
 					/>
 				</div>
 				{activeCourse?.chargingPattern?.toLowerCase() === "school" && (
@@ -413,7 +426,7 @@ export function CourseRateTab({ data, onUpdate, setChangeVersions }: CourseRateT
 									const factor = rawRate ? getDiscountFactor(rawRate.minDaysInEnr || 0, rawRate.discountOnDayReduce || 0) : 1;
 
 									const finalTotal = rawRate
-										? (Number(rawRate.unitRate) * factor * billingDaysSessions * (activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1))
+										? (Number(rawRate.unitRate) * factor * Number(billingDaysSessions) * (activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1))
 										: 0;
 
 									return (
