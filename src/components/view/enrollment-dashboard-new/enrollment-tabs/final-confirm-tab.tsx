@@ -5,13 +5,14 @@ import { motion } from "framer-motion"
 import {
 	User, BookOpen, FileText, Clock, BadgeCheck, Coins, ArrowDownToLine, Scale, Receipt
 } from "lucide-react"
-import { format, parseISO, addMinutes } from "date-fns"
+import { format, parseISO } from "date-fns"
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import ExcelInvoice from "../EnrollmentPreview"
+import { getFinalAmounts } from "@/helpers/enrollment"
 
 interface FinalConfirmTabProps {
 	data?: EnrollmentData,
@@ -95,50 +96,26 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		const processingCharge = Number(parseFloat(String(data.processingCharge)).toFixed(5)) || 0;
 		const billingDaysSessions = Number(data.billingDaysSessions) || 1;
 		const membersEnrolled = Number(data.membersEnrolled) || 1;
-		const hasDnAccount = !!data.dnAccountId && data.dnAccountId !== 0;
 
-		let baseRateD = hasDnAccount
-			? (rackPrice * patternDiscount)
-			: (rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions);
-
-		baseRateD = Number(baseRateD.toFixed(5));
-
-		const A = ((baseRateD * billingDaysSessions) + processingCharge);
-		const B = 100 + sgstRate + cgstRate;
-		const C = A * (B / 100);
-		const X = Math.ceil(Number(C.toFixed(5)));
-		const E = X - C;
-		const roundedAmount = ((100 * E) / B);
-
-		const costToMember = ((rackPrice * patternDiscount) - (dnOrDiscount / billingDaysSessions));
-		const billingAmount = baseRateD * billingDaysSessions * membersEnrolled;
-
-		const cgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (cgstRate / 100);
-		const sgstAmount = (billingAmount + (processingCharge * membersEnrolled) + roundedAmount) * (sgstRate / 100);
-
-		const totalDebitAmount = (costToMember * billingDaysSessions * membersEnrolled) + cgstAmount + sgstAmount + (processingCharge * membersEnrolled) + roundedAmount;
-
-		let calculatedEndTime = data.startTime || "";
 		if (data.attendingStartDate && data.startTime && course.sessionMinutes) {
-			const startDateTime = parseISO(`${data.attendingStartDate}T${data.startTime}`);
-			const endDateTime = addMinutes(startDateTime, course.sessionMinutes);
-			calculatedEndTime = format(endDateTime, "HH:mm:ss");
-		}
+			const calc = getFinalAmounts(rackPrice, patternDiscount, dnOrDiscount, billingDaysSessions, processingCharge, sgstRate, cgstRate, membersEnrolled, data.startTime, course.sessionMinutes, data.attendingStartDate)
 
-		return {
-			internal: { A, B, C, X, E, totalDebitAmount },
-			display: {
-				billingRate: Number(baseRateD.toFixed(2)),
-				billingAmount: Number(billingAmount.toFixed(2)),
-				roundedAmount: Number(roundedAmount.toFixed(2)),
-				cgstAmount: Number(cgstAmount.toFixed(2)),
-				sgstAmount: Number(sgstAmount.toFixed(2)),
-				totalDebitAmount: Math.round(totalDebitAmount),
-				costToMember: Number(costToMember.toFixed(2)),
-				calculatedEndTime,
-				cgstRate,
-				sgstRate
-			}
+			const calculatedEndTime = calc.calculatedEndTime
+			return {
+				// internal: { A, B, C, X, E, totalDebitAmount },
+				display: {
+					billingRate: Number(calc.baseRate.toFixed(2)),
+					billingAmount: Number(calc.billingAmount.toFixed(2)),
+					roundedAmount: Number(calc.roundedAmount.toFixed(2)),
+					cgstAmount: Number(calc.cgstAmount.toFixed(2)),
+					sgstAmount: Number(calc.sgstAmount.toFixed(2)),
+					totalDebitAmount: Math.round(calc.totalDebitAmount),
+					costToMember: Number(calc.costToMember.toFixed(2)),
+					calculatedEndTime,
+					cgstRate,
+					sgstRate
+				}
+			};
 		};
 	}, [data]);
 

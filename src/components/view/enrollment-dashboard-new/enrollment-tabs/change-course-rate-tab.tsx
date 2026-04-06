@@ -44,6 +44,8 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
   const allowedPattern = activeCourse?.daysPattern || "1234567";
 
   const [rates, setRates] = useState<CourseRate[]>([])
+
+  const finalBalance = balance / (1 + ((Number(data?.course?.cgstRate) + Number(data?.course?.sgstRate)) / 100));
   const [isLoading, setIsLoading] = useState(false)
   const [selectedRate, setSelectedRate] = useState<CourseRate | null>(data?.courseRate || null)
 
@@ -81,6 +83,7 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
   useEffect(() => {
     if (activeCourse?.courseId) {
       setIsLoading(true)
+
       getCourseRates({ courseId: Number(activeCourse.courseId), limit: 1000 })
         .then(res => res?.data && setRates(res.data))
         .finally(() => setIsLoading(false));
@@ -144,7 +147,7 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
       ? getDiscountFactor(rawRate.minDaysInEnr || 0, rawRate.discountOnDayReduce || 0)
       : 1;
     setSelectedRate(rawRate);
-    const days = Math.floor(balance / Number(rawRate.unitRate * factor));
+    const days = Math.floor(Number(finalBalance) / Number(rawRate.unitRate * factor));
 
     onUpdate({
       courseRate: rawRate,
@@ -186,7 +189,7 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
         </div>
         <div className="space-y-1.5">
           <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><IndianRupee size={12} /> Balance</Label>
-          <Input type="number" className="h-10 text-xs font-mono" value={balance} disabled />
+          <Input type="number" className="h-10 text-xs font-mono" value={finalBalance} disabled />
         </div>
         {activeCourse?.chargingPattern?.toLowerCase() === "school" && <div className="space-y-1.5">
           <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><UsersIcon size={12} /> Members</Label>
@@ -236,7 +239,7 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
                   const unitRate = rawRate?.unitRate ?? 1;
 
                   const finalDays = rawRate?.unitRate
-                    ? balance / (Number(unitRate) * factor)
+                    ? finalBalance / (Number(unitRate) * factor)
                     : 0; // const finalDays = rawRate ? (Number(rawRate.unitRate) * factor * billingDaysSessions * (activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1)) : 0;
 
                   return (

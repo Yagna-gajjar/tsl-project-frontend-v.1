@@ -9,12 +9,6 @@ export interface Process1Result {
 	values: any;
 }
 
-const toNumber = (v: string | number | null | undefined): number =>
-	Number(v ?? 0);
-
-const toFixed2 = (v: number): number =>
-	Number(Number(v).toFixed(2));
-
 const nowISO = (): string => new Date().toISOString();
 
 const formatDate = (d: Date): string =>
@@ -34,21 +28,21 @@ export async function process1(
 
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 
-	const roundedAmount = toNumber(base.roundedAmount);
-	const processingCharge = toNumber(base.processingCharge);
+	const roundedAmount = Number(base.roundedAmount);
+	const processingCharge = Number(base.processingCharge);
 
 	const baseAmount = roundedAmount + processingCharge;
 
-	const newCgst = baseAmount * (toNumber(base.cgstRate) / 100);
-	const newSgst = baseAmount * (toNumber(base.sgstRate) / 100);
+	const newCgst = baseAmount * (Number(base.cgstRate) / 100);
+	const newSgst = baseAmount * (Number(base.sgstRate) / 100);
 
 	const totalDebit = baseAmount + newCgst + newSgst;
 
 	const modify: EnrollmentData = {
 		...base,
-		cgstAmount: toFixed2(newCgst),
-		sgstAmount: toFixed2(newSgst),
-		totalDebitAmount: toFixed2(totalDebit),
+		cgstAmount: Number(newCgst.toFixed(2)),
+		sgstAmount: Number(newSgst.toFixed(2)),
+		totalDebitAmount: Number(totalDebit.toFixed(2)),
 		officeRemarks: base.officeRemarks
 			? `${base.officeRemarks} | Enrolment Canceled Processing Charges Billed - Auto Terminated`
 			: "Enrolment Canceled Processing Charges Billed - Auto Terminated",
@@ -61,7 +55,7 @@ export async function process1(
 	}
 
 	const startDate = new Date(base.attendingStartDate);
-	const calculatedPermittedDays = diffDaysInclusive(startDate, endDate); // 20
+	const calculatedPermittedDays = diffDaysInclusive(startDate, endDate);
 
 	let billingDaysSessions = 0;
 	const chargingPattern = (base.chargingPattern || "").toLowerCase();
@@ -69,7 +63,7 @@ export async function process1(
 	if (chargingPattern === "day") {
 		billingDaysSessions = calculatedPermittedDays;
 	} else if (chargingPattern === "unit") {
-		billingDaysSessions = calculatedPermittedDays / toNumber(base.permittedDays);
+		billingDaysSessions = calculatedPermittedDays / Number(base.permittedDays);
 	} else if (chargingPattern === "session") {
 		const res = await getBatchMember({
 			enrollmentNo: base.enrollmentNo!,
@@ -78,9 +72,9 @@ export async function process1(
 		billingDaysSessions = Array.isArray(res) ? res.length : 0;
 	}
 
-	billingDaysSessions = toFixed2(billingDaysSessions);
+	billingDaysSessions = Number(billingDaysSessions.toFixed(2));
 
-	let newBillingAmount = billingDaysSessions * (base?.billingRate ?? 0);
+	const newBillingAmount = billingDaysSessions * (base?.billingRate ?? 0);
 
 	let selectedCourseRate: any = null;
 	let newVersion: any = {};
@@ -108,13 +102,13 @@ export async function process1(
 		}
 
 		selectedCourseRate = filteredRates
-			.filter(r => toNumber(r.aboveUnits) <= calculatedPermittedDays)
-			.sort((a, b) => toNumber(b.aboveUnits) - toNumber(a.aboveUnits))[0] || null;
+			.filter(r => Number(r.aboveUnits) <= calculatedPermittedDays)
+			.sort((a, b) => Number(b.aboveUnits) - Number(a.aboveUnits))[0] || null;
 
-		let P = base?.noOfDaysInWeek ?? 0;//5
-		let Q = base?.attendingPatternDays ?? 0;//5
-		let R = selectedCourseRate?.discountOnDayReduce ?? 1;//10
-		let S = selectedCourseRate?.minDaysInEnr ?? 0;//1
+		const P = base?.noOfDaysInWeek ?? 0;
+		const Q = base?.attendingPatternDays ?? 0;
+		const R = selectedCourseRate?.discountOnDayReduce ?? 1;
+		const S = selectedCourseRate?.minDaysInEnr ?? 0;
 		let A;
 		if (P - Q <= S) {
 			A = (1 - ((P - Q) * (R / 100)));
@@ -123,30 +117,30 @@ export async function process1(
 			A = (1 - ((P - S) * (R / 100)));
 		}
 
-		let B = selectedCourseRate?.unitRate;
-		let C = A * B;
-		let D = C * billingDaysSessions;
-		let E = D - newBillingAmount;
+		const B = selectedCourseRate?.unitRate;
+		const C = A * B;
+		const D = C * billingDaysSessions;
+		const E = D - newBillingAmount;
 
-		let tax = (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100) / 100);
-		let X = (Number(newBillingAmount) + Number(givenProcessingCharge) + Number(E)) * tax;
+		const tax = ((Number(base?.cgstRate) + Number(base?.sgstRate) + 100) / 100);
+		const X = (Number(newBillingAmount) + Number(givenProcessingCharge) + Number(E)) * tax;
 
-		let Y = Math.ceil(X);
+		const Y = Math.ceil(X);
 
-		newRoundedAmount = (((Y - X) * 100) / (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100))) + E;
+		newRoundedAmount = (((Y - X) * 100) / ((Number(base?.cgstRate) + Number(base?.sgstRate) + 100))) + E;
 	}
 	else {
-		let tax = (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100) / 100);
-		let X = (Number(newBillingAmount) + Number(givenProcessingCharge)) * tax;
+		const tax = ((Number(base?.cgstRate) + Number(base?.sgstRate) + 100) / 100);
+		const X = (Number(newBillingAmount) + Number(givenProcessingCharge)) * tax;
 
-		let Y = Math.ceil(X);
+		const Y = Math.ceil(X);
 
-		newRoundedAmount = (((Y - X) * 100) / (((Number(base?.cgstRate) ?? 0) + (Number(base?.sgstRate) ?? 0) + 100)));
+		newRoundedAmount = (((Y - X) * 100) / ((Number(base?.cgstRate) + Number(base?.sgstRate) + 100)));
 	}
 
-	const newCgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.cgstRate) ?? 0)) / 100);
+	const newCgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * ((Number(base?.cgstRate)) / 100);
 
-	const newSgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * (((Number(base?.sgstRate) ?? 0)) / 100);
+	const newSgstAmount = (Number(newBillingAmount) + Number(givenProcessingCharge) + newRoundedAmount) * ((Number(base?.sgstRate)) / 100);
 
 	const newTotalDebitAmount = Number(newBillingAmount) + Number(newCgstAmount) + Number(newSgstAmount) + Number(givenProcessingCharge) + Number(newRoundedAmount);
 
@@ -165,7 +159,7 @@ export async function process1(
 		printRemarks:
 			(base.printRemarks || "") +
 			(applyNewRates
-				? " Rates changed due to change in units booked difference in the rates added to the Invoice in Rounded Section"
+				? "Rates changed due to change in units booked difference in the rates added to the Invoice in Rounded Section"
 				: ""),
 		officeRemarks:
 			(base.officeRemarks || "") + " Auto Terminate Due to changes",
@@ -173,12 +167,11 @@ export async function process1(
 		updatedAt: nowISO(),
 	};
 
-	let v1 = (Number(base.billingAmount) + Number(base.roundedAmount) + processingCharge) * (1 + ((Number(base?.cgstRate) + Number(base?.sgstRate)) / 100));
-	let v2 = totalDebit;
-	let v3 = newTotalDebitAmount;
-	let v4 = v1 - v2 - v3;
+	const v1 = Number(base.totalDebitAmount)
+	const v2 = totalDebit;
+	const v3 = newTotalDebitAmount;
+	const v4 = v1 - v2 - v3;
 
-	console.log(newVersion.endDate);
 
 	const values = {
 		value1: v1,
@@ -188,7 +181,6 @@ export async function process1(
 		value5: billingDaysSessions,
 		value6: addDays(newVersion.endDate, 1)
 	}
-
 	return {
 		modify,
 		newVersion,

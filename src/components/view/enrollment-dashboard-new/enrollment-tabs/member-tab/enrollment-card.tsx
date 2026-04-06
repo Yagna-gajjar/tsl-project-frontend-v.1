@@ -13,8 +13,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import type { Enrollment } from "@/types/enrollment"
 import { EnrollmentActionModal } from "../../enrollment-action-modal"
 
-// ─── MiniInfo ─────────────────────────────────────────────────────────────────
-
 export function MiniInfo({
   label,
   value,
@@ -33,8 +31,6 @@ export function MiniInfo({
     </div>
   )
 }
-
-// ─── DetailItem ───────────────────────────────────────────────────────────────
 
 export function DetailItem({
   icon,

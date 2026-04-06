@@ -8,9 +8,7 @@ import {
 	Mail,
 	Activity,
 	Search,
-	Filter,
-	Eye,
-	UserPlus,
+	Filter
 } from "lucide-react"
 import { Virtuoso } from "react-virtuoso"
 import { Button } from "@/components/ui/button"
@@ -34,23 +32,17 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { toast } from "@/hooks/use-toast"
 
 import type { Member } from "@/types/member"
 import type { Enrollment } from "@/types/enrollment"
 import type { Response } from "@/types/response"
-import type { Account } from "@/types/account"
 
 import { getMembers } from "@/api/member.api"
 import { deleteEnrollment, getEnrollments, loadEnrollmentById } from "@/api/enrollment.api"
 import { getAccountsWithAllMembersByMemberId } from "@/api/accountMember.api"
 
-// ── Split components ──────────────────────────────────────────────────────────
 import { EnrollmentCard, DetailItem } from "./enrollment-card"
-// import { AccountAccordion } from "./add-member"
-
-// ─── MemberTab ────────────────────────────────────────────────────────────────
 
 export function MemberTab({
 	data,
@@ -74,7 +66,6 @@ export function MemberTab({
 	const [searchTerm, setSearchTerm] = useState("")
 	const [statusFilter, setStatusFilter] = useState<string>("all")
 
-	// ─── API ─────────────────────────────────────────────────────────────────────
 
 	const fetchFamilyMembers = useCallback(async () => {
 		if (!selectedMember?.memberId) return
@@ -140,25 +131,6 @@ export function MemberTab({
 		}
 	}
 
-	// ─── Derived Data ─────────────────────────────────────────────────────────────
-
-	const groupedAccounts = familyMembers.reduce(
-		(acc, item) => {
-			if (!acc[item.accountId]) {
-				acc[item.accountId] = {
-					accountId: item.accountId,
-					accountName: item.accountName,
-					members: [],
-				}
-			}
-			acc[item.accountId].members.push(item)
-			return acc
-		},
-		{} as Record<string, any>,
-	)
-
-	const accountsArray: Account[] = Object.values(groupedAccounts)
-
 	const filteredEnrollments = useMemo(() => {
 		return enrollments.filter((enr) => {
 			const matchesSearch =
@@ -170,8 +142,6 @@ export function MemberTab({
 		})
 	}, [enrollments, searchTerm, statusFilter])
 
-	// ─── Effects ──────────────────────────────────────────────────────────────────
-
 	useEffect(() => {
 		if (data?.memberId) fetchEnrollmentsOfMember(Number(data.memberId))
 	}, [data])
@@ -179,8 +149,6 @@ export function MemberTab({
 	useEffect(() => {
 		if (openShowFamily) fetchFamilyMembers()
 	}, [openShowFamily, fetchFamilyMembers])
-
-	// ─── Render ───────────────────────────────────────────────────────────────────
 
 	return (
 		<div className="space-y-6 max-w-7xl mx-auto p-1">
@@ -253,16 +221,6 @@ export function MemberTab({
 							</PopoverContent>
 						</Popover>
 					</div>
-
-					<Button
-						disabled={!selectedMember}
-						variant="outline"
-						className="h-11 border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 font-bold px-6"
-						onClick={() => setOpenShowFamily(true)}
-					>
-						<Eye className="w-4 h-4 mr-2" />
-						Show Family
-					</Button>
 				</div>
 			</div>
 
@@ -374,87 +332,6 @@ export function MemberTab({
 				</>
 			)}
 
-			{/* 4. FAMILY MODAL */}
-			<Dialog open={openShowFamily} onOpenChange={setOpenShowFamily}>
-				<DialogContent className="max-w-xl p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-white">
-
-					{/* Header */}
-					<div className="bg-gradient-to-br from-blue-50 to-transparent px-6 pt-6 pb-8 relative overflow-hidden">
-						<div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-blue-500/10 blur-2xl" />
-						<div className="absolute bottom-0 left-1/2 w-24 h-24 rounded-full bg-blue-400/10 blur-xl" />
-						<div className="relative flex items-center gap-3">
-							<div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center backdrop-blur-sm">
-								<Users className="w-5 h-5 text-blue-600" />
-							</div>
-							<div>
-								<h2 className="font-black text-base tracking-tight leading-none">Account Relations</h2>
-								<p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mt-0.5">
-									{selectedMember?.memberFirstName} {selectedMember?.memberLastName}
-								</p>
-							</div>
-						</div>
-					</div>
-
-					{/* Body */}
-					<div className="min-h-[360px] max-h-[55vh] overflow-y-auto p-5 space-y-3">
-						{loading ? (
-							<div className="flex flex-col justify-center items-center h-48 space-y-4">
-								<div className="relative">
-									<div className="w-12 h-12 rounded-full border-2 border-slate-200" />
-									<div className="absolute inset-0 w-12 h-12 rounded-full border-t-2 border-blue-500 animate-spin" />
-								</div>
-								<p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-									Fetching records...
-								</p>
-							</div>
-						) : accountsArray.length > 0 ? (
-							<div className="space-y-3">
-								{/* {accountsArray.map((account) => (
-									<AccountAccordion
-										key={account?.accountId}
-										account={account as Account & { members: any[] }}
-										onMemberAdded={fetchFamilyMembers}
-									/>
-								))} */}
-							</div>
-						) : (
-							<div className="flex flex-col items-center justify-center h-48 text-center space-y-3">
-								<div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center shadow-inner">
-									<Users className="w-7 h-7 text-slate-300" />
-								</div>
-								<div>
-									<h3 className="text-slate-800 font-black text-sm uppercase tracking-tight">
-										No Relations Found
-									</h3>
-									<p className="text-slate-400 text-xs mt-1 max-w-[220px] mx-auto">
-										This member isn't linked to any other accounts yet.
-									</p>
-								</div>
-								<Button
-									size="sm"
-									variant="outline"
-									className="mt-2 border-blue-200 text-blue-600 hover:bg-blue-50 text-[10px] font-black uppercase h-8 px-4"
-									onClick={() => toast({ title: "Note", description: "Redirecting to linking form..." })}
-								>
-									<UserPlus className="w-3 h-3 mr-1.5" />
-									Link an Account
-								</Button>
-							</div>
-						)}
-					</div>
-
-					<div className="flex justify-end px-5 py-3 border-t border-slate-100">
-						<Button
-							size="sm"
-							variant="ghost"
-							className="text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 h-7 px-3"
-							onClick={() => setOpenShowFamily(false)}
-						>
-							Close
-						</Button>
-					</div>
-				</DialogContent>
-			</Dialog>
 		</div>
 	)
 }

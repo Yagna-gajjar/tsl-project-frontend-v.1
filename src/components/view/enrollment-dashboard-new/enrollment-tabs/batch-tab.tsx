@@ -23,6 +23,8 @@ interface BatchTabProps {
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function BatchTab({ data, onUpdate }: BatchTabProps) {
+	console.log(data, " = from batch tab");
+
 	const [batches, setBatches] = useState<Batch[]>([])
 	const [isLoading, setIsLoading] = useState(false)
 	const [searchQuery, setSearchQuery] = useState("")

@@ -14,6 +14,8 @@ import { getCourseById, getCourses } from "@/api/course.api"
 import type { Course } from "@/types/course"
 import { getEnrollmentById } from "@/api/enrollment.api"
 import type { Response } from "@/types/response"
+import { getAccountsWithAllMembersByMemberId } from "@/api/accountMember.api"
+import type { AccountMember } from "@/types/accountMember"
 
 const ACTIONS = [
 	{ id: "QUIT", label: "Quit", icon: LogOut, color: "text-red-600", bg: "bg-red-50" },
@@ -43,10 +45,12 @@ interface ActionModalProps {
 export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionModalProps) {
 	const navigate = useNavigate()
 	const [loading, setLoading] = useState(false)
+	const [members, setMembers] = useState<AccountMember[]>();
+	const [openMembers, setOpenMembers] = useState<boolean>(false);
+	const [selectedMember, setSelectedMember] = useState<number>();
 
 	const navigateToChange = (actionId: string, actionLabel: string, firstEnrPattern: number, firstEnrPatternDays: number, activity: Course) => {
 		const config = ENROLLMENT_WORKFLOW_CONFIG[actionId]
-		console.log(actionLabel);
 		navigate(`/enrollment/change`, {
 			state: {
 				enrollmentId: enrollment.enrollmentId,
@@ -59,7 +63,8 @@ export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionMod
 				newVersion: config.newVersion,
 				newEnrollment: config.newEnrollment,
 			}
-		})
+		}
+		)
 		onClose()
 	}
 
@@ -70,6 +75,16 @@ export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionMod
 				state: { tabIndex: 1, type: "CHANGE_COURSE", enrollment: enrollment }
 			})
 			onClose()
+			return
+		}
+		if (actionId == "FEE_TRANSFER") {
+			const res = await getAccountsWithAllMembersByMemberId(String(enrollment.memberId))
+
+			if (res.success && res.data) {
+				setMembers(res.data);
+				setOpenMembers(true)
+			}
+
 			return
 		}
 
@@ -103,33 +118,49 @@ export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionMod
 	}
 
 	return (
-		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-2xl">
-				<DialogHeader>
-					<DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
-						<RefreshCw className={`w-5 h-5 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
-						Enrollment Management Actions
-					</DialogTitle>
-				</DialogHeader>
+		<>
+			<Dialog open={isOpen} onOpenChange={onClose}>
+				<DialogContent className="max-w-2xl">
+					<DialogHeader>
+						<DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+							<RefreshCw className={`w-5 h-5 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
+							Enrollment Management Actions
+						</DialogTitle>
+					</DialogHeader>
 
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 max-h-[60vh] overflow-y-auto p-1">
-					{ACTIONS.map((action) => (
-						<button
-							key={action.id}
-							disabled={loading}
-							onClick={() => handleActionClick(action.id, action.label)}
-							className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all group bg-white disabled:opacity-50"
-						>
-							<div className={`p-2.5 rounded-full ${action.bg} ${action.color} mb-2 group-hover:scale-110 transition-transform`}>
-								<action.icon className="w-5 h-5" />
-							</div>
-							<span className="text-[10px] font-black text-slate-700 uppercase text-center leading-tight">
-								{action.label}
-							</span>
-						</button>
-					))}
-				</div>
-			</DialogContent>
-		</Dialog>
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 max-h-[60vh] overflow-y-auto p-1">
+						{ACTIONS.map((action) => (
+							<button
+								key={action.id}
+								disabled={loading}
+								onClick={() => handleActionClick(action.id, action.label)}
+								className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all group bg-white disabled:opacity-50"
+							>
+								<div className={`p-2.5 rounded-full ${action.bg} ${action.color} mb-2 group-hover:scale-110 transition-transform`}>
+									<action.icon className="w-5 h-5" />
+								</div>
+								<span className="text-[10px] font-black text-slate-700 uppercase text-center leading-tight">
+									{action.label}
+								</span>
+							</button>
+						))}
+					</div>
+				</DialogContent>
+			</Dialog>
+			<Dialog open={openMembers} onOpenChange={() => setOpenMembers(false)}>
+				<DialogContent>
+					{members?.map((member) => {
+						return (
+							<div onClick={() => {
+								navigate("/enrollment-dashboard", {
+									state: { tabIndex: 1, type: "FEE_TRANSFER", enrollment: { ...enrollment, memberId: member.memberId } }
+								})
+								onClose()
+							}}>{member.memberFirstName} {member.memberLastName}</div>
+						)
+					})}
+				</DialogContent>
+			</Dialog>
+		</>
 	)
 }

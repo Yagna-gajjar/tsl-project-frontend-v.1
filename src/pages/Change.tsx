@@ -40,17 +40,11 @@ const ChangeEnrollment = () => {
 	const navigate = useNavigate();
 
 	const { enrollmentId, actionType, activity, firstEnrPattern, firstEnrPatternDays, enrollmentData, passedModification, passedNewVersion,
-		passedNewEnrollment } = location.state || {};
-	console.log(passedModification, " = passed modification");
-	console.log(passedNewVersion, " = passed new version");
-	console.log(passedNewEnrollment, " = passed new enr");
+		passedNewEnrollment, passedValues } = location.state || {};
 
 	const currentConfig = ENROLLMENT_WORKFLOW_CONFIG[actionType];
 
-
-	const [values, setValues] = useState();
 	const [processedData] = useState<{ modify: any; newVersion: any, newEnrollment: any } | null>(null);
-	console.log(values);
 
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -122,11 +116,11 @@ const ChangeEnrollment = () => {
 
 		4: async (ctx: any) =>
 			process4(
-				ctx.enrollmentData,
+				enrollmentData,
+				passedNewEnrollment,
 				ctx.newVersion,
 				ctx.values,
 				activity,
-				ctx.courseRateData,
 				false,
 				ctx.changeDate.toString(),
 				"",
@@ -224,10 +218,11 @@ const ChangeEnrollment = () => {
 		if (!enrollmentData || !currentConfig) return;
 
 		if (actionType === "CHANGE_COURSE") {
+
 			setModification(passedModification || null);
 			setNewVersion(passedNewVersion || null);
 			setNewEnrollment(passedNewEnrollment || null);
-			return;
+			// return;
 		}
 
 		const runProcesses = async () => {
@@ -242,42 +237,16 @@ const ChangeEnrollment = () => {
 					newVersion: null
 				};
 
-				if (currentConfig.existingEnrollment?.process) {
-					const result: any =
-						await PROCESS_MAP[
-							currentConfig.existingEnrollment.process as keyof typeof PROCESS_MAP
-						](ctx);
-					setModification(result?.modify || null);
-				}
-
-				if (currentConfig.newVersion?.process) {
-					const result: any =
-						await PROCESS_MAP[
-							currentConfig.newVersion.process as keyof typeof PROCESS_MAP
-						](ctx);
-
-					ctx.values = result?.values || null;
-					ctx.newVersion = result?.newVersion || result || null;
-
-					setValues(ctx.values);
-					setNewVersion(ctx.newVersion);
-
-					if (ctx.newVersion?.membershipMasterId && activity?.courseId) {
-						const res: Response<CourseRate[]> = await getCourseRates({
-							membershipMasterId: Number(ctx.newVersion.membershipMasterId),
-							courseId: activity.courseId
-						});
-
-						if (res?.success && res?.data?.length) {
-							ctx.courseRateData = res.data[0];
-						} else {
-							ctx.courseRateData = null;
-						}
-					}
-				}
-
-
-				if (currentConfig.newEnrollment?.process) {
+				if (passedValues) {
+					const ctx: any = {
+						enrollmentData: enrollmentData,
+						passedNewEnrollment: passedNewEnrollment,
+						newVersion: passedNewVersion,
+						values: passedValues,
+						changeDate: new Date(changeDate),
+						processingCharge,
+						applyNewRates,
+					};
 					const result: any =
 						await PROCESS_MAP[
 							currentConfig.newEnrollment.process as keyof typeof PROCESS_MAP
@@ -285,7 +254,51 @@ const ChangeEnrollment = () => {
 
 					setNewEnrollment(result?.newEnrollment || result || null);
 				} else {
-					setNewEnrollment(null);
+
+					if (currentConfig.existingEnrollment?.process) {
+						const result: any =
+							await PROCESS_MAP[
+								currentConfig.existingEnrollment.process as keyof typeof PROCESS_MAP
+							](ctx);
+
+						setModification(result?.modify || null);
+					}
+
+					if (currentConfig.newVersion?.process) {
+						const result: any =
+							await PROCESS_MAP[
+								currentConfig.newVersion.process as keyof typeof PROCESS_MAP
+							](ctx);
+
+						ctx.values = passedValues ?? result?.values ?? null;
+						ctx.newVersion = result?.newVersion || result || null;
+
+						setNewVersion(ctx.newVersion);
+
+						if (ctx.newVersion?.membershipMasterId && activity?.courseId) {
+							const res: Response<CourseRate[]> = await getCourseRates({
+								membershipMasterId: Number(ctx.newVersion.membershipMasterId),
+								courseId: activity.courseId
+							});
+
+							if (res?.success && res?.data?.length) {
+								ctx.courseRateData = res.data[0];
+							} else {
+								ctx.courseRateData = null;
+							}
+						}
+					}
+
+					if (currentConfig.newEnrollment?.process) {
+						const result: any =
+							await PROCESS_MAP[
+								currentConfig.newEnrollment.process as keyof typeof PROCESS_MAP
+							](ctx);
+
+						setNewEnrollment(result?.newEnrollment || result || null);
+					} else {
+						setNewEnrollment(null);
+					}
 				}
 
 			} catch (err) {
@@ -332,16 +345,7 @@ const ChangeEnrollment = () => {
 
 	const handleSave = async () => {
 		if (newEnrollment && newVersion) {
-			console.log(enrollmentData, " = existingEnrollment");
-			console.log({ ...newVersion, firstEnrollmentId: enrollmentData.enrollmentId }, " = new version");
-			console.log({
-				...newEnrollment,
-				firstEnrollmentId: enrollmentData.enrollmentId,
-				attendingPattern: firstEnrPattern,
-				attendingPatternDays: firstEnrPatternDays,
-			}, " = new Enrollment");
-
-			const res = await changeEnrollment({
+			await changeEnrollment({
 				existingEnrollmentId: enrollmentData.enrollmentId,
 				existingEnrollmentNo: enrollmentData.enrollmentNo,
 				newVersion: { ...newVersion, firstEnrollmentId: enrollmentData.enrollmentId },
@@ -352,7 +356,6 @@ const ChangeEnrollment = () => {
 					attendingPatternDays: firstEnrPatternDays,
 				},
 			});
-			console.log(res);
 		}
 	}
 

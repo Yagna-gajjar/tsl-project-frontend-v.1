@@ -32,7 +32,7 @@ import { useAuth } from "@/contexts/authContext"
 import { useLocation, useNavigate } from "react-router-dom"
 import { TransactionModalForEnrollment } from "./Transaction-modal-for-enrollment"
 import type { Transaction } from "@/types/transaction"
-import { BalanceDaysTab, ChangeCourseRateTab } from "./enrollment-tabs/change-course-rate-tab"
+import { ChangeCourseRateTab } from "./enrollment-tabs/change-course-rate-tab"
 import { process1 } from "@/helpers/enrollment-change/process1"
 import { getCourseById } from "@/api/course.api"
 
@@ -48,15 +48,6 @@ const tabLabels: Record<TabValue, string> = {
 	batch: "Batch",
 	bill: "Bill",
 	confirm: "Confirm",
-}
-
-interface ProcessValues {
-	value1?: number
-	value2?: number
-	value3?: number
-	value4?: number
-	value5?: number
-	value6?: string
 }
 
 export function EnrollmentFlow() {
@@ -97,7 +88,6 @@ export function EnrollmentFlow() {
 	}), [enrollmentData]);
 
 	const [balance, setbalance] = useState<number>(0);
-
 
 	const getProcessData = async (enrollment: Enrollment) => {
 		if (enrollment) {
@@ -180,26 +170,18 @@ export function EnrollmentFlow() {
 	}
 
 	const handleNext = async () => {
-
-		console.log(enrollmentData);
 		if (currentTabIndex < TAB_ORDER.length - 1) {
 			if (currentTabIndex == 4 && location.state) {
 				const courseRes = await getCourseById(Number(enrollmentData?.courseId));
 				if (courseRes.success) {
-					console.log("courseRes.data: ", courseRes.data);
-
-					console.log(enrollmentData, " = enrollmentData");
-					console.log(changeVersions, " = changeVersions");
-					console.log(location.state, " = xxxxxxxxxxxxxxxxxxxxxxxxxx");
-					// enrollmentId, actionType, activity, firstEnrPattern, firstEnrPatternDays, enrollmentData, passedModification, passedNewVersion,
-					// passedNewEnrollment
 					navigate("/enrollment/change",
 						{
 							state: {
 								enrollmentId: location.state.enrollment.enrollmentId,
+								activity: courseRes.data,
 								actionType: "CHANGE_COURSE",
-								// activity: ,
-								enrollmentData: enrollmentData,
+								enrollmentData: location.state.enrollment,
+								passedValues: changeVersions.values,
 								passedModification: changeVersions?.modify,
 								passedNewVersion: changeVersions?.newVersion,
 								passedNewEnrollment: enrollmentData,

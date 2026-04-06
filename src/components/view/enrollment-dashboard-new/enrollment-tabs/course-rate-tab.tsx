@@ -168,7 +168,7 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 					<Popover>
 						<PopoverTrigger asChild>
 							<Button variant="outline" className="w-full justify-start text-xs font-semibold h-10 bg-background border-border">
-								{format(startDate, "dd MMM yyyy")}
+								{format(startDate, "dd MMM yyyy")},
 							</Button>
 						</PopoverTrigger>
 						<PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={startDate} onSelect={(d) => d && setStartDate(d)} disabled={(d) => d < startOfToday()} /></PopoverContent>

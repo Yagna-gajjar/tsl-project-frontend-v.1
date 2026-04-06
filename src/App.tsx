@@ -51,7 +51,6 @@ import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrol
 import SessionBooking from "./pages/SessionBooking";
 import ChangeEnrollment from "./pages/Change";
 import Ledger from "./pages/ledger";
-
 export default function App() {
   return (
     <ThemeProvider>
