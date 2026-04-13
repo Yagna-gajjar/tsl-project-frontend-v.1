@@ -1,7 +1,7 @@
 import type { Course } from "@/types/course";
 import type { CourseRate } from "@/types/courseRate";
 import type { EnrollmentData } from "@/types/enrollment";
-import { calsPermittedDays } from "../calculatePermittedDays";
+import { calsPermittedDays } from "../enrollment";
 
 export interface Process2Result {
     newEnrollment: any;
