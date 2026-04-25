@@ -63,9 +63,6 @@ export const TransactionModalForEnrollment = ({ isOpen, onClose, initialData, se
 				accApproval: false
 			});
 			fetchTransactionAccounts(initialData.drEntityId);
-		} else if (!isOpen) {
-			setFormData(null);
-			setDrAccounts([]);
 		}
 	}, [isOpen, initialData]);
 
@@ -227,7 +224,7 @@ export const TransactionModalForEnrollment = ({ isOpen, onClose, initialData, se
 						>
 							Save Transaction
 						</Button>
-					</div>
+					</div>	
 				</form>
 			</div>
 		</div>
