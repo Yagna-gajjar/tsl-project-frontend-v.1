@@ -492,9 +492,15 @@ export function EnrollmentFlow() {
 						{showTransModal && (
 							<TransactionModalForEnrollment
 								isOpen={showTransModal}
-								onClose={() => setShowTransModal(false)}
+								onClose={() => {
+									setShowTransModal(false)
+									setTransactionData(undefined)  
+								}}
 								initialData={emptyReceipt}
-								setPaymentData={setTransactionData}
+								setPaymentData={(data) => {
+									setTransactionData(data)
+									setShowTransModal(false)        
+								}}
 							/>
 						)}
 						<AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>

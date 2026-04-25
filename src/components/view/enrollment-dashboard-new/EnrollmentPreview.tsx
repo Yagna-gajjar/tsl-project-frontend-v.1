@@ -253,7 +253,7 @@ const ExcelInvoice = ({
 
 					<div style={labelStyle}>To</div><div style={cellStyle}>{enrollmentData?.endTime}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>Total Charge</div><div style={cellStyle}>{n(enrollmentData?.billingAmount) + n(enrollmentData?.roundedAmount) + n(enrollmentData?.processingCharge)}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Discounted Ammount</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>CN/DN Ammount</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div>
 
 					<div style={labelStyle}>Batch</div><div style={cellStyle}>{enrollmentData?.batch?.batchName}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>CGST</div><div style={cellStyle}>{enrollmentData?.cgstAmount}</div><div style={gutterStyle}></div>
@@ -263,7 +263,7 @@ const ExcelInvoice = ({
 					<div style={labelStyle}>SGST</div><div style={cellStyle}>{enrollmentData?.sgstAmount}</div><div style={gutterStyle}></div>
 					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Walking Customer</div><div style={cellStyle}>{enrollmentData?.walkingName}</div>
 
-					<div style={labelStyle}>Discount</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div><div style={gutterStyle}></div>
+					<div style={labelStyle}>Discount</div><div style={cellStyle}>{ enrollmentData?.dnAccountId ? "" : enrollmentData?.dnOrDiscount}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>Receivable</div><div style={cellStyle}>{n(enrollmentData?.cgstAmount) + n(enrollmentData?.sgstAmount) + n(enrollmentData?.billingAmount) + n(enrollmentData?.roundedAmount) + n(enrollmentData?.processingCharge)}</div><div style={gutterStyle}></div>
 					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Total Debited Amount</div><div style={cellStyle}>{enrollmentData?.totalDebitAmount}</div>
 

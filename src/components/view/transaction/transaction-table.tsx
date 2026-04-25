@@ -11,10 +11,11 @@ import { Badge } from "@/components/ui/badge";
 type Props = {
 	onView?: (row: Transaction) => void;
 	onEdit?: (row: Transaction) => void;
+	onPrint?: (row: Transaction) => void;
 	refreshKey?: number;
 };
 
-export default function TransactionTable({ onView, onEdit, refreshKey }: Props) {
+export default function TransactionTable({ onView, onEdit, onPrint, refreshKey }: Props) {
 	const [data, setData] = useState<Transaction[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -162,7 +163,7 @@ export default function TransactionTable({ onView, onEdit, refreshKey }: Props) 
 					page,
 					limit,
 					total,
-					onPageChange: (p:number) => setPage(p),
+					onPageChange: (p: number) => setPage(p),
 				}}
 				onSearchChange={handleSearchChange}
 				onFilterChange={handleFilterChange}
@@ -173,9 +174,13 @@ export default function TransactionTable({ onView, onEdit, refreshKey }: Props) 
 					setDeleteId(id as number);
 					setDeleteOpen(true);
 				}}
+				onPrint={onPrint ? (row) => {
+					onPrint(row);
+					document?.querySelector('#depositSlip')?.scrollIntoView({ behavior: 'smooth' });
+				} : undefined}
 				idKey="transactionId"
 				exportFileName="Transactions"
-				onExport={async () => data} // Simplification for now
+				onExport={async () => data}
 			/>
 			<ConfirmDialog
 				isOpen={deleteOpen}

@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import type { Transaction } from "@/types/transaction";
 
-const CustomTable = () => {
+const CustomTable = ({ printRow }: { printRow: Transaction | undefined }) => {
 	const tableRef = useRef(null);
 
 	const downloadPDF = async () => {
@@ -19,16 +20,20 @@ const CustomTable = () => {
 
 		const pageWidth = pdf.internal.pageSize.getWidth();
 
-		const margin = 10; // 10mm padding
+		const margin = 10;
 		const usableWidth = pageWidth - margin * 2;
 		const imgHeight = (canvas.height * usableWidth) / canvas.width;
 
 		pdf.addImage(imgData, "PNG", margin, margin, usableWidth, imgHeight);
 		pdf.save("DepositSlip.pdf");
+
 	};
+	useEffect(() => {
+		console.log(printRow, " : print row");
+	}, [printRow])
 
 	return (
-		<div className="p-6 bg-gray-100 min-h-screen">
+		printRow && <div id="depositSlip" className="p-6 bg-gray-100 min-h-screen">
 			<button
 				onClick={downloadPDF}
 				className="mb-6 px-6 py-2 bg-black text-white font-semibold rounded hover:bg-gray-800"
@@ -63,7 +68,7 @@ const CustomTable = () => {
 												Vou Type
 											</td>
 											<td className="w-1/2 border-b border-black p-2 align-middle">
-												2.transactionType
+												{printRow?.transactionType}
 											</td>
 										</tr>
 
@@ -94,7 +99,7 @@ const CustomTable = () => {
 								Credited To Account
 							</td>
 							<td colSpan={2} className="border-2 border-black align-top p-2">
-								5.crAccountId + 5.crAccountId - Name
+								{printRow?.crAccountId} {printRow?.crAccountName}
 							</td>
 							<td
 								rowSpan={7}
@@ -164,7 +169,7 @@ const CustomTable = () => {
 
 						<tr>
 							<td colSpan={3} className="border-2 border-black align-top p-2">
-								"Remarks : " + 19.printRemarks
+								Remarks : {printRow?.printRemarks}
 							</td>
 						</tr>
 

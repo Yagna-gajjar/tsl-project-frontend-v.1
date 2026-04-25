@@ -15,6 +15,7 @@ export default function TransactionPage() {
 	const [editRow, setEditRow] = useState<Transaction>();
 	const [viewId, setViewId] = useState<number>();
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [printRow, setPrintRow] = useState<Transaction>();
 
 	const bumpRefresh = () => {
 		setRefreshKey((prev) => prev + 1);
@@ -63,6 +64,7 @@ export default function TransactionPage() {
 				<TransactionTable
 					onView={openView}
 					onEdit={openForm}
+					onPrint={setPrintRow}
 					refreshKey={refreshKey}
 				/>
 			</div>
@@ -91,7 +93,7 @@ export default function TransactionPage() {
 				onClose={() => setExcelOpen(false)}
 				onSuccess={handleSaved}
 			/>
-			<DipositeSlip />
+			<DipositeSlip printRow={printRow} />
 		</div>
 	);
 }

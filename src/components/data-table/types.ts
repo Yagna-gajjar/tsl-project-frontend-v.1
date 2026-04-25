@@ -1,17 +1,17 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 
-export type FilterType = "text" | "number" | "select" | "date" | null
+export type FilterType = "text" | "number" | "select" | "date" | null;
 
 export interface Column<T> {
-  key: keyof T | string
-  header: string
-  sortable?: boolean
-  filterType?: FilterType
-  filterOptions?: { label: string; value: string | number }[]
-  render?: (row: T) => ReactNode
-  width?: number | string
-  align?: "left" | "center" | "right"
-  hidden?: boolean
+  key: keyof T | string;
+  header: string;
+  sortable?: boolean;
+  filterType?: FilterType;
+  filterOptions?: { label: string; value: string | number }[];
+  render?: (row: T) => ReactNode;
+  width?: number | string;
+  align?: "left" | "center" | "right";
+  hidden?: boolean;
 }
 
 export interface PaginationState {
@@ -36,6 +36,7 @@ export interface DynamicTableProps<T> {
   onEdit?: (row: T) => void;
   onCopy?: (row: T) => void;
   onDelete?: (id: any) => void;
+  onPrint?: (id: T) => void;
 
   idKey?: keyof T;
 

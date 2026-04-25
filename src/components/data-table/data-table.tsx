@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, Pencil, Trash2 } from "lucide-react";
+import { Copy, Eye, Pencil, Trash2, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { DynamicTableProps } from "./types";
@@ -30,6 +30,7 @@ export function DataTable<T>({
   onView,
   onEdit,
   onDelete,
+  onPrint,
   onCopy,
   idKey = "id" as keyof T,
   exportFileName,
@@ -338,9 +339,20 @@ export function DataTable<T>({
                           </TableCell>
                         );
                       })}
-                      {(onView || onEdit || onDelete || onCopy) && ( // Update condition
+                      {(onView || onEdit || onDelete || onCopy || onPrint) && (
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {onPrint && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100"
+                                onClick={() => onPrint(row)}
+                                title="Copy to New Member"
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                            )}
                             {onView && (
                               <Button
                                 variant="ghost"
@@ -365,7 +377,6 @@ export function DataTable<T>({
                                 <Copy className="h-4 w-4" />
                               </Button>
                             )}
-
                             {onEdit && (
                               <Button
                                 variant="ghost"
