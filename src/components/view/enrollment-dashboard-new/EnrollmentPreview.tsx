@@ -115,6 +115,7 @@ const ExcelInvoice = ({
 	const cellStyle: React.CSSProperties = { border: '1px solid #e0e0e0', display: 'flex', alignItems: 'center', padding: '6px', fontSize: '10px', overflow: 'hidden' };
 	const labelStyle: React.CSSProperties = { ...cellStyle, backgroundColor: '#f5f5f5', fontWeight: 'bold' };
 	const gutterStyle: React.CSSProperties = { border: '1px solid #eee', background: '#f9f9f9' };
+	console.log(enrollmentData, " : enrollmentData from form");
 
 	return (
 		<div style={{ backgroundColor: '#f0f2f5', width: '100%', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -247,23 +248,24 @@ const ExcelInvoice = ({
 					{/* FINANCIALS */}
 					<div style={labelStyle}>From</div><div style={cellStyle}>{enrollmentData?.startTime}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>Processing</div><div style={cellStyle}>{enrollmentData?.processingCharge}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Amount Being Debited</div><div style={cellStyle}>{enrollmentData?.totalDebitAmount}</div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Member Amount</div><div style={cellStyle}>{enrollmentData?.accountName}</div>
+					{/* <div style={{ ...labelStyle, gridColumn: 'span 3' }}>Amount Being Debited</div><div style={cellStyle}>{enrollmentData?.billingAmount}</div> */}
 
 					<div style={labelStyle}>To</div><div style={cellStyle}>{enrollmentData?.endTime}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>Total Charge</div><div style={cellStyle}>{n(enrollmentData?.billingAmount) + n(enrollmentData?.roundedAmount) + n(enrollmentData?.processingCharge)}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Member Amount</div><div style={cellStyle}>{enrollmentData?.totalDebitAmount}</div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Discounted Ammount</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div>
 
 					<div style={labelStyle}>Batch</div><div style={cellStyle}>{enrollmentData?.batch?.batchName}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>CGST</div><div style={cellStyle}>{enrollmentData?.cgstAmount}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>{enrollmentData?.dnAccountId || "A/C ID"}</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>CN/DN Account</div><div style={cellStyle}>{enrollmentData?.dnAccountName}</div>
 
 					<div style={labelStyle}>Offered Rate</div><div style={cellStyle}>{enrollmentData?.rackPrice}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>SGST</div><div style={cellStyle}>{enrollmentData?.sgstAmount}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Walking Customer</div><div style={cellStyle}>{enrollmentData?.totalDebitAmount}</div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Walking Customer</div><div style={cellStyle}>{enrollmentData?.walkingName}</div>
 
 					<div style={labelStyle}>Discount</div><div style={cellStyle}>{enrollmentData?.dnOrDiscount}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>Receivable</div><div style={cellStyle}>{n(enrollmentData?.cgstAmount) + n(enrollmentData?.sgstAmount) + n(enrollmentData?.billingAmount) + n(enrollmentData?.roundedAmount) + n(enrollmentData?.processingCharge)}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Total Debited Amount</div><div style={cellStyle}>Not Defined Yet</div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>Total Debited Amount</div><div style={cellStyle}>{enrollmentData?.totalDebitAmount}</div>
 
 					{/* FOOTER */}
 					<div style={{ gridColumn: 'span 10', height: '15px' }}></div>

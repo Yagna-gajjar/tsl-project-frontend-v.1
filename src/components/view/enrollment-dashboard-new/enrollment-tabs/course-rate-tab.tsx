@@ -46,6 +46,7 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	const [selectedRate, setSelectedRate] = useState<CourseRate | null>(data?.courseRate || null)
 
 	const [billingDaysSessions, setBillingDaysSessions] = useState(data?.billingDaysSessions || 1)
+	const [billingInput, setBillingInput] = useState(String(data?.billingDaysSessions || 1))
 	const [startDate, setStartDate] = useState<Date>(data?.attendingStartDate ? parseISO(data.attendingStartDate) : startOfToday())
 	const [endDate, setEndDate] = useState<string>(data?.endDate || "")
 	const [startTime, setStartTime] = useState(data?.startTime || (activeCourse?.avbFrom?.slice(0, 5) || "09:00"))
@@ -171,7 +172,13 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 								{format(startDate, "dd MMM yyyy")},
 							</Button>
 						</PopoverTrigger>
-						<PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={startDate} onSelect={(d) => d && setStartDate(d)} disabled={(d) => d < startOfToday()} /></PopoverContent>
+						<PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={startDate}
+							onSelect={(d) => {
+								if (d) {
+									setStartDate(d)
+									setSelectedRate(null)
+								}
+							}} /></PopoverContent>
 					</Popover>
 				</div>
 				<div className="space-y-1.5">
@@ -180,7 +187,25 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 				</div>
 				<div className="space-y-1.5">
 					<Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><Calculator size={12} /> Units</Label>
-					<Input type="number" className="h-10 text-xs font-mono" value={billingDaysSessions} onChange={(e) => setBillingDaysSessions(Number(e.target.value))} />
+					<Input
+						type="number"
+						className="h-10 text-xs font-mono"
+						value={billingInput}
+						onChange={(e) => {
+							const raw = e.target.value
+							setBillingInput(raw)
+							const num = Number(raw)
+							if (raw !== "" && !isNaN(num) && num > 0) {
+								setBillingDaysSessions(num)
+								setSelectedRate(null)
+							}
+						}}
+						onBlur={() => {
+							if (billingInput === "" || Number(billingInput) <= 0) {
+								setBillingInput(String(billingDaysSessions))
+							}
+						}}
+					/>
 				</div>
 				{activeCourse?.chargingPattern?.toLowerCase() === "school" && <div className="space-y-1.5">
 					<Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><UsersIcon size={12} /> Members</Label>
@@ -189,7 +214,12 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 			</div>
 
 			<Card className="p-4 border-2 border-primary/20 bg-primary/5">
-				<ToggleGroup type="multiple" variant="outline" className="justify-start gap-2" value={selectedDays} onValueChange={(val) => val.length > 0 && setSelectedDays(val)}>
+				<ToggleGroup type="multiple" variant="outline" className="justify-start gap-2" value={selectedDays} onValueChange={(val) => {
+					if (val.length > 0) {
+						setSelectedDays(val)
+						setSelectedRate(null)
+					}
+				}}>
 					{WEEK_DAYS.map((day) => {
 						const isAllowed = allowedPattern.includes(day.value);
 						return (

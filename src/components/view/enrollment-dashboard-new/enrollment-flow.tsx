@@ -91,7 +91,7 @@ export function EnrollmentFlow() {
 
 	const getProcessData = async (enrollment: Enrollment) => {
 		if (enrollment) {
-			const res = await process1(enrollment, new Date("2026-04-15"), 100, false);
+			const res = await process1(enrollment, new Date(), 100, false);
 			setChangeVersions(res);
 			setbalance(res.values.value4 || {});
 		}
@@ -299,7 +299,7 @@ export function EnrollmentFlow() {
 					description: "Enrollment craeted successfully.",
 					variant: "success"
 				});
-				// navigate(0);
+				handleClear()
 			}
 			else {
 				toast({
@@ -318,12 +318,30 @@ export function EnrollmentFlow() {
 		}
 	}
 
+	const handleClear = () => {
+		navigate(location.pathname, { replace: true, state: null });
+		setEnrollmentData({});
+		setCompletedTabs(new Set());
+		setCurrentTabIndex(0);
+		setChangeVersions(undefined);
+		setbalance(0);
+		setTransactionData(undefined);
+	}
+
 	return (
 		<div className="flex min-h-screen flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-8 bg-background">
 			<div className="flex-1 min-w-0">
 				<motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
 					<div className="mb-8">
-						<h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight">Sports Academy Enrollment</h1>
+						<div className="flex justify-between items-center">
+							<h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight">Sports Academy Enrollment</h1>
+							<Button
+								onClick={handleClear}
+								className="bg-primary/10 text-primary border border-primary hover:bg-primary/20"
+							>
+								Clear
+							</Button>
+						</div>
 						<p className="text-muted-foreground text-sm font-medium">Step {currentTabIndex + 1} of {TAB_ORDER.length}: {tabLabels[currentTabValue]}</p>
 					</div>
 
@@ -459,11 +477,13 @@ export function EnrollmentFlow() {
 										Transaction Details
 									</Button>
 									<Button
-										onClick={() => setShowConfirmDialog(true)}
+										onClick={() => {
+											setShowConfirmDialog(true)
+										}}
 										disabled={!canProceedToNext}
 										className="min-w-[200px] bg-green-600 hover:bg-green-700 text-white shadow-lg px-8"
 									>
-										<CheckCircle2 className="w-4 h-4 mr-2" />
+										<CheckCircle2 className="	w-4 h-4 mr-2" />
 										Finalize Registration
 									</Button>
 								</>

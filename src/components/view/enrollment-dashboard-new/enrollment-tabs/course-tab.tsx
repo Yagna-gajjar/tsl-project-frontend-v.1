@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Virtuoso } from "react-virtuoso"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen, CheckCircle2, Clock, Loader2, MapPin, Search, Target, Users, Building2 } from "lucide-react"
+import { CheckCircle2, Loader2, Search, Building2 } from "lucide-react"
 
 import { getCourses } from "@/api/course.api"
 import { getEnumsByCategory } from "@/api/enums.api"
@@ -12,7 +12,6 @@ import { toast } from "@/hooks/use-toast"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import type { Enums } from "@/types/enums"
 import type { Activity } from "@/types/activity"
-import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -22,12 +21,31 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 import type { Course } from "@/types/course"
 
 interface CourseTabProps {
 	data?: EnrollmentData
 	onUpdate: (data: Partial<EnrollmentData>) => void
 	member?: any
+}
+
+const COL_WIDTHS = "grid-cols-[2fr_1.2fr_1.2fr_1fr_52px_80px_64px_80px_32px]"
+
+function TableHeader() {
+	return (
+		<div className={`grid ${COL_WIDTHS} gap-x-3 px-3 py-2 bg-muted/60 border-b text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sticky top-0 z-10`}>
+			<span>Course</span>
+			<span>Activity</span>
+			<span>Entity</span>
+			<span>Time</span>
+			<span className="text-center">Days</span>
+			<span className="text-center">Age</span>
+			<span className="text-center">Gender</span>
+			<span className="text-center">Pattern</span>
+			<span />
+		</div>
+	)
 }
 
 export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
@@ -48,41 +66,32 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		classification: "all",
 		activityType: "all",
 		activityId: "all",
-		entityId: "all"
+		entityId: "all",
 	})
 
 	const memberAge = useMemo(() => {
-		if (!member?.dob) return undefined;
-		const birthDate = new Date(member.dob);
-		const today = new Date();
-		let age = today.getFullYear() - birthDate.getFullYear();
-		if (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())) age--;
-		return age;
-	}, [member]);
+		if (!member?.dob) return undefined
+		const birthDate = new Date(member.dob)
+		const today = new Date()
+		let age = today.getFullYear() - birthDate.getFullYear()
+		if (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())) age--
+		return age
+	}, [member])
 
 	const availableEntities = useMemo(() => {
-		const entityMap = new Map();
+		const entityMap = new Map()
 		courses.forEach((c) => {
-			if (c.entityId && c.entityName) {
-				entityMap.set(c.entityId, c.entityName);
-			}
-		});
-		return Array.from(entityMap.entries()).map(([id, name]) => ({ id, name }));
-	}, [courses]);
+			if (c.entityId && c.entityName) entityMap.set(c.entityId, c.entityName)
+		})
+		return Array.from(entityMap.entries()).map(([id, name]) => ({ id, name }))
+	}, [courses])
 
 	const handleSearchDebounced = (value: string) => {
-		if (searchDebounceRef.current) {
-			clearTimeout(searchDebounceRef.current)
-		}
-
+		if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
 		searchDebounceRef.current = setTimeout(() => {
-			setFilters(f => ({
-				...f,
-				search: value,
-			}))
+			setFilters((f) => ({ ...f, search: value }))
 		}, 400)
 	}
-
 
 	useEffect(() => {
 		const loadEnums = async () => {
@@ -90,20 +99,20 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 				const [enumClass, enumType] = await Promise.all([
 					getEnumsByCategory("ACTIVITY STATUS"),
 					getEnumsByCategory("ACTIVITY TYPE"),
-				]);
+				])
 				setOptions({
 					activityClassification: enumClass?.data || [],
 					activityTypes: enumType?.data || [],
-				});
+				})
 			} catch {
-				toast({ title: "Error", description: "Failed to load filter options", variant: "destructive" });
+				toast({ title: "Error", description: "Failed to load filter options", variant: "destructive" })
 			}
-		};
-		loadEnums();
-	}, []);
+		}
+		loadEnums()
+	}, [])
 
 	const loadFilteredData = useCallback(async () => {
-		setRefreshing(true);
+		setRefreshing(true)
 		try {
 			const params: any = {
 				limit: 500,
@@ -112,60 +121,54 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 				classification: filters.activityType !== "all" ? filters.activityType : undefined,
 				activityId: filters.activityId !== "all" ? filters.activityId : undefined,
 				entityId: filters.entityId !== "all" ? filters.entityId : undefined,
-				age: memberAge
-			};
-
-			const res = await getCourses(params);
-			setCourses(res?.data || []);
-		} catch (err) {
-			toast({ title: "Error", description: "Failed to refresh courses", variant: "destructive" });
+				age: memberAge,
+			}
+			const res = await getCourses(params)
+			setCourses(res?.data || [])
+		} catch {
+			toast({ title: "Error", description: "Failed to refresh courses", variant: "destructive" })
 		} finally {
-			setRefreshing(false);
-			setLoading(false);
+			setRefreshing(false)
+			setLoading(false)
 		}
-	}, [filters, memberAge]);
+	}, [filters, memberAge])
 
 	useEffect(() => {
-		loadFilteredData();
-	}, [filters.activityType, filters.activityId, filters.search, filters.entityId]);
+		loadFilteredData()
+	}, [filters.activityType, filters.activityId, filters.search, filters.entityId])
 
 	useEffect(() => {
 		if (filters.activityType !== "all") {
 			const fetchActs = async () => {
-				const res = await getActivities({
-					activityType: filters.activityType,
-					limit: 500
-				});
-				setActivities(res?.data || []);
-			};
-			fetchActs();
+				const res = await getActivities({ activityType: filters.activityType, limit: 500 })
+				setActivities(res?.data || [])
+			}
+			fetchActs()
 		} else {
-			setActivities([]);
+			setActivities([])
 		}
-	}, [filters.activityType]);
+	}, [filters.activityType])
 
 	const handleSelect = (course: Course) => {
-		setSelectedId(course.courseId);
+		setSelectedId(course.courseId)
 		onUpdate({
 			course,
 			courseId: Number(course.courseId),
 			activityId: course.activityId,
 			academyEntityId: course.entityId,
-			chargingPattern: course.chargingPattern as any
-		});
-	};
+			chargingPattern: course.chargingPattern as any,
+		})
+	}
 
 	useEffect(() => {
 		return () => {
-			if (searchDebounceRef.current) {
-				clearTimeout(searchDebounceRef.current)
-			}
+			if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
 		}
 	}, [])
 
-
 	return (
 		<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-[800px] space-y-4">
+			{/* Filters */}
 			<div className="bg-card border rounded-xl p-4 space-y-4 shadow-sm">
 				<div className="relative">
 					<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -175,39 +178,46 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 						onChange={(e) => handleSearchDebounced(e.target.value)}
 					/>
 				</div>
-
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-					<Select value={filters.classification} onValueChange={(v) => setFilters(f => ({ ...f, classification: v, activityType: "all", activityId: "all" }))}>
+					<Select
+						value={filters.classification}
+						onValueChange={(v) => setFilters((f) => ({ ...f, classification: v, activityType: "all", activityId: "all" }))}
+					>
 						<SelectTrigger><SelectValue placeholder="Classification" /></SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">All Classifications</SelectItem>
-							{options.activityClassification.map(item => (
+							{options.activityClassification.map((item) => (
 								<SelectItem key={item.id} value={String(item.enumCase)}>{item.value}</SelectItem>
 							))}
 						</SelectContent>
 					</Select>
 
-					<Select value={filters.activityType} onValueChange={(v) => setFilters(f => ({ ...f, activityType: v, activityId: "all" }))}>
+					<Select
+						value={filters.activityType}
+						onValueChange={(v) => setFilters((f) => ({ ...f, activityType: v, activityId: "all" }))}
+					>
 						<SelectTrigger><SelectValue placeholder="Activity Type" /></SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">All Types</SelectItem>
-							{options.activityTypes.filter(t => filters.classification === "all" || String(t.enumCase) === filters.classification).map(item => (
-								<SelectItem key={item.id} value={item.value}>{item.value}</SelectItem>
-							))}
+							{options.activityTypes
+								.filter((t) => filters.classification === "all" || String(t.enumCase) === filters.classification)
+								.map((item) => (
+									<SelectItem key={item.id} value={item.value}>{item.value}</SelectItem>
+								))}
 						</SelectContent>
 					</Select>
 
-					<Select value={filters.activityId} onValueChange={(v) => setFilters(f => ({ ...f, activityId: v }))}>
+					<Select value={filters.activityId} onValueChange={(v) => setFilters((f) => ({ ...f, activityId: v }))}>
 						<SelectTrigger><SelectValue placeholder="Activity" /></SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">All Activities</SelectItem>
-							{activities.map(act => (
+							{activities.map((act) => (
 								<SelectItem key={act.activityId} value={String(act.activityId)}>{act.activityName}</SelectItem>
 							))}
 						</SelectContent>
 					</Select>
 
-					<Select value={filters.entityId} onValueChange={(v) => setFilters(f => ({ ...f, entityId: v }))}>
+					<Select value={filters.entityId} onValueChange={(v) => setFilters((f) => ({ ...f, entityId: v }))}>
 						<SelectTrigger>
 							<div className="flex items-center gap-2 truncate">
 								<Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -216,7 +226,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">All Entities</SelectItem>
-							{availableEntities.map(entity => (
+							{availableEntities.map((entity) => (
 								<SelectItem key={entity.id} value={String(entity.id)}>{entity.name}</SelectItem>
 							))}
 						</SelectContent>
@@ -224,113 +234,138 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 				</div>
 			</div>
 
-			<div className="flex-1 border rounded-xl overflow-hidden bg-muted/5 relative">
+			{/* Table */}
+			<div className="flex-1 border rounded-xl overflow-hidden bg-background relative flex flex-col">
 				{(loading || refreshing) && (
-					<div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
-						<Loader2 className="w-8 h-8 animate-spin text-primary" />
+					<div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
+						<Loader2 className="w-7 h-7 animate-spin text-primary" />
 					</div>
 				)}
 
+				<TableHeader />
+
 				<Virtuoso
-					style={{ height: '100%' }}
+					style={{ flex: 1 }}
 					data={courses}
 					itemContent={(index, course) => {
-						const isSelected = selectedId === course.courseId;
-						const isAgeEligible = memberAge ? (memberAge >= course.minAge && memberAge <= course.maxAge) : true;
-						const isGenderEligible = !course.gender || course.gender === 'A' || course.gender.toLowerCase() === member?.gender?.toLowerCase() || course.gender === 'O';
-						const isEligible = isAgeEligible && isGenderEligible;
+						const isSelected = selectedId === course.courseId
+						const isAgeEligible = memberAge
+							? memberAge >= course.minAge && memberAge <= course.maxAge
+							: true
+						const isGenderEligible =
+							!course.gender ||
+							course.gender === "A" ||
+							course.gender === "O" ||
+							course.gender.toLowerCase() === member?.gender?.toLowerCase()
+						const isEligible = isAgeEligible && isGenderEligible
+
+						const genderLabel =
+							course.gender === "A" ? "ANY"
+								: course.gender === "M" ? "MALE"
+									: course.gender === "F" ? "FEM"
+										: "OPEN"
+
+						const timeLabel =
+							course.avbFrom !== "00:00:00"
+								? `${course.avbFrom?.slice(0, 5)}–${course.avbTo?.slice(0, 5)}`
+								: "Flex"
 
 						return (
-							<motion.div
-								initial={{ opacity: 0, x: -20 }}
-								animate={{ opacity: 1, x: 0 }}
-								transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.3) }}
-								className="px-4 py-1.5"
+							<div
+								onClick={() => isEligible && handleSelect(course)}
+								className={cn(
+									"grid gap-x-3 px-3 items-center border-b transition-colors",
+									COL_WIDTHS,
+									"h-10",
+									isSelected
+										? "bg-primary/8 border-l-2 border-l-primary"
+										: "hover:bg-muted/40 border-l-2 border-l-transparent",
+									!isEligible
+										? "opacity-40 cursor-not-allowed"
+										: "cursor-pointer"
+								)}
 							>
-								<Card
-									onClick={() => isEligible && handleSelect(course)}
-									className={`relative overflow-hidden cursor-pointer transition-all border-2 group ${isSelected
-										? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/20"
-										: "hover:border-primary/30 border-border bg-card"
-										} ${!isEligible ? "opacity-50 saturate-50 cursor-not-allowed bg-muted/30" : ""}`}
+								{/* Course name */}
+								<span
+									className={cn(
+										"text-sm font-medium truncate",
+										isSelected ? "text-primary font-semibold" : "text-foreground"
+									)}
+									title={course.courseName}
 								>
+									{course.courseName}
+								</span>
+
+								{/* Activity */}
+								<span className="text-xs text-muted-foreground truncate">{course.activityName}</span>
+
+								{/* Entity */}
+								<span className="text-xs text-muted-foreground truncate">{course.entityName}</span>
+
+								{/* Time */}
+								<span className="text-xs tabular-nums text-muted-foreground">{timeLabel}</span>
+
+								{/* Days/wk */}
+								<span className="text-xs text-center text-muted-foreground tabular-nums">
+									{course.noOfDaysInWeek}d/wk
+								</span>
+
+								{/* Age range */}
+								<span
+									className={cn(
+										"text-[11px] font-semibold text-center px-1.5 py-0.5 rounded",
+										isAgeEligible
+											? "bg-green-500/10 text-green-600"
+											: "bg-destructive/10 text-destructive"
+									)}
+								>
+									{course.minAge}–{course.maxAge}y
+								</span>
+
+								{/* Gender */}
+								<span
+									className={cn(
+										"text-[10px] font-bold text-center tracking-wide",
+										isGenderEligible ? "text-muted-foreground" : "text-destructive"
+									)}
+								>
+									{genderLabel}
+								</span>
+
+								{/* Charging pattern */}
+								<Badge
+									variant={isSelected ? "default" : "outline"}
+									className="text-[9px] px-1.5 py-0 h-5 justify-center font-bold tracking-wide"
+								>
+									{course.chargingPattern}
+								</Badge>
+
+								{/* Selected check */}
+								<div className="flex justify-center">
 									<AnimatePresence>
 										{isSelected && (
 											<motion.div
-												layoutId="activeBar"
-												className="absolute left-0 top-0 bottom-0 w-1 bg-primary"
-											/>
+												initial={{ scale: 0, opacity: 0 }}
+												animate={{ scale: 1, opacity: 1 }}
+												exit={{ scale: 0, opacity: 0 }}
+												transition={{ type: "spring", stiffness: 400, damping: 20 }}
+											>
+												<CheckCircle2 className="w-4 h-4 text-primary" />
+											</motion.div>
 										)}
 									</AnimatePresence>
-
-									<div className="p-3 space-y-2">
-										<div className="flex items-center justify-between gap-4">
-											<div className="flex items-center gap-3 min-w-0">
-												<div className={`p-2 rounded-lg ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"} transition-colors`}>
-													<BookOpen className="w-4 h-4" />
-												</div>
-												<div className="truncate">
-													<h4 className="font-bold text-sm truncate leading-none mb-1">
-														{course.courseName}
-													</h4>
-													<div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-														<span>{course.activityName}</span>
-														<span>•</span>
-														<span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {course.entityName}</span>
-													</div>
-												</div>
-											</div>
-
-											<div className="flex items-center gap-2 shrink-0">
-												<Badge variant={isSelected ? "default" : "outline"} className="text-[10px] font-bold px-2 py-0">
-													{course.chargingPattern}
-												</Badge>
-												{isSelected && <CheckCircle2 className="w-5 h-5 text-primary animate-in zoom-in" />}
-											</div>
-										</div>
-
-										<div className="flex items-center justify-between border-t border-dashed pt-2">
-											<div className="flex items-center gap-4">
-												<LogisticsItem
-													icon={<Clock className="w-3 h-3" />}
-													value={course.avbFrom !== "00:00:00" ? `${course?.avbFrom?.slice(0, 5)} - ${course?.avbTo?.slice(0, 5)}` : "Flexible"}
-												/>
-												<LogisticsItem
-													icon={<Users className="w-3 h-3" />}
-													value={`${course.noOfDaysInWeek} Days/Wk`}
-												/>
-												<LogisticsItem
-													icon={<Users className="w-3 h-3" />}
-													value={`Cap: ${course.batchCapacity}`}
-												/>
-											</div>
-
-											<div className="flex items-center gap-3">
-												<div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold ${!isAgeEligible ? "bg-destructive/10 text-destructive" : "bg-green-500/10 text-green-600"}`}>
-													<Target className="w-3 h-3" />
-													{course.minAge}-{course.maxAge} Yrs
-												</div>
-												<div className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${!isGenderEligible ? "border-destructive/20 text-destructive" : "border-muted-foreground/20 text-muted-foreground"}`}>
-													{course.gender === 'A' ? 'ANY' : course.gender === 'M' ? 'MALE' : course.gender === 'F' ? 'FEMALE' : 'OPEN'}
-												</div>
-											</div>
-										</div>
-									</div>
-								</Card>
-							</motion.div>
+								</div>
+							</div>
 						)
 					}}
 				/>
+
+				{!loading && courses.length === 0 && (
+					<div className="flex-1 flex items-center justify-center text-muted-foreground text-sm py-16">
+						No courses found.
+					</div>
+				)}
 			</div>
 		</motion.div>
-	)
-}
-
-function LogisticsItem({ icon, value }: { icon: React.ReactNode, value: string }) {
-	return (
-		<div className="flex items-center gap-1.5 text-muted-foreground">
-			<span className="opacity-70">{icon}</span>
-			<span className="text-[11px] font-medium">{value}</span>
-		</div>
 	)
 }

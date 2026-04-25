@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useEffect, useRef } from "react"
+import { useMemo, useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import {
 	User, BookOpen, FileText, Clock, BadgeCheck, Coins, ArrowDownToLine, Scale, Receipt
@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import ExcelInvoice from "../EnrollmentPreview"
 import { getFinalAmounts } from "@/helpers/enrollment"
+import { getAccountById } from "@/api/account.api"
 
 interface FinalConfirmTabProps {
 	data?: EnrollmentData,
@@ -21,6 +22,7 @@ interface FinalConfirmTabProps {
 
 const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	const lastCalculatedRef = useRef<string>("");
+	const [dnAccountName, setDnAccountName] = useState<string>();
 
 	const excelEnrollmentData = {
 		member: {
@@ -51,6 +53,9 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 
 		accountName: data?.accountName,
 		accountId: data?.accountId,
+
+		dnAccountId: data?.dnAccountId,
+		dnAccountName: dnAccountName,
 
 		membershipMasterId: data?.membershipMasterId,
 
@@ -118,13 +123,22 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 			};
 		};
 	}, [data]);
+	const getDnAccount = async (id: number) => {
+		const res = await getAccountById(id)
+		if (res.success) {
+			setDnAccountName(res.data?.accountName);
+		}
 
+	}
 	useEffect(() => {
 		if (results) {
 			const signature = JSON.stringify(results.display);
 			if (lastCalculatedRef.current !== signature) {
 				lastCalculatedRef.current = signature;
 				onUpdate(results.display);
+			}
+			if (data?.dnAccountId) {
+				getDnAccount(data.dnAccountId);
 			}
 		}
 	}, [results, onUpdate]);
