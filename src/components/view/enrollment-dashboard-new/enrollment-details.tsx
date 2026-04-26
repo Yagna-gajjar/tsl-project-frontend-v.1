@@ -8,6 +8,9 @@ import { User, BookOpen, DollarSign, Calendar, FileCheck, Badge } from "lucide-r
 import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import type { JSX } from "react/jsx-runtime"
 import { format, isValid, parseISO } from "date-fns"
+import type { Response } from "@/types/response"
+import { getTotalBalance } from "@/api/transaction.api"
+import { useEffect, useState } from "react"
 
 interface EnrollmentDetailsProps {
 	data: EnrollmentData
@@ -33,6 +36,38 @@ const getSectionIcon = (iconType: string): JSX.Element => {
 }
 
 export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) {
+	const [accountBalance, setAccountBalance] = useState<{
+		credit: number;
+		debit: number;
+		balance: number;
+	}>();
+	const fetchBalance = async (id: number) => {
+		try {
+			const res: Response<{
+				credit: number;
+				debit: number;
+				balance: number;
+			}> = await getTotalBalance(id);
+			console.log(res);
+			if (res.success) {
+
+				setAccountBalance(res.data as {
+					credit: number;
+					debit: number;
+					balance: number;
+				});
+			}
+		} catch (err) {
+			console.log(err);
+
+		}
+	}
+
+	useEffect(() => {
+		if (data) {
+			fetchBalance(data?.member?.memberId);
+		}
+	}, [data])
 
 	return (
 		<motion.div className="sticky top-8 space-y-4">
@@ -41,6 +76,19 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 				<p className="text-sm text-muted-foreground">Live enrollment details</p>
 			</div>
 
+			<div className="py-5 text-center gap-1">
+				{accountBalance?.balance &&
+					<h1 className={`${accountBalance?.balance < 0
+						? 'text-red-600'
+						: accountBalance?.balance > 0
+							? 'text-emerald-700'
+							: 'text-slate-500'} text-3xl font-bold tracking-tight`}>
+						{new Intl.NumberFormat('en-US', {
+							style: 'currency',
+							currency: 'USD',
+						}).format(accountBalance?.balance)}
+					</h1>}
+			</div>
 			<AnimatedDetailCard title="Member" icon={getSectionIcon("member")} isActive={currentTab === "member"}>
 				{data?.member ? (
 					<div className="space-y-2 text-sm">
@@ -203,7 +251,7 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 					</div>
 				)}
 			</AnimatedDetailCard>
-		</motion.div>
+		</motion.div >
 	)
 }
 

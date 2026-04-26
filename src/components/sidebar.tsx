@@ -28,6 +28,7 @@ import {
   ScrollText,
   Contact,
   TicketPercent,
+  Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -142,6 +143,11 @@ const navigationItems: NavigationItem[] = [
         label: "Transaction",
         icon: Banknote,
         href: "/finance/transaction",
+      },
+      {
+        label: "Trail Balance",
+        icon: Scale,
+        href: "/finance/trialbalance",
       }
     ],
   },

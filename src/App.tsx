@@ -51,6 +51,7 @@ import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrol
 import SessionBooking from "./pages/SessionBooking";
 import ChangeEnrollment from "./pages/Change";
 import Ledger from "./pages/ledger";
+import TrialBalancePage from "./components/view/transaction/transaction-trialbalance";
 export default function App() {
   return (
     <ThemeProvider>
@@ -178,6 +179,7 @@ export default function App() {
                 />
                 <Route path="/finance/transaction" element={<TransactionPage />} />
                 <Route path="/finance/ledger" element={<Ledger />} />
+                <Route path="/finance/trialbalance" element={<TrialBalancePage />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route path="/setting" element={<Setting />}>

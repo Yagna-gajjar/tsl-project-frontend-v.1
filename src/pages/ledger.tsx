@@ -236,7 +236,7 @@ const Ledger = () => {
 										{isFetchingAccounts ? "Searching..." : "No accounts found."}
 									</CommandEmpty>
 									<CommandGroup>
-										{accounts.map((acc:Account) => (
+										{accounts.map((acc: Account) => (
 											<CommandItem
 												key={acc.accountId}
 												value={acc?.accountId?.toString()}
@@ -366,7 +366,7 @@ const Ledger = () => {
 											</TableRow>
 										</TableHeader>
 										<TableBody>
-											{ledgerEntries.map((entry:Transaction, idx:number) => {
+											{ledgerEntries.map((entry: Transaction, idx: number) => {
 												const amount = parseFloat(entry?.amount as string) || 0;
 												const isDebit = entry.drAccountId?.toString() === selectedAccountId;
 												const isCredit = entry.crAccountId?.toString() === selectedAccountId;
@@ -386,7 +386,7 @@ const Ledger = () => {
 															{opposingAccount?.trim() || 'Unknown Account'}
 														</TableCell>
 														<TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
-															{entry.formReferenceNo +" "+ entry.entrySource || '-'}
+															{entry.formReferenceNo + " " + entry.entrySource || '-'}
 														</TableCell>
 														<TableCell className={`text-right font-medium ${isDebit ? 'text-rose-500' : 'text-muted-foreground'}`}>
 															{isDebit ? amount.toFixed(2) : '-'}

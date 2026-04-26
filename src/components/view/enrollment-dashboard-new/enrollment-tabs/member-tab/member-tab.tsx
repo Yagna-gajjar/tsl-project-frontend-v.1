@@ -43,6 +43,7 @@ import { deleteEnrollment, getEnrollments, loadEnrollmentById } from "@/api/enro
 import { getAccountsWithAllMembersByMemberId } from "@/api/accountMember.api"
 
 import { EnrollmentCard, DetailItem } from "./enrollment-card"
+import { getTotalBalance } from "@/api/transaction.api"
 
 export function MemberTab({
 	data,
@@ -51,6 +52,7 @@ export function MemberTab({
 	data?: Member
 	onUpdate: (data: Partial<Enrollment>) => void
 }) {
+
 	const [open, setOpen] = useState(false)
 	const [openShowFamily, setOpenShowFamily] = useState(false)
 	const [isActionModalOpen, setIsActionModalOpen] = useState(false)
@@ -69,7 +71,6 @@ export function MemberTab({
 
 	const fetchFamilyMembers = useCallback(async () => {
 		if (!selectedMember?.memberId) return
-		setLoading(true)
 		try {
 			const res = await getAccountsWithAllMembersByMemberId(String(selectedMember.memberId))
 			setFamilyMembers(res.data || [])
@@ -143,7 +144,9 @@ export function MemberTab({
 	}, [enrollments, searchTerm, statusFilter])
 
 	useEffect(() => {
-		if (data?.memberId) fetchEnrollmentsOfMember(Number(data.memberId))
+		if (data?.memberId) {
+			fetchEnrollmentsOfMember(Number(data.memberId))
+		}
 	}, [data])
 
 	useEffect(() => {
@@ -253,6 +256,7 @@ export function MemberTab({
 										className="text-[10px] border-emerald-200 text-emerald-700 bg-emerald-50 uppercase font-black"
 									>
 										Status: {selectedMember.status}
+
 									</Badge>
 								</div>
 							</div>
