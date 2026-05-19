@@ -39,7 +39,6 @@ export default function TransactionExcelUpload({ isOpen, onClose, onSuccess }: T
 		if (!row.transactionType) return "Transaction Type is required";
 		if (!row.amount || isNaN(Number(row.amount))) return "Valid Amount is required";
 
-		// Ensure all required ID references are numeric
 		if (!row.crEntityId || isNaN(Number(row.crEntityId))) return "Credit Entity ID is required";
 		if (!row.crAccountId || isNaN(Number(row.crAccountId))) return "Credit Account ID is required";
 		if (!row.drEntityId || isNaN(Number(row.drEntityId))) return "Debit Entity ID is required";

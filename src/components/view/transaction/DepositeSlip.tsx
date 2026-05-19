@@ -99,7 +99,7 @@ const CustomTable = ({ printRow }: { printRow: Transaction | undefined }) => {
 								Credited To Account
 							</td>
 							<td colSpan={2} className="border-2 border-black align-top p-2">
-								{printRow?.crAccountId} {printRow?.crAccountName}
+								{printRow?.crAccountId}, {printRow?.crAccountName ?? '-'}
 							</td>
 							<td
 								rowSpan={7}
@@ -122,7 +122,7 @@ const CustomTable = ({ printRow }: { printRow: Transaction | undefined }) => {
 								Membership
 							</td>
 							<td colSpan={2} className="border-2 border-black align-top p-2">
-								7.crMsNo + 4.crEntityId - Type + Name
+								{printRow?.crMsNo}, {printRow?.crEntityId} - {printRow?.crEntityName}
 							</td>
 						</tr>
 
@@ -131,7 +131,7 @@ const CustomTable = ({ printRow }: { printRow: Transaction | undefined }) => {
 								Member
 							</td>
 							<td colSpan={2} className="border-2 border-black align-top p-2">
-								6.crMemberId + 6.crMemberId - Name
+								{printRow.crMemberId}, {printRow.crMemberFirstName} {printRow.crMemberLastName}
 							</td>
 						</tr>
 

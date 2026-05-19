@@ -23,8 +23,6 @@ interface BatchTabProps {
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function BatchTab({ data, onUpdate }: BatchTabProps) {
-	console.log(data, " = from batch tab");
-
 	const [batches, setBatches] = useState<Batch[]>([])
 	const [isLoading, setIsLoading] = useState(false)
 	const [searchQuery, setSearchQuery] = useState("")
@@ -60,6 +58,8 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 			setIsLoading(true);
 			try {
 				const res = await getBatch({ ...apiParams, limit: 1000 });
+				console.log(res, " : allll batches");
+
 				if (res?.success) setBatches(res.data || []);
 			} catch (err) {
 				toast({ title: "Error", description: "Failed to fetch batches", variant: "destructive" });
