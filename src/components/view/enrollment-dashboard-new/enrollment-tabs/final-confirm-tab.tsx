@@ -260,9 +260,9 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 							<span className="text-[10px] font-black uppercase text-muted-foreground">Session</span>
 							<span className="font-mono font-black text-base">{data.startTime} - {display.calculatedEndTime}</span>
 						</div>
-						<div className="flex-col px-1">
-							<span className="text-[10px] font-black uppercase text-muted-foreground">Pattern</span>
-							<span className="text-xs font-black uppercase">{formatAttendingPattern(data.attendingPattern)}</span>
+						<div className="flex justify-between items-center px-1">
+							<span className="text-[10px] font-black uppercase text-muted-foreground">Pattern {" "}</span>
+							<span className="text-xs font-black text-uppercase">{formatAttendingPattern(data.attendingPattern)}</span>
 						</div>
 					</div>
 				</Card>

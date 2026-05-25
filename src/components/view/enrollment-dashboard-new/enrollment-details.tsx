@@ -156,20 +156,37 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 							<span className="text-muted-foreground">Type:</span>
 							<span className="font-medium">{data.courseRate.membershipType}</span>
 						</div>
-						<div className="flex justify-between">
-							<span className="text-muted-foreground">Billing Rate:</span>
-							<span className="font-medium">₹{data.billingRate?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-						</div>
-						<div className="flex justify-between">
-							<span className="text-muted-foreground">Days:</span>
-							<span className="font-medium">{(data as any)?.billingDaysSessions}</span>
-						</div>
-						<div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
-							<span>Total:</span>
-							<span className="text-primary">
-								₹{((data.courseRate.unitRate || 0) * ((data as any)?.billingDaysSessions)).toFixed(2)}
-							</span>
-						</div>
+						{(() => {
+							const rate = Number(data.billingRate ?? data.courseRate.unitRate) || 0;
+							const days = Number((data as any)?.billingDaysSessions) || 0;
+							const isSchool = data.course?.chargingPattern?.toLowerCase() === "school";
+							const members = isSchool ? (Number((data as any)?.membersEnrolled) || 1) : 1;
+							const total = rate * days * members;
+							return (
+								<>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Billing Rate:</span>
+										<span className="font-medium">₹{rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+									</div>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Days:</span>
+										<span className="font-medium">{days}</span>
+									</div>
+									{isSchool && (
+										<div className="flex justify-between">
+											<span className="text-muted-foreground">Members:</span>
+											<span className="font-medium">{members}</span>
+										</div>
+									)}
+									<div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
+										<span>Total:</span>
+										<span className="text-primary">
+											₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+										</span>
+									</div>
+								</>
+							);
+						})()}
 					</div>
 				) : (
 					<p className="text-xs text-muted-foreground italic">Not selected yet</p>
