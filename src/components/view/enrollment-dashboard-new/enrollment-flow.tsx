@@ -480,7 +480,7 @@ export function EnrollmentFlow() {
 										onClick={() => {
 											setShowConfirmDialog(true)
 										}}
-										disabled={!canProceedToNext}
+										disabled={!canProceedToNext || !transactionData}
 										className="min-w-[200px] bg-green-600 hover:bg-green-700 text-white shadow-lg px-8"
 									>
 										<CheckCircle2 className="	w-4 h-4 mr-2" />

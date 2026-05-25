@@ -158,7 +158,7 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						</div>
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">Unit Rate:</span>
-							<span className="font-medium">₹{data.courseRate.unitRate}</span>
+							<span className="font-medium">₹{Number((data as any)?.billingRate ?? data.courseRate.unitRate).toFixed(2)}</span>
 						</div>
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">Days:</span>
@@ -167,7 +167,7 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						<div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
 							<span>Total:</span>
 							<span className="text-primary">
-								₹{((data.courseRate.unitRate || 0) * ((data as any)?.billingDaysSessions)).toFixed(2)}
+								₹{((Number((data as any)?.billingRate ?? data.courseRate.unitRate) || 0) * (Number((data as any)?.billingDaysSessions) || 0) * (data.course?.chargingPattern?.toLowerCase() === "school" ? (Number((data as any)?.membersEnrolled) || 1) : 1)).toFixed(2)}
 							</span>
 						</div>
 					</div>

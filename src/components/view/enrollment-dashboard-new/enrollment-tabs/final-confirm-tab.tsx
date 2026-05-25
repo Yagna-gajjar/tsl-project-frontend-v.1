@@ -20,6 +20,13 @@ interface FinalConfirmTabProps {
 	onUpdate: (data: Partial<EnrollmentData>) => void
 }
 
+const DAY_LABELS: Record<string, string> = { "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun" };
+
+const formatAttendingPattern = (pattern?: string | null) => {
+	if (!pattern) return "—";
+	return String(pattern).split("").map(d => DAY_LABELS[d] ?? d).join(", ");
+};
+
 const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	const lastCalculatedRef = useRef<string>("");
 	const [dnAccountName, setDnAccountName] = useState<string>();
@@ -254,7 +261,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 						</div>
 						<div className="flex justify-between items-center px-1">
 							<span className="text-[10px] font-black uppercase text-muted-foreground">Pattern</span>
-							<span className="text-xs font-black uppercase">{data.attendingPattern}</span>
+							<span className="text-xs font-black uppercase">{formatAttendingPattern(data.attendingPattern)}</span>
 						</div>
 					</div>
 				</Card>
