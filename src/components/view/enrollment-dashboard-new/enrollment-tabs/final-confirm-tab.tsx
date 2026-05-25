@@ -97,7 +97,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		memberApprovalStatus: data?.academyApprovalStatus,
 		printRemarks: data?.printRemarks,
 	};
-
 	const results = useMemo(() => {
 		if (!data?.course || !data?.courseRate) return null;
 
@@ -117,7 +116,6 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 
 			const calculatedEndTime = calc.calculatedEndTime
 			return {
-				// internal: { A, B, C, X, E, totalDebitAmount },
 				display: {
 					billingRate: Number(calc.baseRate.toFixed(2)),
 					billingAmount: Number(calc.billingAmount.toFixed(2)),
@@ -262,7 +260,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 							<span className="text-[10px] font-black uppercase text-muted-foreground">Session</span>
 							<span className="font-mono font-black text-base">{data.startTime} - {display.calculatedEndTime}</span>
 						</div>
-						<div className="flex justify-between items-center px-1">
+						<div className="flex-col px-1">
 							<span className="text-[10px] font-black uppercase text-muted-foreground">Pattern</span>
 							<span className="text-xs font-black uppercase">{formatAttendingPattern(data.attendingPattern)}</span>
 						</div>

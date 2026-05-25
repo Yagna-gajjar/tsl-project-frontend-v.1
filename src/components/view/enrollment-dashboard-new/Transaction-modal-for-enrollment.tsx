@@ -224,7 +224,7 @@ export const TransactionModalForEnrollment = ({ isOpen, onClose, initialData, se
 						>
 							Save Transaction
 						</Button>
-					</div>	
+					</div>
 				</form>
 			</div>
 		</div>

@@ -123,23 +123,31 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 		return { sortedTiers: tiers, groupedData: grouped }
 	}, [rates])
 
+
+
 	const getApplicableRateForRow = (category: string) => {
 		const row = groupedData[category];
 		if (!row) return null;
-		const targetTier = sortedTiers.filter(t => t <= billingDaysSessions).reverse()[0] || sortedTiers[0];
-		if (row.tiers[targetTier]) return row.tiers[targetTier];
-		const lower = Object.keys(row.tiers).map(Number).filter(t => t < targetTier).sort((a, b) => b - a);
-		return lower.length > 0 ? row.tiers[lower[0]] : null;
-	}
+
+		const applicableTiers = sortedTiers.filter(t => t <= billingDaysSessions);
+		const targetTier = applicableTiers.length > 0
+			? applicableTiers[applicableTiers.length - 1]
+			: sortedTiers[0];
+
+		return row.tiers[targetTier] ?? null;
+	};
 
 	const handleSelectRow = (category: string) => {
 		const row = groupedData[category];
 		const rawRate = getApplicableRateForRow(category);
 		const mapping = getAccountMapping(category, row.masterId);
+		console.log(selectedDays, ' :selectedDays');
 
 		if (!rawRate || !mapping) return;
 
 		const factor = getDiscountFactor(rawRate.minDaysInEnr || 0, rawRate.discountOnDayReduce || 0);
+		console.log(factor);
+
 		setSelectedRate(rawRate);
 
 		onUpdate({
@@ -253,10 +261,8 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 									const mapping = getAccountMapping(category, row.masterId);
 									const isEligible = !!mapping;
 									const isSelected = selectedRate?.membershipType === category;
-
 									const factor = rawRate ? getDiscountFactor(rawRate.minDaysInEnr || 0, rawRate.discountOnDayReduce || 0) : 1;
 									const finalTotal = rawRate ? (Number(rawRate.unitRate) * factor * billingDaysSessions * (activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1)) : 0;
-
 									return (
 										<TableRow key={category} className={cn("group transition-none", isSelected && "bg-primary/5", !isEligible && "opacity-40 grayscale-[0.8]")}>
 											<TableCell className="font-bold border-b border-r text-sm px-4">
