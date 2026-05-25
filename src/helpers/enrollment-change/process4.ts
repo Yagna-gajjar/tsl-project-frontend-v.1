@@ -17,7 +17,7 @@ export async function process4(
 	givenWalkingContact?: string,
 	givenProcessingCharge?: number,
 ): Promise<Process4Result> {
-	
+	console.log(newVersion, applyNewRates, givenStartDate, givenPrintRemarks, givenWalkingName, givenWalkingContact, givenProcessingCharge);
 	const base: EnrollmentData = JSON.parse(JSON.stringify(enrollmentData));
 	const newEnrollmentBase: EnrollmentData = JSON.parse(JSON.stringify(passedNewEnrollment));
 	const billingAmount = values.value4 / (1 + ((Number(course?.cgstRate) + Number(course?.sgstRate)) / 100))

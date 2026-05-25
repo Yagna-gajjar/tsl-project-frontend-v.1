@@ -47,9 +47,9 @@ export function EnrollmentActionModal({ isOpen, onClose, enrollment }: ActionMod
 	const [loading, setLoading] = useState(false)
 	const [members, setMembers] = useState<AccountMember[]>();
 	const [openMembers, setOpenMembers] = useState<boolean>(false);
-	const [selectedMember, setSelectedMember] = useState<number>();
 
 	const navigateToChange = (actionId: string, actionLabel: string, firstEnrPattern: number, firstEnrPatternDays: number, activity: Course) => {
+		console.log(actionLabel, ": Action Label");
 		const config = ENROLLMENT_WORKFLOW_CONFIG[actionId]
 		navigate(`/enrollment/change`, {
 			state: {

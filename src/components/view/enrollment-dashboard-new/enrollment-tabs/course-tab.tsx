@@ -247,7 +247,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 				<Virtuoso
 					style={{ flex: 1 }}
 					data={courses}
-					itemContent={(index, course) => {
+					itemContent={(_, course) => {
 						const isSelected = selectedId === course.courseId
 						const isAgeEligible = memberAge
 							? memberAge >= course.minAge && memberAge <= course.maxAge

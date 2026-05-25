@@ -36,6 +36,7 @@ export interface Enrollment {
   rackPrice?: number;
   dnOrDiscount?: number;
   dnAccountId?: number | null;
+  dnAccountName?: string;
   billingRate?: number;
   costToMember?: number;
   roundedAmount?: number;

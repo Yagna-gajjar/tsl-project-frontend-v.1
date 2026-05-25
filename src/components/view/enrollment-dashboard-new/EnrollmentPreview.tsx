@@ -257,7 +257,7 @@ const ExcelInvoice = ({
 
 					<div style={labelStyle}>Batch</div><div style={cellStyle}>{enrollmentData?.batch?.batchName}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>CGST</div><div style={cellStyle}>{enrollmentData?.cgstAmount}</div><div style={gutterStyle}></div>
-					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>CN/DN Account</div><div style={cellStyle}>{enrollmentData?.dnAccountName}</div>
+					<div style={{ ...labelStyle, gridColumn: 'span 3' }}>CN/DN Account</div><div style={cellStyle}>{enrollmentData?.dnAccountName ?? "N/A"}</div>
 
 					<div style={labelStyle}>Offered Rate</div><div style={cellStyle}>{enrollmentData?.rackPrice}</div><div style={gutterStyle}></div>
 					<div style={labelStyle}>SGST</div><div style={cellStyle}>{enrollmentData?.sgstAmount}</div><div style={gutterStyle}></div>

@@ -320,7 +320,7 @@ export function EnrollmentFlow() {
 
 	const handleClear = () => {
 		navigate(location.pathname, { replace: true, state: null });
-		setEnrollmentData({});
+		setEnrollmentData(undefined);
 		setCompletedTabs(new Set());
 		setCurrentTabIndex(0);
 		setChangeVersions(undefined);

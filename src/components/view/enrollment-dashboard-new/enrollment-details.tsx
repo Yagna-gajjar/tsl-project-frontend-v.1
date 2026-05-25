@@ -65,7 +65,7 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 
 	useEffect(() => {
 		if (data) {
-			fetchBalance(data?.member?.memberId);
+			fetchBalance(data?.member?.memberId as number);
 		}
 	}, [data])
 

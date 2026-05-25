@@ -43,7 +43,6 @@ import { deleteEnrollment, getEnrollments, loadEnrollmentById } from "@/api/enro
 import { getAccountsWithAllMembersByMemberId } from "@/api/accountMember.api"
 
 import { EnrollmentCard, DetailItem } from "./enrollment-card"
-import { getTotalBalance } from "@/api/transaction.api"
 
 export function MemberTab({
 	data,
@@ -54,7 +53,7 @@ export function MemberTab({
 }) {
 
 	const [open, setOpen] = useState(false)
-	const [openShowFamily, setOpenShowFamily] = useState(false)
+	const [openShowFamily, _] = useState(false)
 	const [isActionModalOpen, setIsActionModalOpen] = useState(false)
 
 	const [members, setMembers] = useState<Member[]>([])
@@ -68,6 +67,7 @@ export function MemberTab({
 	const [searchTerm, setSearchTerm] = useState("")
 	const [statusFilter, setStatusFilter] = useState<string>("all")
 
+	console.log(familyMembers, " Family Members")
 
 	const fetchFamilyMembers = useCallback(async () => {
 		if (!selectedMember?.memberId) return

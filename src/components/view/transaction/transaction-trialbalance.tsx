@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -16,6 +16,7 @@ import { getTrialBalance } from "@/api/transaction.api";
 import { DataTable } from "@/components/data-table/data-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import type { Response } from "@/types/response";
 
 interface Account {
   accountId: number;
@@ -162,9 +163,9 @@ export default function AccountsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getTrialBalance(hideZero, hideNoTx);
+      const res: Response<any> = await getTrialBalance(hideZero, hideNoTx);
       if (!res.success) throw new Error("API returned success: false");
-      setApiData(res.data);
+      setApiData(res?.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load accounts");
     } finally {

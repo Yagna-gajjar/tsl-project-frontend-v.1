@@ -22,9 +22,12 @@ interface FinalConfirmTabProps {
 
 const DAY_LABELS: Record<string, string> = { "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun" };
 
-const formatAttendingPattern = (pattern?: string | null) => {
-	if (!pattern) return "—";
-	return String(pattern).split("").map(d => DAY_LABELS[d] ?? d).join(", ");
+const formatAttendingPattern = (pattern?: string | string[] | number[] | null) => {
+	if (pattern === null || pattern === undefined || pattern === "") return "—";
+	const tokens = Array.isArray(pattern)
+		? pattern.map(String)
+		: String(pattern).split("");
+	return tokens.map(d => DAY_LABELS[d] ?? d).join(", ");
 };
 
 const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {

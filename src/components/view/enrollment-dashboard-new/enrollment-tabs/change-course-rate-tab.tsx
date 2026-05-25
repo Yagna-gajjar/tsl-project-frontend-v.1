@@ -49,7 +49,7 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
   const [isLoading, setIsLoading] = useState(false)
   const [selectedRate, setSelectedRate] = useState<CourseRate | null>(data?.courseRate || null)
 
-  const [billingDaysSessions, setBillingDaysSessions] = useState(data?.billingDaysSessions || 1)
+  const [billingDaysSessions, _] = useState(data?.billingDaysSessions || 1)
   const [startDate, setStartDate] = useState<Date>(data?.attendingStartDate ? parseISO(data.attendingStartDate) : startOfToday())
   const [endDate, setEndDate] = useState<string>(data?.endDate || "")
   const [startTime, setStartTime] = useState(data?.startTime || (activeCourse?.avbFrom?.slice(0, 5) || "09:00"))
