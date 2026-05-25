@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ViewModal } from "@/components/view-modal/view-modal";
 import type { Account } from "@/types/account";
 import { getAccountById } from "@/api/account.api";
@@ -52,7 +52,7 @@ export function MemberListModal({
       });
 
       if (res?.success) {
-        setCurrentMemberId(res?.data ? res?.data[0].memberId : null);
+        setCurrentMemberId(res?.data && res.data.length > 0 ? res.data[0].memberId : null);
       }
     } catch (err) {
       console.error("Failed to fetch authority", err);
@@ -328,7 +328,7 @@ export default function AccountViewModal({
     }
   }, [accountId]);
 
-  const fields = baseViewFields.map((f) => {
+  const fields = useMemo(() => baseViewFields.map((f) => {
     if (f.key === "addMember") {
       return {
         ...f,
@@ -355,7 +355,7 @@ export default function AccountViewModal({
     }
 
     return f;
-  });
+  }), [fetchMembers]);
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { getCourses, deleteCourse } from "@/api/course.api";
@@ -64,7 +64,7 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
     return Array.isArray(res?.data) ? res.data : [];
   };
 
-  const columns: Column<Course>[] = [
+  const columns = useMemo<Column<Course>[]>(() => [
     { header: "ID", key: "courseId", sortable: true },
     { header: "Course Name", key: "courseName", sortable: true },
     { header: "Type", key: "courseType", sortable: true },
@@ -94,7 +94,7 @@ export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) => r.introduceDate ? new Date(r.introduceDate).toLocaleDateString() : "N/A",
       sortable: true,
     },
-  ];
+  ], []);
 
   return (
     <>

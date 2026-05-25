@@ -15,7 +15,6 @@ type Props = {
 const fields: FieldConfig<CoachAssignment>[] = [
   { key: "coachAssignmentId", label: "ID", icon: Tag },
   { key: "coachName", label: "Coach", icon: User },
-  { key: "coachName", label: "Coach", icon: User },
   { key: "batchName", label: "Batch", icon: Layers },
   { key: "batchId", label: "Batch ID", icon: Layers },
   { key: "designation", label: "Designation", icon: Tag },

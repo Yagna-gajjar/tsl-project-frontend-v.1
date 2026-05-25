@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -192,7 +192,7 @@ export default function AccountFormModal({
   };
 
 
-  const fields: FormFieldConfig<Account>[] = [
+  const fields = useMemo<FormFieldConfig<Account>[]>(() => [
     {
       name: "entityId",
       label: "Entity",
@@ -221,7 +221,7 @@ export default function AccountFormModal({
     { name: "state", label: "State", type: "text", required: true },
     { name: "pinCode", label: "Pin Code", type: "text", required: true },
     { name: "country", label: "Country", type: "text" },
-  ];
+  ], [entities, accountTypeOpt, adminInstructionOpt, initialData]);
 
   return (
     <>

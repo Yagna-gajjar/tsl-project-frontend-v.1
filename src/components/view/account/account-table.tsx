@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { getAccounts, deleteAccount } from "@/api/account.api";
@@ -73,9 +73,9 @@ export default function AccountTable({ onView, onEdit, refreshKey, entityType, e
 
   useEffect(() => {
     loadData();
-  }, [loadData, refreshKey, entityId, entityType]);
+  }, [loadData, refreshKey]);
 
-  const columns: Column<Account>[] = [
+  const columns = useMemo<Column<Account>[]>(() => [
     { key: "accountName", header: "Account Name", sortable: true },
     { key: "entityType", header: "Define Type" },
     { key: "entityName", header: "Entity Name" },
@@ -93,7 +93,7 @@ export default function AccountTable({ onView, onEdit, refreshKey, entityType, e
       header: "Suspension Date",
       render: (r) => r.suspensionDate ? format(r.suspensionDate, "dd-MMM-yyyy") : "-",
     },
-  ];
+  ], []);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 
@@ -52,7 +52,9 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       })) as Payment[];
 
       setData(rows);
-      setTotal(rows.length);
+      setTotal(
+        (res as Record<string, any>)?.pagination?.total ?? rows.length
+      );
     } catch (err) {
       console.error("Failed to fetch payments", err);
       setData([]);
@@ -112,7 +114,12 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const columns: Column<Payment>[] = [
+  const formatAmount = (v: unknown) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toFixed(2) : "-";
+  };
+
+  const columns = useMemo<Column<Payment>[]>(() => [
     {
       key: "paymentId",
       header: "ID",
@@ -154,9 +161,7 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       filterType: null,
       render: (r) => (
-        <span className="text-sm">
-          {Number(r.totalAmount)?.toFixed(2) ?? "-"}
-        </span>
+        <span className="text-sm">{formatAmount(r.totalAmount)}</span>
       ),
     },
     {
@@ -165,7 +170,7 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       filterType: null,
       render: (r) => (
-        <span className="text-sm">{Number(r.paid)?.toFixed(2) ?? "-"}</span>
+        <span className="text-sm">{formatAmount(r.paid)}</span>
       ),
     },
     {
@@ -174,9 +179,7 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       sortable: true,
       filterType: null,
       render: (r) => (
-        <span className="text-sm">
-          {Number(r.remaining)?.toFixed(2) ?? "-"}
-        </span>
+        <span className="text-sm">{formatAmount(r.remaining)}</span>
       ),
     },
     {
@@ -187,7 +190,7 @@ export default function PaymentTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) =>
         r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US") : "-",
     },
-  ];
+  ], []);
 
   const handleDelete = async (id: number | undefined) => {
     if (id === undefined) return;

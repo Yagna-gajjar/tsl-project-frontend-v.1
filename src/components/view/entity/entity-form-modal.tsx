@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -77,45 +77,22 @@ export default function EntityFormModal({
       }
     }
 
-    const fetchEntityType = async () => {
-      const res = await getEnumsByCategory("ENTITY TYPE");
-      const data = res?.data as Enums[];
-      setEntityTypeOpt(data);
+    const fetchEnums = async () => {
+      const [typeRes, sectorRes, natureRes, roleRes, statusRes] = await Promise.all([
+        getEnumsByCategory("ENTITY TYPE"),
+        getEnumsByCategory("sector"),
+        getEnumsByCategory("EntityNature"),
+        getEnumsByCategory("EntityRole"),
+        getEnumsByCategory("EntityStatus"),
+      ]);
+      setEntityTypeOpt((typeRes?.data as Enums[]) ?? []);
+      setSectorEnum((sectorRes?.data as Enums[]) ?? []);
+      setEntityNatureEnum((natureRes?.data as Enums[]) ?? []);
+      setEntityRoleEnum((roleRes?.data as Enums[]) ?? []);
+      setEntityStatusEnum((statusRes?.data as Enums[]) ?? []);
     };
 
-    fetchEntityType();
-
-    const fetchSector = async () => {
-      const res = await getEnumsByCategory("sector");
-      const data = res?.data as Enums[];
-      setSectorEnum(data);
-    };
-
-    fetchSector();
-
-    const fetchEntityNature = async () => {
-      const res = await getEnumsByCategory("EntityNature");
-      const data = res?.data as Enums[];
-      setEntityNatureEnum(data);
-    };
-
-    fetchEntityNature();
-
-    const fetchEntityRole = async () => {
-      const res = await getEnumsByCategory("EntityRole");
-      const data = res?.data as Enums[];
-      setEntityRoleEnum(data);
-    };
-
-    fetchEntityRole();
-
-    const fetchEntityStatus = async () => {
-      const res = await getEnumsByCategory("EntityStatus");
-      const data = res?.data as Enums[];
-      setEntityStatusEnum(data);
-    };
-
-    fetchEntityStatus();
+    fetchEnums();
   }, [initialData, isOpen]);
 
   const validate = useCallback(() => {
@@ -176,7 +153,7 @@ export default function EntityFormModal({
     }
   }, [values, initialData, validate, onSave, onClose]);
 
-  const fields: FormFieldConfig<Entity>[] = [
+  const fields = useMemo<FormFieldConfig<Entity>[]>(() => [
     { name: "entityName", label: "Entity Name", type: "text", required: true },
     { name: "regDate", label: "Registration Date", type: "Date" },
     {
@@ -255,7 +232,7 @@ export default function EntityFormModal({
         label: s.value + " (" + s.enumCase + ")",
       })),
     },
-  ];
+  ], [entityTypeOpt, sectorEnum, entityNatureEnum, entityRoleEnum, entityStatusEnum]);
 
   if (!isOpen) return null;
 

@@ -2,52 +2,75 @@ import { toast } from "@/hooks/use-toast"
 import type { User } from "@/types/user"
 import React, {
 	createContext,
+	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
+	useRef,
 	useState,
 } from "react"
 
 interface AuthContextType {
 	user: User | null
 	token: string | null
+	isLoading: boolean
 	login: (user: User, token: string) => void
 	logout: () => void
 }
+
+const TOKEN_STORAGE_KEY = "token"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null)
-	const [token, setToken] = useState<string | null>(() => {
-		return localStorage.getItem("token")
-	})
+	const [token, setToken] = useState<string | null>(() =>
+		localStorage.getItem(TOKEN_STORAGE_KEY)
+	)
+	const [isLoading, setIsLoading] = useState<boolean>(true)
 
-	const redirectToLogin = () => {
+	const isMountedRef = useRef(true)
+
+	const redirectToLogin = useCallback(() => {
 		window.location.replace("/login")
-	}
+	}, [])
 
-	const login = (user: User, token: string) => {
-		setUser(user)
-		setToken(token)
-		localStorage.setItem("token", token)
-	}
+	const login = useCallback((nextUser: User, nextToken: string) => {
+		localStorage.setItem(TOKEN_STORAGE_KEY, nextToken)
+		setUser(nextUser)
+		setToken(nextToken)
+	}, [])
 
-	const logout = () => {
+	const logout = useCallback(() => {
+		localStorage.removeItem(TOKEN_STORAGE_KEY)
 		setUser(null)
 		setToken(null)
-		localStorage.removeItem("token")
 		redirectToLogin()
-	}
+	}, [redirectToLogin])
 
 	useEffect(() => {
-		if (window.location.pathname === "/login") return;
+		isMountedRef.current = true
+		return () => {
+			isMountedRef.current = false
+		}
+	}, [])
+
+	useEffect(() => {
+		if (window.location.pathname === "/login") {
+			setIsLoading(false)
+			return
+		}
+
+		const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY)
+		if (!storedToken) {
+			setIsLoading(false)
+			logout()
+			return
+		}
+
+		const controller = new AbortController()
 
 		const validateToken = async () => {
-			if (!token) {
-				logout()
-				return
-			}
-
 			try {
 				const res = await fetch(
 					`${import.meta.env.VITE_APP_API_URL}/user/validate`,
@@ -55,10 +78,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 						method: "GET",
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: `Bearer ${token}`,
+							Authorization: `Bearer ${storedToken}`,
 						},
+						signal: controller.signal,
 					}
 				)
+
+				if (!isMountedRef.current) return
 
 				if (!res.ok) {
 					logout()
@@ -66,40 +92,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				}
 
 				const data = await res.json()
+				if (!isMountedRef.current) return
+
 				if (data.success) {
 					setUser(data.user)
-
-					if (data.token) {
+					if (data.token && data.token !== storedToken) {
+						localStorage.setItem(TOKEN_STORAGE_KEY, data.token)
 						setToken(data.token)
-						localStorage.setItem("token", data.token)
 					}
 				} else {
 					logout()
 				}
 			} catch (err) {
+				if ((err as { name?: string })?.name === "AbortError") return
+				if (!isMountedRef.current) return
 				toast({
 					title: "Error",
 					description: "Failed to validate session. Please login again.",
 					variant: "destructive",
-				});
+				})
 				logout()
+			} finally {
+				if (isMountedRef.current) setIsLoading(false)
 			}
 		}
+
 		validateToken()
-	}, [token])
 
-	const value = {
-		user,
-		token,
-		login,
-		logout,
-	}
+		return () => {
+			controller.abort()
+		}
+	}, [logout])
 
-	return (
-		<AuthContext.Provider value={value}>
-			{children}
-		</AuthContext.Provider>
+	const value = useMemo<AuthContextType>(
+		() => ({
+			user,
+			token,
+			isLoading,
+			login,
+			logout,
+		}),
+		[user, token, isLoading, login, logout]
 	)
+
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => {

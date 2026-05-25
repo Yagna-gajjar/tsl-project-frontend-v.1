@@ -310,9 +310,13 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
                   className="h-7 text-[11px]"
                   disabled={!bulkRel || Object.keys(selectedMembers).length === 0}
                   onClick={() => {
-                    const next = { ...selectedMembers };
-                    Object.keys(next).forEach(k => next[Number(k)].relationship = bulkRel);
-                    setSelectedMembers(next);
+                    setSelectedMembers(prev => {
+                      const next: Record<number, SelectedMemberConfig> = {};
+                      Object.entries(prev).forEach(([k, v]) => {
+                        next[Number(k)] = { ...v, relationship: bulkRel };
+                      });
+                      return next;
+                    });
                   }}
                 >
                   Apply All

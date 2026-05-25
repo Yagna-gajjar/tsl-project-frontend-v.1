@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { getEntities, deleteEntity } from "@/api/entity.api";
@@ -77,7 +77,7 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
     loadData();
   }, [loadData, refreshKey]);
 
-  const columns: Column<Entity>[] = [
+  const columns = useMemo<Column<Entity>[]>(() => [
     {
       key: "entityName",
       header: "Entity Name",
@@ -110,7 +110,7 @@ export default function EntityTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) =>
         r.suspensionDate ? new Date(r.suspensionDate).toLocaleDateString() : "-",
     },
-  ];
+  ], []);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);

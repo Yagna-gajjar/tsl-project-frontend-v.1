@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormContent } from "@/components/form-modal/form-content";
@@ -210,7 +210,7 @@ export default function FacilityAllotmentFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields: FormFieldConfig<FacilityAllotment>[] = [
+  const fields = useMemo<FormFieldConfig<FacilityAllotment>[]>(() => [
     {
       name: "facilityId",
       label: "Facility",
@@ -259,7 +259,7 @@ export default function FacilityAllotmentFormModal({
       type: "Date",
       required: false,
     },
-  ];
+  ], [facilityOptions, areaOptions, batchOptions]);
 
   if (!isOpen) return null;
 

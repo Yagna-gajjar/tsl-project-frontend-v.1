@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormContent } from "@/components/form-modal/form-content";
@@ -207,7 +207,7 @@ export default function CoachAssignmentFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields: FormFieldConfig<CoachAssignment>[] = [
+  const fields = useMemo<FormFieldConfig<CoachAssignment>[]>(() => [
     // {
     //   name: "academyCoachesId",
     //   label: "Academy",
@@ -254,7 +254,7 @@ export default function CoachAssignmentFormModal({
     { name: "startDate", label: "Start Date", type: "Date", required: false },
     { name: "endDate", label: "End Date", type: "Date", required: false },
     { name: "remarks", label: "Remarks", type: "textarea", required: false },
-  ];
+  ], [coachOptions, batchOptions]);
 
   if (!isOpen) return null;
 

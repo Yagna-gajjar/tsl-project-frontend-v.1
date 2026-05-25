@@ -32,7 +32,6 @@ export function getFinalAmounts(
   const sgstAmount =
     (billingAmount + processingCharge * membersEnrolled + roundedAmount) *
     (sgst / 100);
-  console.log(baseRate, " : costToMember");
 
   const totalDebitAmount =
     baseRate * billingDaysSessions * membersEnrolled +

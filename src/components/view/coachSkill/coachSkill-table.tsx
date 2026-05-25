@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { getCoachSkills, deleteCoachSkill } from "@/api/coachSkill.api";
@@ -122,7 +122,7 @@ export default function CoachSkillTable({
     }
   };
 
-  const columns: Column<CoachSkill>[] = [
+  const columns = useMemo<Column<CoachSkill>[]>(() => [
     {
       header: "Member Name",
       key: "memberFirstName",
@@ -159,7 +159,7 @@ export default function CoachSkillTable({
         row.createdAt instanceof Date ? row.createdAt.toLocaleDateString() : "-",
       sortable: true,
     },
-  ];
+  ], []);
 
   return (
     <div className="w-full">

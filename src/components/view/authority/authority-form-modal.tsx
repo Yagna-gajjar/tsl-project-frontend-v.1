@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -170,51 +170,53 @@ export default function AuthorityFormModal({
   };
 
   // Base fields configuration
-  const fields: FormFieldConfig<Authority>[] = [
-    {
-      name: "accountId",
-      label: "Account",
-      type: "select",
-      required: true,
-      disabled: isEdit, // Only editable in 'Add' mode
-      options: accounts.map((a) => ({
-        label: a.accountName,
-        value: a.accountId,
-      })),
-    },
-    {
-      name: "memberId",
-      label: "Member",
-      type: "select",
-      required: true,
-      disabled: isEdit, // Only editable in 'Add' mode
-      options: members.map((m) => ({
-        label: `${m.memberFirstName} ${m.memberLastName}`,
-        value: m.memberId,
-      })),
-    },
-    {
-      name: "linkingDate",
-      label: "Link Date",
-      type: "Date",
-      disabled: isEdit
-    },
-    {
-      name: "level",
-      label: "Level",
-      type: "number"
-    },
-  ];
+  const fields = useMemo<FormFieldConfig<Authority>[]>(() => {
+    const base: FormFieldConfig<Authority>[] = [
+      {
+        name: "accountId",
+        label: "Account",
+        type: "select",
+        required: true,
+        disabled: isEdit, // Only editable in 'Add' mode
+        options: accounts.map((a) => ({
+          label: a.accountName,
+          value: a.accountId,
+        })),
+      },
+      {
+        name: "memberId",
+        label: "Member",
+        type: "select",
+        required: true,
+        disabled: isEdit, // Only editable in 'Add' mode
+        options: members.map((m) => ({
+          label: `${m.memberFirstName} ${m.memberLastName}`,
+          value: m.memberId,
+        })),
+      },
+      {
+        name: "linkingDate",
+        label: "Link Date",
+        type: "Date",
+        disabled: isEdit
+      },
+      {
+        name: "level",
+        label: "Level",
+        type: "number"
+      },
+    ];
 
-  // Dynamically add de-link date ONLY if we are in Edit mode
-  if (isEdit) {
-    fields.push({
-      name: "dlinkDate",
-      label: "De-link Date",
-      type: "Date",
-      // This field remains editable during Edit
-    });
-  }
+    if (isEdit) {
+      base.push({
+        name: "dlinkDate",
+        label: "De-link Date",
+        type: "Date",
+      });
+    }
+
+    return base;
+  }, [accounts, members, isEdit]);
 
   if (!isOpen) return null;
 
