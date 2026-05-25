@@ -494,12 +494,11 @@ export function EnrollmentFlow() {
 								isOpen={showTransModal}
 								onClose={() => {
 									setShowTransModal(false)
-									setTransactionData(undefined)  
 								}}
-								initialData={emptyReceipt}
+								initialData={transactionData ?? emptyReceipt}
 								setPaymentData={(data) => {
 									setTransactionData(data)
-									setShowTransModal(false)        
+									setShowTransModal(false)
 								}}
 							/>
 						)}

@@ -58,9 +58,9 @@ export const TransactionModalForEnrollment = ({ isOpen, onClose, initialData, se
 				drAccountId: initialData.drAccountId ? String(initialData.drAccountId) : "",
 				typeSerialNo: initialData.typeSerialNo || 0,
 				formReferenceNo: initialData.formReferenceNo || "",
-				printRemarks: "",
-				adminRemarks: "",
-				accApproval: false
+				printRemarks: initialData.printRemarks || "",
+				adminRemarks: initialData.adminRemarks || "",
+				accApproval: initialData.accApproval || false
 			});
 			fetchTransactionAccounts(initialData.drEntityId);
 		}
