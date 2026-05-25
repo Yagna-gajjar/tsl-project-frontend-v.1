@@ -156,7 +156,7 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
       endDate,
       startTime,
       membersEnrolled: activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1,
-      attendingPattern: selectedDays.sort().join(""),
+      attendingPattern: [...selectedDays].sort().join(""),
       attendingPatternDays: selectedDays.length,
       patternDiscount: factor,
       billingRate: Number(rawRate.unitRate) * factor,

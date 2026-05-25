@@ -141,12 +141,10 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 		const row = groupedData[category];
 		const rawRate = getApplicableRateForRow(category);
 		const mapping = getAccountMapping(category, row.masterId);
-		console.log(selectedDays, ' :selectedDays');
 
 		if (!rawRate || !mapping) return;
 
 		const factor = getDiscountFactor(rawRate.minDaysInEnr || 0, rawRate.discountOnDayReduce || 0);
-		console.log(factor);
 
 		setSelectedRate(rawRate);
 
@@ -157,7 +155,7 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 			endDate,
 			startTime,
 			membersEnrolled: activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1,
-			attendingPattern: selectedDays.sort().join(""),
+			attendingPattern: [...selectedDays].sort().join(""),
 			attendingPatternDays: selectedDays.length,
 			patternDiscount: factor,
 			billingRate: Number(rawRate.unitRate) * factor,

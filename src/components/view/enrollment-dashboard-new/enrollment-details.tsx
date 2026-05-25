@@ -48,7 +48,6 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 				debit: number;
 				balance: number;
 			}> = await getTotalBalance(id);
-			console.log(res);
 			if (res.success) {
 
 				setAccountBalance(res.data as {
@@ -58,16 +57,14 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 				});
 			}
 		} catch (err) {
-			console.log(err);
-
 		}
 	}
 
 	useEffect(() => {
-		if (data) {
-			fetchBalance(data?.member?.memberId as number);
+		if (data?.member?.memberId) {
+			fetchBalance(Number(data.member.memberId));
 		}
-	}, [data])
+	}, [data?.member?.memberId])
 
 	return (
 		<motion.div className="sticky top-8 space-y-4">
@@ -83,9 +80,9 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 						: accountBalance?.balance > 0
 							? 'text-emerald-700'
 							: 'text-slate-500'} text-3xl font-bold tracking-tight`}>
-						{new Intl.NumberFormat('en-US', {
+						{new Intl.NumberFormat('en-IN', {
 							style: 'currency',
-							currency: 'USD',
+							currency: 'INR',
 						}).format(accountBalance?.balance)}
 					</h1>}
 			</div>

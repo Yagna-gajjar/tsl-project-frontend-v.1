@@ -53,12 +53,12 @@ export function MemberTab({
 }) {
 
 	const [open, setOpen] = useState(false)
-	const [openShowFamily, _] = useState(false)
+	const [openShowFamily] = useState(false)
 	const [isActionModalOpen, setIsActionModalOpen] = useState(false)
 
 	const [members, setMembers] = useState<Member[]>([])
 	const [selectedMember, setSelectedMember] = useState<Member | null>(data || null)
-	const [familyMembers, setFamilyMembers] = useState<any[]>([])
+	const [_, setFamilyMembers] = useState<any[]>([])
 
 	const [loading, setLoading] = useState(false)
 	const [enrollments, setEnrollments] = useState<Enrollment[]>([])
@@ -66,8 +66,6 @@ export function MemberTab({
 
 	const [searchTerm, setSearchTerm] = useState("")
 	const [statusFilter, setStatusFilter] = useState<string>("all")
-
-	console.log(familyMembers, " Family Members")
 
 	const fetchFamilyMembers = useCallback(async () => {
 		if (!selectedMember?.memberId) return
@@ -133,10 +131,11 @@ export function MemberTab({
 	}
 
 	const filteredEnrollments = useMemo(() => {
+		const q = searchTerm.toLowerCase()
 		return enrollments.filter((enr) => {
 			const matchesSearch =
-				(enr.courseName as string).toLowerCase().includes(searchTerm.toLowerCase()) ||
-				(enr.enrollmentNo as number ?? "").toString().includes(searchTerm)
+				(enr.courseName ?? "").toString().toLowerCase().includes(q) ||
+				(enr.enrollmentNo ?? "").toString().includes(searchTerm)
 			const matchesStatus =
 				statusFilter === "all" || enr.status?.toLowerCase() === statusFilter.toLowerCase()
 			return matchesSearch && matchesStatus
@@ -147,11 +146,17 @@ export function MemberTab({
 		if (data?.memberId) {
 			fetchEnrollmentsOfMember(Number(data.memberId))
 		}
-	}, [data])
+	}, [data?.memberId])
 
 	useEffect(() => {
 		if (openShowFamily) fetchFamilyMembers()
 	}, [openShowFamily, fetchFamilyMembers])
+
+	useEffect(() => {
+		return () => {
+			if (debounceRef.current) clearTimeout(debounceRef.current)
+		}
+	}, [])
 
 	return (
 		<div className="space-y-6 max-w-7xl mx-auto p-1">
