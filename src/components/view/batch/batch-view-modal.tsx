@@ -53,7 +53,7 @@ const fields: FieldConfig<Batch>[] = [
     key: "maxCapacity",
     label: "Max Capacity",
     icon: Users,
-    render: (v) => Number(v) ?? "1"
+    render: (v) => (Number.isFinite(Number(v)) ? Number(v) : 1)
   },
   {
     key: "activeMemberCount",

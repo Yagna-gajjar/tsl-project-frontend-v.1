@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import type { CoachAssignment } from "@/types/coachAssignment";
@@ -25,6 +25,7 @@ export default function CoachAssignmentTable({
 
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<
@@ -54,9 +55,11 @@ export default function CoachAssignmentTable({
       const rows = (Array.isArray(rowsRaw) ? rowsRaw : []) as CoachAssignment[];
 
       setData(rows);
+      setTotal(res?.pagination?.total ?? rows.length);
     } catch (err) {
       console.error("Failed to fetch coach assignments", err);
       setData([]);
+      setTotal(0);
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +110,7 @@ export default function CoachAssignmentTable({
     }
   };
 
-  const columns: Column<CoachAssignment>[] = [
+  const columns = useMemo<Column<CoachAssignment>[]>(() => [
     {
       key: "coachName",
       header: "Coach",
@@ -154,7 +157,7 @@ export default function CoachAssignmentTable({
       render: (r) =>
         r.endDate ? new Date(r.endDate).toLocaleDateString() : "-",
     },
-  ];
+  ], []);
 
   return (
     <div>
@@ -165,7 +168,7 @@ export default function CoachAssignmentTable({
         pagination={{
           page,
           limit,
-          total: data.length,
+          total,
           onPageChange: handlePageChange,
         }}
         onSearchChange={handleSearchChange}

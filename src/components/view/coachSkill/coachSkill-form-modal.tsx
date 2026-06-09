@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
@@ -167,7 +167,7 @@ export default function CoachSkillFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields: FormFieldConfig<CoachSkill>[] = [
+  const fields = useMemo<FormFieldConfig<CoachSkill>[]>(() => [
     {
       name: "memberId",
       label: "Member (Coach)",
@@ -228,7 +228,7 @@ export default function CoachSkillFormModal({
       label: "Services Details",
       type: "textarea",
     },
-  ];
+  ], [memberOptions, activityOptions]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

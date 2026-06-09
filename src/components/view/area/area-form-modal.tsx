@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
@@ -144,7 +144,7 @@ export default function AreaFormModal({
     }
   }, [validate, values, initialData, onSave, onClose]);
 
-  const fields: FormFieldConfig<Area>[] = [
+  const fields = useMemo<FormFieldConfig<Area>[]>(() => [
     { name: "areaName", label: "Area Name", type: "text", required: true },
     {
       name: "facilityId",
@@ -171,7 +171,7 @@ export default function AreaFormModal({
       type: "text",
       required: false,
     },
-  ];
+  ], [facilityFields]);
 
   if (!isOpen) return null;
 

@@ -167,7 +167,7 @@ export function PaymentFormModal({
     [committedAmount, payment]
   );
 
-  const fields: FormFieldConfig<Payment>[] = [
+  const fields = useMemo<FormFieldConfig<Payment>[]>(() => [
     {
       name: "paid",
       label: "Paying Now (₹)",
@@ -211,7 +211,7 @@ export function PaymentFormModal({
         },
       ]
       : []) as any,
-  ];
+  ], [remaining, values.paymentMode]);
 
   if (!isOpen) return null;
 

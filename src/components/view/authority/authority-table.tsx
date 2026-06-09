@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { getAuthorities, deleteAuthority } from "@/api/authority.api";
@@ -26,7 +26,7 @@ export default function AuthorityTable({ onView, onEdit, refreshKey }: Props) {
     loadData();
   }, [loadData, refreshKey]);
 
-  const columns: Column<Authority>[] = [
+  const columns = useMemo<Column<Authority>[]>(() => [
     {
       key: "memberId",
       header: "Member",
@@ -40,7 +40,7 @@ export default function AuthorityTable({ onView, onEdit, refreshKey }: Props) {
         r.linkingDate ? new Date(r.linkingDate).toLocaleDateString() : "-",
     },
     { key: "level", header: "Level" },
-  ];
+  ], []);
 
   return (
     <DataTable

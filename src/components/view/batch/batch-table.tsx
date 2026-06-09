@@ -7,13 +7,31 @@ import { toast } from "@/hooks/use-toast";
 import type { Batch } from "@/types/batch";
 import { format } from "date-fns";
 import { ExternalLink } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
   onView?: (row: Batch) => void;
   onEdit?: (row: Batch) => void;
   refreshKey?: number;
+};
+
+const WEEK_CODE_MAP: Record<string, string> = {
+  "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun",
+};
+
+const formatTimeDisplay = (t: string | null | undefined): string => {
+  if (!t) return "-";
+  return t.substring(0, 5);
+};
+
+const weekCodeToNames = (code: string | null | undefined): string => {
+  if (!code) return "-";
+  const names: string[] = [];
+  for (const ch of String(code)) {
+    if (WEEK_CODE_MAP[ch]) names.push(WEEK_CODE_MAP[ch]);
+  }
+  return names.length > 0 ? names.join(", ") : String(code);
 };
 
 export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
@@ -28,23 +46,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
   const navigate = useNavigate();
 
-  const formatTimeDisplay = (t: string | null | undefined): string => {
-    if (!t) return "-";
-    return t.substring(0, 5);
-  };
-
   const handlePageChange = (p: number) => setPage(p);
-  const weekCodeToNames = (code: string | null | undefined): string => {
-    if (!code) return "-";
-    const map: Record<string, string> = {
-      "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun",
-    };
-    const names: string[] = [];
-    for (const ch of String(code)) {
-      if (map[ch]) names.push(map[ch]);
-    }
-    return names.length > 0 ? names.join(", ") : String(code);
-  };
 
   const loadData = useCallback(async () => {
     try {
@@ -127,7 +129,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
     }
   };
 
-  const columns: Column<Batch>[] = [
+  const columns = useMemo<Column<Batch>[]>(() => [
     {
       key: "members",
       header: "Action",
@@ -228,7 +230,7 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
         </span>
       ),
     },
-  ];
+  ], [navigate]);
 
   return (
     <div className="space-y-4">

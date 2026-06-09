@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { format } from "date-fns";
@@ -66,7 +66,7 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
     loadData();
   }, [loadData, refreshKey]);
 
-  const columns: Column<Facility>[] = [
+  const columns = useMemo<Column<Facility>[]>(() => [
     {
       key: "facilityName",
       header: "Facility Name",
@@ -113,7 +113,7 @@ export default function FacilityTable({ onView, onEdit, refreshKey }: Props) {
       filterType: null,
       render: (r) => (r.createdAt ? format(r.createdAt, "dd MMM yyyy") : "-"),
     },
-  ];
+  ], []);
 
   const handleSearchChange = (q: string) => {
     setSearch(q);

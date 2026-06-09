@@ -65,7 +65,7 @@ export function ConfirmationProvider({ children }: { children: React.ReactNode }
 	return (
 		<ConfirmationContext.Provider value={{ confirm }}>
 			{children}
-			<AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+			<AlertDialog open={isOpen} onOpenChange={(open) => { if (!open) handleCancel() }}>
 				<AlertDialogContent className="z-[60]">
 					<AlertDialogHeader>
 						<AlertDialogTitle>{options.title}</AlertDialogTitle>

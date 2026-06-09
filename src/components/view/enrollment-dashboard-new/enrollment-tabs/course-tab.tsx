@@ -78,13 +78,18 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		return age
 	}, [member])
 
+	const visibleCourses = useMemo(
+		() => courses.filter((c) => c.activityName?.trim().toLowerCase() !== "freezer"),
+		[courses]
+	)
+
 	const availableEntities = useMemo(() => {
 		const entityMap = new Map()
-		courses.forEach((c) => {
+		visibleCourses.forEach((c) => {
 			if (c.entityId && c.entityName) entityMap.set(c.entityId, c.entityName)
 		})
 		return Array.from(entityMap.entries()).map(([id, name]) => ({ id, name }))
-	}, [courses])
+	}, [visibleCourses])
 
 	const handleSearchDebounced = (value: string) => {
 		if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
@@ -246,7 +251,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 
 				<Virtuoso
 					style={{ flex: 1 }}
-					data={courses}
+					data={visibleCourses}
 					itemContent={(_, course) => {
 						const isSelected = selectedId === course.courseId
 						const isAgeEligible = memberAge
@@ -360,7 +365,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 					}}
 				/>
 
-				{!loading && courses.length === 0 && (
+				{!loading && visibleCourses.length === 0 && (
 					<div className="flex-1 flex items-center justify-center text-muted-foreground text-sm py-16">
 						No courses found.
 					</div>

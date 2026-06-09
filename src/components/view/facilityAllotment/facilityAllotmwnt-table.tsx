@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import type { FacilityAllotment } from "@/types/facilityAllotment";
@@ -118,7 +118,7 @@ export default function FacilityAllotmentTable({
     }
   };
 
-  const columns: Column<FacilityAllotment>[] = [
+  const columns = useMemo<Column<FacilityAllotment>[]>(() => [
     {
       key: "facilityAllotmentId",
       header: "ID",
@@ -155,7 +155,7 @@ export default function FacilityAllotmentTable({
       key: "level",
       header: "Level",
       sortable: true,
-      render: (r) => <span>{r.level ?? r.level ?? 1}</span>,
+      render: (r) => <span>{r.level ?? 1}</span>,
     },
     {
       key: "assignmentDate",
@@ -185,7 +185,7 @@ export default function FacilityAllotmentTable({
       render: (r) =>
         r.createdAt ? new Date(r.createdAt).toLocaleString() : "-",
     },
-  ];
+  ], []);
 
   return (
     <div>

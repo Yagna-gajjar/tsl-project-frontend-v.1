@@ -132,6 +132,8 @@ const initialFormState: CourseFormState = {
   shares: defaultShares,
 };
 
+const TAX_SHARE_TYPES = ["CGST", "SGST"];
+
 type Props = {
   isOpen: boolean;
   initialData?: CourseFormState;
@@ -282,7 +284,7 @@ export default function CourseFormModal({
 
   useEffect(() => {
     loadMasterData();
-  }, [loadMasterData, initialData]);
+  }, [loadMasterData]);
 
   useEffect(() => {
     if (isOpen && initialData?.course?.courseId) {
@@ -559,8 +561,6 @@ export default function CourseFormModal({
       return copy;
     });
   };
-
-  const TAX_SHARE_TYPES = ["CGST", "SGST"];
 
   const handleShareChange = (
     index: number,

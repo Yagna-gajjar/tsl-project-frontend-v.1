@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -154,7 +154,7 @@ export default function AccountMemberFormModal({
     }
   };
 
-  const fields: FormFieldConfig<AccountMember>[] = [
+  const fields = useMemo<FormFieldConfig<AccountMember>[]>(() => [
     {
       name: "memberId",
       label: "Member",
@@ -196,7 +196,7 @@ export default function AccountMemberFormModal({
       label: "Delink Date",
       type: "Date",
     },
-  ];
+  ], [memberOptions, accountOptions]);
 
   if (!isOpen) return null;
 

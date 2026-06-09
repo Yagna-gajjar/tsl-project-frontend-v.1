@@ -28,7 +28,13 @@ export function ThemeProvider({ children, defaultTheme = "system", ...props }: T
 	useEffect(() => {
 		const root = window.document.documentElement
 		root.classList.remove("light", "dark")
-		root.classList.add(theme)
+		const applied =
+			theme === "system"
+				? window.matchMedia("(prefers-color-scheme: dark)").matches
+					? "dark"
+					: "light"
+				: theme
+		root.classList.add(applied)
 	}, [theme])
 
 	const toggleTheme = () => {

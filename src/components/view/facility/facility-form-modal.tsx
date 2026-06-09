@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -29,7 +29,7 @@ export function FacilityFormModal({
 }: Props) {
   const isEdit = Boolean(initialData && initialData.facilityId);
 
-  const empty: Partial<Facility> = {
+  const empty = useMemo<Partial<Facility>>(() => ({
     facilityName: initialData?.facilityName ?? "",
     facilityType: initialData?.facilityType ?? "",
     facilityDimension: initialData?.facilityDimension ?? "",
@@ -39,7 +39,7 @@ export function FacilityFormModal({
     recreationCapacity: initialData?.recreationCapacity ?? undefined,
     eventCapacity: initialData?.eventCapacity ?? undefined,
     level: initialData?.level ?? undefined,
-  };
+  }), [initialData]);
 
   const [values, setValues] = useState<Partial<Facility>>(empty);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,7 +148,7 @@ export function FacilityFormModal({
     }
   }, [values, isEdit, initialData, onSaved, onClose, validate]);
 
-  const fields = [
+  const fields = useMemo(() => [
     {
       name: "facilityName",
       label: "Facility Name",
@@ -196,7 +196,7 @@ export function FacilityFormModal({
       label: "Description",
       type: "textarea",
     },
-  ] as any;
+  ] as any, []);
 
   return (
     <Dialog

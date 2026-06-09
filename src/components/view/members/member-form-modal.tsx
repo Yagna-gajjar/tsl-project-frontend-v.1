@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -54,8 +54,8 @@ export function MemberFormModal({
   layout = "grid",
 }: Props) {
   const isEdit = Boolean(initialData && initialData.memberId);
-  const empty: MemberFormState = {
-    regDate: initialData?.regDate ?? format(new Date(), "yyy-MM-dd"),
+  const empty = useMemo<MemberFormState>(() => ({
+    regDate: initialData?.regDate ?? format(new Date(), "yyyy-MM-dd"),
     suspensionDate: initialData?.suspensionDate ?? "",
     memberFirstName: initialData?.memberFirstName ?? "",
     memberMiddleName: initialData?.memberMiddleName ?? "",
@@ -83,7 +83,7 @@ export function MemberFormModal({
     state: initialData?.state ?? "",
     country: initialData?.country ?? "India",
     pinCode: initialData?.pinCode ?? "",
-  };
+  }), [initialData]);
 
   const [values, setValues] = useState<MemberFormState>(empty);
   const [loading] = useState(false);
@@ -177,7 +177,7 @@ export function MemberFormModal({
     });
   };
 
-  const fields: FormFieldConfig<Member>[] = [
+  const fields = useMemo<FormFieldConfig<Member>[]>(() => [
 
     {
       name: "memberFirstName",
@@ -322,7 +322,7 @@ export function MemberFormModal({
       ],
     },
     { name: "remarks", label: "Remarks", type: "text" },
-  ];
+  ], [personalStatusEnum, personalStatusSectorEnum, qualificationEnum, idProofTypeEnum, transportModeEnum, maritialStatusEnum, adminInstructionEnum]);
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
@@ -405,6 +405,8 @@ export function MemberFormModal({
             description: "Can't Add Member, please define",
             variant: "destructive",
           });
+          setIsSubmitting(false);
+          return;
         }
 
         res = await createMember(payload as Member);

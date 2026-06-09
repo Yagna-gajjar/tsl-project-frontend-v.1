@@ -58,8 +58,6 @@ export function BatchTab({ data, onUpdate }: BatchTabProps) {
 			setIsLoading(true);
 			try {
 				const res = await getBatch({ ...apiParams, limit: 1000 });
-				console.log(res, " : allll batches");
-
 				if (res?.success) setBatches(res.data || []);
 			} catch (err) {
 				toast({ title: "Error", description: "Failed to fetch batches", variant: "destructive" });

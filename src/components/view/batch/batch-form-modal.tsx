@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
@@ -27,6 +27,36 @@ type Props = {
   layout?: "grid" | "list";
 };
 
+// --- Helpers ---
+const NUMBER_TO_WEEK: Record<string, string> = {
+  "1": "monday", "2": "tuesday", "3": "wednesday",
+  "4": "thursday", "5": "friday", "6": "saturday", "7": "sunday",
+};
+
+const WEEK_TO_NUMBER: Record<string, number> = {
+  monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7,
+};
+
+const numberToWeekArray = (code?: any): string[] => {
+  if (!code) return [];
+  return String(code).split("").map(ch => NUMBER_TO_WEEK[ch]).filter(Boolean);
+};
+
+const weekArrayToNumber = (arr?: string[]): number | undefined => {
+  if (!arr?.length) return undefined;
+  const nums = arr.map(k => WEEK_TO_NUMBER[k.toLowerCase()]).filter(n => !!n).sort();
+  return Number(nums.join(""));
+};
+
+const addMinutesToTime = (t: string, mins: number): string | undefined => {
+  if (!t || isNaN(mins)) return undefined;
+  const [hh, mm] = t.split(":").map(Number);
+  let total = hh * 60 + mm + mins;
+  const dayMinutes = 1440;
+  total = ((total % dayMinutes) + dayMinutes) % dayMinutes;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
 export function BatchFormModal({
   isOpen,
   onClose,
@@ -34,34 +64,6 @@ export function BatchFormModal({
   onSaved,
   layout = "grid",
 }: Props) {
-  // --- Helpers ---
-  const numberToWeekArray = (code?: any): string[] => {
-    if (!code) return [];
-    const s = String(code);
-    const map: Record<string, string> = {
-      "1": "monday", "2": "tuesday", "3": "wednesday",
-      "4": "thursday", "5": "friday", "6": "saturday", "7": "sunday",
-    };
-    return s.split("").map(ch => map[ch]).filter(Boolean);
-  };
-
-  const weekArrayToNumber = (arr?: string[]): number | undefined => {
-    if (!arr?.length) return undefined;
-    const map: Record<string, number> = {
-      monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7,
-    };
-    const nums = arr.map(k => map[k.toLowerCase()]).filter(n => !!n).sort();
-    return Number(nums.join(""));
-  };
-
-  const addMinutesToTime = (t: string, mins: number): string | undefined => {
-    if (!t || isNaN(mins)) return undefined;
-    const [hh, mm] = t.split(":").map(Number);
-    let total = hh * 60 + mm + mins;
-    const dayMinutes = 1440;
-    total = ((total % dayMinutes) + dayMinutes) % dayMinutes;
-    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-  };
 
   // --- Options State ---
   const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
@@ -197,7 +199,7 @@ export function BatchFormModal({
     }
   };
 
-  const fields = [
+  const fields = useMemo(() => [
     { name: "batchName", label: "Batch Name", type: "text", required: true },
     {
       name: "batchType",
@@ -258,7 +260,7 @@ export function BatchFormModal({
       options: [{ label: "Active", value: "active" }, { label: "Suspended", value: "suspended" }],
       required: true
     }
-  ];
+  ], [batchTypeOptions, entityOptions, activityOptions, courses, membershipOptions]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>

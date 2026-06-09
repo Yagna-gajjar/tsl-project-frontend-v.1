@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 
@@ -141,7 +141,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
     }
   };
 
-  const columns: Column<Area>[] = [
+  const columns = useMemo<Column<Area>[]>(() => [
     {
       key: "areaName",
       header: "Area Name",
@@ -189,7 +189,7 @@ export default function AreaTable({ onView, onEdit, refreshKey }: Props) {
       render: (r) =>
         r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US") : "-",
     },
-  ];
+  ], []);
 
   return (
     <div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { Badge } from "@/components/ui/badge";
@@ -246,6 +246,9 @@ export default function MemberTable({
   };
 
   const closeUploadModal = () => {
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setUploadModalOpen(false);
     setSelectedMember(null);
     setSelectedFile(null);
@@ -255,6 +258,9 @@ export default function MemberTable({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
       setSelectedFile(file);
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
@@ -312,7 +318,7 @@ export default function MemberTable({
     return Array.isArray(res?.data) ? res.data : [];
   };
 
-  const columns: Column<Member>[] = [
+  const columns = useMemo<Column<Member>[]>(() => [
     {
       key: "avatar",
       header: "Avatar",
@@ -409,7 +415,7 @@ export default function MemberTable({
       render: (row) =>
         row.createdAt ? format(row?.createdAt, "dd MMM yyyy") || "-" : "-",
     },
-  ];
+  ], []);
 
   return (
     <div className="relative">
