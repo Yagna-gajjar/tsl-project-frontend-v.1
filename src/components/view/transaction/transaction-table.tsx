@@ -174,10 +174,11 @@ export default function TransactionTable({ onView, onEdit, onPrint, refreshKey }
 					setDeleteId(id as number);
 					setDeleteOpen(true);
 				}}
-				onPrint={onPrint ? (row) => {
-					onPrint(row);
-					document?.querySelector('#depositSlip')?.scrollIntoView({ behavior: 'smooth' });
-				} : undefined}
+				onPrint={onPrint}
+				// onPrint={onPrint ? (row) => {
+				// 	onPrint(row);
+				// 	document?.querySelector('#depositSlip')?.scrollIntoView({ behavior: 'smooth' });
+				// } : undefined}
 				idKey="transactionId"
 				exportFileName="Transactions"
 				onExport={async () => data}

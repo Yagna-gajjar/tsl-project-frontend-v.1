@@ -5,6 +5,7 @@ import { ModalContent } from "./modal-content"
 import type { ViewModalProps, ViewModalState, FieldConfig } from "./types"
 import { motion, AnimatePresence } from "framer-motion"
 
+
 export function ViewModal<T extends Record<string, any>>({
   isOpen,
   onClose,

@@ -215,6 +215,8 @@ export function EnrollmentFlow() {
 	}
 
 	const handleCreateEnrollment = async () => {
+		console.log(enrollmentData, " : enrollmentData?.membershipId");
+
 		const enrollmentPayload = {
 			firstEnrollmentId: enrollmentData?.firstEnrollmentId ?? null,
 			enrollmentNo: enrollmentData?.enrollmentNo ?? null,

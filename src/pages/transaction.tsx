@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Upload } from "lucide-react";
 import type { Transaction } from "@/types/transaction";
 import TransactionTable from "@/components/view/transaction/transaction-table";
@@ -7,10 +7,16 @@ import TransactionViewModal from "@/components/view/transaction/transaction-view
 import TransactionExcelUpload from "@/components/view/transaction/transaction-excel-upload";
 import { Button } from "@/components/ui/button";
 import DipositeSlip from "@/components/view/transaction/DepositeSlip";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AnimatePresence } from "framer-motion";
+
 
 export default function TransactionPage() {
 	const [viewOpen, setViewOpen] = useState(false);
 	const [formOpen, setFormOpen] = useState(false);
+	const [slipOpen, setSlipOpen] = useState(false);
 	const [excelOpen, setExcelOpen] = useState(false);
 	const [editRow, setEditRow] = useState<Transaction>();
 	const [viewId, setViewId] = useState<number>();
@@ -21,9 +27,40 @@ export default function TransactionPage() {
 		setRefreshKey((prev) => prev + 1);
 	};
 
-	const openView = (row: Transaction) => {
-		setViewId(row.transactionId);
-		setViewOpen(true);
+	const tableRef = useRef(null);
+
+	const downloadPDF = async (row?: Transaction) => {
+		setPrintRow(row);
+
+		await new Promise(resolve => setTimeout(resolve, 300));
+
+		const element = tableRef.current;
+
+		if (!element) {
+			console.log("Element not found");
+			return;
+		}
+
+		const canvas = await html2canvas(element as any, {
+			scale: 2,
+			useCORS: true,
+			backgroundColor: "#ffffff"
+		});
+		console.log(canvas, " : canvas");
+
+
+		const imgData = canvas.toDataURL("image/png");
+		const pdf = new jsPDF("p", "mm", "a4");
+
+		const pageWidth = pdf.internal.pageSize.getWidth();
+
+		const margin = 10;
+		const usableWidth = pageWidth - margin * 2;
+		const imgHeight = (canvas.height * usableWidth) / canvas.width;
+
+		pdf.addImage(imgData, "PNG", margin, margin, usableWidth, imgHeight);
+		pdf.save("DepositSlip.pdf");
+
 	};
 
 	const openForm = (row?: Transaction) => {
@@ -31,6 +68,10 @@ export default function TransactionPage() {
 		setFormOpen(true);
 	};
 
+	const openSlip = (row?: Transaction) => {
+		setPrintRow(row);
+		setSlipOpen(true);
+	}
 	const handleSaved = () => {
 		bumpRefresh();
 	};
@@ -62,9 +103,9 @@ export default function TransactionPage() {
 
 			<div className="rounded-lg">
 				<TransactionTable
-					onView={openView}
+					onView={openSlip}
 					onEdit={openForm}
-					onPrint={setPrintRow}
+					onPrint={downloadPDF}
 					refreshKey={refreshKey}
 				/>
 			</div>
@@ -93,7 +134,40 @@ export default function TransactionPage() {
 				onClose={() => setExcelOpen(false)}
 				onSuccess={handleSaved}
 			/>
-			<DipositeSlip printRow={printRow} />
+			{slipOpen ? <Dialog
+				open={slipOpen}
+				onOpenChange={() => {
+					if (slipOpen) {
+						console.log(slipOpen);
+						
+						setSlipOpen(false)
+					}
+				}}>
+				<AnimatePresence>
+					<DialogContent className="max-w-[80%] max-h-[90%] p-0 border-border/50 shadow-2xl backdrop-blur-lg rounded-xl overflow-y-scroll">
+						<DipositeSlip
+							printRow={printRow}
+							tableRef={tableRef}
+							downloadPDF={downloadPDF}
+						/>
+					</DialogContent>
+				</AnimatePresence>
+			</Dialog> :
+				<div
+					style={{
+						position: "absolute",
+						zIndex: -99,
+						top: 0,
+					}}
+				>
+					<div>
+						<DipositeSlip
+							printRow={printRow}
+							tableRef={tableRef}
+							downloadPDF={downloadPDF}
+						/>
+					</div>
+				</div>}
 		</div>
 	);
 }
