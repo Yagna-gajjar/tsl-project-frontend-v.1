@@ -51,6 +51,21 @@ export function signup(payload: User): Promise<Response<User>> {
 	});
 }
 
+export interface ChangePasswordPayload {
+	currentPassword: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
+export function changePassword(
+	payload: ChangePasswordPayload
+): Promise<Response> {
+	return request<Response>(`${USER_BASE}/change-password`, {
+		method: "POST",
+		body: JSON.stringify(payload),
+	});
+}
+
 export function login(payload: LoginPayload): Promise<LoginResponseData> {
 	return request<LoginResponseData>(`${USER_BASE}/login`, {
 		method: "POST",

@@ -51,6 +51,7 @@ import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrol
 import SessionBooking from "./pages/SessionBooking";
 import ChangeEnrollment from "./pages/Change";
 import Ledger from "./pages/ledger";
+import ProfilePage from "./pages/profile";
 import TrialBalancePage from "./components/view/transaction/transaction-trialbalance";
 export default function App() {
   return (
@@ -65,6 +66,7 @@ export default function App() {
               <Route path="/" element={<Layout />}>
                 <Route index element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route
                   path="/enrollment-dashboard"
                   element={<EnrollmentFlow />}

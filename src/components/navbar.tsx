@@ -347,7 +347,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                       {user?.username}
                     </span>
                   </div>
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
