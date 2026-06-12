@@ -14,14 +14,11 @@ import {
   CheckCircle2,
   type LucideIcon
 } from 'lucide-react';
-import { login as userLogin, type LoginResponseData } from "@/api/user.api";
-
-type UserRole = "staff" | "admin" | "superadmin";
+import { login as userLogin, getDatabases, type LoginResponseData } from "@/api/user.api";
 
 interface LoginFormData {
   username: string;
   password: string;
-  role: UserRole;
 }
 
 interface InputFieldProps {
@@ -88,22 +85,15 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<LoginFormData>({
     username: '',
-    password: '',
-    role: 'staff'
+    password: ''
   });
   const [showDbModal, setShowDbModal] = useState(false);
   const [tempAuth, setTempAuth] = useState<{ user: any; token: string } | null>(null);
-  const [databases] = useState(['tsl-project', 'tsl-beta', 'tsl-alpha']);
-
-  const roles: UserRole[] = ['staff', 'admin', 'superadmin'];
+  const [databases, setDatabases] = useState<string[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleRoleChange = (role: UserRole) => {
-    setFormData(prev => ({ ...prev, role }));
   };
 
   const handleDbSelect = (dbName: string) => {
@@ -138,13 +128,28 @@ export default function LoginForm() {
       if (response.success) {
         const { user, token }: LoginResponseData = response;
 
-        if (user.role === 'admin' || user.role === 'superadmin') {
-          setTempAuth({ user, token });
-          setShowDbModal(true);
-          setIsLoading(false);
+        if (user.role !== 'staff') {
+          const dbResponse = await getDatabases(token);
+          if (dbResponse.success && Array.isArray(dbResponse.data) && dbResponse.data.length > 0) {
+            setDatabases(dbResponse.data);
+            setTempAuth({ user, token });
+            setShowDbModal(true);
+            setIsLoading(false);
+          } else {
+            // Could not load the database list: log in on the default database
+            localStorage.removeItem("selected_db_name");
+            login(user, token);
+            toast({
+              title: "Database list unavailable",
+              description: "Logged in using the default database.",
+              variant: "destructive",
+            });
+            navigate("/dashboard");
+          }
         } else {
+          // staff: always pinned to the default tsl-project database
+          localStorage.setItem("selected_db_name", "tsl-project");
           login(user, token);
-          localStorage.setItem("selected_db_name", "public");
           toast({
             title: "Success",
             description: "Welcome back! Login successful.",
@@ -198,27 +203,6 @@ export default function LoginForm() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                Select Role
-              </label>
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                {roles.map((role) => (
-                  <button
-                    key={role}
-                    type="button"
-                    onClick={() => handleRoleChange(role)}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all duration-200 ${formData.role === role
-                        ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-                      }`}
-                  >
-                    {role === "superadmin" ? "Super Admin" : role}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <InputField
               label="Username / Email"
               name="username"
@@ -320,8 +304,8 @@ export default function LoginForm() {
                 <div className="h-14 w-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-600/30">
                   <Database size={28} />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Switch Workspace</h2>
-                <p className="text-slate-500 text-sm mt-1">Select an experiment or create a new one.</p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Select Database</h2>
+                <p className="text-slate-500 text-sm mt-1">All operations in this session will run on the selected database.</p>
               </div>
 
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">

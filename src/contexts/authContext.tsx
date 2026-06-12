@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	const logout = useCallback(() => {
 		localStorage.removeItem(TOKEN_STORAGE_KEY)
+		localStorage.removeItem("selected_db_name")
 		setUser(null)
 		setToken(null)
 		redirectToLogin()

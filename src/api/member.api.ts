@@ -131,11 +131,21 @@ export function deleteMember(id: number): Promise<Response<Member>> {
 	})
 }
 
+function dbHeaders(): Record<string, string> {
+	const token = localStorage.getItem("token");
+	const selectedDb = localStorage.getItem("selected_db_name");
+	return {
+		...(token ? { authorization: `Bearer ${token}` } : {}),
+		...(selectedDb ? { "x-db-name": selectedDb } : {}),
+	};
+}
+
 export async function saveUrlToMember(formData: FormData): Promise<Response> {
 	try {
 		const res = await fetch(`${MEMBER_BASE}/avatar`, {
 			method: "POST",
 			body: formData,
+			headers: dbHeaders(),
 		});
 
 		const data = await res.json();
@@ -164,7 +174,8 @@ export async function deleteAvatar(memberId: number, avatar: string): Promise<Re
 				avatar: avatar
 			}),
 			headers: {
-				"Content-Type": "application/json"
+				"Content-Type": "application/json",
+				...dbHeaders(),
 			}
 		})
 			.then((res) => res.json());

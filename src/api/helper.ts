@@ -8,14 +8,23 @@ export function toQueryString(q: Record<string, any>) {
     return s ? `?${s}` : '';
 }
 
+export function getSelectedDb(): string | null {
+    return localStorage.getItem('selected_db_name');
+}
+
 export async function request<T>(url: string, options?: RequestInit, token?: string): Promise<T> {
     try {
+        const authToken = token ?? localStorage.getItem('token');
+        const selectedDb = getSelectedDb();
+
         const res = await fetch(url, {
+            ...options,
             headers: {
                 'Content-Type': 'application/json',
-                "authorization": `Bearer ${token}`
+                ...(authToken ? { "authorization": `Bearer ${authToken}` } : {}),
+                ...(selectedDb ? { 'x-db-name': selectedDb } : {}),
+                ...(options?.headers as Record<string, string> | undefined),
             },
-            ...options,
         })
 
         const data = (await res.json()) as T

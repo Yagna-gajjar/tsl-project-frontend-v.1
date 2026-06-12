@@ -58,6 +58,12 @@ export function login(payload: LoginPayload): Promise<LoginResponseData> {
 	});
 }
 
+export function getDatabases(token: string): Promise<Response<string[]>> {
+	return request<Response<string[]>>(`${USER_BASE}/databases`, {
+		method: "GET",
+	}, token);
+}
+
 export function validateToken(): Promise<LoginResponseData> {
 	return request<LoginResponseData>(`${USER_BASE}/validate`, {
 		method: "GET",
