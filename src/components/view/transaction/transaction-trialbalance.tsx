@@ -156,16 +156,31 @@ export default function AccountsPage() {
   const [apiData, setApiData] = useState<ApiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hideZero, setHideZero] = useState(false);
+  const [hideZero, setHideZero] = useState(true);
   const [hideNoTx, setHideNoTx] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res: Response<any> = await getTrialBalance(hideZero, hideNoTx);
+      const res: Response<ApiData> = await getTrialBalance(hideZero, hideNoTx);
+
       if (!res.success) throw new Error("API returned success: false");
-      setApiData(res?.data);
+
+      const totals: Account = {
+        accountId: 0,
+        accountName: "Total",
+        debit: String(res.data?.totalDebit),
+        credit: String(res.data?.totalCredit),
+        balance: Number(res.data?.totalDebit) - Number(res.data?.totalCredit),
+      };
+
+      setApiData({
+        accounts: [...(res.data?.accounts ?? []), totals],
+        totalDebit: res.data?.totalDebit ?? 0,
+        totalCredit: res.data?.totalCredit ?? 0,
+        isBalanced: res.data?.isBalanced ?? false,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load accounts");
     } finally {
@@ -192,7 +207,6 @@ export default function AccountsPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <motion.div
-          animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
           <Loader2 size={28} className="text-blue-600" />
@@ -225,8 +239,6 @@ export default function AccountsPage() {
 
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-between"
       >
         <div>

@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Card } from "@/components/ui/card"
 import { getEnumsByCategory } from "@/api/enums.api"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const WEEK_DAYS = [
 	{ label: "Mon", value: "1" },
@@ -58,7 +59,7 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 	)
 	const [casualAccount, setCasualAccount] = useState<number | null>(null);
 	const [walkingAccount, setWalkingAccount] = useState<number | null>(null);
-
+	const [showEligible, setShowEligible] = useState<boolean>(false);
 	const actualDaysInWeek = selectedDays.length;
 	const selectedCourseDayInWeek = allowedPattern.length;
 
@@ -213,6 +214,16 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 						}}
 					/>
 				</div>
+				<div className="flex items-center gap-2">
+					<Checkbox
+						id="hideZero"
+						checked={showEligible}
+						onCheckedChange={(v) => setShowEligible(!!v)}
+					/>
+					<Label htmlFor="hideZero" className="text-sm cursor-pointer select-none">
+						Show Non Eligible Course Rate
+					</Label>
+				</div>
 				{activeCourse?.chargingPattern?.toLowerCase() === "school" && <div className="space-y-1.5">
 					<Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1"><UsersIcon size={12} /> Members</Label>
 					<Input type="number" className="h-10 text-xs" disabled={activeCourse?.chargingPattern?.toLowerCase() !== "school"} value={membersEnrolled} onChange={(e) => setMembersEnrolled(Number(e.target.value))} />
@@ -262,7 +273,7 @@ export function CourseRateTab({ data, onUpdate }: CourseRateTabProps) {
 									const factor = rawRate ? getDiscountFactor(rawRate.minDaysInEnr || 0, rawRate.discountOnDayReduce || 0) : 1;
 									const finalTotal = rawRate ? (Number(rawRate.unitRate) * factor * billingDaysSessions * (activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1)) : 0;
 									return (
-										<TableRow key={category} className={cn("group transition-none", isSelected && "bg-primary/5", !isEligible && "opacity-40 grayscale-[0.8]")}>
+										(showEligible || isEligible) && <TableRow key={category} className={cn("group transition-none", isSelected && "bg-primary/5", !isEligible && "opacity-40 grayscale-[0.8]")}>
 											<TableCell className="font-bold border-b border-r text-sm px-4">
 												<div className="flex items-center gap-2">
 													{!isEligible && <Lock className="w-3 h-3 text-muted-foreground" />}
