@@ -33,13 +33,11 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { TransactionModalForEnrollment } from "./Transaction-modal-for-enrollment"
 import type { Transaction } from "@/types/transaction"
 import { ChangeCourseRateTab } from "./enrollment-tabs/change-course-rate-tab"
-import { process1 } from "@/helpers/enrollment-change/process1"
+import { process1, type Process1Result } from "@/helpers/enrollment-change/process1"
 import { getCourseById } from "@/api/course.api"
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"] as const
 type TabValue = (typeof TAB_ORDER)[number]
-
-const SIDEBAR_WIDTH = "lg:w-[180px] xl:w-[250px]";
 
 const tabLabels: Record<TabValue, string> = {
 	member: "Member",
@@ -55,14 +53,16 @@ export function EnrollmentFlow() {
 	const location = useLocation()
 
 	const [currentTabIndex, setCurrentTabIndex] = useState(0);
-	const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>();
-	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set());
-	const [changeVersions, setChangeVersions] = useState<{} | any>();
-	const navigate = useNavigate();
-	const [showTransModal, setShowTransModal] = useState(false);
 	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue;
+	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set());
+	
+	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>();
+	const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+	const [changeVersions, setChangeVersions] = useState<Process1Result>();
+	const [showTransModal, setShowTransModal] = useState(false);
 	const [transactionData, setTransactionData] = useState<Transaction>();
+	
+	const navigate = useNavigate();
 
 	const emptyReceipt = useMemo(() => ({
 		transactionType: "receipt",
@@ -108,6 +108,7 @@ export function EnrollmentFlow() {
 			}
 		}
 	}, [location.state])
+
 	const canProceedToNext = useMemo(() => {
 		if (completedTabs.has(currentTabValue)) return true;
 
@@ -181,7 +182,7 @@ export function EnrollmentFlow() {
 								activity: courseRes.data,
 								actionType: "CHANGE_COURSE",
 								enrollmentData: location.state.enrollment,
-								passedValues: changeVersions.values,
+								passedValues: changeVersions?.values,
 								passedModification: changeVersions?.modify,
 								passedNewVersion: changeVersions?.newVersion,
 								passedNewEnrollment: enrollmentData,
@@ -215,8 +216,6 @@ export function EnrollmentFlow() {
 	}
 
 	const handleCreateEnrollment = async () => {
-		console.log(enrollmentData, " : enrollmentData?.membershipId");
-
 		const enrollmentPayload = {
 			firstEnrollmentId: enrollmentData?.firstEnrollmentId ?? null,
 			enrollmentNo: enrollmentData?.enrollmentNo ?? null,
@@ -392,7 +391,6 @@ export function EnrollmentFlow() {
 									<TabsContent value="member" className="mt-0 h-full">
 										<MemberTab
 											data={enrollmentData?.member}
-											// onUpdate={(data) => updateEnrollmentData({ member: data }, "member")}
 											onUpdate={(data) => updateEnrollmentData(data, "member")}
 										/>
 									</TabsContent>
@@ -530,14 +528,14 @@ export function EnrollmentFlow() {
 				</motion.div>
 			</div>
 
-			<div className={`w-full shrink-0 transition-all duration-300 ${SIDEBAR_WIDTH}`}>
+			<div className={`w-full shrink-0 transition-all duration-300 lg:w-[180px] xl:w-[250px]`}>
 				<motion.div
 					initial={{ opacity: 0, x: 20 }}
 					animate={{ opacity: 1, x: 0 }}
 					transition={{ duration: 0.5, delay: 0.2 }}
 					className="sticky top-8"
 				>
-					<EnrollmentDetails data={enrollmentData as any} currentTab={currentTabValue} />
+					<EnrollmentDetails data={enrollmentData as EnrollmentData} currentTab={currentTabValue} />
 				</motion.div>
 			</div>
 		</div>

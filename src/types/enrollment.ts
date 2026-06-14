@@ -68,8 +68,8 @@ export interface Enrollment {
   endTime?: string;
   activityClassification?: number | null;
   activityType?: string | null;
-  chargingPattern: "",
-  payment: Transaction,
+  chargingPattern: "";
+  payment: Transaction;
   batchId: number | null;
   member?: Member;
   course?: Course;
@@ -143,8 +143,8 @@ export interface EnrollmentData {
   suspensionDate?: string | Date | null;
   activityClassification?: number | null;
   activityType?: string | null;
-  chargingPattern: string,
-  payment: Transaction,
+  chargingPattern: string;
+  payment: Transaction;
   batchId: number | null;
   member?: Member;
   course?: Course;

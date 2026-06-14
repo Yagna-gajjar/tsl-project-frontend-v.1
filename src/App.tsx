@@ -47,7 +47,7 @@ import TransactionPage from "./pages/transaction";
 import AccessAndDetails from "./pages/access-details";
 import UserAccessPage from "./components/view/user/UserAccessPage";
 import StatusVisible from "./pages/status-visible";
-import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrollment-flow";
+import { EnrollmentFlow } from "./components/view/enrollment-dashboard/enrollment-flow";
 import SessionBooking from "./pages/SessionBooking";
 import ChangeEnrollment from "./pages/Change";
 import Ledger from "./pages/ledger";
