@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
+import type { Resource } from "@/config/permissions";
 
 interface SubMenuItem {
   label: string;
@@ -189,7 +191,40 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
+// Which resource each navigable link belongs to. Links with no entry here
+// (e.g. Dashboard) are visible to everyone who is logged in.
+const RESOURCE_BY_HREF: Record<string, Resource> = {
+  "/enrollment-dashboard": "Enrollment",
+  "/account/accounts": "Account",
+  "/account/authority": "Authority",
+  "/account/account-member": "Account",
+  "/account/member": "Member",
+  "/bookings/session": "Appointment",
+  "/bookings/booking": "Appointment",
+  "/course/courses": "Course",
+  "/course/course-share": "Course",
+  "/course/course-rate": "Course",
+  "/course/course-package": "Course",
+  "/batches": "Batch",
+  "/enrollment": "Enrollment",
+  "/discount": "Discount",
+  "/infrastructure-configurations/facility": "Facility",
+  "/infrastructure-configurations/facility-allotment": "Facility",
+  "/infrastructure-configurations/area": "Facility",
+  "/finance/ledger": "Finance",
+  "/finance/transaction": "Finance",
+  "/finance/trialbalance": "Finance",
+  "/staff-management/access-details": "User",
+  "/staff-management/coach-assignment": "CoachAssignment",
+  "/staff-management/coach-skills": "CoachSkill",
+  "/staff-management/attendance": "Attendance",
+  "/membership/membership-master": "Membership",
+  "/membership/membership-registration": "Membership",
+  "/membership/membership-link": "Membership",
+};
+
 export default function Sidebar({ onClose }: SidebarProps) {
+  const { can } = usePermissions();
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
@@ -197,6 +232,24 @@ export default function Sidebar({ onClose }: SidebarProps) {
     Family: true,
   });
   const location = useLocation();
+
+  const canSee = (href?: string) => {
+    if (!href) return true;
+    const resource = RESOURCE_BY_HREF[href];
+    return !resource || can(resource);
+  };
+
+  // Hide links the current role cannot access. A section with no visible
+  // children is dropped entirely.
+  const items = navigationItems
+    .map((item) =>
+      item.submenu
+        ? { ...item, submenu: item.submenu.filter((s) => canSee(s.href)) }
+        : item
+    )
+    .filter((item) =>
+      Array.isArray(item.submenu) ? item.submenu.length > 0 : canSee(item.href)
+    );
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -259,7 +312,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         </AnimatePresence>
 
         <nav className="space-y-2 pb-10">
-          {navigationItems.map((item) => {
+          {items.map((item) => {
             const hasSubmenu =
               Array.isArray(item.submenu) && item.submenu.length > 0;
             const isSectionExpanded = expandedSections[item.name];

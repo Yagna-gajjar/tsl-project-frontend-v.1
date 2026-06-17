@@ -26,6 +26,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/authContext";
+import { usePermissions } from "@/hooks/use-permissions";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { getBatchMemberRequests } from "@/api/enrollmentActions.api";
@@ -78,6 +79,7 @@ const settingsMenu: SettingsGroup[] = [
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const { theme, toggleTheme } = useTheme();
   const { logout, user, token } = useAuth();
+  const { can } = usePermissions();
   const navigate = useNavigate();
   const [userImage] = useState<string>();
   const [requests, setRequests] = useState<BatchMember[]>([]);
@@ -232,6 +234,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               )}
             </Button>
 
+            {can("Settings") && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -311,6 +314,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
 
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
               <motion.div
