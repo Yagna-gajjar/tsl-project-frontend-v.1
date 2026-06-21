@@ -24,7 +24,7 @@ export interface EnrollmentQuery {
 const ENROLLMENT_BASE = import.meta.env.VITE_APP_API_URL + "/enrollment";
 
 export function getEnrollments(
-  params: EnrollmentQuery = {}
+  params: EnrollmentQuery = {},
 ): Promise<Response<Enrollment[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
@@ -39,7 +39,7 @@ export function getEnrollments(
     memberFirstName: params.memberFirstName ?? undefined,
     academyName: params.academyName ?? undefined,
     courseName: params.courseName ?? undefined,
-    enrollmentNo: params.enrollmentNo ?? undefined
+    enrollmentNo: params.enrollmentNo ?? undefined,
   });
 
   return request<Response<Enrollment[]>>(`${ENROLLMENT_BASE}${qs}`);
@@ -54,7 +54,7 @@ export function loadEnrollmentById(id: number): Promise<Response<any>> {
 }
 
 export function createEnrollment(
-  payload: Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">
+  payload: Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">,
 ): Promise<Response<Enrollment>> {
   return request<Response<Enrollment>>(ENROLLMENT_BASE, {
     method: "POST",
@@ -62,14 +62,12 @@ export function createEnrollment(
   });
 }
 
-export function changeEnrollment(
-  payload: {
-    existingEnrollmentId: string,
-    existingEnrollmentNo: string,
-    newVersion: Partial<EnrollmentData>,
-    newEnrollment: Partial<EnrollmentData>,
-  }
-): Promise<Response<Enrollment>> {
+export function changeEnrollment(payload: {
+  existingEnrollmentId: string;
+  existingEnrollmentNo: string;
+  newVersion: Partial<EnrollmentData>;
+  newEnrollment: Partial<EnrollmentData>;
+}): Promise<Response<Enrollment>> {
   return request<Response<Enrollment>>(`${ENROLLMENT_BASE}/change-enrollment`, {
     method: "POST",
     body: JSON.stringify(payload),
@@ -78,7 +76,9 @@ export function changeEnrollment(
 
 export function updateEnrollment(
   id: number,
-  payload: Partial<Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">>
+  payload: Partial<
+    Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">
+  >,
 ): Promise<Response<Enrollment>> {
   return request<Response<Enrollment>>(`${ENROLLMENT_BASE}/${id}`, {
     method: "PUT",

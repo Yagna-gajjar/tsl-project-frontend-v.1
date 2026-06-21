@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -31,37 +31,30 @@ import { createEnrollment, deleteEnrollment } from "@/api/enrollment.api"
 import { useAuth } from "@/contexts/authContext"
 import { useLocation, useNavigate } from "react-router-dom"
 import { TransactionModalForEnrollment } from "./Transaction-modal-for-enrollment"
-import type { Transaction } from "@/types/transaction"
 import { ChangeCourseRateTab } from "./enrollment-tabs/change-course-rate-tab"
-import { process1, type Process1Result } from "@/helpers/enrollment-change/process1"
-import { getCourseById } from "@/api/course.api"
+import { process1 } from "@/helpers/enrollment-change/process1"
+import { useEnrDashTabs, useEnrollment } from "@/contexts/enrollmentContext"
 
-const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"] as const
+const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"]
 type TabValue = (typeof TAB_ORDER)[number]
-
-const tabLabels: Record<TabValue, string> = {
-	member: "Member",
-	course: "Course",
-	courseRate: "Rate",
-	batch: "Batch",
-	bill: "Bill",
-	confirm: "Confirm",
-}
 
 export function EnrollmentFlow() {
 	const { user } = useAuth();
 	const location = useLocation()
+	const { currentTabIndex, setCurrentTabIndex } = useEnrDashTabs();
+	const { completedTabs, setCompletedTabs } = useEnrDashTabs();
+	const { handleTabChange, handleBack, handleNext } = useEnrDashTabs();
 
-	const [currentTabIndex, setCurrentTabIndex] = useState(0);
 	const currentTabValue = TAB_ORDER[currentTabIndex] as TabValue;
-	const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set());
-	
-	const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>();
-	const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-	const [changeVersions, setChangeVersions] = useState<Process1Result>();
+
+	const { enrollmentData, setEnrollmentData } = useEnrollment();
+	const { changeVersions, setChangeVersions } = useEnrollment();
+	const { transactionData, setTransactionData } = useEnrollment();
+	const { balance, setbalance } = useEnrollment();
+	const { updateEnrollmentData } = useEnrollment();
 	const [showTransModal, setShowTransModal] = useState(false);
-	const [transactionData, setTransactionData] = useState<Transaction>();
-	
+	const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
 	const navigate = useNavigate();
 
 	const emptyReceipt = useMemo(() => ({
@@ -87,15 +80,15 @@ export function EnrollmentFlow() {
 		status: "active",
 	}), [enrollmentData]);
 
-	const [balance, setbalance] = useState<number>(0);
 
-	const getProcessData = async (enrollment: Enrollment) => {
+	const getProcessData = useCallback(async (enrollment: Enrollment) => {
 		if (enrollment) {
 			const res = await process1(enrollment, new Date(), 100, false);
 			setChangeVersions(res);
 			setbalance(res.values.value4 || {});
 		}
-	}
+	}, [])
+
 	useEffect(() => {
 		if (location.state) {
 			if (location.state.tabIndex) {
@@ -107,7 +100,7 @@ export function EnrollmentFlow() {
 				}
 			}
 		}
-	}, [location.state])
+	}, [location.state, setCurrentTabIndex, getProcessData])
 
 	const canProceedToNext = useMemo(() => {
 		if (completedTabs.has(currentTabValue)) return true;
@@ -121,7 +114,6 @@ export function EnrollmentFlow() {
 			default: return false;
 		}
 	}, [currentTabValue, completedTabs, enrollmentData]);
-
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -146,61 +138,7 @@ export function EnrollmentFlow() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [currentTabIndex, canProceedToNext, enrollmentData, changeVersions, location.state]);
-
-	const updateEnrollmentData = useCallback((data: Partial<EnrollmentData>, tabKey?: TabValue) => {
-		setEnrollmentData((prev: any) => ({
-			...prev,
-			...data,
-		}))
-
-		if (tabKey) {
-			setCompletedTabs((prev) => new Set([...prev, tabKey]))
-		}
-
-		if (data.enrollmentId) {
-			setCurrentTabIndex(2);
-		}
-	}, [])
-
-	const handleTabChange = (newTabValue: string) => {
-		const newIndex = TAB_ORDER.indexOf(newTabValue as TabValue)
-		if (newIndex <= currentTabIndex) {
-			setCurrentTabIndex(newIndex)
-		}
-	}
-
-	const handleNext = async () => {
-		if (currentTabIndex < TAB_ORDER.length - 1) {
-			if (currentTabIndex == 4 && location.state) {
-				const courseRes = await getCourseById(Number(enrollmentData?.courseId));
-				if (courseRes.success) {
-					navigate("/enrollment/change",
-						{
-							state: {
-								enrollmentId: location.state.enrollment.enrollmentId,
-								activity: courseRes.data,
-								actionType: "CHANGE_COURSE",
-								enrollmentData: location.state.enrollment,
-								passedValues: changeVersions?.values,
-								passedModification: changeVersions?.modify,
-								passedNewVersion: changeVersions?.newVersion,
-								passedNewEnrollment: enrollmentData,
-							}
-						}
-					)
-				}
-			} else {
-				setCurrentTabIndex(currentTabIndex + 1)
-			}
-		}
-	}
-
-	const handleBack = () => {
-		if (currentTabIndex > 0) {
-			setCurrentTabIndex(currentTabIndex - 1)
-		}
-	}
+	}, [currentTabIndex, canProceedToNext, enrollmentData, changeVersions, location.state, handleNext, handleBack]);
 
 	function calculateEndTime(startTime: string, sessionMinutes: number): string {
 		if (!startTime || !sessionMinutes) return startTime;
@@ -278,7 +216,7 @@ export function EnrollmentFlow() {
 		}
 		if (enrollmentData?.isDraft) {
 			try {
-				const dRes: Response<EnrollmentData> = await deleteEnrollment(enrollmentData.enrollmentId);
+				const dRes: Response<EnrollmentData> = await deleteEnrollment(enrollmentData?.enrollmentId);
 				if (!dRes.success) {
 					throw new Error("failed to delete");
 				}
@@ -293,7 +231,7 @@ export function EnrollmentFlow() {
 			}
 		}
 		try {
-			const eRes: Response<any> = await createEnrollment(enrollmentPayload as any);
+			const eRes: Response<Enrollment> = await createEnrollment(enrollmentPayload as Omit<Enrollment, "enrollmentId" | "createdAt" | "updatedAt">);
 			if (eRes.success) {
 				toast({
 					title: "Success",
@@ -343,7 +281,7 @@ export function EnrollmentFlow() {
 								Clear
 							</Button>
 						</div>
-						<p className="text-muted-foreground text-sm font-medium">Step {currentTabIndex + 1} of {TAB_ORDER.length}: {tabLabels[currentTabValue]}</p>
+						<p className="text-muted-foreground text-sm font-medium">Step {currentTabIndex + 1} of {TAB_ORDER.length}: {currentTabValue}</p>
 					</div>
 
 					<Tabs value={currentTabValue} onValueChange={handleTabChange} className="w-full">
@@ -371,7 +309,7 @@ export function EnrollmentFlow() {
 											) : (
 												<div className="w-2 h-2 bg-muted-foreground/30 rounded-full" />
 											)}
-											<span className="font-semibold uppercase tracking-tighter">{tabLabels[tab]}</span>
+											<span className="font-semibold uppercase tracking-tighter">{tab}</span>
 										</div>
 									</TabsTrigger>
 								)
@@ -398,12 +336,12 @@ export function EnrollmentFlow() {
 									<TabsContent value="course" className="mt-0 h-full">
 										{location.state ?
 											<CourseTab
-												data={enrollmentData}
+												data={enrollmentData as EnrollmentData}
 												onUpdate={(data) => updateEnrollmentData(data, "course")}
 												member={location.state.memberId}
 											/>
 											: <CourseTab
-												data={enrollmentData}
+												data={enrollmentData as EnrollmentData}
 												onUpdate={(data) => updateEnrollmentData(data, "course")}
 												member={enrollmentData?.member}
 											/>}
@@ -413,31 +351,31 @@ export function EnrollmentFlow() {
 										{balance != 0 ? <ChangeCourseRateTab
 											balance={balance}
 											onUpdate={(data) => updateEnrollmentData(data, "courseRate")}
-											data={enrollmentData}
+											data={enrollmentData as EnrollmentData}
 										/> :
 											<CourseRateTab
-												data={enrollmentData}
+												data={enrollmentData as EnrollmentData}
 												onUpdate={(data) => updateEnrollmentData(data, "courseRate")}
 											/>}
 									</TabsContent>
 
 									<TabsContent value="batch" className="mt-0 h-full">
 										<BatchTab
-											data={enrollmentData}
+											data={enrollmentData as EnrollmentData}
 											onUpdate={(data) => updateEnrollmentData(data, "batch")}
 										/>
 									</TabsContent>
 
 									<TabsContent value="bill" className="mt-0 h-full">
 										<BillTab
-											data={enrollmentData}
+											data={enrollmentData as EnrollmentData}
 											onUpdate={(data) => updateEnrollmentData(data, "bill")}
 										/>
 									</TabsContent>
 
 									<TabsContent value="confirm" className="mt-0 h-full">
 										<FinalConfirmTab
-											data={enrollmentData}
+											data={enrollmentData as EnrollmentData}
 											onUpdate={(data) => updateEnrollmentData(data, "confirm")}
 										/>
 									</TabsContent>
@@ -464,7 +402,7 @@ export function EnrollmentFlow() {
 									disabled={!canProceedToNext}
 									className="min-w-[160px] flex items-center gap-2 shadow-lg group"
 								>
-									Continue to {tabLabels[TAB_ORDER[currentTabIndex + 1]]}
+									Continue to {TAB_ORDER[currentTabIndex + 1]}
 									<ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
 								</Button>
 							) : (
