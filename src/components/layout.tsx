@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Navbar from "./navbar"
 import Sidebar from "./sidebar"
 import { Outlet } from "react-router-dom"
+import RouteGuard from "./route-guard"
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -47,7 +48,9 @@ export default function Layout() {
 
         <main className="flex-1 h-screen overflow-auto p-4 w-[80%]">
           <div className="pt-16">
-            <Outlet />
+            <RouteGuard>
+              <Outlet />
+            </RouteGuard>
           </div>
         </main>
       </div>

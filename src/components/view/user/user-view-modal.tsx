@@ -22,12 +22,6 @@ type Props = {
 	onClose: () => void;
 };
 
-// Define the structure of encrypted access JSON if not already in types
-interface AccessPermission {
-	resource: string;
-	actions: string[];
-}
-
 const fields: FieldConfig<User>[] = [
 	{ key: "userId", label: "User ID", icon: Key },
 	{ key: "username", label: "Username", icon: UserIcon },
@@ -52,30 +46,47 @@ const fields: FieldConfig<User>[] = [
 		render: (v) => (v ? new Date(v as string).toLocaleDateString() : "-"),
 	},
 	{
-		// Custom Renderer for the JSON Access Field
+		// Per-user access overrides ({ grants, revokes }) layered on the role.
 		key: "access",
-		label: "Access Permissions",
+		label: "Access Overrides",
 		icon: Key,
 		render: (value) => {
-			const permissions = value as AccessPermission[] | undefined;
-			if (!permissions || permissions.length === 0) {
-				return <span className="text-muted-foreground text-sm">No specific permissions assigned.</span>;
+			const access = value as
+				| { grants?: string[]; revokes?: string[] }
+				| undefined;
+			const grants = access?.grants ?? [];
+			const revokes = access?.revokes ?? [];
+
+			if (grants.length === 0 && revokes.length === 0) {
+				return (
+					<span className="text-muted-foreground text-sm">
+						No overrides — access follows the role.
+					</span>
+				);
 			}
 
 			return (
 				<div className="flex flex-col gap-2 mt-1">
-					{permissions.map((perm, idx) => (
-						<div key={idx} className="flex items-center text-sm border rounded-md p-2 bg-muted/40">
-							<span className="font-semibold capitalize mr-2">{perm.resource}:</span>
-							<div className="flex gap-1 flex-wrap">
-								{perm.actions.map((action, actionIdx) => (
-									<Badge key={actionIdx} variant="outline" className="text-xs capitalize">
-										{action}
-									</Badge>
-								))}
-							</div>
+					{grants.length > 0 && (
+						<div className="flex items-center gap-2 text-sm flex-wrap">
+							<span className="font-semibold text-blue-600">Granted:</span>
+							{grants.map((g, idx) => (
+								<Badge key={idx} variant="outline" className="text-xs">
+									{g}
+								</Badge>
+							))}
 						</div>
-					))}
+					)}
+					{revokes.length > 0 && (
+						<div className="flex items-center gap-2 text-sm flex-wrap">
+							<span className="font-semibold text-rose-600">Revoked:</span>
+							{revokes.map((g, idx) => (
+								<Badge key={idx} variant="outline" className="text-xs">
+									{g}
+								</Badge>
+							))}
+						</div>
+					)}
 				</div>
 			);
 		},

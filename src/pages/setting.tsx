@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Outlet } from "react-router-dom";
 import SettingSidebar from "@/components/settingSidebar";
+import RouteGuard from "@/components/route-guard";
 import { Menu } from "lucide-react";
 
 export default function Setting() {
@@ -51,7 +52,9 @@ export default function Setting() {
             <Menu className="h-5 w-5 text-foreground" />
           </div>
           <div className="pt-5 px-2">
-            <Outlet />
+            <RouteGuard>
+              <Outlet />
+            </RouteGuard>
           </div>
         </main>
       </div>

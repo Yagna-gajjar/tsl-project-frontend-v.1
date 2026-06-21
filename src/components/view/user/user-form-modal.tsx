@@ -24,7 +24,7 @@ const empty: User = {
 	password: "",
 	role: "staff",
 	memberId: undefined,
-	access: [],
+	access: { grants: [], revokes: [] },
 } as any;
 
 export default function UserFormModal({ isOpen, initialData, onClose, onSave }: Props) {
@@ -145,8 +145,7 @@ export default function UserFormModal({ isOpen, initialData, onClose, onSave }: 
 			options: [
 				{ label: "Staff", value: "staff" },
 				{ label: "Admin", value: "admin" },
-				{ label: "Member", value: "member" },
-				{ label: "Coach", value: "coach" }
+				{ label: "Super Admin", value: "superadmin" }
 			]
 		}
 	];

@@ -3,6 +3,13 @@ export interface AccessPermission {
 	actions: ("read" | "create" | "update" | "delete")[];
 }
 
+// Per-user access overrides layered on top of the role: lists of resource
+// names to additionally grant or to revoke.
+export interface UserAccess {
+	grants: string[];
+	revokes: string[];
+}
+
 export interface User {
 	userId?: number;
 	username: string;
@@ -13,7 +20,7 @@ export interface User {
 	role: "admin" | "staff" | "superadmin" | string;
 	memberId?: number;
 
-	access: AccessPermission[];
+	access?: UserAccess;
 
 	lastLogin?: Date | string;
 	createdAt?: Date | string;
