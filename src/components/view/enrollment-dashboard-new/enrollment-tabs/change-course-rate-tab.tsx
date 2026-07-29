@@ -240,8 +240,7 @@ export function ChangeCourseRateTab({ balance, data, onUpdate }: CourseRateTabPr
 
                   const finalDays = rawRate?.unitRate
                     ? finalBalance / (Number(unitRate) * factor)
-                    : 0; // const finalDays = rawRate ? (Number(rawRate.unitRate) * factor * billingDaysSessions * (activeCourse?.chargingPattern?.toLowerCase() === "school" ? membersEnrolled : 1)) : 0;
-
+                    : 0;
                   return (
                     <TableRow key={category} className={cn("group transition-none", isSelected && "bg-primary/5", !isEligible && "opacity-40 grayscale-[0.8]")}>
                       <TableCell className="font-bold border-b border-r text-sm px-4">

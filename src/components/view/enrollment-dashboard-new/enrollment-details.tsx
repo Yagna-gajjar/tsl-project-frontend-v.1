@@ -57,6 +57,8 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 				});
 			}
 		} catch (err) {
+			console.log(err);
+
 		}
 	}
 
@@ -68,12 +70,7 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 
 	return (
 		<motion.div className="sticky top-8 space-y-4">
-			<div>
-				<h2 className="text-2xl font-bold text-foreground mb-2">Summary</h2>
-				<p className="text-sm text-muted-foreground">Live enrollment details</p>
-			</div>
-
-			<div className="py-5 text-center gap-1">
+			<div className="text-center gap-1">
 				{accountBalance?.balance &&
 					<h1 className={`${accountBalance?.balance < 0
 						? 'text-red-600'
@@ -85,6 +82,9 @@ export function EnrollmentDetails({ data, currentTab }: EnrollmentDetailsProps) 
 							currency: 'INR',
 						}).format(accountBalance?.balance)}
 					</h1>}
+			</div>
+			<div>
+				<h2 className="text-2xl font-bold text-foreground mb-2">Summary</h2>
 			</div>
 			<AnimatedDetailCard title="Member" icon={getSectionIcon("member")} isActive={currentTab === "member"}>
 				{data?.member ? (

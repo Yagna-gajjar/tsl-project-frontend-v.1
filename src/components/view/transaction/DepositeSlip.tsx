@@ -59,7 +59,7 @@ const CustomTable = ({ printRow,
 													No
 												</td>
 												<td className="border-b border-black p-2 align-middle">
-													3.typeSerialNo
+													{printRow.typeSerialNo}
 												</td>
 											</tr>
 
@@ -138,10 +138,10 @@ const CustomTable = ({ printRow,
 										<tbody>
 											<tr>
 												<td className="w-1/2 border-r border-black p-2 align-middle">
-													By - 9.drAccountId - Name
+													{printRow.drAccountId}, {printRow.drAccountName}
 												</td>
 												<td className="w-1/2 p-2 align-middle">
-													Tran Ref No - 12.transactionDetails
+													{printRow.formReferenceNo} - {printRow.transactionDetails}
 												</td>
 											</tr>
 										</tbody>
