@@ -124,7 +124,21 @@ export function EnrollmentFlow() {
 
 			if (e.key === "ArrowRight") {
 				if (canProceedToNext) {
-					handleNext();
+					if (location.state.type == "CHANGE_COURSE" && enrollmentData) {
+						handleNext({
+							enrollmentId: enrollmentData.enrollmentId,
+							firstEnrPattern: enrollmentData.firstEnrollmentId,
+							firstEnrPatternDays: enrollmentData.firstEnrPatternDays,
+							activity: activity ?? null,
+							actionType: actionId,
+							enrollmentData: enrollment,
+							existingEnrollment: config.existingEnrollment,
+							newVersion: config.newVersion,
+							newEnrollment: config.newEnrollment,
+						});
+					} else {
+						handleNext();
+					}
 				}
 			} else if (e.key === "ArrowLeft") {
 				if (currentTabIndex > 0) {
@@ -398,7 +412,7 @@ export function EnrollmentFlow() {
 
 							{currentTabIndex < TAB_ORDER.length - 1 ? (
 								<Button
-									onClick={handleNext}
+									onClick={() => handleNext()}
 									disabled={!canProceedToNext}
 									className="min-w-[160px] flex items-center gap-2 shadow-lg group"
 								>

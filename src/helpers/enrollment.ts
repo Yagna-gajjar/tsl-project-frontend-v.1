@@ -19,7 +19,11 @@ export function getFinalAmounts(
   const gst = (100 + (sgst + cgst)) / 100;
 
   const baseRateWithGst = baseRate * gst;
+  console.log(baseRateWithGst, ":baseRateWithGst");
+
   const roundedBaseRateWithGst = Math.ceil(Number(baseRateWithGst));
+  console.log(roundedBaseRateWithGst, ":roundedBaseRateWithGst");
+
   const roundedAmount =
     (100 * (roundedBaseRateWithGst - baseRateWithGst)) / gst;
   const costToMember = rackPrice * patternDiscount;

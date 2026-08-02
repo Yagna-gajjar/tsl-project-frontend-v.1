@@ -48,7 +48,9 @@ const ChangeEnrollment = () => {
 
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [changeDate, setChangeDate] = useState("2026-04-15");
+	const [changeDate, setChangeDate] = useState(
+		new Date().toISOString().split("T")[0]
+	);
 	const [processingCharge, setProcessingCharge] = useState(
 		enrollmentData?.processingCharge || "0"
 	);
@@ -222,12 +224,9 @@ const ChangeEnrollment = () => {
 			setModification(passedModification || null);
 			setNewVersion(passedNewVersion || null);
 			setNewEnrollment(passedNewEnrollment || null);
-			// return;
 		}
 
 		const runProcesses = async () => {
-			setIsLoading(true);
-
 			try {
 				const ctx: any = {
 					enrollmentData,
@@ -303,8 +302,6 @@ const ChangeEnrollment = () => {
 
 			} catch (err) {
 				console.error("Process execution failed:", err);
-			} finally {
-				setIsLoading(false);
 			}
 		};
 

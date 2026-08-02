@@ -59,9 +59,9 @@ export default function App() {
     <ThemeProvider>
       <ConfirmationProvider>
         <AuthProvider>
-          <EnrDashTabsProvider>
-            <EnrollmentProvider>
-              <Router>
+          <Router>
+            <EnrDashTabsProvider>
+              <EnrollmentProvider>
                 <Routes>
                   <Route path="/404error" element={<NotFound />} />
                 </Routes>
@@ -212,10 +212,10 @@ export default function App() {
                   <Route path="/login" element={<LoginForm />} />
                   <Route path="/signup" element={<Signup />} />
                 </Routes>
-              </Router>
-              <Toaster />
-            </EnrollmentProvider>
-          </EnrDashTabsProvider>
+                <Toaster />
+              </EnrollmentProvider>
+            </EnrDashTabsProvider>
+          </Router>
         </AuthProvider>
       </ConfirmationProvider>
     </ThemeProvider>

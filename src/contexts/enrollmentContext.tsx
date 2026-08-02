@@ -1,7 +1,9 @@
 import { type Process1Result } from "@/helpers/enrollment-change/process1";
+import type { Activity } from "@/types/activity";
 import type { EnrollmentData } from "@/types/enrollment";
 import type { Transaction } from "@/types/transaction";
 import { createContext, useCallback, useContext, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const TAB_ORDER = ["member", "course", "courseRate", "batch", "bill", "confirm"]
 type TabValue = (typeof TAB_ORDER)[number]
@@ -13,7 +15,17 @@ type EnrDashTabsType = {
   setCompletedTabs: Dispatch<SetStateAction<Set<string>>>,
   handleTabChange: (newTabValue: string) => void,
   handleBack: () => void,
-  handleNext: () => void
+  handleNext: (state?: {
+    enrollmentId: number,
+    firstEnrPattern: number | undefined,
+    firstEnrPatternDays: number,
+    activity: Activity,
+    actionType: string,
+    enrollmentData: EnrollmentData,
+    existingEnrollment: EnrollmentData,
+    newVersion: EnrollmentData,
+    newEnrollment: EnrollmentData,
+  }) => void
 }
 
 const EnrDashTabsContext = createContext<EnrDashTabsType | undefined>(undefined);
@@ -21,21 +33,43 @@ const EnrDashTabsContext = createContext<EnrDashTabsType | undefined>(undefined)
 export const EnrDashTabsProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState<number>(0);
   const [completedTabs, setCompletedTabs] = useState<Set<TabValue>>(new Set());
-
+  const location = useLocation()
+  const navigate = useNavigate()
   const handleTabChange = useCallback((newTabValue: string) => {
     const newIndex = TAB_ORDER.indexOf(newTabValue as TabValue)
     setCurrentTabIndex(newIndex)
   }, [])
-
   const handleBack = useCallback(() => {
     if (currentTabIndex > 0) {
       setCurrentTabIndex(currentTabIndex - 1)
     }
   }, [currentTabIndex])
 
-  const handleNext = useCallback(async () => {
-    setCurrentTabIndex(currentTabIndex + 1)
-  }, [currentTabIndex])
+  const type = location.state?.type;
+
+  const handleNext = useCallback(
+    async (state?: {
+      enrollmentId: number,
+      firstEnrPattern: number | undefined,
+      firstEnrPatternDays: number,
+      activity: Activity,
+      actionType: string,
+      enrollmentData: EnrollmentData,
+      existingEnrollment: EnrollmentData,
+      newVersion: EnrollmentData,
+      newEnrollment: EnrollmentData,
+    }) => {
+      if (currentTabIndex === 2 && type === "CHANGE_COURSE") {
+        navigate("/enrollment/change", {
+          state: { ...state },
+        });
+        return;
+      }
+
+      setCurrentTabIndex((prev) => prev + 1);
+    },
+    [currentTabIndex, type, navigate]
+  );
 
   const value = useMemo<EnrDashTabsType>(
     () => ({
