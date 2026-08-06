@@ -1,29 +1,29 @@
 import { useState } from "react";
-import BatchTable from "@/components/view/batch/batch-table";
-import { BatchFormModal } from "@/components/view/batch/batch-form-modal";
-import BatchViewModal from "@/components/view/batch/batch-view-modal";
-import type { Batch } from "@/types/batch";
+import IncidentTable from "@/components/view/incident-report/incident-table";
+import IncidentFormModal from "@/components/view/incident-report/incident-form-modal";
+import IncidentViewModal from "@/components/view/incident-report/incident-view-modal";
+import type { IncidentReport } from "@/types/incidentReport";
 import { Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import BatchExcelUpload from "@/components/view/batch/batch-excel-upload";
+import IncidentExcelUpload from "@/components/view/incident-report/incident-excel-upload";
 
 export default function IncidentReportingPage() {
   const [viewOpen, setViewOpen] = useState(false);
-  const [viewData, setViewData] = useState<Batch | null>(null);
+  const [viewData, setViewData] = useState<IncidentReport | null>(null);
   const [excelOpen, setExcelOpen] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editRow, setEditRow] = useState<Batch | null>(null);
+  const [editRow, setEditRow] = useState<IncidentReport | null>(null);
 
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const bumpRefresh = () => setRefreshKey((s) => s + 1);
 
-  const openView = (row: Batch) => {
+  const openView = (row: IncidentReport) => {
     setViewData(row);
     setViewOpen(true);
   };
 
-  const openForm = (row?: Batch | null) => {
+  const openForm = (row?: IncidentReport | null) => {
     setEditRow(row ?? null);
     setFormOpen(true);
   };
@@ -55,30 +55,31 @@ export default function IncidentReportingPage() {
           </Button>
 
           <Button onClick={() => openForm(null)}>
-            <Plus className="w-4 h-4 mr-2" /> Add Batch
+            <Plus className="w-4 h-4 mr-2" /> Add Incident Report
           </Button>
         </div>
       </div>
 
-      <BatchTable onView={openView} onEdit={openForm} refreshKey={refreshKey} />
+      <IncidentTable onView={openView} onEdit={openForm} refreshKey={refreshKey} />
 
-      <BatchViewModal
+      <IncidentViewModal
         isOpen={viewOpen}
         onClose={() => {
           setViewOpen(false);
           setViewData(null);
         }}
         item={viewData}
+        incidentId={viewData?.incidentId}
       />
 
-      <BatchFormModal
+      <IncidentFormModal
         isOpen={formOpen}
         onClose={closeForm}
         initialData={editRow}
         onSaved={bumpRefresh}
       />
 
-      <BatchExcelUpload
+      <IncidentExcelUpload
         isOpen={excelOpen}
         onClose={() => setExcelOpen(false)}
         onSuccess={bumpRefresh}

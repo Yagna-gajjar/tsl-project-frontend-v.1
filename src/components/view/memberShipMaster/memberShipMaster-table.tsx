@@ -133,8 +133,10 @@ export default function MembershipMasterTable({
     },
     {
       header: "Entity Type",
-      key: "entityId",
+      key: "entityType",
       render: (row) => row.entityType || "-",
+      sortable: true,
+      filterType: "text",
     },
 
     {
@@ -179,7 +181,7 @@ export default function MembershipMasterTable({
     },
     {
       header: "Min F Balance",
-      key: "caDepositPR",
+      key: "fBalPrInCa",
       render: (row) => Number(row.caDepositPR ?? 0).toFixed(2),
       sortable: true,
       filterType: "number",

@@ -28,6 +28,8 @@ const empty: MembershipMaster = {
   membershipMasterId: 0,
   membershipType: "",
   entityName: "",
+  entityType: "",
+  status: "active",
   introductionDate: format(new Date(), "yyyy-MM-dd"),
   suspensionDate: undefined as unknown as Date,
   membershipDetails: "",
@@ -58,77 +60,49 @@ export default function MembershipMasterFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const [entityOpt, setEntityOpt] = useState<Entity[]>([]);
-  const [entityPage, setEntityPage] = useState(1);
-  const [hasMoreEntity, setHasMoreEntity] = useState(true);
-  const [loadingEntity, setLoadingEntity] = useState(false);
-
   const [billingEntityOpt, setBillingEntity] = useState<Enums[]>([]);
+  const [entityTypeOptions, setEntityTypeOptions] = useState<{ label: string; value: string }[]>([]);
 
-  const PAGE_SIZE = 20;
+  const fetchOptions = async () => {
+    try {
+      const [resBilling, resEntities, resEnums] = await Promise.all([
+        getEnumsByCategory("BILLINGENTITYOFFAMILY").catch(() => ({ data: [] })),
+        getEntities({ limit: 1000 }).catch(() => ({ data: [] })),
+        getEnumsByCategory("ENTITYTYPE").catch(() => ({ data: [] })),
+      ]);
 
-  const fetchEntity = useCallback(
-    async (isInitial = false) => {
-      if (loadingEntity || (!hasMoreEntity && !isInitial)) return;
-      setLoadingEntity(true);
-      try {
-        const page = isInitial ? 1 : entityPage;
-        const response: Response<Entity[]> = await getEntities({
-          limit: PAGE_SIZE,
-          page,
-        });
-        const items = response?.data || ([] as Entity[]);
-        setEntityOpt((prev) => (isInitial ? items : [...prev, ...items]));
-        setHasMoreEntity(items.length === PAGE_SIZE);
-        setEntityPage(page + 1);
-      } catch {
-        toast({
-          title: "Error",
-          description: "Failed to fetch members",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingEntity(false);
+      const billingData = (resBilling?.data as Enums[]) || [];
+      setBillingEntity(billingData);
+
+      const entities = (resEntities?.data as Entity[]) || [];
+      const entityEnums = (resEnums?.data as Enums[]) || [];
+
+      const rawTypes = [
+        ...entities.map((e) => e.entityType || e.entityName).filter(Boolean),
+        ...entities.map((e) => e.entityName).filter(Boolean),
+        ...entityEnums.map((e) => e.value).filter(Boolean),
+      ];
+
+      const uniqueTypes = Array.from(new Set(rawTypes));
+      const mappedOptions = uniqueTypes.map((t) => ({
+        label: String(t),
+        value: String(t),
+      }));
+
+      if (mappedOptions.length === 0) {
+        setEntityTypeOptions([
+          { label: "Academy", value: "Academy" },
+          { label: "Individual", value: "Individual" },
+          { label: "Family", value: "Family" },
+          { label: "Corporate", value: "Corporate" },
+        ]);
+      } else {
+        setEntityTypeOptions(mappedOptions);
       }
-    },
-    [loadingEntity, hasMoreEntity, entityPage]
-  );
-
-  const fetchBillingEntity = async () => {
-    const res: Response<Enums[]> = await getEnumsByCategory(
-      "BILLINGENTITYOFFAMILY"
-    );
-
-    const data = res?.data as Enums[];
-
-    setBillingEntity(data);
+    } catch (err) {
+      console.error("Error fetching membership master form options:", err);
+    }
   };
-
-  // const fetchBillingEntity = useCallback(
-  //   async (isInitial = false) => {
-  //     if (loadingBillingEntity || (!hasMoreBillingEntity && !isInitial)) return;
-  //     setLoadingBillingEntity(true);
-  //     try {
-  //       const page = isInitial ? 1 : entityPage;
-  //       const response: Response<Entity[]> = await getEnumsByCategory(
-  //         "BILLINGENTITYOFFAMILY"
-  //       );
-  //       const items = response?.data || ([] as Entity[]);
-  //       setEntityOpt((prev) => (isInitial ? items : [...prev, ...items]));
-  //       setHasMoreEntity(items.length === PAGE_SIZE);
-  //       setEntityPage(page + 1);
-  //     } catch {
-  //       toast({
-  //         title: "Error",
-  //         description: "Failed to fetch members",
-  //         variant: "destructive",
-  //       });
-  //     } finally {
-  //       setLoadingEntity(false);
-  //     }
-  //   },
-  //   [loadingEntity, hasMoreEntity, entityPage]
-  // );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -144,6 +118,8 @@ export default function MembershipMasterFormModal({
 
       setValues({
         ...initialData,
+        entityType: initialData.entityType || "",
+        status: initialData.status || "active",
         introductionDate: intro,
         suspensionDate: suspend as unknown as Date,
         createdAt: initialData.createdAt
@@ -156,16 +132,17 @@ export default function MembershipMasterFormModal({
     } else {
       setValues({
         ...empty,
+        status: "active",
         introductionDate: format(new Date(), "yyyy-MM-dd"),
         suspensionDate: "" as unknown as Date,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     }
-    fetchEntity();
+
     setFieldErrors({});
     setError(null);
-    fetchBillingEntity();
+    fetchOptions();
   }, [initialData, isOpen]);
 
   const onChange = (
@@ -220,7 +197,8 @@ export default function MembershipMasterFormModal({
     try {
       const payload: Partial<MembershipMaster> = {
         membershipType: String(values.membershipType),
-        entityId: Number(values.entityId),
+        entityType: values.entityType ? String(values.entityType) : undefined,
+        status: values.status ? String(values.status) : "active",
         introductionDate: new Date(values.introductionDate).toISOString(),
         suspensionDate: values.suspensionDate
           ? new Date(values.suspensionDate).toISOString()
@@ -252,7 +230,7 @@ export default function MembershipMasterFormModal({
           payload as Partial<
             Omit<
               MembershipMaster,
-              "MembershipMasterId" | "createdAt" | "updatedAt"
+              "membershipMasterId" | "createdAt" | "updatedAt"
             >
           >
         );
@@ -265,7 +243,7 @@ export default function MembershipMasterFormModal({
         await createMembershipMaster(
           payload as Omit<
             MembershipMaster,
-            "MembershipMasterId" | "createdAt" | "updatedAt"
+            "membershipMasterId" | "createdAt" | "updatedAt"
           >
         );
         toast({
@@ -299,13 +277,10 @@ export default function MembershipMasterFormModal({
       required: true,
     },
     {
-      name: "entityId",
-      label: "EntityName",
+      name: "entityType",
+      label: "Entity Type",
       type: "select",
-      options: entityOpt?.map((e) => ({
-        value: e.entityId,
-        label: e.entityName,
-      })),
+      options: entityTypeOptions,
       required: true,
     },
     {
@@ -444,7 +419,12 @@ export default function MembershipMasterFormModal({
     {
       name: "status",
       label: "Status",
-      type: "text",
+      type: "select",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Suspended", value: "suspended" },
+      ],
     },
   ];
 
