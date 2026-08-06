@@ -11,8 +11,6 @@ import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import type { FormFieldConfig } from "@/components/form-modal/types";
 import type { Response } from "@/types/response";
-import { getEntities } from "@/api/entity.api";
-import type { Entity } from "@/types/entity";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
 import type { MembershipMaster } from "@/types/membershipMaster";
@@ -61,44 +59,31 @@ export default function MembershipMasterFormModal({
   const [error, setError] = useState<string | null>(null);
 
   const [billingEntityOpt, setBillingEntity] = useState<Enums[]>([]);
-  const [entityTypeOptions, setEntityTypeOptions] = useState<{ label: string; value: string }[]>([]);
+  const [entityTypeOptions, setEntityTypeOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
 
+  // FIX (Bug 2): this used to also call getEntities() and merge every
+  // Entity's own name/entityType into this list, which let users pick an
+  // entity's *name* as if it were a category. Entity Type must only ever
+  // come from the "ENTITY TYPE" enum — same source used by
+  // entity-form-modal.tsx, pages/entity.tsx and pages/membership.tsx.
   const fetchOptions = async () => {
     try {
-      const [resBilling, resEntities, resEnums] = await Promise.all([
+      const [resBilling, resEnums] = await Promise.all([
         getEnumsByCategory("BILLINGENTITYOFFAMILY").catch(() => ({ data: [] })),
-        getEntities({ limit: 1000 }).catch(() => ({ data: [] })),
-        getEnumsByCategory("ENTITYTYPE").catch(() => ({ data: [] })),
+        getEnumsByCategory("ENTITY TYPE").catch(() => ({ data: [] })),
       ]);
 
       const billingData = (resBilling?.data as Enums[]) || [];
       setBillingEntity(billingData);
 
-      const entities = (resEntities?.data as Entity[]) || [];
       const entityEnums = (resEnums?.data as Enums[]) || [];
-
-      const rawTypes = [
-        ...entities.map((e) => e.entityType || e.entityName).filter(Boolean),
-        ...entities.map((e) => e.entityName).filter(Boolean),
-        ...entityEnums.map((e) => e.value).filter(Boolean),
-      ];
-
-      const uniqueTypes = Array.from(new Set(rawTypes));
-      const mappedOptions = uniqueTypes.map((t) => ({
-        label: String(t),
-        value: String(t),
-      }));
-
-      if (mappedOptions.length === 0) {
-        setEntityTypeOptions([
-          { label: "Academy", value: "Academy" },
-          { label: "Individual", value: "Individual" },
-          { label: "Family", value: "Family" },
-          { label: "Corporate", value: "Corporate" },
-        ]);
-      } else {
-        setEntityTypeOptions(mappedOptions);
-      }
+      setEntityTypeOptions(
+        entityEnums
+          .filter((e) => e.value)
+          .map((e) => ({ label: String(e.value), value: String(e.value) }))
+      );
     } catch (err) {
       console.error("Error fetching membership master form options:", err);
     }
@@ -164,6 +149,17 @@ export default function MembershipMasterFormModal({
     if (!values.membershipType || String(values.membershipType).trim() === "") {
       errs.membershipType = "Membership type is required";
     }
+    // FIX (Bug 1): entityType is marked required:true in the field config
+    // below but was never actually checked here, so an empty selection
+    // silently passed validation, then got dropped from the payload
+    // (falsy -> undefined -> stripped by JSON.stringify) and the column
+    // was left unset on the server. Enforce it explicitly.
+    if (!values.entityType || String(values.entityType).trim() === "") {
+      errs.entityType = "Entity type is required";
+    }
+    if (!values.status || String(values.status).trim() === "") {
+      errs.status = "Status is required";
+    }
     if (
       values.durationDays === undefined ||
       values.durationDays === null ||
@@ -197,8 +193,8 @@ export default function MembershipMasterFormModal({
     try {
       const payload: Partial<MembershipMaster> = {
         membershipType: String(values.membershipType),
-        entityType: values.entityType ? String(values.entityType) : undefined,
-        status: values.status ? String(values.status) : "active",
+        entityType: String(values.entityType),
+        status: String(values.status),
         introductionDate: new Date(values.introductionDate).toISOString(),
         suspensionDate: values.suspensionDate
           ? new Date(values.suspensionDate).toISOString()
@@ -422,9 +418,9 @@ export default function MembershipMasterFormModal({
       type: "select",
       options: [
         { label: "Active", value: "active" },
-        { label: "Inactive", value: "inactive" },
         { label: "Suspended", value: "suspended" },
       ],
+      required: true,
     },
   ];
 
