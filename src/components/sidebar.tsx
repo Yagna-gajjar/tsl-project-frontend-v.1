@@ -110,6 +110,11 @@ const navigationItems: NavigationItem[] = [
     icon: TicketPercent,
   },
   {
+    name: "Incident Management",
+    href: "/incident-reporting",
+    icon: ScrollText,
+  },
+  {
     name: "infrastructure & Configurations",
     href: "/infrastructure-configurations",
     icon: Building2,
