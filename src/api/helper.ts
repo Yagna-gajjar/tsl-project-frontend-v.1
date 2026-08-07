@@ -16,11 +16,14 @@ export async function request<T>(url: string, options?: RequestInit, token?: str
     try {
         const authToken = token ?? localStorage.getItem('token');
         const selectedDb = getSelectedDb();
+        const isFormData = options?.body instanceof FormData;
 
         const res = await fetch(url, {
             ...options,
             headers: {
-                'Content-Type': 'application/json',
+                // FormData must set its own Content-Type: the browser appends the
+                // multipart boundary, and multer cannot parse the body without it.
+                ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
                 ...(authToken ? { "authorization": `Bearer ${authToken}` } : {}),
                 ...(selectedDb ? { 'x-db-name': selectedDb } : {}),
                 ...(options?.headers as Record<string, string> | undefined),
