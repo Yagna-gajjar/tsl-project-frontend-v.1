@@ -21,8 +21,6 @@ export async function request<T>(url: string, options?: RequestInit, token?: str
         const res = await fetch(url, {
             ...options,
             headers: {
-                // FormData must set its own Content-Type: the browser appends the
-                // multipart boundary, and multer cannot parse the body without it.
                 ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
                 ...(authToken ? { "authorization": `Bearer ${authToken}` } : {}),
                 ...(selectedDb ? { 'x-db-name': selectedDb } : {}),

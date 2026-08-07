@@ -54,6 +54,7 @@ import Ledger from "./pages/ledger";
 import ProfilePage from "./pages/profile";
 import TrialBalancePage from "./components/view/transaction/transaction-trialbalance";
 import IncidentReportingPage from "./pages/incidentReport";
+import AuditLogsPage from "./pages/audit-logs";
 export default function App() {
   return (
     <ThemeProvider>
@@ -184,6 +185,7 @@ export default function App() {
                 <Route path="/finance/ledger" element={<Ledger />} />
                 <Route path="/finance/trialbalance" element={<TrialBalancePage />} />
                 <Route path="/incident-reporting" element={<IncidentReportingPage />} />
+                <Route path="/audit-logs" element={<AuditLogsPage />} />
 
                 <Route path="*" element={<NotFound />} />
               </Route>

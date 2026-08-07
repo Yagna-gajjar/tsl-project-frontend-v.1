@@ -2,9 +2,6 @@ import type { Transaction } from "@/types/transaction";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";
 
-// The trial-balance endpoint does not return Account entities: transaction.controller.js
-// selects only the identifying columns and attaches the aggregated figures, so this row
-// shape is deliberately narrower than @/types/account.
 export interface TrialBalanceRow {
   accountId: number;
   accountName: string;

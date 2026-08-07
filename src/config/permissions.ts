@@ -25,12 +25,24 @@ export const RESOURCES = [
 	"Finance",
 	"Settings",
 	"User",
+	"Audit",
 ] as const;
 
 export type Resource = (typeof RESOURCES)[number];
 
 // Resources a "staff" member may NOT touch at all.
-const STAFF_DENIED: Resource[] = ["Settings", "User"];
+const STAFF_DENIED: Resource[] = ["Settings", "User", "Audit"];
+
+// Resources no role reaches except superadmin, not even the "*" roles and not
+// via a per-user grant. The audit log exposes before/after values for every
+// table, and it is the record of the admins themselves.
+const SUPERADMIN_ONLY: Resource[] = ["Audit"];
+
+// Modules the access screen may offer as per-user toggles. Superadmin-only
+// resources are excluded: a grant cannot open them, so a toggle would lie.
+export const GRANTABLE_RESOURCES = RESOURCES.filter(
+	(r) => !SUPERADMIN_ONLY.includes(r),
+);
 
 type PermissionMap = Partial<Record<Resource, Action[]>>;
 
@@ -52,6 +64,7 @@ export function roleCan(
 	action: Action = "read"
 ): boolean {
 	if (!role) return false;
+	if (SUPERADMIN_ONLY.includes(resource)) return role === "superadmin";
 	const perms = ROLE_PERMISSIONS[role as Role];
 	if (!perms) return false;
 	if (perms === "*") return true;
@@ -128,6 +141,8 @@ export function userCan(
 	_action: Action = "read"
 ): boolean {
 	if (!user) return false;
+	// Checked before overrides so a per-user grant can never open the audit log.
+	if (SUPERADMIN_ONLY.includes(resource)) return user.role === "superadmin";
 	const eff = effectiveResourceSet(user.role, user.access);
 	if (eff === "*") return true;
 	return eff.has(resource);
@@ -135,6 +150,7 @@ export function userCan(
 
 // Maps a route path to the resource that guards it (longest prefix wins).
 const ROUTE_RESOURCE: { prefix: string; resource: Resource }[] = [
+	{ prefix: "/audit-logs", resource: "Audit" },
 	{ prefix: "/staff-management/access-details", resource: "User" },
 	{ prefix: "/staff-management/user-access", resource: "User" },
 	{ prefix: "/staff-management/coach-assignment", resource: "CoachAssignment" },
