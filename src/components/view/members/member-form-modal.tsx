@@ -364,13 +364,21 @@ export function MemberFormModal({
     }
 
     try {
+      // "" is not a date. Postgres rejects it outright ("invalid input syntax
+      // for type date"), so an absent or unparseable value has to be null.
+      const toDate = (v: unknown): Date | null => {
+        if (v === null || v === undefined || v === "") return null;
+        const d = new Date(v as string | number | Date);
+        return Number.isNaN(d.getTime()) ? null : d;
+      };
+
       const payload: Member | any = {
-        regDate: new Date(values?.regDate as any),
-        suspensionDate: values.suspensionDate ?? "",
+        regDate: toDate(values?.regDate),
+        suspensionDate: toDate(values.suspensionDate),
         memberFirstName: String(values.memberFirstName ?? "").trim(),
         memberMiddleName: values.memberMiddleName ?? "",
         memberLastName: values.memberLastName ?? "",
-        dob: values.dob ? new Date(values.dob) : undefined,
+        dob: toDate(values.dob),
         email: emailVal || undefined,
         bloodGroup: values.bloodGroup,
         gender: values.gender ?? "",

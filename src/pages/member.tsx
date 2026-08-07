@@ -45,22 +45,51 @@ export default function MemberPage() {
     setIsCleared(false);
   };
 
-  const handleCopyMember = (row: Member) => {
-    const {
-      memberId,
-      createdAt,
-      updatedAt,
-      avatar,
-      ...memberDataWithoutId
-    } = row;
+  const handleCopyMember = async (row: Member) => {
+    const fullName = [row.memberFirstName, row.memberMiddleName, row.memberLastName]
+      .filter(Boolean)
+      .join(" ");
 
-    setEditRow(memberDataWithoutId as Member);
-    setFormOpen(true);
+    const address = [row.line1, row.line2, row.city, row.state, row.country, row.pinCode]
+      .filter(Boolean)
+      .join(", ");
 
-    toast({
-      title: "Data Copied",
-      description: `Ready to add a new member based on ${row.memberFirstName}'s details.`,
-    });
+    const asDate = (v: unknown) => {
+      if (!v) return "";
+      const d = new Date(v as string);
+      return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString();
+    };
+
+    const details = [
+      ["Name", fullName],
+      ["DOB", asDate(row.dob)],
+      ["Gender", row.gender],
+      ["Contact", row.contactNumber],
+      ["Email", row.email],
+      ["Address", address],
+      ["ID proof", [row.idProofType, row.idProofNumber].filter(Boolean).join(" ")],
+      ["Status", row.status],
+    ]
+      .filter(([, value]) => value)
+      .map(([label, value]) => `${label}: ${value}`)
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(details);
+      toast({
+        title: "Copied",
+        description: `${fullName || "Member"}'s details are on your clipboard.`,
+      });
+    } catch {
+      // Clipboard access is blocked outside a secure context, and on plain
+      // http://<lan-ip> that is every browser. Say so instead of failing silently.
+      toast({
+        title: "Could not copy",
+        description:
+          "Your browser blocked clipboard access. This needs HTTPS or localhost.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRunProcess = async () => {
