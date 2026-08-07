@@ -1,7 +1,17 @@
 import type { Transaction } from "@/types/transaction";
 import { request, toQueryString, type SortOrder } from "./helper";
 import type { Response } from "@/types/response";
-import type { Account } from "@/types/account";
+
+// The trial-balance endpoint does not return Account entities: transaction.controller.js
+// selects only the identifying columns and attaches the aggregated figures, so this row
+// shape is deliberately narrower than @/types/account.
+export interface TrialBalanceRow {
+  accountId: number;
+  accountName: string;
+  debit: string;
+  credit: string;
+  balance: number;
+}
 
 export interface TransactionsQuery {
   page?: number;
@@ -67,7 +77,7 @@ export function getTrialBalance(
   hideNoTx: boolean,
 ): Promise<
   Response<{
-    accounts: Account;
+    accounts: TrialBalanceRow[];
     totalDebit: number;
     totalCredit: number;
     isBalanced: boolean;
@@ -75,7 +85,7 @@ export function getTrialBalance(
 > {
   return request<
     Response<{
-      accounts: Account;
+      accounts: TrialBalanceRow[];
       totalDebit: number;
       totalCredit: number;
       isBalanced: boolean;
