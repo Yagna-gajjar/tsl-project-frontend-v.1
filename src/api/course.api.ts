@@ -14,7 +14,11 @@ export interface CourseQuery {
   activityName?: string;
   status?: string;
   entityId?: number;
+  entityName?: string;
+  courseType?: string;
   classification?: string;
+  chargingPattern?: string;
+  introduceDate?: string;
   suspenspedCourse?: boolean;
   age?: number;
 }
@@ -36,7 +40,11 @@ export function getCourses(
     activityName: params.activityName ?? undefined,
     status: params.status ?? undefined,
     entityId: params.entityId ?? undefined,
+    entityName: params.entityName ?? undefined,
+    courseType: params.courseType ?? undefined,
     classification: params.classification ?? undefined,
+    chargingPattern: params.chargingPattern ?? undefined,
+    introduceDate: params.introduceDate ?? undefined,
     suspenspedCourse: params.suspenspedCourse ?? undefined,
     age: params.age ?? undefined,
   });

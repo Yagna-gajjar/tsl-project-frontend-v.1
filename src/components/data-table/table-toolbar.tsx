@@ -17,6 +17,8 @@ import {
   ArrowUpDown,
   CalendarIcon,
   Download,
+  Search,
+  X,
 } from "lucide-react";
 import type { Column } from "./types";
 import {
@@ -38,7 +40,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface TableToolbarProps<T> {
-  onSearch: (value: string) => void;
+  onSearch?: (value: string) => void;
   columns: Column<T>[];
   visibleColumns: Set<string>;
   onColumnToggle: (key: string) => void;
@@ -50,7 +52,29 @@ interface TableToolbarProps<T> {
   isExporting?: boolean;
 }
 
+/**
+ * Filter values travel to the parent as plain strings (dates as "yyyy-MM-dd"),
+ * so the calendar control has to re-hydrate whatever it is handed back.
+ */
+function toDate(value: unknown): Date | undefined {
+  if (!value) return undefined;
+  if (value instanceof Date) return isNaN(value.getTime()) ? undefined : value;
+
+  const raw = String(value);
+
+  // "yyyy-MM-dd" must be read as a local calendar day. new Date() would treat
+  // it as UTC midnight, which lands on the previous day west of Greenwich.
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (parts) {
+    return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+  }
+
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
 export function TableToolbar<T>({
+  onSearch,
   columns,
   visibleColumns,
   onColumnToggle,
@@ -95,6 +119,24 @@ export function TableToolbar<T>({
       if (showApplyTimer.current) clearTimeout(showApplyTimer.current);
     };
   }, []);
+
+  const [searchValue, setSearchValue] = useState("");
+  const searchTimer = useRef<number | null>(null);
+
+  const pushSearch = (value: string) => {
+    setSearchValue(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = window.setTimeout(() => {
+      onSearch?.(value.trim());
+    }, 350);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, []);
+
   const activeFilterCount = Object.keys(filters).length;
 
   const renderFilterInput = (column: Column<T>) => {
@@ -108,7 +150,7 @@ export function TableToolbar<T>({
         return (
           <Input
             type="number"
-            placeholder={`Filter ${column.header}...`}
+            placeholder={column.filterPlaceholder ?? `Filter ${column.header}...`}
             value={value as any ?? ""}
             onChange={(e) => {
               const v = e.target.value;
@@ -178,38 +220,66 @@ export function TableToolbar<T>({
           </Select>
         );
       }
-      case "date":
+      case "date": {
+        const selectedDate = toDate(value);
         return (
-          <Popover>
-            <PopoverTrigger asChild>
+          <div className="flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-8 flex-1 justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? (
+                    format(selectedDate, "dd MMM yyyy")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    if (!date) return;
+                    setTempFilters((p: any) => ({ ...p, [key]: date }));
+                    debounceShowApply();
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {selectedDate && (
               <Button
-                variant="outline"
-                className={cn(
-                  "h-8 w-full justify-start text-left font-normal",
-                  !value && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {value ? format(value as any, "dd MMM yyyy") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={value as any}
-                onSelect={(date) => {
-                  setTempFilters((p: any) => ({ ...p, [key]: date }));
-                  debounceShowApply();
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                title={`Clear ${column.header}`}
+                onClick={() => {
+                  setTempFilters((p) => {
+                    const np = { ...p };
+                    delete np[key];
+                    return np;
+                  });
+                  onFilterChange(key, "");
+                  setShowApply(false);
                 }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         );
+      }
       case "text":
         return (
           <Input
-            placeholder={`Filter ${column.header}...`}
+            placeholder={column.filterPlaceholder ?? `Filter ${column.header}...`}
             value={value as any ?? ""}
             onChange={(e) => {
               const v = e.target.value;
@@ -281,7 +351,29 @@ export function TableToolbar<T>({
   return (
     <div className="flex items-center justify-between py-4 gap-2">
       <div className="flex flex-1 items-center justify-between space-x-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {onSearch && (
+            <div className="relative w-[200px] lg:w-[260px]">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchValue}
+                onChange={(e) => pushSearch(e.target.value)}
+                placeholder="Search..."
+                className="h-9 pl-8 pr-8"
+              />
+              {searchValue && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => pushSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
+
           <Popover>
             <PopoverTrigger asChild>
               <Button

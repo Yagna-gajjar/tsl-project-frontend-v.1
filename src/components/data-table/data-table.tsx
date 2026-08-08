@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Copy, Eye, Pencil, Trash2, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { DynamicTableProps } from "./types";
 import { TablePagination } from "./table-pagination";
@@ -156,14 +157,18 @@ export function DataTable<T>({
   };
 
   const handleFilter = (key: string, value: any) => {
+    // Dates are serialised here so consumers (and the query string) always see
+    // a plain "yyyy-MM-dd" value instead of a locale-specific Date.toString().
+    const normalized = value instanceof Date ? format(value, "yyyy-MM-dd") : value;
+
     const newFilters = { ...filters };
-    if (value === "" || value === null || value === undefined) {
+    if (normalized === "" || normalized === null || normalized === undefined) {
       delete newFilters[key];
     } else {
-      newFilters[key] = value;
+      newFilters[key] = normalized;
     }
     setFilters(newFilters);
-    sendFilterChange(key, value);
+    sendFilterChange(key, normalized === "" ? undefined : normalized);
   };
 
   const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
@@ -202,53 +207,51 @@ export function DataTable<T>({
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="w-full h-96 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  // The toolbar is rendered from a single place in a stable position so that
+  // loading/empty transitions never unmount it — remounting it used to close
+  // the filter popover and drop input focus on every keystroke-driven fetch.
+  const toolbar = (
+    <TableToolbar
+      onSearch={onSearchChange}
+      columns={columns}
+      visibleColumns={visibleColumns}
+      onColumnToggle={handleColumnToggle}
+      filters={filters as any}
+      onFilterChange={handleFilter}
+      sortConfig={sortConfig}
+      onSortChange={handleSort}
+      onExport={onExport ? handleExport : undefined}
+      isExporting={isExporting}
+    />
+  );
 
-  if (!data.length && !isLoading) {
+  if (isLoading || !data.length) {
     return (
-      <div className="w-full space-y-4">
-        <TableToolbar
-          onSearch={onSearchChange || (() => { })}
-          columns={columns}
-          visibleColumns={visibleColumns}
-          onColumnToggle={handleColumnToggle}
-          filters={filters as any}
-          onFilterChange={handleFilter}
-          sortConfig={sortConfig}
-          onSortChange={handleSort}
-        />
-        <div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-muted/10">
-          <div className="text-muted-foreground text-lg">No data available</div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Try adjusting your search or filters
-          </p>
-        </div>
+      <div className="space-y-4 w-full">
+        {toolbar}
+        {isLoading ? (
+          <div className="w-full h-96 flex items-center justify-center rounded-md border bg-card">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-muted/10">
+            <div className="text-muted-foreground text-lg">
+              No data available
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              Try adjusting your search or filters
+            </p>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <>
-      <div className="space-y-4 w-full">
-        <TableToolbar
-          onSearch={onSearchChange || (() => { })}
-          columns={columns}
-          visibleColumns={visibleColumns}
-          onColumnToggle={handleColumnToggle}
-          filters={filters as any}
-          onFilterChange={handleFilter}
-          sortConfig={sortConfig}
-          onSortChange={handleSort}
-          onExport={onExport ? handleExport : undefined}
-          isExporting={isExporting}
-        />
+    <div className="space-y-4 w-full">
+      {toolbar}
 
+      <>
         <div className="hidden md:block rounded-md border shadow-sm bg-card">
           <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
             <Table>
@@ -410,17 +413,17 @@ export function DataTable<T>({
             </Table>
           </div>
         </div>
-      </div>
 
-      <TableMobileCard
-        data={data}
-        columns={displayColumns}
-        onView={onView}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        idKey={idKey}
-      />
-      {pagination && <TablePagination pagination={pagination} />}
-    </>
+        <TableMobileCard
+          data={data}
+          columns={displayColumns}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          idKey={idKey}
+        />
+        {pagination && <TablePagination pagination={pagination} />}
+      </>
+    </div>
   );
 }

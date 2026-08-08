@@ -14,4 +14,7 @@ export interface CoursePackage {
   activityId?: string | undefined;
   courseName?: string;
   batchName?: string;
+  authorityFirstName?: string;
+  authorityLastName?: string;
+  authorityName?: string;
 }
