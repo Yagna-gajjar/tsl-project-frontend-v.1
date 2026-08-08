@@ -55,7 +55,7 @@ export default function CourseRateTable({
         sortBy,
         sortOrder,
         courseId: filterCourseId,
-        entityType: filters.entityType as string | undefined,
+        // entityType: filters.entityType as string | undefined,
         courseName: filters.courseName as string | undefined,
       });
 
@@ -93,12 +93,12 @@ export default function CourseRateTable({
       sortable: true,
       filterType: "text",
     },
-    {
-      header: "Entity Type",
-      key: "entityType",
-      sortable: true,
-      filterType: "text",
-    },
+    // {
+    //   header: "Entity Type",
+    //   key: "entityType",
+    //   sortable: true,
+    //   filterType: "text",
+    // },
     {
       header: "Rate",
       key: "unitRate",
@@ -107,7 +107,7 @@ export default function CourseRateTable({
       filterType: "number",
     },
     { header: "Above Units", key: "aboveUnits", sortable: true },
-    { header: "Freezing", key: "freezing", sortable: true },
+    { header: "Freezing", key: "enrFreezingAllowed", sortable: true },
     {
       header: "Effective Date",
       key: "introduceDate",

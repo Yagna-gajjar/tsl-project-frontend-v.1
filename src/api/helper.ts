@@ -16,11 +16,12 @@ export async function request<T>(url: string, options?: RequestInit, token?: str
     try {
         const authToken = token ?? localStorage.getItem('token');
         const selectedDb = getSelectedDb();
+        const isFormData = options?.body instanceof FormData;
 
         const res = await fetch(url, {
             ...options,
             headers: {
-                'Content-Type': 'application/json',
+                ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
                 ...(authToken ? { "authorization": `Bearer ${authToken}` } : {}),
                 ...(selectedDb ? { 'x-db-name': selectedDb } : {}),
                 ...(options?.headers as Record<string, string> | undefined),

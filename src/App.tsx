@@ -10,7 +10,6 @@ import Layout from "./components/layout";
 import Dashboard from "./pages/dashboard";
 import Projects from "./pages/projects";
 import EnumsPage from "./components/setting/enums/enums";
-import { Toaster } from "./components/ui/toaster";
 import LoginForm from "./components/login-form";
 import NotFound from "./pages/NotFound";
 import Signup from "./pages/Signup";
@@ -53,6 +52,8 @@ import ChangeEnrollment from "./pages/Change";
 import Ledger from "./pages/ledger";
 import ProfilePage from "./pages/profile";
 import TrialBalancePage from "./components/view/transaction/transaction-trialbalance";
+import IncidentReportingPage from "./pages/incidentReport";
+import AuditLogsPage from "./pages/audit-logs";
 import { EnrDashTabsProvider, EnrollmentProvider } from "./contexts/enrollmentContext";
 export default function App() {
   return (
@@ -185,6 +186,9 @@ export default function App() {
                     <Route path="/finance/transaction" element={<TransactionPage />} />
                     <Route path="/finance/ledger" element={<Ledger />} />
                     <Route path="/finance/trialbalance" element={<TrialBalancePage />} />
+                    <Route path="/incident-reporting" element={<IncidentReportingPage />} />
+                    <Route path="/audit-logs" element={<AuditLogsPage />} />
+
                     <Route path="*" element={<NotFound />} />
                   </Route>
                   <Route path="/setting" element={<Setting />}>
@@ -212,7 +216,6 @@ export default function App() {
                   <Route path="/login" element={<LoginForm />} />
                   <Route path="/signup" element={<Signup />} />
                 </Routes>
-                <Toaster />
               </EnrollmentProvider>
             </EnrDashTabsProvider>
           </Router>

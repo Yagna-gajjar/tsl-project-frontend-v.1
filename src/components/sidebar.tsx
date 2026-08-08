@@ -29,6 +29,7 @@ import {
   Contact,
   TicketPercent,
   Scale,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -110,6 +111,11 @@ const navigationItems: NavigationItem[] = [
     icon: TicketPercent,
   },
   {
+    name: "Incident Management",
+    href: "/incident-reporting",
+    icon: ScrollText,
+  },
+  {
     name: "infrastructure & Configurations",
     href: "/infrastructure-configurations",
     icon: Building2,
@@ -189,6 +195,11 @@ const navigationItems: NavigationItem[] = [
       { label: "Membership Link", href: "/membership/membership-link" },
     ],
   },
+  {
+    name: "Audit Logs",
+    href: "/audit-logs",
+    icon: History,
+  },
 ];
 
 // Which resource each navigable link belongs to. Links with no entry here
@@ -221,6 +232,7 @@ const RESOURCE_BY_HREF: Record<string, Resource> = {
   "/membership/membership-master": "Membership",
   "/membership/membership-registration": "Membership",
   "/membership/membership-link": "Membership",
+  "/audit-logs": "Audit",
 };
 
 export default function Sidebar({ onClose }: SidebarProps) {

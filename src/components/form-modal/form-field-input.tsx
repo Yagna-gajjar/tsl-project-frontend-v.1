@@ -241,9 +241,14 @@ export default function FormFieldInput(props: any) {
   } = props
 
   const baseInputClass = error ? "border-destructive focus-visible:ring-destructive" : ""
+  const [dateOpen, setDateOpen] = useState(false)
 
   const renderField = () => {
-    switch (type) {
+    // Field configs are inconsistent about casing: 32 fields across 15 forms
+    // declare type "Date" while this switch only matched "date". Those fell
+    // through to a native <input type="date">, which cannot read an ISO
+    // timestamp and so rendered blank, then submitted "" and broke the save.
+    switch (String(type ?? "").toLowerCase()) {
       case "textarea":
         return (
           <Textarea
@@ -288,23 +293,39 @@ export default function FormFieldInput(props: any) {
           />
         )
 
-      case "date":
+      case "date": {
+        // Accepts a Date, an ISO string, or nothing. An unparseable value shows
+        // the placeholder instead of "Invalid Date".
+        const parsed = value ? new Date(value) : null
+        const picked = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null
+
         return (
-          <Popover>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left font-normal ${baseInputClass}`}
                 disabled={disabled}
               >
-                {value ? new Date(value).toLocaleDateString() : <span>{placeholder || "Pick a date"}</span>}
+                {picked ? picked.toLocaleDateString() : <span>{placeholder || "Pick a date"}</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
-              <Calendar mode="single" selected={value ? new Date(value) : undefined} onSelect={onChange} />
+              <Calendar
+                mode="single"
+                selected={picked ?? undefined}
+                defaultMonth={picked ?? undefined}
+                onSelect={(day) => {
+                  // null rather than undefined/"", so a cleared date reaches
+                  // Postgres as NULL instead of an empty string.
+                  onChange(day ?? null)
+                  setDateOpen(false)
+                }}
+              />
             </PopoverContent>
           </Popover>
         )
+      }
 
       case "checkbox":
         return (

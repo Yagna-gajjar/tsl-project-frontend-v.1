@@ -14,7 +14,7 @@ type Props = {
 
 const fields: FieldConfig<MembershipLink>[] = [
   { key: "membershipType", label: "Membership Master", icon: Link },
-  { key: "membershipName", label: "Membership", icon: Link },
+  { key: "membershipId", label: "Membership", icon: Link },
   { key: "accountId", label: "Account", icon: User },
   { key: "linkDate", label: "Link Date", icon: Link },
   { key: "dLinkDate", label: "D-Link Date", icon: Link },

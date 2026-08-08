@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	ShieldCheck,
@@ -21,7 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-	RESOURCES,
+	GRANTABLE_RESOURCES,
 	roleResourceSet,
 	effectiveResourceSet,
 	normalizeOverrides,
@@ -72,6 +72,7 @@ const RESOURCE_INFO: Record<Resource, string> = {
 	Finance: "Transactions, billing & ledger",
 	Settings: "System settings & lookups",
 	User: "User & role management",
+	Audit: "Audit trail (superadmin only)",
 };
 
 type EnabledMap = Record<Resource, boolean>;
@@ -80,7 +81,7 @@ type EnabledMap = Record<Resource, boolean>;
 function computeEnabled(role: string, overrides: unknown): EnabledMap {
 	const eff = effectiveResourceSet(role, overrides);
 	const map = {} as EnabledMap;
-	for (const r of RESOURCES) map[r] = eff === "*" ? true : eff.has(r);
+	for (const r of GRANTABLE_RESOURCES) map[r] = eff === "*" ? true : eff.has(r);
 	return map;
 }
 
@@ -90,7 +91,7 @@ function computeOverrides(role: string, enabled: EnabledMap): UserAccess {
 	if (base === "*") return { grants: [], revokes: [] };
 	const grants: string[] = [];
 	const revokes: string[] = [];
-	for (const r of RESOURCES) {
+	for (const r of GRANTABLE_RESOURCES) {
 		const roleHas = base.has(r);
 		if (enabled[r] && !roleHas) grants.push(r);
 		if (!enabled[r] && roleHas) revokes.push(r);
@@ -187,7 +188,7 @@ export default function UserAccessPage() {
 			!sortedEq(currentOverrides.grants, savedOverrides.grants) ||
 			!sortedEq(currentOverrides.revokes, savedOverrides.revokes));
 
-	const enabledCount = RESOURCES.filter((r) => enabled[r]).length;
+	const enabledCount = GRANTABLE_RESOURCES.filter((r) => enabled[r]).length;
 
 	const handleSave = async () => {
 		if (!selectedUser?.userId) return;
@@ -339,7 +340,7 @@ export default function UserAccessPage() {
 								</div>
 								<div className="flex items-center gap-3">
 									<Badge variant="outline" className="px-3 py-1">
-										{enabledCount} / {RESOURCES.length} modules
+										{enabledCount} / {GRANTABLE_RESOURCES.length} modules
 									</Badge>
 									<Button
 										onClick={handleSave}
@@ -347,7 +348,7 @@ export default function UserAccessPage() {
 										className="gap-2 px-6"
 									>
 										{isSaving ? (
-											<span className="animate-spin mr-2 inline-block">⏳</span>
+											<span className="animate-spin mr-2 inline-block">â³</span>
 										) : (
 											<Save className="w-4 h-4" />
 										)}
@@ -405,7 +406,7 @@ export default function UserAccessPage() {
 							{/* Module toggle list */}
 							<ScrollArea className="flex-1 px-4">
 								<div className="p-4 space-y-2">
-									{RESOURCES.map((res) => {
+									{GRANTABLE_RESOURCES.map((res) => {
 										const status = statusFor(res);
 										const sensitive = res === "User" || res === "Settings";
 										return (

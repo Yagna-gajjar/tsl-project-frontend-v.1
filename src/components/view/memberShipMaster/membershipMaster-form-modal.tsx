@@ -10,9 +10,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import type { FormFieldConfig } from "@/components/form-modal/types";
-import type { Response } from "@/types/response";
-import { getEntities } from "@/api/entity.api";
-import type { Entity } from "@/types/entity";
 import { getEnumsByCategory } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
 import type { MembershipMaster } from "@/types/membershipMaster";
@@ -28,6 +25,8 @@ const empty: MembershipMaster = {
   membershipMasterId: 0,
   membershipType: "",
   entityName: "",
+  entityType: "",
+  status: "active",
   introductionDate: format(new Date(), "yyyy-MM-dd"),
   suspensionDate: undefined as unknown as Date,
   membershipDetails: "",
@@ -58,77 +57,36 @@ export default function MembershipMasterFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const [entityOpt, setEntityOpt] = useState<Entity[]>([]);
-  const [entityPage, setEntityPage] = useState(1);
-  const [hasMoreEntity, setHasMoreEntity] = useState(true);
-  const [loadingEntity, setLoadingEntity] = useState(false);
-
   const [billingEntityOpt, setBillingEntity] = useState<Enums[]>([]);
+  const [entityTypeOptions, setEntityTypeOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
 
-  const PAGE_SIZE = 20;
+  // FIX (Bug 2): this used to also call getEntities() and merge every
+  // Entity's own name/entityType into this list, which let users pick an
+  // entity's *name* as if it were a category. Entity Type must only ever
+  // come from the "ENTITY TYPE" enum — same source used by
+  // entity-form-modal.tsx, pages/entity.tsx and pages/membership.tsx.
+  const fetchOptions = async () => {
+    try {
+      const [resBilling, resEnums] = await Promise.all([
+        getEnumsByCategory("BILLINGENTITYOFFAMILY").catch(() => ({ data: [] })),
+        getEnumsByCategory("ENTITY TYPE").catch(() => ({ data: [] })),
+      ]);
 
-  const fetchEntity = useCallback(
-    async (isInitial = false) => {
-      if (loadingEntity || (!hasMoreEntity && !isInitial)) return;
-      setLoadingEntity(true);
-      try {
-        const page = isInitial ? 1 : entityPage;
-        const response: Response<Entity[]> = await getEntities({
-          limit: PAGE_SIZE,
-          page,
-        });
-        const items = response?.data || ([] as Entity[]);
-        setEntityOpt((prev) => (isInitial ? items : [...prev, ...items]));
-        setHasMoreEntity(items.length === PAGE_SIZE);
-        setEntityPage(page + 1);
-      } catch {
-        toast({
-          title: "Error",
-          description: "Failed to fetch members",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingEntity(false);
-      }
-    },
-    [loadingEntity, hasMoreEntity, entityPage]
-  );
+      const billingData = (resBilling?.data as Enums[]) || [];
+      setBillingEntity(billingData);
 
-  const fetchBillingEntity = async () => {
-    const res: Response<Enums[]> = await getEnumsByCategory(
-      "BILLINGENTITYOFFAMILY"
-    );
-
-    const data = res?.data as Enums[];
-
-    setBillingEntity(data);
+      const entityEnums = (resEnums?.data as Enums[]) || [];
+      setEntityTypeOptions(
+        entityEnums
+          .filter((e) => e.value)
+          .map((e) => ({ label: String(e.value), value: String(e.value) }))
+      );
+    } catch (err) {
+      console.error("Error fetching membership master form options:", err);
+    }
   };
-
-  // const fetchBillingEntity = useCallback(
-  //   async (isInitial = false) => {
-  //     if (loadingBillingEntity || (!hasMoreBillingEntity && !isInitial)) return;
-  //     setLoadingBillingEntity(true);
-  //     try {
-  //       const page = isInitial ? 1 : entityPage;
-  //       const response: Response<Entity[]> = await getEnumsByCategory(
-  //         "BILLINGENTITYOFFAMILY"
-  //       );
-  //       const items = response?.data || ([] as Entity[]);
-  //       setEntityOpt((prev) => (isInitial ? items : [...prev, ...items]));
-  //       setHasMoreEntity(items.length === PAGE_SIZE);
-  //       setEntityPage(page + 1);
-  //     } catch {
-  //       toast({
-  //         title: "Error",
-  //         description: "Failed to fetch members",
-  //         variant: "destructive",
-  //       });
-  //     } finally {
-  //       setLoadingEntity(false);
-  //     }
-  //   },
-  //   [loadingEntity, hasMoreEntity, entityPage]
-  // );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -144,6 +102,8 @@ export default function MembershipMasterFormModal({
 
       setValues({
         ...initialData,
+        entityType: initialData.entityType || "",
+        status: initialData.status || "active",
         introductionDate: intro,
         suspensionDate: suspend as unknown as Date,
         createdAt: initialData.createdAt
@@ -156,16 +116,17 @@ export default function MembershipMasterFormModal({
     } else {
       setValues({
         ...empty,
+        status: "active",
         introductionDate: format(new Date(), "yyyy-MM-dd"),
         suspensionDate: "" as unknown as Date,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     }
-    fetchEntity();
+
     setFieldErrors({});
     setError(null);
-    fetchBillingEntity();
+    fetchOptions();
   }, [initialData, isOpen]);
 
   const onChange = (
@@ -186,6 +147,17 @@ export default function MembershipMasterFormModal({
     const errs: Record<string, string> = {};
     if (!values.membershipType || String(values.membershipType).trim() === "") {
       errs.membershipType = "Membership type is required";
+    }
+    // FIX (Bug 1): entityType is marked required:true in the field config
+    // below but was never actually checked here, so an empty selection
+    // silently passed validation, then got dropped from the payload
+    // (falsy -> undefined -> stripped by JSON.stringify) and the column
+    // was left unset on the server. Enforce it explicitly.
+    if (!values.entityType || String(values.entityType).trim() === "") {
+      errs.entityType = "Entity type is required";
+    }
+    if (!values.status || String(values.status).trim() === "") {
+      errs.status = "Status is required";
     }
     if (
       values.durationDays === undefined ||
@@ -220,7 +192,8 @@ export default function MembershipMasterFormModal({
     try {
       const payload: Partial<MembershipMaster> = {
         membershipType: String(values.membershipType),
-        entityId: Number(values.entityId),
+        entityType: String(values.entityType),
+        status: String(values.status),
         introductionDate: new Date(values.introductionDate).toISOString(),
         suspensionDate: values.suspensionDate
           ? new Date(values.suspensionDate).toISOString()
@@ -252,7 +225,7 @@ export default function MembershipMasterFormModal({
           payload as Partial<
             Omit<
               MembershipMaster,
-              "MembershipMasterId" | "createdAt" | "updatedAt"
+              "membershipMasterId" | "createdAt" | "updatedAt"
             >
           >
         );
@@ -265,7 +238,7 @@ export default function MembershipMasterFormModal({
         await createMembershipMaster(
           payload as Omit<
             MembershipMaster,
-            "MembershipMasterId" | "createdAt" | "updatedAt"
+            "membershipMasterId" | "createdAt" | "updatedAt"
           >
         );
         toast({
@@ -299,13 +272,10 @@ export default function MembershipMasterFormModal({
       required: true,
     },
     {
-      name: "entityId",
-      label: "EntityName",
+      name: "entityType",
+      label: "Entity Type",
       type: "select",
-      options: entityOpt?.map((e) => ({
-        value: e.entityId,
-        label: e.entityName,
-      })),
+      options: entityTypeOptions,
       required: true,
     },
     {
@@ -444,7 +414,12 @@ export default function MembershipMasterFormModal({
     {
       name: "status",
       label: "Status",
-      type: "text",
+      type: "select",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Suspended", value: "suspended" },
+      ],
+      required: true,
     },
   ];
 
