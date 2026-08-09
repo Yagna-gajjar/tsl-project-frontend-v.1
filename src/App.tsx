@@ -46,7 +46,6 @@ import AccessAndDetails from "./pages/access-details";
 import UserAccessPage from "./components/view/user/UserAccessPage";
 import StatusVisible from "./pages/status-visible";
 import { EnrollmentFlow } from "./components/view/enrollment-dashboard/enrollment-flow";
-import SessionBooking from "./pages/SessionBooking";
 import ChangeEnrollment from "./pages/Change";
 import Ledger from "./pages/ledger";
 import ProfilePage from "./pages/profile";
@@ -143,7 +142,6 @@ export default function App() {
                       path="/staff-management/coach-assignment"
                       element={<CoachAssignmentsPage />}
                     />
-                    <Route path="/bookings/session" element={<SessionBooking />} />
                     <Route path="/course/courses" element={<CoursePage />} />
                     <Route
                       path="course/course-share"
@@ -190,7 +188,7 @@ export default function App() {
                     <Route path="/audit-logs" element={<AuditLogsPage />} />
 
                     <Route path="*" element={<NotFound />} />
-                  </Route>
+                  </Route >
                   <Route path="/setting" element={<Setting />}>
                     <Route path="/setting/entity" element={<EntityPage />} />
                     <Route
@@ -215,12 +213,12 @@ export default function App() {
                   </Route>
                   <Route path="/login" element={<LoginForm />} />
                   <Route path="/signup" element={<Signup />} />
-                </Routes>
-              </EnrollmentProvider>
-            </EnrDashTabsProvider>
-          </Router>
-        </AuthProvider>
-      </ConfirmationProvider>
-    </ThemeProvider>
+                </Routes >
+              </EnrollmentProvider >
+            </EnrDashTabsProvider >
+          </Router >
+        </AuthProvider >
+      </ConfirmationProvider >
+    </ThemeProvider >
   );
 }

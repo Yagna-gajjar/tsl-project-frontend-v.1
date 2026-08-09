@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FormHeader } from "@/components/form-modal/form-header";
 import { FormFooter } from "@/components/form-modal/form-footer";
 import { FormContent } from "@/components/form-modal/form-content";
@@ -18,6 +18,9 @@ import { getEnumsByCategory } from "@/api/enums.api";
 import type { Enums } from "@/types/enums";
 import { getAccountMembers } from "@/api/accountMember.api";
 import type { AccountMember } from "@/types/accountMember";
+import { getEnrollmentById, getEnrollments } from "@/api/enrollment.api";
+import type { Enrollment } from "@/types/enrollment";
+import { format } from "date-fns";
 
 type Props = {
 	isOpen: boolean;
@@ -58,13 +61,37 @@ const empty: Transaction = {
 	drMemberLastName: "",
 };
 
-const FAKE_ENROLLMENTS = [
-	{ label: "ENR-2025-001 (Cricket Academy)", value: null },
-	{ label: "ENR-2025-002 (Football Club)", value: null },
-	{ label: "ENR-2025-003 (Tennis Pro)", value: null },
-	{ label: "ENR-2025-004 (Swimming Basic)", value: null },
-	{ label: "ENR-2025-005 (Badminton Elite)", value: null },
-];
+const ENROLLMENT_PAGE_SIZE = 20;
+
+/**
+ * "Member No 3(3)  Football  31 Jul 2026  #137"
+ *  name(memberId)  course     enrollment date  enrollment id
+ *
+ * The trailing enrollment id keeps rows distinguishable when the same member
+ * has more than one enrollment on the same course and date.
+ */
+function enrollmentLabel(e: Enrollment): string {
+	const name =
+		[e.memberFirstName, e.memberLastName]
+			.filter(Boolean)
+			.join(" ")
+			.trim() ||
+		e.walkingName ||
+		"Unknown member";
+
+	const who = e.memberId ? `${name}(${e.memberId})` : name;
+	const course = e.courseName || e.activityName || "No course";
+
+	let date = "";
+	if (e.enrollmentDate) {
+		const d = new Date(e.enrollmentDate);
+		if (!isNaN(d.getTime())) date = format(d, "dd MMM yyyy");
+	}
+
+	return [who, course, date, `#${e.enrollmentId}`]
+		.filter(Boolean)
+		.join("  ");
+}
 
 export default function TransactionFormModal({ isOpen, initialData, onClose, onSave }: Props) {
 	const [values, setValues] = useState<Transaction>(empty);
@@ -78,6 +105,15 @@ export default function TransactionFormModal({ isOpen, initialData, onClose, onS
 	const [crMembers, setCrMembers] = useState<AccountMember[]>([]);
 	const [drMembers, setDrMembers] = useState<AccountMember[]>([]);
 	const [entrySourceOptions, setEntrySourceOptions] = useState<Enums[]>([]);
+
+	const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+	const [enrollmentsPage, setEnrollmentsPage] = useState(1);
+	const [hasMoreEnrollments, setHasMoreEnrollments] = useState(true);
+	const [loadingEnrollments, setLoadingEnrollments] = useState(false);
+	const [enrollmentSearch, setEnrollmentSearch] = useState("");
+	const enrollmentSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	// Guards against a slow page-1 response overwriting a newer search's results.
+	const enrollmentRequestId = useRef(0);
 
 	const filterPaymentModeAccounts = (accounts: Account[]) => {
 		return accounts.filter(acc =>
@@ -102,6 +138,127 @@ export default function TransactionFormModal({ isOpen, initialData, onClose, onS
 		};
 		fetchBaseOptions();
 	}, [isOpen]);
+
+	const fetchEnrollments = useCallback(
+		async (isInitial = false, searchStr = enrollmentSearch) => {
+			// An initial/search fetch always wins: it supersedes anything in
+			// flight (the request id below discards the stale response), so it
+			// must not be dropped just because a page load is still running.
+			if (!isInitial && (loadingEnrollments || !hasMoreEnrollments)) return;
+
+			const requestId = isInitial
+				? ++enrollmentRequestId.current
+				: enrollmentRequestId.current;
+
+			setLoadingEnrollments(true);
+			try {
+				const page = isInitial ? 1 : enrollmentsPage;
+				const res: Response<Enrollment[]> = await getEnrollments({
+					page,
+					limit: ENROLLMENT_PAGE_SIZE,
+					sortBy: "enrollmentDate",
+					sortOrder: "DESC",
+					search: searchStr || undefined,
+				});
+
+				// A newer search superseded this response.
+				if (requestId !== enrollmentRequestId.current) return;
+
+				const data = res?.data ?? [];
+				setEnrollments((prev) => {
+					if (isInitial) return data;
+					const seen = new Set(prev.map((e) => e.enrollmentId));
+					return [...prev, ...data.filter((e) => !seen.has(e.enrollmentId))];
+				});
+				setHasMoreEnrollments(data.length === ENROLLMENT_PAGE_SIZE);
+				setEnrollmentsPage(page + 1);
+			} catch {
+				toast({
+					title: "Error",
+					description: "Failed to load enrollments",
+					variant: "destructive",
+				});
+			} finally {
+				setLoadingEnrollments(false);
+			}
+		},
+		[loadingEnrollments, hasMoreEnrollments, enrollmentsPage, enrollmentSearch]
+	);
+
+	useEffect(() => {
+		if (!isOpen) {
+			// Drop the cached list so a reopened modal shows fresh data.
+			setEnrollments([]);
+			setEnrollmentsPage(1);
+			setHasMoreEnrollments(true);
+			setEnrollmentSearch("");
+			return;
+		}
+		fetchEnrollments(true, "");
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen]);
+
+	useEffect(() => {
+		return () => {
+			if (enrollmentSearchTimer.current)
+				clearTimeout(enrollmentSearchTimer.current);
+		};
+	}, []);
+
+	const handleEnrollmentSearch = useCallback(
+		(query: string) => {
+			if (enrollmentSearchTimer.current)
+				clearTimeout(enrollmentSearchTimer.current);
+			enrollmentSearchTimer.current = setTimeout(() => {
+				setEnrollmentSearch(query);
+				setHasMoreEnrollments(true);
+				fetchEnrollments(true, query);
+			}, 350);
+		},
+		[fetchEnrollments]
+	);
+
+	// When editing, the linked enrollment may sit beyond page 1 (or outside the
+	// current search), so fetch it directly to keep its label visible.
+	const resolvedEnrollmentIds = useRef<Set<number>>(new Set());
+
+	useEffect(() => {
+		if (!isOpen) {
+			resolvedEnrollmentIds.current.clear();
+			return;
+		}
+		const id = values.enrollmentId;
+		if (!id || resolvedEnrollmentIds.current.has(id)) return;
+		resolvedEnrollmentIds.current.add(id);
+
+		let cancelled = false;
+		getEnrollmentById(id)
+			.then((res) => {
+				const row = res?.data;
+				if (cancelled || !row) return;
+				setEnrollments((prev) =>
+					prev.some((e) => e.enrollmentId === row.enrollmentId)
+						? prev
+						: [row, ...prev]
+				);
+			})
+			.catch(() => { });
+
+		return () => {
+			cancelled = true;
+		};
+	}, [isOpen, values.enrollmentId]);
+
+	const enrollmentOptions = useMemo(
+		() => [
+			{ label: "— None —", value: null },
+			...enrollments.map((e) => ({
+				label: enrollmentLabel(e),
+				value: e.enrollmentId,
+			})),
+		],
+		[enrollments]
+	);
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -253,7 +410,16 @@ export default function TransactionFormModal({ isOpen, initialData, onClose, onS
 			options: entrySourceOptions.map((e) => ({ label: e.value, value: e.value })),
 			disabled: true
 		},
-		{ name: "enrollmentId", label: "Enrollment", type: "select", options: FAKE_ENROLLMENTS },
+		{
+			name: "enrollmentId",
+			label: "Enrollment",
+			type: "select",
+			options: enrollmentOptions,
+			placeholder: "Select enrollment (latest first)",
+			onSearch: handleEnrollmentSearch,
+			onLoadMore: () => fetchEnrollments(),
+			isLoadingMore: loadingEnrollments,
+		},
 
 		// --- Credit Side ---
 		{

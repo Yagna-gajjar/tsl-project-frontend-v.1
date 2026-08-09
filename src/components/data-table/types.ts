@@ -8,6 +8,8 @@ export interface Column<T> {
   sortable?: boolean;
   filterType?: FilterType;
   filterOptions?: { label: string; value: string | number }[];
+  /** Overrides the default "Filter <header>..." placeholder on text/number filters. */
+  filterPlaceholder?: string;
   render?: (row: T) => ReactNode;
   width?: number | string;
   align?: "left" | "center" | "right";

@@ -31,15 +31,6 @@ export function changeBatch(
   });
 }
 
-export function createSession(
-  payload: BatchMember
-): Promise<Response<BatchMember>> {
-  return request<Response<BatchMember>>(`${BATCH_MEMBER_BASE}`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
 export function getAttendance(batchId: number, date: string): Promise<Response<BatchMember>> {
   return request<Response<BatchMember>>(
     `${BATCH_MEMBER_BASE}/attendance/${batchId}?date=${date}`,

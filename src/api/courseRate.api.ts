@@ -12,6 +12,11 @@ export interface CourseRateQuery {
 	entityType?: string;
 	membershipMasterId?: number;
 	courseName?: string;
+	membershipType?: string;
+	minUnitRate?: number | string;
+	minAboveUnits?: number | string;
+	introduceDate?: string;
+	status?: string;
 }
 
 const RATE_BASE = import.meta.env.VITE_APP_API_URL + "/course-rate";
@@ -28,7 +33,12 @@ export function getCourseRates(
 		courseId: params.courseId ?? undefined,
 		membershipMasterId: params.membershipMasterId ?? undefined,
 		entityType: params.entityType ?? undefined,
-		courseName: params.courseName ?? undefined
+		courseName: params.courseName ?? undefined,
+		membershipType: params.membershipType ?? undefined,
+		minUnitRate: params.minUnitRate ?? undefined,
+		minAboveUnits: params.minAboveUnits ?? undefined,
+		introduceDate: params.introduceDate ?? undefined,
+		status: params.status ?? undefined
 	});
 
 	return request<Response<CourseRate[]>>(`${RATE_BASE}${qs}`);

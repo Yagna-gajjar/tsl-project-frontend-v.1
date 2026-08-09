@@ -32,7 +32,7 @@ export interface FormFieldConfig<T extends Record<string, any>> {
   onLoadMore?: () => void
   isLoadingMore?: boolean
   colSpan?: 1 | 2 | 3 | 4 | "full"
-  onSearch?: (query: string) => Promise<void>
+  onSearch?: (query: string) => void | Promise<void>
   hidden?: boolean
 }
 

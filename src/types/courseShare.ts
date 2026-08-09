@@ -19,4 +19,7 @@ export interface CourseShare {
 
   accountName?: string;
   courseName?: string;
+  memberFirstName?: string;
+  memberLastName?: string;
+  authorityName?: string;
 }

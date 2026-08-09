@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
-import { getCourseRates, deleteCourseRate } from "@/api/courseRate.api";
+import {
+  getCourseRates,
+  deleteCourseRate,
+  type CourseRateQuery,
+} from "@/api/courseRate.api";
 import type { CourseRate } from "@/types/courseRate";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
@@ -12,6 +16,8 @@ type Props = {
   refreshKey?: number;
   filterCourseId?: number;
 };
+
+type FilterValue = string | number | undefined;
 
 export default function CourseRateTable({
   onView,
@@ -25,22 +31,35 @@ export default function CourseRateTable({
   const [total, setTotal] = useState(0);
 
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState<
-    Record<string, string | number | undefined>
-  >({});
+  const [filters, setFilters] = useState<Record<string, FilterValue>>({});
   const [sortBy, setSortBy] = useState<keyof CourseRate>("courseRateId");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const handleExport = async (): Promise<CourseRate[]> => {
-    const res: Response<CourseRate[]> = await getCourseRates({
-      page: 1,
-      limit: total,
+
+  const buildQuery = useCallback(
+    (overrides: Partial<CourseRateQuery> = {}): CourseRateQuery => ({
+      page,
+      limit,
+      search: search || undefined,
       sortBy,
       sortOrder,
-      search: search || undefined,
-    });
+      courseId: filterCourseId,
+      courseName: filters.courseName as string | undefined,
+      minUnitRate: filters.unitRate,
+      minAboveUnits: filters.aboveUnits,
+      introduceDate: filters.introduceDate as string | undefined,
+      status: filters.status as string | undefined,
+      ...overrides,
+    }),
+    [page, limit, search, sortBy, sortOrder, filterCourseId, filters]
+  );
+
+  const handleExport = async (): Promise<CourseRate[]> => {
+    const res: Response<CourseRate[]> = await getCourseRates(
+      buildQuery({ page: 1, limit: total || 1000 })
+    );
 
     return Array.isArray(res?.data) ? res.data : [];
   };
@@ -48,16 +67,7 @@ export default function CourseRateTable({
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const res: Response<CourseRate[]> = await getCourseRates({
-        page,
-        limit,
-        search: search || undefined,
-        sortBy,
-        sortOrder,
-        courseId: filterCourseId,
-        // entityType: filters.entityType as string | undefined,
-        courseName: filters.courseName as string | undefined,
-      });
+      const res: Response<CourseRate[]> = await getCourseRates(buildQuery());
 
       setData(res.data ?? []);
       setTotal(res.pagination?.total ?? 0);
@@ -67,12 +77,9 @@ export default function CourseRateTable({
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, sortBy, sortOrder, filterCourseId, filters]);
+  }, [buildQuery]);
 
-  const handleFilterChange = async (
-    filterKey: string,
-    value: string | number | undefined
-  ) => {
+  const handleFilterChange = (filterKey: string, value: FilterValue) => {
     setFilters((prev) => ({ ...prev, [filterKey]: value || undefined }));
     setPage(1);
   };
@@ -85,36 +92,54 @@ export default function CourseRateTable({
     setPage(1);
   }, [filterCourseId]);
 
-  const columns: Column<CourseRate>[] = [
-    {
-      header: "Course Name",
-      key: "courseId",
-      render: (r) => `${r.courseName}`,
-      sortable: true,
-      filterType: "text",
-    },
-    // {
-    //   header: "Entity Type",
-    //   key: "entityType",
-    //   sortable: true,
-    //   filterType: "text",
-    // },
-    {
-      header: "Rate",
-      key: "unitRate",
-      render: (r) => `₹${r.unitRate}`,
-      sortable: true,
-      filterType: "number",
-    },
-    { header: "Above Units", key: "aboveUnits", sortable: true },
-    { header: "Freezing", key: "enrFreezingAllowed", sortable: true },
-    {
-      header: "Effective Date",
-      key: "introduceDate",
-      render: (r) => new Date(r.introduceDate).toLocaleDateString(),
-      sortable: true,
-    }
-  ];
+  const columns = useMemo<Column<CourseRate>[]>(
+    () => [
+      {
+        header: "Course Name",
+        key: "courseName",
+        sortable: true,
+        filterType: "text",
+      },
+      {
+        header: "Rate",
+        key: "unitRate",
+        render: (r) => `₹${r.unitRate}`,
+        sortable: true,
+        filterType: "number",
+        filterPlaceholder: "Minimum rate",
+      },
+      {
+        header: "Above Units",
+        key: "aboveUnits",
+        sortable: true,
+        filterType: "number",
+        filterPlaceholder: "Minimum units",
+      },
+      { header: "Freezing", key: "enrFreezingAllowed", sortable: true },
+      {
+        header: "Effective Date",
+        key: "introduceDate",
+        render: (r) =>
+          r.introduceDate
+            ? new Date(r.introduceDate).toLocaleDateString()
+            : "N/A",
+        sortable: true,
+        filterType: "date",
+      },
+      {
+        header: "Status",
+        key: "status",
+        sortable: true,
+        filterType: "select",
+        filterOptions: [
+          { label: "Active", value: "active" },
+          { label: "Inactive", value: "inactive" },
+        ],
+        render: (r) => <span className="capitalize">{r.status || "-"}</span>,
+      },
+    ],
+    []
+  );
 
   return (
     <>
@@ -135,6 +160,7 @@ export default function CourseRateTable({
         onSortChange={(c, d) => {
           setSortBy(c as keyof CourseRate);
           setSortOrder(d);
+          setPage(1);
         }}
         onView={onView}
         onDelete={(id) => {
@@ -144,6 +170,7 @@ export default function CourseRateTable({
         onFilterChange={handleFilterChange}
         onExport={handleExport}
         idKey="courseRateId"
+        exportFileName="CourseRates"
       />
 
       <ConfirmDialog

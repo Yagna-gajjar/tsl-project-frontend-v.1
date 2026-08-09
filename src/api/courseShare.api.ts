@@ -12,6 +12,13 @@ export interface CourseShareQuery {
 	academyId?: number;
 	academyName?: string;
 	courseId?: number;
+	accountId?: number;
+	roleInCourse?: string;
+	courseName?: string;
+	accountName?: string;
+	authorityName?: string;
+	minShare?: number | string;
+	status?: string;
 }
 
 const COURSE_SHARE_BASE =
@@ -25,11 +32,18 @@ export function getCourseShares(
 		limit: params.limit ?? 10,
 		sortBy: params.sortBy ?? "courseShareId",
 		sortOrder: params.sortOrder ?? "ASC",
-		search: params.search ?? params.shareType,
+		search: params.search ?? undefined,
 		shareType: params.shareType ?? undefined,
 		academyId: params.academyId ?? undefined,
 		academyName: params.academyName ?? undefined,
 		courseId: params.courseId ?? undefined,
+		accountId: params.accountId ?? undefined,
+		roleInCourse: params.roleInCourse ?? undefined,
+		courseName: params.courseName ?? undefined,
+		accountName: params.accountName ?? undefined,
+		authorityName: params.authorityName ?? undefined,
+		minShare: params.minShare ?? undefined,
+		status: params.status ?? undefined,
 	});
 
 	return request<Response<CourseShare[]>>(`${COURSE_SHARE_BASE}${qs}`);

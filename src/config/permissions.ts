@@ -160,7 +160,6 @@ const ROUTE_RESOURCE: { prefix: string; resource: Resource }[] = [
 	{ prefix: "/account", resource: "Account" },
 	{ prefix: "/enrollment-dashboard", resource: "Enrollment" },
 	{ prefix: "/enrollment", resource: "Enrollment" },
-	{ prefix: "/bookings", resource: "Appointment" },
 	{ prefix: "/course", resource: "Course" },
 	{ prefix: "/batches", resource: "Batch" },
 	{ prefix: "/batch", resource: "Batch" },

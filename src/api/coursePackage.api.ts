@@ -12,6 +12,10 @@ export interface CoursePackageQuery {
 	activityType?: string;
 	courseId?: number;
 	courseName?: string;
+	batchId?: number;
+	batchName?: string;
+	authorityName?: string;
+	status?: string;
 }
 
 const COURSE_PACKAGE_BASE =
@@ -25,11 +29,15 @@ export function getCoursePackages(
 		limit: params.limit ?? 10,
 		sortBy: params.sortBy ?? "coursePackageId",
 		sortOrder: params.sortOrder ?? "ASC",
-		search: params.search ?? params.linkType,
+		search: params.search ?? undefined,
 		linkType: params.linkType ?? undefined,
 		activityType: params.activityType ?? undefined,
 		courseId: params.courseId ?? undefined,
 		courseName: params.courseName ?? undefined,
+		batchId: params.batchId ?? undefined,
+		batchName: params.batchName ?? undefined,
+		authorityName: params.authorityName ?? undefined,
+		status: params.status ?? undefined,
 	});
 
 	return request<Response<CoursePackage[]>>(`${COURSE_PACKAGE_BASE}${qs}`);
