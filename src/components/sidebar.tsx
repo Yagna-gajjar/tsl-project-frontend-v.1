@@ -27,7 +27,7 @@ import {
   Ticket,
   ScrollText,
   Contact,
-  TicketPercent,
+  // TicketPercent,
   Scale,
   History,
 } from "lucide-react";
@@ -105,11 +105,11 @@ const navigationItems: NavigationItem[] = [
     href: "/enrollment",
     icon: BookA,
   },
-  {
-    name: "Discount",
-    href: "/discount",
-    icon: TicketPercent,
-  },
+  // {
+  //   name: "Discount",
+  //   href: "/discount",
+  //   icon: TicketPercent,
+  // },
   {
     name: "Incident Management",
     href: "/incident-reporting",

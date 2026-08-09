@@ -24,7 +24,6 @@ import FacilityPage from "@/pages/facility";
 import AreaPage from "@/pages/area";
 import CoachSkillPage from "@/pages/coachSkill";
 import CoursePage from "@/pages/course";
-import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
 import EnrollmentPage from "./pages/enrollment";
 import AttendanceSheet from "./components/view/batch/attendance-sheet";
@@ -55,6 +54,7 @@ import TrialBalancePage from "./components/view/transaction/transaction-trialbal
 import IncidentReportingPage from "./pages/incidentReport";
 import AuditLogsPage from "./pages/audit-logs";
 import { EnrDashTabsProvider, EnrollmentProvider } from "./contexts/enrollmentContext";
+import BatchChangeBulk from "./components/view/batch/batch-change-bulk";
 export default function App() {
   return (
     <ThemeProvider>
@@ -111,7 +111,6 @@ export default function App() {
                       path="/enrollment/:id/refund"
                       element={<RefundFormModal />}
                     />
-                    <Route path="/discount" element={<DiscountPage />} />
                     <Route path="/projects" element={<Projects />} />
                     <Route
                       path="/infrastructure-Configurations"
@@ -159,6 +158,7 @@ export default function App() {
                       element={<CourseRatePage />}
                     />
                     <Route path="/batches" element={<BatchPage />} />
+                    <Route path="/batches/batch-change-bulk" element={<BatchChangeBulk />} />
                     <Route
                       path="/batch/attendance-sheet/:id"
                       element={<AttendanceSheet />}
