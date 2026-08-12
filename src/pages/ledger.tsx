@@ -294,7 +294,14 @@ const Ledger = () => {
 							</CardHeader>
 							<CardContent>
 								<div className="text-2xl font-bold text-foreground">
-									{loadingLedger ? <Skeleton className="h-8 w-24" /> : totalDebit.toFixed(2)}
+									{loadingLedger ? (
+										<Skeleton className="h-8 w-24" />
+									) : (
+										totalDebit.toLocaleString("en-IN", {
+											minimumFractionDigits: 2,
+											maximumFractionDigits: 2,
+										})
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -305,7 +312,17 @@ const Ledger = () => {
 							</CardHeader>
 							<CardContent>
 								<div className="text-2xl font-bold text-foreground">
-									{loadingLedger ? <Skeleton className="h-8 w-24" /> : totalCredit.toFixed(2)}
+									{/* {loadingLedger ? <Skeleton className="h-8 w-24" /> : totalCredit.toFixed(2)} */}
+									<div className="text-2xl font-bold text-foreground">
+									{loadingLedger ? (
+										<Skeleton className="h-8 w-24" />
+									) : (
+										totalCredit.toLocaleString("en-IN", {
+											minimumFractionDigits: 2,
+											maximumFractionDigits: 2,
+										})
+									)}
+								</div>
 								</div>
 							</CardContent>
 						</Card>
@@ -320,7 +337,11 @@ const Ledger = () => {
 										<Skeleton className="h-8 w-32" />
 									) : (
 										<>
-											{closingBalance.toFixed(2)}
+											{/* {closingBalance.toFixed(2)} */}
+											{closingBalance.toLocaleString("en-IN", {
+												minimumFractionDigits: 2,
+												maximumFractionDigits: 2,
+											})}
 											{balanceType && (
 												<Badge variant="secondary" className="text-xs">
 													{balanceType}
