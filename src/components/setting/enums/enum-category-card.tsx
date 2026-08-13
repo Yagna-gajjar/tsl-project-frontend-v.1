@@ -21,6 +21,8 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
 		enumCase: group.enumCase[i],
 	}));
 
+	const isActive = (status: string) => status?.toLowerCase() === "active";
+
 	return (
     <motion.div
       layout
@@ -59,7 +61,7 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
                       className={`
 							w-2 h-2 rounded-full ring-2 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900 
 							${
-                item.status
+                isActive(item.status)
                   ? "bg-emerald-500 ring-emerald-100"
                   : "bg-slate-300 ring-slate-100"
               }
@@ -67,7 +69,7 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
                     />
                   </TooltipTrigger>
                   <TooltipContent>
-                    {item.status ? "Active" : "Inactive"}
+                    {isActive(item.status) ? "Active" : "Inactive"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -75,7 +77,7 @@ export function EnumCategoryCard({ group, onEditItem, onCreateItem }: Props) {
               <div className="flex flex-col min-w-0">
                 <span
                   className={`text-sm font-medium truncate ${
-                    !item.status
+                    !isActive(item.status)
                       ? "text-muted-foreground line-through decoration-slate-400"
                       : ""
                   }`}

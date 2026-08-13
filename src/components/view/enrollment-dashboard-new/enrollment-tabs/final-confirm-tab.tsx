@@ -111,7 +111,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		const billingDaysSessions = Number(data.billingDaysSessions) || 1;
 		const membersEnrolled = Number(data.membersEnrolled) || 1;
 
-		if (data.attendingStartDate && data.startTime && course.sessionMinutes) {
+		if (data.attendingStartDate && data.startTime) {
 			const calc = getFinalAmounts(rackPrice, patternDiscount, dnOrDiscount, billingDaysSessions, processingCharge, sgstRate, cgstRate, membersEnrolled, data.startTime, course.sessionMinutes, data.attendingStartDate)
 
 			const calculatedEndTime = calc.calculatedEndTime

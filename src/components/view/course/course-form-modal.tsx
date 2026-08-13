@@ -39,8 +39,8 @@ import CourseFooter from "./course-form/course-footer";
 import { getCourseRates, createCourseRate, updateCourseRate, deleteCourseRate } from "@/api/courseRate.api";
 import { getCourseShares, createCourseShare, updateCourseShare, deleteCourseShare } from "@/api/courseShare.api";
 import { getCoursePackages, createCoursePackage, updateCoursePackage, deleteCoursePackage } from "@/api/coursePackage.api";
-import { getAccounts } from "@/api/account.api";
 import { createFullCourse, updateCourse } from "@/api/course.api";
+import { getAccounts } from "@/api/account.api";
 import type { Account } from "@/types/account";
 
 interface CourseFormState {
@@ -200,7 +200,8 @@ export default function CourseFormModal({
   const [originalState, setOriginalState] = useState<CourseFormState | null>(null);
   const [activityOptions, setActivityOptions] = useState<Activity[]>([]);
   const [courseTypeOptions, setCourseTypeOptions] = useState<Enums[]>([]);
-  const [roleInCourse, setRoleInCourse] = useState<Enums[]>();
+  const [courseStatusOptions, setCourseStatusOptions] = useState<Enums[]>([]);
+  const [roleInCourse, setRoleInCourse] = useState<Enums[]>([]);
   const [entityOptions, setEntityOptions] = useState<Entity[]>([]);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const [shareEntityOptions, setShareEntityOptions] = useState<Account[]>([]);
@@ -213,18 +214,20 @@ export default function CourseFormModal({
       setLoadingOptions(true);
       setGlobalError(null);
 
-      const [actRes, typeRes, entityRes, roleInCourseRes] =
+      const [actRes, typeRes, accountRes, roleInCourseRes, statusRes] =
         await Promise.all([
           getActivities({ limit: 500 }),
-          getEnumsByCategory("COURSETYPE"),
-          getAccounts({ limit: 500 }),
-          getEnumsByCategory("ROLEINCOURSE"),
+          getEnumsByCategory("courseType"),
+          getAccounts({ limit: 5000, excludeEntityId: 20 }),
+          getEnumsByCategory("roleInCourse"),
+          getEnumsByCategory("courseStatus"),
         ]);
 
       setActivityOptions((actRes as Response<Activity[]>)?.data ?? []);
       setCourseTypeOptions((typeRes as Response<Enums[]>)?.data ?? []);
       setRoleInCourse((roleInCourseRes as Response<Enums[]>)?.data ?? []);
-      setShareEntityOptions((entityRes as Response<Account[]>)?.data ?? []);
+      setShareEntityOptions((accountRes as Response<Account[]>)?.data ?? []);
+      setCourseStatusOptions((statusRes as Response<Enums[]>)?.data ?? []);
 
       await loadCourseAcademies();
     } catch {
@@ -347,7 +350,7 @@ export default function CourseFormModal({
       if (s.roleInCourse === "CGST" || s.roleInCourse === "SGST") {
         return sum;
       }
-      return sum + (s.share || 0);
+      return sum + Number(s.share || 0);
     }, 0);
 
     if (totalShare !== 100) {
@@ -374,8 +377,8 @@ export default function CourseFormModal({
     setGlobalError(null);
 
     const vErrors = validate();
+    setErrors(vErrors);
     if (Object.keys(vErrors).length) {
-      setErrors(vErrors);
       setIsSubmitting(false);
       return;
     }
@@ -420,10 +423,12 @@ export default function CourseFormModal({
             status: rate.status || "active",
           };
 
-          if (rate.courseRateId && rate.courseRateId > 0) {
-            await updateCourseRate(rate.courseRateId, rateData as any);
-          } else {
-            await createCourseRate(rateData as any);
+          const rateRes = rate.courseRateId && rate.courseRateId > 0
+            ? await updateCourseRate(rate.courseRateId, rateData as any)
+            : await createCourseRate(rateData as any);
+
+          if (!rateRes?.success) {
+            throw new Error(rateRes?.message || "Failed to save course rate");
           }
         }
 
@@ -447,10 +452,12 @@ export default function CourseFormModal({
             approvalAuthorityId: share.approvalAuthorityId || null,
           };
 
-          if (share.courseShareId && share.courseShareId > 0) {
-            await updateCourseShare(share.courseShareId, shareData as any);
-          } else {
-            await createCourseShare(shareData as any);
+          const shareRes = share.courseShareId && share.courseShareId > 0
+            ? await updateCourseShare(share.courseShareId, shareData as any)
+            : await createCourseShare(shareData as any);
+
+          if (!shareRes?.success) {
+            throw new Error(shareRes?.message || "Failed to save course share");
           }
         }
 
@@ -474,12 +481,12 @@ export default function CourseFormModal({
             approvalAuthorityId: pkg.approvalAuthorityId || null,
           };
 
-          if (pkg.coursePackageId && pkg.coursePackageId > 0) {
-            // Update existing package
-            await updateCoursePackage(pkg.coursePackageId, pkgData as any);
-          } else {
-            // Create new package
-            await createCoursePackage(pkgData as any);
+          const pkgRes = pkg.coursePackageId && pkg.coursePackageId > 0
+            ? await updateCoursePackage(pkg.coursePackageId, pkgData as any)
+            : await createCoursePackage(pkgData as any);
+
+          if (!pkgRes?.success) {
+            throw new Error(pkgRes?.message || "Failed to save course package");
           }
         }
 
@@ -590,28 +597,6 @@ export default function CourseFormModal({
             shares[i] = { ...s, share: newValue };
           }
         });
-        return { ...p, shares };
-      }
-
-      const tslIndex = shares.findIndex(
-        (s) => s.roleInCourse === "TSL"
-      );
-
-      if (tslIndex !== -1) {
-        const totalOtherShares = shares.reduce((sum, s, i) => {
-          if (
-            i !== tslIndex &&
-            !TAX_SHARE_TYPES.includes(s.roleInCourse || "")
-          ) {
-            return sum + (Number(s.share) || 0);
-          }
-          return sum;
-        }, 0);
-
-        shares[tslIndex] = {
-          ...shares[tslIndex],
-          share: Math.max(0, 100 - totalOtherShares),
-        };
       }
 
       return { ...p, shares };
@@ -795,6 +780,7 @@ export default function CourseFormModal({
                         activityOptions={activityOptions}
                         entityOptions={entityOptions}
                         courseTypeOptions={courseTypeOptions}
+                        courseStatusOptions={courseStatusOptions}
                         onChange={handleCourseChange}
                       />
                     </TabsContent>

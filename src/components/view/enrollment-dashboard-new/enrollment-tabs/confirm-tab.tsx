@@ -60,7 +60,9 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		setIsAccountsLoading(true);
 		try {
 			const aRes: Response<Account[]> = await getAccounts({
-				accountType: "Expences"
+				accountType: "Main",
+				excludeEntityId: 20,
+				limit: 5000,
 			});
 			if (aRes.success) {
 				setDnAccounts(aRes?.data || []);
@@ -70,7 +72,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		} catch {
 			toast({
 				title: "Error",
-				description: "Failed to fetch expense accounts.",
+				description: "Failed to fetch academy/coach accounts.",
 				variant: "destructive"
 			})
 		} finally {
@@ -179,7 +181,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 										) : (
 											<Building2 className="w-4 h-4 text-muted-foreground" />
 										)}
-										<SelectValue placeholder={isAccountsLoading ? "Fetching accounts..." : "Select Expense Account"} />
+										<SelectValue placeholder={isAccountsLoading ? "Fetching accounts..." : "Select Academy/Coach Account"} />
 									</div>
 								</SelectTrigger>
 								<SelectContent>

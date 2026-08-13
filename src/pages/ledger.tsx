@@ -151,6 +151,7 @@ const Ledger = () => {
 				const response: Response<Transaction[]> = await getLedgerEntriesByAccount(Number(selectedAccountId));
 				if (response?.success) {
 					setLedgerEntries(response?.data || []);
+					console.log(response?.data)
 				}
 			} catch (error) {
 				console.error("Failed to fetch ledger entries:", error);
@@ -378,6 +379,7 @@ const Ledger = () => {
 									<Table>
 										<TableHeader>
 											<TableRow className="bg-muted/50">
+												<TableHead>Sr. No</TableHead>
 												<TableHead>Date</TableHead>
 												<TableHead>Type</TableHead>
 												<TableHead>Particulars</TableHead>
@@ -395,8 +397,11 @@ const Ledger = () => {
 
 												return (
 													<TableRow key={idx} className="hover:bg-muted/50 transition-colors">
+														<TableCell>
+															{entry.typeSerialNo}
+														</TableCell>
 														<TableCell className="whitespace-nowrap text-muted-foreground">
-															{entry?.createdAt ? format(new Date(entry.createdAt), 'dd MMM yyyy') : '-'}
+															{entry?.transactionDate ? format(new Date(entry.transactionDate), 'dd MMM yyyy') : '-'}
 														</TableCell>
 														<TableCell>
 															<Badge variant="outline" className="capitalize">

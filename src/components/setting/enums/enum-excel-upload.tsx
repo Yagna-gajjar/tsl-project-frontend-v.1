@@ -39,16 +39,16 @@ export default function EnumExcelUpload({ isOpen, onClose, onSuccess }: EnumExce
 	}, []);
 
 	const handleCreateEnum = useCallback(async (row: EnumImportRow) => {
-		const parseBoolean = (val: any) => {
-			if (typeof val === 'boolean') return val;
-			const str = String(val).toLowerCase();
-			return str === 'true' || str === '1' || str === 'active' || str === 'yes';
+		const parseStatus = (val: any) => {
+			const str = String(val).trim().toLowerCase();
+			const isActive = str === 'true' || str === '1' || str === 'active' || str === 'yes';
+			return isActive ? 'active' : 'inactive';
 		};
 
 		const payload: Partial<Enums> = {
-			category: row.category.toUpperCase().trim(),
+			category: row.category.trim(),
 			value: row.value.trim(),
-			status: parseBoolean(row.status),
+			status: parseStatus(row.status),
 			description: row.description || null,
 			enumCase: Number(row.enumCase),
 		};
