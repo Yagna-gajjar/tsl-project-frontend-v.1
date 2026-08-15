@@ -1,17 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Eye, Pencil, Trash2 } from "lucide-react"
-import type { Column } from "./types"
+import type { TableMobileCardProps } from "./types"
 import { motion } from "framer-motion"
 
-interface TableMobileCardProps<T> {
-	data: T[];
-	columns: Column<T>[];
-	onView?: (row: T) => void;
-	onEdit?: (row: T) => void;
-	onDelete?: (id: number | undefined) => void;
-	idKey?: keyof T;
-}
 
 export function TableMobileCard<T>({
 	data,
@@ -23,7 +15,7 @@ export function TableMobileCard<T>({
 }: TableMobileCardProps<T>) {
 	return (
 		<div className="grid gap-4 md:hidden">
-			{data.map((row:any, index: number) => (
+			{data.map((row: T, index: number) => (
 				<motion.div
 					key={String((row)[idKey] || index)}
 					initial={{ opacity: 0, y: 20 }}
@@ -52,7 +44,7 @@ export function TableMobileCard<T>({
 											variant="ghost"
 											size="icon"
 											className="h-8 w-8"
-											onClick={() => onDelete((row)[idKey])}
+											onClick={() => onDelete(String((row)[idKey]))}
 										>
 											<Trash2 className="h-4 w-4 text-red-600" />
 										</Button>

@@ -1,6 +1,7 @@
-import type { Batch } from '@/types/batch';
-import { request, toQueryString, type SortOrder } from './helper';
-import type { Response } from '@/types/response';
+import type { Batch } from "@/types/batch";
+import { request, toQueryString, type SortOrder } from "./helper";
+import type { Response } from "@/types/response";
+import type { BatchMember } from "@/types/batchMember";
 
 export interface BatchQuery {
   page?: number;
@@ -28,6 +29,12 @@ export interface BatchQuery {
 
 const BATCH_BASE = import.meta.env.VITE_APP_API_URL + "/batch";
 
+export interface ReassignBatchMembersPayload {
+  fromBatchId: number;
+  toBatchId: number;
+  batchMemberIds: number[];
+}
+
 export function getBatch(params: BatchQuery = {}): Promise<Response<Batch[]>> {
   const qs = toQueryString({
     page: params.page ?? 1,
@@ -50,7 +57,7 @@ export function getBatch(params: BatchQuery = {}): Promise<Response<Batch[]>> {
     activityId: params.activityId ?? undefined,
     startTime: params.startTime ?? undefined,
     endTime: params.endTime ?? undefined,
-    daysPattern: params.daysPattern ?? undefined
+    daysPattern: params.daysPattern ?? undefined,
   });
 
   return request<Response<Batch[]>>(`${BATCH_BASE}${qs}`);
@@ -67,15 +74,38 @@ export function createBatch(payload: Batch): Promise<Response<Batch>> {
   });
 }
 
-export function editBatch(id: number, payload: Batch): Promise<Response<Batch>> {
+export function editBatch(
+  id: number,
+  payload: Batch,
+): Promise<Response<Batch>> {
   return request<Response<Batch>>(`${BATCH_BASE}/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteBatch(id: number): Promise<Response<Batch>> {
-  return request<Response<Batch>>(`${BATCH_BASE}/${id}`, {
+export function deleteBatch(id: number, newBatchId: number): Promise<Response> {
+  return request<Response>(`${BATCH_BASE}/${id}`, {
     method: "DELETE",
+    body: JSON.stringify({
+      newBatchId,
+    }),
+  });
+}
+export function reassignRequiredBatch(id: number): Promise<
+  Response<{
+    required: boolean;
+    count: number;
+    batchMembers: BatchMember[];
+  }>
+> {
+  return request<
+    Response<{
+      required: boolean;
+      count: number;
+      batchMembers: BatchMember[];
+    }>
+  >(`${BATCH_BASE}/reassign-required-batch/${id}`, {
+    method: "GET",
   });
 }

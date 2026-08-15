@@ -24,9 +24,10 @@ import {
   Shield,
   ScrollText,
   Contact,
-  TicketPercent,
+  // TicketPercent,
   Scale,
   History,
+  University,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -93,11 +94,11 @@ const navigationItems: NavigationItem[] = [
     href: "/enrollment",
     icon: BookA,
   },
-  {
-    name: "Discount",
-    href: "/discount",
-    icon: TicketPercent,
-  },
+  // {
+  //   name: "Discount",
+  //   href: "/discount",
+  //   icon: TicketPercent,
+  // },
   {
     name: "Incident Management",
     href: "/incident-reporting",
@@ -167,6 +168,11 @@ const navigationItems: NavigationItem[] = [
         label: "Staff Attendance",
         href: "/staff-management/attendance",
         icon: ScrollText,
+      },
+      {
+        label: "Academies",
+        href: "/staff-management/academies",
+        icon: University,
       },
     ],
   },

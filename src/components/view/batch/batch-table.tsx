@@ -1,4 +1,4 @@
-import { deleteBatch, getBatch } from "@/api/batch.api";
+import { getBatch, reassignRequiredBatch } from "@/api/batch.api";
 import { DataTable } from "@/components/data-table/data-table";
 import type { Column } from "@/components/data-table/types";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
@@ -120,7 +120,16 @@ export default function BatchTable({ onView, onEdit, refreshKey }: Props) {
   const handleDelete = async (id: number | null) => {
     if (id === null) return;
     try {
-      await deleteBatch(id);
+      const res = await reassignRequiredBatch(id);
+      if (res.data?.required) {
+        navigate("/batches/batch-change-bulk", {
+          state: {
+            batch_id: id,
+            reassignment_batchMember: res.data.batchMembers
+          }
+        })
+      }
+
       toast({ title: "Success", description: "Batch deleted successfully" });
       setDeleteOpen(false);
       loadData();

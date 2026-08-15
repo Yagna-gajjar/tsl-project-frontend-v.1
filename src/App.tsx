@@ -10,7 +10,6 @@ import Layout from "./components/layout";
 import Dashboard from "./pages/dashboard";
 import Projects from "./pages/projects";
 import EnumsPage from "./components/setting/enums/enums";
-import { Toaster } from "./components/ui/toaster";
 import LoginForm from "./components/login-form";
 import NotFound from "./pages/NotFound";
 import Signup from "./pages/Signup";
@@ -26,7 +25,6 @@ import FacilityPage from "@/pages/facility";
 import AreaPage from "@/pages/area";
 import CoachSkillPage from "@/pages/coachSkill";
 import CoursePage from "@/pages/course";
-import DiscountPage from "./pages/discount";
 import BatchPage from "./pages/batch";
 import EnrollmentPage from "./pages/enrollment";
 import AttendanceSheet from "./components/view/batch/attendance-sheet";
@@ -48,46 +46,52 @@ import TransactionPage from "./pages/transaction";
 import AccessAndDetails from "./pages/access-details";
 import UserAccessPage from "./components/view/user/UserAccessPage";
 import StatusVisible from "./pages/status-visible";
-import { EnrollmentFlow } from "./components/view/enrollment-dashboard-new/enrollment-flow";
+import { EnrollmentFlow } from "./components/view/enrollment-dashboard/enrollment-flow";
 import ChangeEnrollment from "./pages/Change";
 import Ledger from "./pages/ledger";
 import ProfilePage from "./pages/profile";
 import TrialBalancePage from "./components/view/transaction/transaction-trialbalance";
 import IncidentReportingPage from "./pages/incidentReport";
 import AuditLogsPage from "./pages/audit-logs";
+import { EnrDashTabsProvider, EnrollmentProvider } from "./contexts/enrollmentContext";
+import BatchChangeBulk from "./components/view/batch/batch-change-bulk";
 import GeneralSettingsPage from "./components/setting/general/general-settings";
+import Academies from "./pages/academies";
+import EntityCoach from "./components/view/academies/entity-coach";
 export default function App() {
   return (
     <ThemeProvider>
       <ConfirmationProvider>
         <AuthProvider>
-        <AppSettingsProvider>
-          <Router>
-            <Routes>
-              <Route path="/404error" element={<NotFound />} />
-            </Routes>
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Navigate to="/dashboard" />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route
-                  path="/enrollment-dashboard"
-                  element={<EnrollmentFlow />}
-                />
-                {/* <Route
+          <AppSettingsProvider>
+            <Router>
+              <EnrDashTabsProvider>
+                <EnrollmentProvider>
+                  <Routes>
+                    <Route path="/404error" element={<NotFound />} />
+                  </Routes>
+                  <Routes>
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<Navigate to="/dashboard" />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route
+                        path="/enrollment-dashboard"
+                        element={<EnrollmentFlow />}
+                      />
+                      {/* <Route
                   path="/enrollment-dashboard"
                   element={<EnrollmentDashboard />}
                 /> */}
-                <Route path="/enrollment" element={<EnrollmentPage />} />
-                <Route path="/enrollment/change" element={<ChangeEnrollment />} />
-                <Route path="/account/authority" element={<AuthorityPage />} />
-                <Route path="/account/accounts" element={<AccountPage />} />
-                <Route
-                  path="/account/account-member"
-                  element={<AccountMemberPage />}
-                />
-                {/* <Route
+                      <Route path="/enrollment" element={<EnrollmentPage />} />
+                      <Route path="/enrollment/change" element={<ChangeEnrollment />} />
+                      <Route path="/account/authority" element={<AuthorityPage />} />
+                      <Route path="/account/accounts" element={<AccountPage />} />
+                      <Route
+                        path="/account/account-member"
+                        element={<AccountMemberPage />}
+                      />
+                      {/* <Route
                   path="/enrollment/:id/course-change"
                   element={<CourseChange />}
                 />
@@ -107,120 +111,129 @@ export default function App() {
                   path="/enrollment/:id/defreeze-enrollment"
                   element={<DefreezeEnrollment />}
                 /> */}
-                <Route
-                  path="/enrollment/:id/refund"
-                  element={<RefundFormModal />}
-                />
-                <Route path="/discount" element={<DiscountPage />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route
-                  path="/infrastructure-Configurations"
-                  element={
-                    <Navigate to="/infrastructure-configurations/facility" />
-                  }
-                />
-                <Route
-                  path="/infrastructure-configurations/facility-allotment"
-                  element={<FacilityAllotmentsPage />}
-                />
-                <Route path="/account/member" element={<MemberPage />} />
-                <Route
-                  path="/staff-management/access-details"
-                  element={<AccessAndDetails />}
-                />
-                <Route
-                  path="/staff-management/user-access"
-                  element={<UserAccessPage />}
-                />
-                <Route
-                  path="/staff-management/coach-skills"
-                  element={<CoachSkillPage />}
-                />
-                <Route
-                  path="/staff-management/attendance"
-                  element={<StaffAttendance />}
-                />
-                <Route
-                  path="/staff-management/coach-assignment"
-                  element={<CoachAssignmentsPage />}
-                />
-                <Route path="/course/courses" element={<CoursePage />} />
-                <Route
-                  path="course/course-share"
-                  element={<CourseSharePage />}
-                />
-                <Route
-                  path="/course/course-package"
-                  element={<CoursePackagePage />}
-                />
-                <Route
-                  path="/course/course-rate"
-                  element={<CourseRatePage />}
-                />
-                <Route path="/batches" element={<BatchPage />} />
-                <Route
-                  path="/batch/attendance-sheet/:id"
-                  element={<AttendanceSheet />}
-                />
-                <Route
-                  path="/infrastructure-configurations/facility"
-                  element={<FacilityPage />}
-                />
-                <Route
-                  path="/infrastructure-configurations/area"
-                  element={<AreaPage />}
-                />
-                <Route
-                  path="/membership/membership-master"
-                  element={<MembershipMasterPage />}
-                />
-                <Route
-                  path="/membership/membership-registration"
-                  element={<MembershipPage />}
-                />
-                <Route
-                  path="/membership/membership-link"
-                  element={<MembershipLinkPage />}
-                />
-                <Route path="/finance/transaction" element={<TransactionPage />} />
-                <Route path="/finance/ledger" element={<Ledger />} />
-                <Route path="/finance/trialbalance" element={<TrialBalancePage />} />
-                <Route path="/incident-reporting" element={<IncidentReportingPage />} />
-                <Route path="/audit-logs" element={<AuditLogsPage />} />
+                      <Route
+                        path="/enrollment/:id/refund"
+                        element={<RefundFormModal />}
+                      />
+                      <Route path="/projects" element={<Projects />} />
+                      <Route
+                        path="/infrastructure-Configurations"
+                        element={
+                          <Navigate to="/infrastructure-configurations/facility" />
+                        }
+                      />
+                      <Route
+                        path="/infrastructure-configurations/facility-allotment"
+                        element={<FacilityAllotmentsPage />}
+                      />
+                      <Route path="/account/member" element={<MemberPage />} />
+                      <Route
+                        path="/staff-management/access-details"
+                        element={<AccessAndDetails />}
+                      />
+                      <Route
+                        path="/staff-management/user-access"
+                        element={<UserAccessPage />}
+                      />
+                      <Route
+                        path="/staff-management/coach-skills"
+                        element={<CoachSkillPage />}
+                      />
+                      <Route
+                        path="/staff-management/academies"
+                        element={<Academies />}
+                      />
+                      <Route
+                        path="/academies/members"
+                        element={<EntityCoach />}
+                      />
+                      <Route
+                        path="/staff-management/attendance"
+                        element={<StaffAttendance />}
+                      />
+                      <Route
+                        path="/staff-management/coach-assignment"
+                        element={<CoachAssignmentsPage />}
+                      />
+                      <Route path="/course/courses" element={<CoursePage />} />
+                      <Route
+                        path="course/course-share"
+                        element={<CourseSharePage />}
+                      />
+                      <Route
+                        path="/course/course-package"
+                        element={<CoursePackagePage />}
+                      />
+                      <Route
+                        path="/course/course-rate"
+                        element={<CourseRatePage />}
+                      />
+                      <Route path="/batches" element={<BatchPage />} />
+                      <Route path="/batches/batch-change-bulk" element={<BatchChangeBulk />} />
+                      <Route
+                        path="/batch/attendance-sheet/:id"
+                        element={<AttendanceSheet />}
+                      />
+                      <Route
+                        path="/infrastructure-configurations/facility"
+                        element={<FacilityPage />}
+                      />
+                      <Route
+                        path="/infrastructure-configurations/area"
+                        element={<AreaPage />}
+                      />
+                      <Route
+                        path="/membership/membership-master"
+                        element={<MembershipMasterPage />}
+                      />
+                      <Route
+                        path="/membership/membership-registration"
+                        element={<MembershipPage />}
+                      />
+                      <Route
+                        path="/membership/membership-link"
+                        element={<MembershipLinkPage />}
+                      />
+                      <Route path="/finance/transaction" element={<TransactionPage />} />
+                      <Route path="/finance/ledger" element={<Ledger />} />
+                      <Route path="/finance/trialbalance" element={<TrialBalancePage />} />
+                      <Route path="/incident-reporting" element={<IncidentReportingPage />} />
+                      <Route path="/audit-logs" element={<AuditLogsPage />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Route>
-              <Route path="/setting" element={<Setting />}>
-                <Route path="/setting/entity" element={<EntityPage />} />
-                <Route
-                  path="/setting/family-type"
-                  element={<FamilyTypePage />}
-                />
-                <Route
-                  path="/setting/team-category"
-                  element={<TeamCategoryPage />}
-                />
-                <Route
-                  path="/setting/identity-type"
-                  element={<IdentityTypePage />}
-                />
-                <Route
-                  path="/setting/status"
-                  element={<StatusVisible />}
-                />
-                <Route path="/setting/activity" element={<ActivityPage />} />
-                <Route path="/setting/common-lookups" element={<EnumsPage />} />
-                <Route path="/setting/general" element={<GeneralSettingsPage />} />
-                <Route path="/setting/*" element={<NotFound />} />
-              </Route>
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/signup" element={<Signup />} />
-            </Routes>
-          </Router>
-          <Toaster />
-        </AppSettingsProvider>
-        </AuthProvider>
-      </ConfirmationProvider>
-    </ThemeProvider>
+                      <Route path="*" element={<NotFound />} />
+                    </Route >
+                    <Route path="/setting" element={<Setting />}>
+                      <Route path="/setting/entity" element={<EntityPage />} />
+                      <Route
+                        path="/setting/family-type"
+                        element={<FamilyTypePage />}
+                      />
+                      <Route
+                        path="/setting/team-category"
+                        element={<TeamCategoryPage />}
+                      />
+                      <Route
+                        path="/setting/identity-type"
+                        element={<IdentityTypePage />}
+                      />
+                      <Route
+                        path="/setting/status"
+                        element={<StatusVisible />}
+                      />
+                      <Route path="/setting/activity" element={<ActivityPage />} />
+                      <Route path="/setting/common-lookups" element={<EnumsPage />} />
+                      <Route path="/setting/general" element={<GeneralSettingsPage />} />
+                      <Route path="/setting/*" element={<NotFound />} />
+                    </Route>
+                    <Route path="/login" element={<LoginForm />} />
+                    <Route path="/signup" element={<Signup />} />
+                  </Routes >
+                </EnrollmentProvider >
+              </EnrDashTabsProvider >
+            </Router >
+          </AppSettingsProvider>
+        </AuthProvider >
+      </ConfirmationProvider >
+    </ThemeProvider >
   );
 }
