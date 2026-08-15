@@ -8,6 +8,8 @@ import {
 import { toast } from "@/hooks/use-toast";
 import type { Response } from "@/types/response";
 import type { CoachMember } from "@/types/coachMember";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   entityId: number;
@@ -29,9 +31,6 @@ export default function CoachTable({ entityId, onView }: Props) {
   const [sortBy, setSortBy] = useState<keyof CoachMember>("memberFirstName");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
-  // Activity/Qualification/Interest are matched exactly on the server, so the
-  // filter offers the real list of values (pulled unfiltered, for this
-  // academy) rather than a free-text box that silently matches nothing.
   const [activityOptions, setActivityOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -160,30 +159,44 @@ export default function CoachTable({ entityId, onView }: Props) {
   );
 
   return (
-    <DataTable<CoachMember>
-      data={data}
-      columns={columns}
-      isLoading={loading}
-      pagination={{
-        page,
-        limit,
-        total,
-        onPageChange: setPage,
-      }}
-      onSearchChange={(q) => {
-        setSearch(q);
-        setPage(1);
-      }}
-      onFilterChange={handleFilterChange}
-      onSortChange={(c, d) => {
-        setSortBy(c as keyof CoachMember);
-        setSortOrder(d);
-        setPage(1);
-      }}
-      onView={onView}
-      idKey="coachSkillId"
-      exportFileName="Members"
-      onExport={handleExport}
-    />
+    <div>
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search academies..."
+          className="pl-9"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
+      </div>
+      <DataTable<CoachMember>
+        data={data}
+        columns={columns}
+        isLoading={loading}
+        pagination={{
+          page,
+          limit,
+          total,
+          onPageChange: setPage,
+        }}
+        onSearchChange={(q) => {
+          setSearch(q);
+          setPage(1);
+        }}
+        onFilterChange={handleFilterChange}
+        onSortChange={(c, d) => {
+          setSortBy(c as keyof CoachMember);
+          setSortOrder(d);
+          setPage(1);
+        }}
+        onView={onView}
+        idKey="coachSkillId"
+        exportFileName="Members"
+        onExport={handleExport}
+      />
+    </div>
   );
 }
