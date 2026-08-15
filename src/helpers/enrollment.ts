@@ -12,33 +12,54 @@ export function getFinalAmounts(
   startTime: string,
   sessionMinutes: number,
   attendingStartDate: string,
+  hasDnAccount: boolean = false,
 ) {
-  const baseRate =
+  // Enrolment Rules sheet, item 20/22: the member's discounted per-unit rate.
+  const discountedRate =
     rackPrice * patternDiscount - dnOrDiscount / billingDaysSessions;
 
-  const gst = (100 + (sgst + cgst)) / 100;
+  // Item 26: when a debit-note/discount account absorbs the discount, the
+  // rounding base uses the full undiscounted rack price instead.
+  const roundingBaseRate = hasDnAccount
+    ? rackPrice * patternDiscount
+    : discountedRate;
 
-  const baseRateWithGst = baseRate * gst;
-  const roundedBaseRateWithGst = Math.ceil(Number(baseRateWithGst));
-  const roundedAmount =
-    (100 * (roundedBaseRateWithGst - baseRateWithGst)) / gst;
-  const costToMember = rackPrice * patternDiscount;
-  const billingAmount = baseRate * billingDaysSessions * membersEnrolled;
+  const gstFactor = 100 + sgst + cgst; // "B" in the spec (percentage scale, e.g. 118)
 
-  const cgstAmount =
-    (billingAmount + processingCharge * membersEnrolled + roundedAmount) *
-    (cgst / 100);
+  const totalBeforeRounding =
+    roundingBaseRate * billingDaysSessions + processingCharge; // "A"
+  const totalWithGst = totalBeforeRounding * (gstFactor / 100); // "X"
+  const roundedTotalWithGst = Math.ceil(totalWithGst); // "Y"
+  const roundingGap = roundedTotalWithGst - totalWithGst; // "Z"
+  const roundedAmount = (100 * roundingGap) / gstFactor;
 
-  const sgstAmount =
-    (billingAmount + processingCharge * membersEnrolled + roundedAmount) *
-    (sgst / 100);
+  // Item 25: the member's true net cost always nets the discount, regardless
+  // of who bears it.
+  const costToMember = discountedRate + roundedAmount;
 
+  // Item 24: the per-unit rate actually billed — just the discount portion
+  // when a debit-note/discount account is absorbing it.
+  const perUnitBillRate = hasDnAccount
+    ? dnOrDiscount / billingDaysSessions
+    : discountedRate;
+  const billingRate = perUnitBillRate + roundedAmount;
+
+  // Item 27: billed off billingRate (which already includes the rounding
+  // correction), not the raw discounted rate.
+  const billingAmount = billingRate * billingDaysSessions * membersEnrolled;
+
+  // Items 28/29: processingCharge is a flat charge, not per member.
+  const cgstAmount = (billingAmount + processingCharge) * (cgst / 100);
+  const sgstAmount = (billingAmount + processingCharge) * (sgst / 100);
+
+  // Item 30: built off costToMember (roundedAmount already folded in), plus
+  // a single flat processingCharge.
   const totalDebitAmount =
-    baseRate * billingDaysSessions * membersEnrolled +
+    costToMember * billingDaysSessions * membersEnrolled +
     cgstAmount +
     sgstAmount +
-    processingCharge * membersEnrolled +
-    roundedAmount;
+    processingCharge;
+
   let calculatedEndTime = startTime || "";
   if (attendingStartDate && startTime && sessionMinutes) {
     const startDateTime = parseISO(`${attendingStartDate}T${startTime}`);
@@ -46,7 +67,8 @@ export function getFinalAmounts(
     calculatedEndTime = format(endDateTime, "HH:mm:ss");
   }
   return {
-    baseRate,
+    baseRate: discountedRate,
+    billingRate,
     roundedAmount,
     costToMember,
     billingAmount,

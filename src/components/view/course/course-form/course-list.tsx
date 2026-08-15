@@ -55,6 +55,7 @@ export function CourseForm({
 			: [...selectedWeekdays, day];
 		setSelectedWeekdays(newSelection);
 		onChange("daysPattern", newSelection);
+		onChange("noOfDaysInWeek", newSelection.length);
 	};
 
 	return (
@@ -197,12 +198,12 @@ export function CourseForm({
 				/>
 			</div>
 			<div>
-				<Label htmlFor="noOfDaysInWeek">Days Per Week*</Label>
+				<Label htmlFor="noOfDaysInWeek">Days Per Week (Auto)</Label>
 				<Input
 					id="noOfDaysInWeek"
 					type="number"
 					value={course.noOfDaysInWeek || ""}
-					onChange={(e) => onChange("noOfDaysInWeek", Number(e.target.value))}
+					disabled
 				/>
 				{errors.noOfDaysInWeek && (
 					<p className="text-xs text-destructive mt-1">

@@ -81,7 +81,7 @@ export function BatchFormModal({
         getActivities({ limit: 10000 }),
         getEntities({ limit: 10000 }),
         getMembershipMasters({ limit: 10000 }),
-        getEnumsByCategory("batchType")
+        getEnumsByCategory("BATCHTYPE")
       ]);
       setActivityOptions(act?.data || []);
       setEntityOptions(ent?.data || []);

@@ -54,7 +54,7 @@ export default function AccountPage() {
 
   const fetchEntityTypes = async (enumCase: number) => {
     try {
-      const res: Response<Enums[]> = await getEnumsByCategory("ENTITY TYPE", {
+      const res: Response<Enums[]> = await getEnumsByCategory("ENTITYTYPE", {
         includeEnumCase: String(enumCase),
       });
       setEntityTypeEnums(res?.data ?? []);

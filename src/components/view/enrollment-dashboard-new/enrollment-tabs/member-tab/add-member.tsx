@@ -161,8 +161,8 @@ export function AddMemberModal({
       fetchEnumByCategory("QUALIFICATION", setqualificationEnum);
       fetchEnumByCategory("IDPROOFTYPE", setIdProofTypeEnum);
       fetchEnumByCategory("TRANSPORTMODE", setTransportModeEnum);
-      fetchEnumByCategory("maritialStatus", setmaritialStatusEnum);
-      fetchEnumByCategory("adminInstructionS", setadminInstructionEnum);
+      fetchEnumByCategory("MARATIALSTATUS", setmaritialStatusEnum);
+      fetchEnumByCategory("ADMININSTRUCTIONS", setadminInstructionEnum);
     }
   }, [initialData, isOpen]);
 

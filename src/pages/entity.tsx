@@ -25,7 +25,7 @@ export default function EntityPage() {
 
     useEffect(() => {
       const fetchEntityTypes = async () => {
-        const res: Response<Enums[]> = await getEnumsByCategory("ENTITY TYPE", {
+        const res: Response<Enums[]> = await getEnumsByCategory("ENTITYTYPE", {
           enumCase: "2,5,6,3",
         });
         setEntityTypeEnums(res.data || []);

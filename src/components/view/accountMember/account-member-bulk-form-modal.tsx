@@ -109,12 +109,7 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
 
         const relations = relRes.data ?? [];
 
-        const filteredRelations =
-          entityType === "Family"
-            ? relations.filter((r) => r.enumCase === 1)
-            : relations.filter((r) => r.enumCase === 2);
-
-        setRelationshipEnums(filteredRelations);
+        setRelationshipEnums(relations);
         setAccountOptions(accRes.data ?? []);
 
         await fetchExistingLinkedMembers();
@@ -195,6 +190,17 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
 
   const handleSubmit = async () => {
     if (!accountId || Object.keys(selectedMembers).length === 0) return;
+
+    const missingRelationship = Object.values(selectedMembers).some(m => !m.relationship);
+    if (missingRelationship) {
+      toast({
+        title: "Error",
+        description: "Every selected member needs a relationship before linking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await bulkAccountMember({
@@ -209,7 +215,11 @@ export default function AccountMemberBulkFormModal({ isOpen, onClose, accountId,
         toast({ title: "Success", description: "Members linked successfully", variant: "success" });
         onSaved?.();
         onClose();
+      } else {
+        toast({ title: "Error", description: res.message || "Failed to link members", variant: "destructive" });
       }
+    } catch {
+      toast({ title: "Error", description: "Failed to link members", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }

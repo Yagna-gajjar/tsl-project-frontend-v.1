@@ -217,10 +217,10 @@ export default function CourseFormModal({
       const [actRes, typeRes, accountRes, roleInCourseRes, statusRes] =
         await Promise.all([
           getActivities({ limit: 500 }),
-          getEnumsByCategory("courseType"),
+          getEnumsByCategory("COURSETYPE"),
           getAccounts({ limit: 5000, excludeEntityId: 20 }),
-          getEnumsByCategory("roleInCourse"),
-          getEnumsByCategory("courseStatus"),
+          getEnumsByCategory("ROLEINCOURSE"),
+          getEnumsByCategory("COURSESTATUS"),
         ]);
 
       setActivityOptions((actRes as Response<Activity[]>)?.data ?? []);

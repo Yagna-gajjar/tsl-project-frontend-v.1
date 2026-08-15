@@ -79,10 +79,10 @@ export default function EntityFormModal({
 
     const fetchEnums = async () => {
       const [typeRes, sectorRes, natureRes, roleRes, statusRes] = await Promise.all([
-        getEnumsByCategory("ENTITY TYPE"),
-        getEnumsByCategory("sector"),
-        getEnumsByCategory("EntityNature"),
-        getEnumsByCategory("EntityRole"),
+        getEnumsByCategory("ENTITYTYPE"),
+        getEnumsByCategory("SECTOR"),
+        getEnumsByCategory("ENTITYNATURE"),
+        getEnumsByCategory("ENTITYROLE"),
         getEnumsByCategory("EntityStatus"),
       ]);
       setEntityTypeOpt((typeRes?.data as Enums[]) ?? []);

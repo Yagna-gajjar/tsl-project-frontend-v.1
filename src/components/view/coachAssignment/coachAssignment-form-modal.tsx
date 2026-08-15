@@ -13,8 +13,6 @@ import { toast } from "@/hooks/use-toast";
 import { getBatch } from "@/api/batch.api";
 import type { Batch } from "@/types/batch";
 import type { FormFieldConfig } from "@/components/form-modal/types";
-import { getMembers } from "@/api/member.api";
-import type { Member } from "@/types/member";
 import { getAccountMembers } from "@/api/accountMember.api";
 import type { AccountMember } from "@/types/accountMember";
 
@@ -28,7 +26,7 @@ type Props = {
 const empty: CoachAssignment = {
   academyCoachesId: 0,
   coachAssignmentId: 0,
-  coachId: undefined,
+  accountMemberId: undefined,
   batchId: undefined,
   designation: "",
   responsibilities: "",
@@ -49,8 +47,7 @@ export default function CoachAssignmentFormModal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const [_, setAcademyOptions] = useState<AccountMember[]>();
-  const [coachOptions, setCoachOptions] = useState<Member[]>();
+  const [accountMemberOptions, setAccountMemberOptions] = useState<AccountMember[]>();
   const [batchOptions, setBatchOptions] = useState<Batch[]>();
 
   useEffect(() => {
@@ -60,51 +57,19 @@ export default function CoachAssignmentFormModal({
   }, [initialData, isOpen]);
 
   useEffect(() => {
-    const fetchAcademy = async () => {
-      try {
-        const res: Response<AccountMember[]> = await getAccountMembers({
-          limit: 100,
-        });
-        const data = Array.isArray(res.data)
-          ? res.data
-          : ([] as AccountMember[]);
-        setAcademyOptions(data);
-      } catch (_) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch Academies.",
-          variant: "destructive",
-        });
-      }
-    };
-    fetchAcademy();
-  }, []);
-
-  useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [cRes, bRes]: [
-          cRes: Response<Member[]>,
+        const [amRes, bRes]: [
+          amRes: Response<AccountMember[]>,
           bRes: Response<Batch[]>
         ] = await Promise.all([
-          getMembers({
-            limit: 1000,
-          }),
+          getAccountMembers({ limit: 1000 }),
           getBatch({ limit: 1000 }),
         ]);
 
-        const coaches = Array.isArray(cRes?.data)
-          ? cRes.data
-          : Array.isArray(cRes)
-          ? cRes
-          : [];
-        const batches = Array.isArray(bRes?.data)
-          ? bRes.data
-          : Array.isArray(bRes)
-          ? bRes
-          : [];
-        setCoachOptions(coaches);
-
+        const accountMembers = Array.isArray(amRes?.data) ? amRes.data : [];
+        const batches = Array.isArray(bRes?.data) ? bRes.data : [];
+        setAccountMemberOptions(accountMembers);
         setBatchOptions(batches);
       } catch (err) {
         toast({
@@ -114,10 +79,8 @@ export default function CoachAssignmentFormModal({
         });
       }
     };
-    if (values.academyCoachesId != 0 || values.academyCoachesId != undefined) {
-      fetchOptions();
-    }
-  }, [values.academyCoachesId]);
+    fetchOptions();
+  }, []);
 
   const onChange = (
     field: keyof CoachAssignment,
@@ -134,7 +97,7 @@ export default function CoachAssignmentFormModal({
 
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
-    if (!values.coachId) errs.coachId = "Coach is required";
+    if (!values.accountMemberId) errs.accountMemberId = "Coach is required";
     if (!values.batchId) errs.batchId = "Batch is required";
     if (values.startDate && values.endDate) {
       const s = new Date(String(values.startDate));
@@ -156,7 +119,7 @@ export default function CoachAssignmentFormModal({
 
     try {
       const payload: Partial<CoachAssignment> = {
-        coachId: values.coachId ? Number(values.coachId) : undefined,
+        accountMemberId: values.accountMemberId ? Number(values.accountMemberId) : undefined,
         batchId: values.batchId ? Number(values.batchId) : undefined,
         designation: values.designation ?? undefined,
         responsibilities: values.responsibilities ?? undefined,
@@ -208,23 +171,14 @@ export default function CoachAssignmentFormModal({
   }, [validate, values, initialData, onSave, onClose]);
 
   const fields = useMemo<FormFieldConfig<CoachAssignment>[]>(() => [
-    // {
-    //   name: "academyCoachesId",
-    //   label: "Academy",
-    //   type: "select",
-    //   options: academyOptions?.map((a) => ({
-    //     label: a.memberFirstName,
-    //     value: a.accountMemberId,
-    //   })),
-    //   required: true,
-    // },
     {
-      name: "coachId",
+      name: "accountMemberId",
       label: "Coach",
       type: "select",
-      options: coachOptions?.map((c) => ({
-        label: c.memberFirstName + " " + c.memberLastName,
-        value: c.memberId,
+      options: accountMemberOptions?.map((a) => ({
+        label: [a.memberFirstName, a.memberLastName].filter(Boolean).join(" ")
+          + (a.accountName ? ` — ${a.accountName}` : ""),
+        value: a.accountMemberId,
       })),
       required: true,
     },
@@ -254,7 +208,7 @@ export default function CoachAssignmentFormModal({
     { name: "startDate", label: "Start Date", type: "Date", required: false },
     { name: "endDate", label: "End Date", type: "Date", required: false },
     { name: "remarks", label: "Remarks", type: "textarea", required: false },
-  ], [coachOptions, batchOptions]);
+  ], [accountMemberOptions, batchOptions]);
 
   if (!isOpen) return null;
 

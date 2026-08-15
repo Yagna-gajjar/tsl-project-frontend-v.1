@@ -15,6 +15,7 @@ import LoginForm from "./components/login-form";
 import NotFound from "./pages/NotFound";
 import Signup from "./pages/Signup";
 import { AuthProvider } from "./contexts/authContext";
+import { AppSettingsProvider } from "./contexts/appSettingsContext";
 import Setting from "./pages/setting";
 import MemberPage from "./pages/member";
 import FamilyTypePage from "@/components/setting/family-type/family-type";
@@ -54,11 +55,13 @@ import ProfilePage from "./pages/profile";
 import TrialBalancePage from "./components/view/transaction/transaction-trialbalance";
 import IncidentReportingPage from "./pages/incidentReport";
 import AuditLogsPage from "./pages/audit-logs";
+import GeneralSettingsPage from "./components/setting/general/general-settings";
 export default function App() {
   return (
     <ThemeProvider>
       <ConfirmationProvider>
         <AuthProvider>
+        <AppSettingsProvider>
           <Router>
             <Routes>
               <Route path="/404error" element={<NotFound />} />
@@ -207,6 +210,7 @@ export default function App() {
                 />
                 <Route path="/setting/activity" element={<ActivityPage />} />
                 <Route path="/setting/common-lookups" element={<EnumsPage />} />
+                <Route path="/setting/general" element={<GeneralSettingsPage />} />
                 <Route path="/setting/*" element={<NotFound />} />
               </Route>
               <Route path="/login" element={<LoginForm />} />
@@ -214,6 +218,7 @@ export default function App() {
             </Routes>
           </Router>
           <Toaster />
+        </AppSettingsProvider>
         </AuthProvider>
       </ConfirmationProvider>
     </ThemeProvider>

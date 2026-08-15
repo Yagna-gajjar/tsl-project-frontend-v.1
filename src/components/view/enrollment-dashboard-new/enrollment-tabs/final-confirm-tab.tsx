@@ -14,6 +14,7 @@ import type { Enrollment as EnrollmentData } from "@/types/enrollment"
 import ExcelInvoice from "../EnrollmentPreview"
 import { getFinalAmounts } from "@/helpers/enrollment"
 import { getAccountById } from "@/api/account.api"
+import { useAppSettings } from "@/contexts/appSettingsContext"
 
 interface FinalConfirmTabProps {
 	data?: EnrollmentData,
@@ -33,6 +34,7 @@ const formatAttendingPattern = (pattern?: string | string[] | number[] | null) =
 const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 	const lastCalculatedRef = useRef<string>("");
 	const [dnAccountName, setDnAccountName] = useState<string>();
+	const { gstEnabled } = useAppSettings();
 
 	const excelEnrollmentData = {
 		member: {
@@ -102,8 +104,8 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 
 		const { course, courseRate: selectedRate } = data;
 
-		const cgstRate = Number(parseFloat(String(course.cgstRate)).toFixed(5));
-		const sgstRate = Number(parseFloat(String(course.sgstRate)).toFixed(5));
+		const cgstRate = gstEnabled ? Number(parseFloat(String(course.cgstRate)).toFixed(5)) : 0;
+		const sgstRate = gstEnabled ? Number(parseFloat(String(course.sgstRate)).toFixed(5)) : 0;
 		const rackPrice = Number(parseFloat(String(selectedRate.unitRate)).toFixed(5));
 		const patternDiscount = Number(parseFloat(String(data.patternDiscount)).toFixed(5)) || 1;
 		const dnOrDiscount = Number(parseFloat(String(data.dnOrDiscount)).toFixed(5)) || 0;
@@ -112,12 +114,12 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 		const membersEnrolled = Number(data.membersEnrolled) || 1;
 
 		if (data.attendingStartDate && data.startTime) {
-			const calc = getFinalAmounts(rackPrice, patternDiscount, dnOrDiscount, billingDaysSessions, processingCharge, sgstRate, cgstRate, membersEnrolled, data.startTime, course.sessionMinutes, data.attendingStartDate)
+			const calc = getFinalAmounts(rackPrice, patternDiscount, dnOrDiscount, billingDaysSessions, processingCharge, sgstRate, cgstRate, membersEnrolled, data.startTime, course.sessionMinutes, data.attendingStartDate, !!data.dnAccountId)
 
 			const calculatedEndTime = calc.calculatedEndTime
 			return {
 				display: {
-					billingRate: Number(calc.baseRate.toFixed(2)),
+					billingRate: Number(calc.billingRate.toFixed(2)),
 					billingAmount: Number(calc.billingAmount.toFixed(2)),
 					roundedAmount: Number(calc.roundedAmount.toFixed(2)),
 					cgstAmount: Number(calc.cgstAmount.toFixed(2)),
@@ -130,7 +132,7 @@ const FinalConfirmTab = ({ data, onUpdate }: FinalConfirmTabProps) => {
 				}
 			};
 		};
-	}, [data]);
+	}, [data, gstEnabled]);
 	const getDnAccount = async (id: number) => {
 		const res = await getAccountById(id)
 		if (res.success) {

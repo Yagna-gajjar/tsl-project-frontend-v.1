@@ -98,8 +98,8 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		const loadEnums = async () => {
 			try {
 				const [enumClass, enumType] = await Promise.all([
-					getEnumsByCategory("ACTIVITY STATUS"),
-					getEnumsByCategory("ACTIVITY TYPE"),
+					getEnumsByCategory("ACTIVITYSTATUS"),
+					getEnumsByCategory("ACTIVITYTYPE"),
 				])
 				setOptions({
 					activityClassification: enumClass?.data || [],
