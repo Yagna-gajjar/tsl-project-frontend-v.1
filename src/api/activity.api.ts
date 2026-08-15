@@ -32,6 +32,8 @@ export function getActivities(
   return request<Response<Activity[]>>(`${ACTIVITY_BASE}${qs}`);
 }
 
+
+
 export function getActivityById(id: number): Promise<Response<Activity>> {
   return request<Response<Activity>>(`${ACTIVITY_BASE}/${id}`);
 }

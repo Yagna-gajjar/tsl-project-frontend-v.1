@@ -16,7 +16,7 @@ type Props = {
 };
 
 type FilterValue = string | number | undefined;
-
+  
 export default function CourseTable({ onView, onEdit, refreshKey }: Props) {
   const [data, setData] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);

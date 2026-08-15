@@ -56,6 +56,8 @@ import AuditLogsPage from "./pages/audit-logs";
 import { EnrDashTabsProvider, EnrollmentProvider } from "./contexts/enrollmentContext";
 import BatchChangeBulk from "./components/view/batch/batch-change-bulk";
 import GeneralSettingsPage from "./components/setting/general/general-settings";
+import Academies from "./pages/academies";
+import EntityCoach from "./components/view/academies/entity-coach";
 export default function App() {
   return (
     <ThemeProvider>
@@ -136,6 +138,14 @@ export default function App() {
                       <Route
                         path="/staff-management/coach-skills"
                         element={<CoachSkillPage />}
+                      />
+                      <Route
+                        path="/staff-management/academies"
+                        element={<Academies />}
+                      />
+                      <Route
+                        path="/academies/members"
+                        element={<EntityCoach />}
                       />
                       <Route
                         path="/staff-management/attendance"

@@ -27,6 +27,7 @@ import {
   // TicketPercent,
   Scale,
   History,
+  University,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -167,6 +168,11 @@ const navigationItems: NavigationItem[] = [
         label: "Staff Attendance",
         href: "/staff-management/attendance",
         icon: ScrollText,
+      },
+      {
+        label: "Academies",
+        href: "/staff-management/academies",
+        icon: University,
       },
     ],
   },
