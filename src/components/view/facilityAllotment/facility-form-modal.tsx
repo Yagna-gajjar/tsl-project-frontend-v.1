@@ -31,7 +31,7 @@ const empty: FacilityAllotment = {
   areaId: undefined,
   batchId: undefined,
   level: 1,
-  assignmentDate: undefined,
+  assignmentDate: new Date().toISOString(),
   unAssignmentDate: undefined,
 };
 
@@ -240,6 +240,7 @@ export default function FacilityAllotmentFormModal({
         value: b.batchId,
       })),
       required: true,
+      colSpan: "full",
     },
     {
       name: "level",
@@ -270,8 +271,8 @@ export default function FacilityAllotmentFormModal({
         if (!o) onClose();
       }}
     >
-      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden">
-        <div className="flex flex-col max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-2xl p-0 border-border/50 shadow-2xl bg-background/95 backdrop-blur-lg rounded-xl overflow-hidden max-h-[95vh]">
+        <div className="flex flex-col max-h-[95vh] min-h-[500px] overflow-hidden">
           <FormHeader
             title={
               initialData?.facilityAllotmentId
