@@ -75,8 +75,8 @@ export default function AccountFormModal({
     const loadData = async () => {
       const [entRes, typeRes, adminRes, accTypeRes] = await Promise.all([
         getEntities({ limit: 500 }),
-        getEnumsByCategory("ENTITY TYPE"),
-        getEnumsByCategory("ADMITINSTRUCTIONS"),
+        getEnumsByCategory("ENTITYTYPE"),
+        getEnumsByCategory("ADMININSTRUCTIONS"),
         getEnumsByCategory("ACCOUNTTYPE"),
       ]);
 

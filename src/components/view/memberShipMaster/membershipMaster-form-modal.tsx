@@ -71,7 +71,7 @@ export default function MembershipMasterFormModal({
     try {
       const [resBilling, resEnums] = await Promise.all([
         getEnumsByCategory("BILLINGENTITYOFFAMILY").catch(() => ({ data: [] })),
-        getEnumsByCategory("ENTITY TYPE").catch(() => ({ data: [] })),
+        getEnumsByCategory("ENTITYTYPE").catch(() => ({ data: [] })),
       ]);
 
       const billingData = (resBilling?.data as Enums[]) || [];

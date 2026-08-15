@@ -10,6 +10,7 @@ export interface AccountQuery {
   search?: string;
   accountName?: string;
   entityId?: number;
+  excludeEntityId?: number;
   entityType?: string;
   accountType?: string;
 }
@@ -27,6 +28,7 @@ export function getAccounts(
     search: params.search ?? params.accountName,
     accountName: params.accountName ?? undefined,
     entityId: params.entityId ?? undefined,
+    excludeEntityId: params.excludeEntityId ?? undefined,
     entityType: params.entityType ?? undefined,
     accountType: params.accountType ?? undefined,
   });

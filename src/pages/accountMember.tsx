@@ -45,7 +45,7 @@ export default function AccountMemberPage() {
 
   useEffect(() => {
     const fetchEntityTypes = async () => {
-      const res: Response<Enums[]> = await getEnumsByCategory("ENTITY TYPE");
+      const res: Response<Enums[]> = await getEnumsByCategory("ENTITYTYPE");
       setEntityTypeEnums(res.data || []);
     };
     fetchEntityTypes();
@@ -73,14 +73,14 @@ export default function AccountMemberPage() {
         setSelectedAccountId("all");
         return;
       }
-      // if entityEnumCase > 3 than acccountType = other, else accounType = transaction
+      // Account type spellings are inconsistent in existing data (e.g. "Others"
+      // vs "Other", "Transactions" vs "Transaction"), so no type filter is
+      // applied here — every account tied to the selected entity is shown.
       try {
-        const accountType = ['family', 'client'].includes(classification) ? 'Transactions' : 'Others';
         const res: Response<Account[]> = await getAccounts({
           limit: 10000,
           entityId: Number(selectedEntityId),
           entityType: selectedEnumId.toLowerCase() !== 'all' ? selectedEnumId : undefined,
-          accountType: accountType
         });
         if (res.success) setAccounts(res.data || []);
       } catch (error) {
@@ -92,6 +92,13 @@ export default function AccountMemberPage() {
   }, [selectedEntityId, selectedEnumId]);
 
   const handleSaved = () => bumpRefresh();
+
+  const selectedEntity = entities.find(
+    (ent) => String(ent.entityId || ent.id) === selectedEntityId
+  );
+  const selectedAccount = accounts.find(
+    (acc) => String(acc.accountId) === selectedAccountId
+  );
 
   const classificationOptions = [
     { label: "All", value: "all" },
@@ -189,6 +196,10 @@ export default function AccountMemberPage() {
         initialData={selected ?? undefined}
         onClose={() => setOpenForm(false)}
         onSaved={handleSaved}
+        accountId={selectedAccountId !== "all" ? Number(selectedAccountId) : undefined}
+        accountName={selectedAccount?.accountName}
+        entityType={selectedEnumId !== "all" ? selectedEnumId : undefined}
+        entityName={selectedEntity?.entityName || selectedEntity?.name}
       />
 
       <AccountMemberViewModal

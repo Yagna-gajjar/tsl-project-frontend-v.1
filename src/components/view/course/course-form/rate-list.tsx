@@ -25,8 +25,6 @@ type BulkFields = {
   enrFreezingAllowed: string;
   minDaysInEnr: string;
   discountOnDayReduce: string;
-  baseRate: string;
-  monthUnit: string;
 };
 
 export const RatesList = ({
@@ -46,13 +44,13 @@ export const RatesList = ({
     enrFreezingAllowed: "",
     minDaysInEnr: "",
     discountOnDayReduce: "",
-    baseRate: "",
-    monthUnit: "",
   });
 
-  // Track individual row percentage discounts locally
-  const [rowPercentages, setRowPercentages] = useState<Record<number, string>>({});
-  const [baseUnitRates, setBaseUnitRates] = useState<Record<number, number>>({});
+  // Each tier (row) can have its own package price / duration — e.g. 2500 for
+  // 30 days, 6000 for 180 days — so Base Rate & Days are entered per row and
+  // only used locally to derive that row's exact Unit Rate.
+  const [rowBaseRate, setRowBaseRate] = useState<Record<number, string>>({});
+  const [rowDays, setRowDays] = useState<Record<number, string>>({});
 
 
   /* ---------------- Fetching ---------------- */
@@ -84,16 +82,9 @@ export const RatesList = ({
     .filter(({ r }) => r.membershipMasterId === selectedMembership);
 
   const isMembershipAlreadyGenerated = selectedMembership !== null && membershipRates.length > 0;
+
   const handleApplyBulk = () => {
     if (membershipRates.length === 0) return;
-
-    const bRate = parseFloat(bulkFields.baseRate);
-    const mUnit = parseFloat(bulkFields.monthUnit);
-
-    if (isNaN(bRate) || isNaN(mUnit) || mUnit === 0) {
-      toast({ title: "Invalid Base Rate / Month Unit", variant: "destructive" });
-      return;
-    }
 
     membershipRates.forEach(({ idx }) => {
       if (bulkFields.enrChangesAllowed !== "")
@@ -107,21 +98,22 @@ export const RatesList = ({
 
       if (bulkFields.discountOnDayReduce !== "")
         onChange(idx, "discountOnDayReduce", Number(bulkFields.discountOnDayReduce));
-
-      const baseUnit = Math.round(bRate / mUnit);
-      const discount = Number(rowPercentages[idx] || 0);
-
-      setBaseUnitRates(prev => ({ ...prev, [idx]: baseUnit }));
-      if (discount != 0) {
-        const finalRate = Math.round(baseUnit * (discount / 100));
-        onChange(idx, "unitRate", finalRate);
-      } else {
-        const finalRate = Math.round(baseUnit);
-        onChange(idx, "unitRate", finalRate);
-      }
     });
 
     toast({ title: "Applied", description: "Bulk values applied correctly." });
+  };
+
+  // Derives this row's exact Unit Rate from its own Base Rate / Days.
+  // Keeps 4-decimal precision (matches the NUMERIC(12,4) unitRate column)
+  // instead of rounding to 2 decimals, so unitRate * days reproduces the
+  // exact Base Rate for billing.
+  const applyRowRate = (idx: number, baseRateStr: string, daysStr: string) => {
+    const bRate = parseFloat(baseRateStr);
+    const days = parseFloat(daysStr);
+    if (isNaN(bRate) || isNaN(days) || days === 0) return;
+
+    const unitRate = Math.round((bRate / days) * 10000) / 10000;
+    onChange(idx, "unitRate", unitRate);
   };
 
 
@@ -170,21 +162,13 @@ export const RatesList = ({
         />
 
 
-        <div className="grid grid-cols-4 md:grid-cols-7 items-end gap-2">
+        <div className="grid grid-cols-4 md:grid-cols-5 items-end gap-2">
           {(["enrChangesAllowed", "enrFreezingAllowed", "minDaysInEnr", "discountOnDayReduce"] as const).map((f) => (
             <div key={f} className="flex flex-col">
               <label className="text-[10px] uppercase text-muted-foreground">{f.replace(/([A-Z])/g, ' $1')}</label>
               <Input type="number" className="h-8" value={bulkFields[f]} onChange={(e) => setBulkFields(p => ({ ...p, [f]: e.target.value }))} />
             </div>
           ))}
-          <div className="flex flex-col">
-            <label className="text-[10px] uppercase font-bold text-primary">Base Rate</label>
-            <Input type="number" className="h-8 border-primary bg-primary/5" value={bulkFields.baseRate} onChange={(e) => setBulkFields(p => ({ ...p, baseRate: e.target.value }))} />
-          </div>
-          <div className="flex flex-col">
-            <label className="text-[10px] uppercase font-bold text-primary">Month Unit</label>
-            <Input type="number" className="h-8 border-primary bg-primary/5" value={bulkFields.monthUnit} onChange={(e) => setBulkFields(p => ({ ...p, monthUnit: e.target.value }))} />
-          </div>
           <Button type="button" onClick={handleApplyBulk} className="h-8">
             <Check className="w-4 h-4 mr-1" /> Apply
           </Button>
@@ -193,15 +177,16 @@ export const RatesList = ({
       </div>
 
       {/* Table Header */}
-      <div className="grid grid-cols-[.6fr,.6fr,.6fr,.6fr,.6fr,.6fr,.6fr,.8fr,50px] gap-1 px-2 py-2 bg-muted/50 text-center text-[10px] font-bold border rounded-t-md">
+      <div className="grid grid-cols-[.6fr,.6fr,.6fr,.6fr,.6fr,.8fr,.6fr,.8fr,.8fr,50px] gap-1 px-2 py-2 bg-muted/50 text-center text-[10px] font-bold border rounded-t-md">
         <div>Above Units</div>
         <div>Enr Changes</div>
         <div>Enr Freezing</div>
         <div>Min Days</div>
         <div>Discount Red.</div>
+        <div>Base Rate</div>
+        <div>Days</div>
         <div>Unit Rate</div>
-        <div>Per %</div>
-        <div>Rate * Units</div>
+        <div>Rate * Days</div>
         <div></div>
       </div>
 
@@ -211,40 +196,72 @@ export const RatesList = ({
           <div className="p-8 flex justify-center"><Button variant="secondary" onClick={addDefaultRates}>Generate Default Rates</Button></div>
         )}
         <AnimatePresence>
-          {membershipRates.map(({ r: rate, idx }) => (
-            <motion.div key={idx} layout className="grid grid-cols-[.6fr,.6fr,.6fr,.6fr,.6fr,.6fr,.6fr,.8fr,50px] gap-1 px-2 py-1 border-b last:border-0 items-center">
-              <Input type="number" className="h-8 text-xs font-bold" value={rate.aboveUnits} onChange={(e) => onChange(idx, "aboveUnits", Number(e.target.value))} />
-              <Input type="number" className="h-8 text-xs" value={rate.enrChangesAllowed} onChange={(e) => onChange(idx, "enrChangesAllowed", Number(e.target.value))} />
-              <Input type="number" className="h-8 text-xs" value={rate.enrFreezingAllowed} onChange={(e) => onChange(idx, "enrFreezingAllowed", Number(e.target.value))} />
-              <Input type="number" className="h-8 text-xs" value={rate.minDaysInEnr} onChange={(e) => onChange(idx, "minDaysInEnr", Number(e.target.value))} />
-              <Input type="number" className="h-8 text-xs" value={rate.discountOnDayReduce} onChange={(e) => onChange(idx, "discountOnDayReduce", Number(e.target.value))} />
-              <Input type="number" className="h-8 text-xs font-bold" value={rate.unitRate} onChange={(e) => onChange(idx, "unitRate", Number(e.target.value))} />
+          {membershipRates.map(({ r: rate, idx }) => {
+            const baseRateVal = rowBaseRate[idx] ?? "";
+            const daysVal = rowDays[idx] ?? "";
 
-              <Input
-                type="number"
-                placeholder="%"
-                className="h-8 text-xs bg-yellow-100/30"
-                value={rowPercentages[idx] || ""}
-                onChange={(e) => {
-                  const discount = Number(e.target.value || 0);
+            return (
+              <motion.div key={idx} layout className="grid grid-cols-[.6fr,.6fr,.6fr,.6fr,.6fr,.8fr,.6fr,.8fr,.8fr,50px] gap-1 px-2 py-1 border-b last:border-0 items-center">
+                <Input type="number" className="h-8 text-xs font-bold" value={rate.aboveUnits} onChange={(e) => onChange(idx, "aboveUnits", Number(e.target.value))} />
+                <Input type="number" className="h-8 text-xs" value={rate.enrChangesAllowed} onChange={(e) => onChange(idx, "enrChangesAllowed", Number(e.target.value))} />
+                <Input type="number" className="h-8 text-xs" value={rate.enrFreezingAllowed} onChange={(e) => onChange(idx, "enrFreezingAllowed", Number(e.target.value))} />
+                <Input type="number" className="h-8 text-xs" value={rate.minDaysInEnr} onChange={(e) => onChange(idx, "minDaysInEnr", Number(e.target.value))} />
+                <Input type="number" className="h-8 text-xs" value={rate.discountOnDayReduce} onChange={(e) => onChange(idx, "discountOnDayReduce", Number(e.target.value))} />
 
-                  const baseUnit = baseUnitRates[idx] ?? rate.unitRate;
+                <Input
+                  type="number"
+                  placeholder="e.g. 2500"
+                  className="h-8 text-xs border-primary bg-primary/5"
+                  value={baseRateVal}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRowBaseRate((prev) => ({ ...prev, [idx]: v }));
+                    applyRowRate(idx, v, daysVal);
+                  }}
+                />
+                <Input
+                  type="number"
+                  placeholder="e.g. 30"
+                  className="h-8 text-xs border-primary bg-primary/5"
+                  value={daysVal}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRowDays((prev) => ({ ...prev, [idx]: v }));
+                    applyRowRate(idx, baseRateVal, v);
+                  }}
+                />
 
-                  setRowPercentages(prev => ({ ...prev, [idx]: e.target.value }));
+                <Input
+                  type="number"
+                  disabled
+                  title="Set via this row's Base Rate ÷ Days, not editable directly"
+                  className="h-8 text-xs font-bold disabled:opacity-100 disabled:cursor-not-allowed bg-muted"
+                  value={rate.unitRate}
+                />
 
-                  const finalRate = Math.round(baseUnit * (discount / 100));
-                  onChange(idx, "unitRate", finalRate);
-                }}
-              />
-              <div className="text-center bg-muted mx-5 py-2 text-xs font-medium">
-                {(rate.unitRate * Number(bulkFields.monthUnit)).toLocaleString()}
-              </div>
+                <div className="text-center bg-muted mx-2 py-2 text-xs font-medium">
+                  {/* Show the Base Rate as typed rather than reconstructing it by
+                      multiplying the rounded Unit Rate back out — that reintroduces
+                      the rounding this column exists to verify against. */}
+                  {baseRateVal
+                    ? Number(baseRateVal).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : daysVal
+                      ? (rate.unitRate * Number(daysVal)).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : "-"}
+                </div>
 
-              <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(idx)} className="h-8 w-8 p-0 text-destructive">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </motion.div>
-          ))}
+                <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(idx)} className="h-8 w-8 p-0 text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
     </div>

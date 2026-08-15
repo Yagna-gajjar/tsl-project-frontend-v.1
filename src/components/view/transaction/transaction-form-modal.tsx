@@ -128,7 +128,7 @@ export default function TransactionFormModal({ isOpen, initialData, onClose, onS
 			try {
 				const [entRes, enumRes] = await Promise.all([
 					getEntities({ limit: 1000 }),
-					getEnumsByCategory("ENTRY SOURCE")
+					getEnumsByCategory("ENTRYSOURCE")
 				]);
 				setEntities(entRes.data ?? []);
 				setEntrySourceOptions(enumRes?.data ?? []);

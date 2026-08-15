@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import type { Enums } from "@/types/enums";
 import type { Account } from "@/types/account";
 
@@ -36,6 +37,15 @@ export const SharesList = ({
 }: SharesListProps) => {
   const [authorityMap, setAuthorityMap] = useState<Record<number, Authority[]>>(
     {}
+  );
+
+  const accountOptions = useMemo(
+    () =>
+      entityOptions.map((e) => ({
+        value: String(e.accountId),
+        label: e.accountName,
+      })),
+    [entityOptions]
   );
 
   const loadAuthorities = async (accountId: number) => {
@@ -97,26 +107,22 @@ export const SharesList = ({
               transition={{ duration: 0.2 }}
               className="grid grid-cols-[2fr,1.5fr,1fr,0.6fr,0.6fr,1.2fr,60px] gap-1 px-2 py-1 border-b hover:bg-muted/30 items-center"
             >
-              <Select
-                value={share.accountId ? String(share.accountId) : ""}
-                onValueChange={(v) => {
-                  const id = Number(v);
-                  onChange(index, "accountId", id);
-                  onChange(index, "approvalAuthorityId", null);
-                  loadAuthorities(id);
-                }}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select Entity" />
-                </SelectTrigger>
-                <SelectContent>
-                  {entityOptions.map((e) => (
-                    <SelectItem key={e.accountId} value={String(e.accountId)}>
-                      {e.accountName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col gap-1">
+                <SearchableSelect
+                  className="h-8 text-xs"
+                  placeholder="Select account..."
+                  searchPlaceholder="Search account..."
+                  emptyText="No account found."
+                  value={share.accountId ? String(share.accountId) : ""}
+                  onValueChange={(v) => {
+                    const id = Number(v);
+                    onChange(index, "accountId", id);
+                    onChange(index, "approvalAuthorityId", null);
+                    loadAuthorities(id);
+                  }}
+                  options={accountOptions}
+                />
+              </div>
 
               <Select
                 value={share.roleInCourse || ""}
@@ -127,8 +133,8 @@ export const SharesList = ({
                   <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
                 <SelectContent>
-                  {roleInCourse.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
+                  {roleInCourse?.map((role) => (
+                    <SelectItem key={role.id} value={role.value}>
                       {role.value}
                     </SelectItem>
                   ))}

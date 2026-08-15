@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import type { Activity } from "@/types/activity";
 import type { Course } from "@/types/course";
 import type { Entity } from "@/types/entity";
@@ -26,6 +27,7 @@ export function CourseForm({
 	activityOptions,
 	entityOptions,
 	courseTypeOptions,
+	courseStatusOptions,
 	onChange,
 }: {
 	course: Partial<Course>;
@@ -34,6 +36,7 @@ export function CourseForm({
 	activityOptions: Activity[];
 	entityOptions: Entity[];
 	courseTypeOptions: Enums[];
+	courseStatusOptions: Enums[];
 	onChange: (field: keyof Course, value: any) => void;
 }) {
 	const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>(
@@ -52,6 +55,7 @@ export function CourseForm({
 			: [...selectedWeekdays, day];
 		setSelectedWeekdays(newSelection);
 		onChange("daysPattern", newSelection);
+		onChange("noOfDaysInWeek", newSelection.length);
 	};
 
 	return (
@@ -114,21 +118,19 @@ export function CourseForm({
 			</div>
 			<div>
 				<Label htmlFor="activityId">Activity*</Label>
-				<Select
-					value={String(course.activityId) || ""}
+				<SearchableSelect
+					id="activityId"
+					disabled={loading}
+					value={course.activityId ? String(course.activityId) : ""}
 					onValueChange={(v) => onChange("activityId", v)}
-				>
-					<SelectTrigger id="activityId" disabled={loading}>
-						<SelectValue placeholder="Select Activity" />
-					</SelectTrigger>
-					<SelectContent>
-						{activityOptions.map((a) => (
-							<SelectItem key={a.activityId} value={String(a.activityId)}>
-								{a.activityName}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+					placeholder="Select Activity"
+					searchPlaceholder="Search activity..."
+					emptyText="No activity found."
+					options={activityOptions.map((a) => ({
+						value: String(a.activityId),
+						label: a.activityName,
+					}))}
+				/>
 				{errors.activityName && (
 					<p className="text-xs text-destructive mt-1">{errors.activityName}</p>
 				)}
@@ -153,21 +155,18 @@ export function CourseForm({
 			</div>
 			<div>
 				<Label htmlFor="entityId">Entity*</Label>
-				<Select
+				<SearchableSelect
+					id="entityId"
 					value={course.entityId ? String(course.entityId) : ""}
 					onValueChange={(v) => onChange("entityId", Number(v))}
-				>
-					<SelectTrigger id="entityId">
-						<SelectValue placeholder="Select Entity" />
-					</SelectTrigger>
-					<SelectContent>
-						{entityOptions.map((a) => (
-							<SelectItem key={a.entityId} value={String(a.entityId)}>
-								{a.entityName}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+					placeholder="Select Entity"
+					searchPlaceholder="Search entity..."
+					emptyText="No entity found."
+					options={entityOptions.map((a) => ({
+						value: String(a.entityId),
+						label: a.entityName,
+					}))}
+				/>
 				{errors.entityId && (
 					<p className="text-xs text-destructive mt-1">{errors.entityId}</p>
 				)}
@@ -199,12 +198,12 @@ export function CourseForm({
 				/>
 			</div>
 			<div>
-				<Label htmlFor="noOfDaysInWeek">Days Per Week*</Label>
+				<Label htmlFor="noOfDaysInWeek">Days Per Week (Auto)</Label>
 				<Input
 					id="noOfDaysInWeek"
 					type="number"
 					value={course.noOfDaysInWeek || ""}
-					onChange={(e) => onChange("noOfDaysInWeek", Number(e.target.value))}
+					disabled
 				/>
 				{errors.noOfDaysInWeek && (
 					<p className="text-xs text-destructive mt-1">
@@ -382,12 +381,25 @@ export function CourseForm({
 			</div>
 
 			<div>
-				<Label htmlFor="Status">Status</Label>
-				<Input
-					id="Status"
+				<Label htmlFor="status">Status</Label>
+				<Select
 					value={course.status || ""}
-					onChange={(e) => onChange("status", e.target.value)}
-				/>
+					onValueChange={(v) => onChange("status", v)}
+				>
+					<SelectTrigger id="status">
+						<SelectValue placeholder="Select Status" />
+					</SelectTrigger>
+					<SelectContent>
+						{courseStatusOptions?.map((s) => (
+							<SelectItem key={s.id} value={String(s.value)}>
+								{s.value}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+				{errors.status && (
+					<p className="text-xs text-destructive mt-1">{errors.status}</p>
+				)}
 			</div>
 		</div>
 	);

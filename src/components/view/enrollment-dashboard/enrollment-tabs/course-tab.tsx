@@ -69,17 +69,13 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		entityId: "all",
 	})
 
-	const memberAge = useMemo(() => {
-		if (!member?.dob) return undefined
-		const birthDate = new Date(member.dob)
-		const today = new Date()
-		let age = today.getFullYear() - birthDate.getFullYear()
-		if (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())) age--
-		return age
-	}, [member])
-
 	const visibleCourses = useMemo(
-		() => courses.filter((c) => c.activityName?.trim().toLowerCase() !== "freezer"),
+		() =>
+			courses.filter(
+				(c) =>
+					c.activityName?.trim().toLowerCase() !== "freezer" &&
+					c.status?.toLowerCase() !== "suspended"
+			),
 		[courses]
 	)
 
@@ -102,8 +98,8 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		const loadEnums = async () => {
 			try {
 				const [enumClass, enumType] = await Promise.all([
-					getEnumsByCategory("ACTIVITY STATUS"),
-					getEnumsByCategory("ACTIVITY TYPE"),
+					getEnumsByCategory("ACTIVITYSTATUS"),
+					getEnumsByCategory("ACTIVITYTYPE"),
 				])
 				setOptions({
 					activityClassification: enumClass?.data || [],
@@ -121,12 +117,10 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 		try {
 			const params: any = {
 				limit: 500,
-				status: "active",
 				search: filters.search || undefined,
 				classification: filters.activityType !== "all" ? filters.activityType : undefined,
 				activityId: filters.activityId !== "all" ? filters.activityId : undefined,
 				entityId: filters.entityId !== "all" ? filters.entityId : undefined,
-				age: memberAge,
 			}
 			const res = await getCourses(params)
 			setCourses(res?.data || [])
@@ -136,7 +130,7 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 			setRefreshing(false)
 			setLoading(false)
 		}
-	}, [filters, memberAge])
+	}, [filters])
 
 	useEffect(() => {
 		loadFilteredData()
@@ -254,15 +248,6 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 					data={visibleCourses}
 					itemContent={(_, course) => {
 						const isSelected = selectedId === course.courseId
-						const isAgeEligible = memberAge
-							? memberAge >= course.minAge && memberAge <= course.maxAge
-							: true
-						const isGenderEligible =
-							!course.gender ||
-							course.gender === "A" ||
-							course.gender === "O" ||
-							course.gender.toLowerCase() === member?.gender?.toLowerCase()
-						const isEligible = isAgeEligible && isGenderEligible
 
 						const genderLabel =
 							course.gender === "A" ? "ANY"
@@ -277,17 +262,14 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 
 						return (
 							<div
-								onClick={() => isEligible && handleSelect(course)}
+								onClick={() => handleSelect(course)}
 								className={cn(
-									"grid gap-x-3 px-3 items-center border-b transition-colors",
+									"grid gap-x-3 px-3 items-center border-b transition-colors cursor-pointer",
 									COL_WIDTHS,
 									"h-10",
 									isSelected
 										? "bg-primary/8 border-l-2 border-l-primary"
-										: "hover:bg-muted/40 border-l-2 border-l-transparent",
-									!isEligible
-										? "opacity-40 cursor-not-allowed"
-										: "cursor-pointer"
+										: "hover:bg-muted/40 border-l-2 border-l-transparent"
 								)}
 							>
 								{/* Course name */}
@@ -316,24 +298,12 @@ export function CourseTab({ data, onUpdate, member }: CourseTabProps) {
 								</span>
 
 								{/* Age range */}
-								<span
-									className={cn(
-										"text-[11px] font-semibold text-center px-1.5 py-0.5 rounded",
-										isAgeEligible
-											? "bg-green-500/10 text-green-600"
-											: "bg-destructive/10 text-destructive"
-									)}
-								>
+								<span className="text-[11px] font-semibold text-center px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
 									{course.minAge}–{course.maxAge}y
 								</span>
 
 								{/* Gender */}
-								<span
-									className={cn(
-										"text-[10px] font-bold text-center tracking-wide",
-										isGenderEligible ? "text-muted-foreground" : "text-destructive"
-									)}
-								>
+								<span className="text-[10px] font-bold text-center tracking-wide text-muted-foreground">
 									{genderLabel}
 								</span>
 

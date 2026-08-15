@@ -28,6 +28,7 @@ import { toast } from "@/hooks/use-toast"
 import type { Response } from "@/types/response"
 import { getAccounts } from "@/api/account.api"
 import type { Account } from "@/types/account"
+import { useAppSettings } from "@/contexts/appSettingsContext"
 
 interface ConfirmTabProps {
 	data?: EnrollmentData
@@ -35,6 +36,8 @@ interface ConfirmTabProps {
 }
 
 export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
+	const { processingCharge: defaultProcessingCharge } = useAppSettings();
+
 	const [formData, setFormData] = useState({
 		walkingName: data?.walkingName || "",
 		walkingContact: data?.walkingContact || "",
@@ -42,7 +45,9 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		printRemarks: data?.printRemarks || "",
 		dnAccountId: data?.dnAccountId ? String(data.dnAccountId) : "",
 		dnOrDiscount: data?.dnOrDiscount || 0 || "0",
-		processingCharge: data?.processingCharge || 100,
+		// Not operator-editable — always mirrors the admin-configured General
+		// Settings value, kept in sync below whenever that setting changes.
+		processingCharge: defaultProcessingCharge || 100,
 		academyApprovalStatus: data?.academyApprovalStatus || "not required",
 		status: data?.status || "created",
 	});
@@ -56,11 +61,24 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		onUpdate(updated as any)
 	}
 
+	// Keeps processingCharge locked to the admin's General Settings value —
+	// it's read-only in this form, so the only way it changes is if the
+	// admin updates the setting (including after the settings fetch resolves
+	// asynchronously post-mount).
+	useEffect(() => {
+		if (defaultProcessingCharge) {
+			handleChange("processingCharge", defaultProcessingCharge)
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [defaultProcessingCharge])
+
 	const fetchAccountsForDN = async () => {
 		setIsAccountsLoading(true);
 		try {
 			const aRes: Response<Account[]> = await getAccounts({
-				accountType: "Expences"
+				accountType: "Main",
+				excludeEntityId: 20,
+				limit: 5000,
 			});
 			if (aRes.success) {
 				setDnAccounts(aRes?.data || []);
@@ -70,7 +88,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 		} catch {
 			toast({
 				title: "Error",
-				description: "Failed to fetch expense accounts.",
+				description: "Failed to fetch academy/coach accounts.",
 				variant: "destructive"
 			})
 		} finally {
@@ -179,7 +197,7 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 										) : (
 											<Building2 className="w-4 h-4 text-muted-foreground" />
 										)}
-										<SelectValue placeholder={isAccountsLoading ? "Fetching accounts..." : "Select Expense Account"} />
+										<SelectValue placeholder={isAccountsLoading ? "Fetching accounts..." : "Select Academy/Coach Account"} />
 									</div>
 								</SelectTrigger>
 								<SelectContent>
@@ -210,15 +228,12 @@ export function ConfirmTab({ data, onUpdate }: ConfirmTabProps) {
 						</div>
 
 						<div className="space-y-2 sm:col-span-1">
-							<Label className="text-xs font-semibold whitespace-nowrap">Proc. Charge (₹)</Label>
+							<Label className="text-xs font-semibold whitespace-nowrap">Proc. Charge (₹) <span className="text-muted-foreground font-normal">(Set by Admin)</span></Label>
 							<Input
 								type="number"
+								disabled
 								className="font-mono h-10 bg-background border-border/60"
 								value={formData.processingCharge}
-								onChange={(e) => {
-									const val = e.target.value;
-									handleChange("processingCharge", val === "" ? "" : Number(val));
-								}}
 							/>
 						</div>
 					</div>

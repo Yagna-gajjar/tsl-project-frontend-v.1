@@ -151,6 +151,7 @@ const Ledger = () => {
 				const response: Response<Transaction[]> = await getLedgerEntriesByAccount(Number(selectedAccountId));
 				if (response?.success) {
 					setLedgerEntries(response?.data || []);
+					console.log(response?.data)
 				}
 			} catch (error) {
 				console.error("Failed to fetch ledger entries:", error);
@@ -294,7 +295,14 @@ const Ledger = () => {
 							</CardHeader>
 							<CardContent>
 								<div className="text-2xl font-bold text-foreground">
-									{loadingLedger ? <Skeleton className="h-8 w-24" /> : totalDebit.toFixed(2)}
+									{loadingLedger ? (
+										<Skeleton className="h-8 w-24" />
+									) : (
+										totalDebit.toLocaleString("en-IN", {
+											minimumFractionDigits: 2,
+											maximumFractionDigits: 2,
+										})
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -305,7 +313,17 @@ const Ledger = () => {
 							</CardHeader>
 							<CardContent>
 								<div className="text-2xl font-bold text-foreground">
-									{loadingLedger ? <Skeleton className="h-8 w-24" /> : totalCredit.toFixed(2)}
+									{/* {loadingLedger ? <Skeleton className="h-8 w-24" /> : totalCredit.toFixed(2)} */}
+									<div className="text-2xl font-bold text-foreground">
+									{loadingLedger ? (
+										<Skeleton className="h-8 w-24" />
+									) : (
+										totalCredit.toLocaleString("en-IN", {
+											minimumFractionDigits: 2,
+											maximumFractionDigits: 2,
+										})
+									)}
+								</div>
 								</div>
 							</CardContent>
 						</Card>
@@ -320,7 +338,11 @@ const Ledger = () => {
 										<Skeleton className="h-8 w-32" />
 									) : (
 										<>
-											{closingBalance.toFixed(2)}
+											{/* {closingBalance.toFixed(2)} */}
+											{closingBalance.toLocaleString("en-IN", {
+												minimumFractionDigits: 2,
+												maximumFractionDigits: 2,
+											})}
 											{balanceType && (
 												<Badge variant="secondary" className="text-xs">
 													{balanceType}
@@ -357,6 +379,7 @@ const Ledger = () => {
 									<Table>
 										<TableHeader>
 											<TableRow className="bg-muted/50">
+												<TableHead>Sr. No</TableHead>
 												<TableHead>Date</TableHead>
 												<TableHead>Type</TableHead>
 												<TableHead>Particulars</TableHead>
@@ -374,8 +397,11 @@ const Ledger = () => {
 
 												return (
 													<TableRow key={idx} className="hover:bg-muted/50 transition-colors">
+														<TableCell>
+															{entry.typeSerialNo}
+														</TableCell>
 														<TableCell className="whitespace-nowrap text-muted-foreground">
-															{entry?.createdAt ? format(new Date(entry.createdAt), 'dd MMM yyyy') : '-'}
+															{entry?.transactionDate ? format(new Date(entry.transactionDate), 'dd MMM yyyy') : '-'}
 														</TableCell>
 														<TableCell>
 															<Badge variant="outline" className="capitalize">

@@ -46,7 +46,7 @@ export function ActivityFormModal({
     setError(null);
 
     const fetchActivity = async () => {
-      const actRes = await getEnumsByCategory("ActivityType");
+      const actRes = await getEnumsByCategory("ACTIVITYTYPE");
       const acrRows = actRes?.data as Enums[];
       setActivityType(acrRows);
     };

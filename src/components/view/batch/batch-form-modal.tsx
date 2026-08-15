@@ -92,9 +92,20 @@ export function BatchFormModal({
     }
   };
 
-  const loadCourses = async (activityId: number) => {
-    const res = await getCourses({ activityId });
-    setCourses(res?.data || []);
+  const loadCourses = async (activityId?: number, entityId?: number) => {
+    if (!activityId && !entityId) {
+      setCourses([]);
+      return;
+    }
+    const res = await getCourses({
+      activityId: activityId || undefined,
+      entityId: entityId || undefined,
+      limit: 10000,
+    });
+    const active = (res?.data || []).filter(
+      (c) => c.status?.toLowerCase() !== "suspended"
+    );
+    setCourses(active);
   };
 
   // --- Form State ---
@@ -115,7 +126,12 @@ export function BatchFormModal({
           endTime: initialData.endTime ? String(initialData.endTime).substring(0, 5) : "",
           introduceDate: initialData.introduceDate ? (initialData.introduceDate as string).split("T")[0] : ""
         });
-        if (initialData.activityId) loadCourses(Number(initialData.activityId));
+        if (initialData.activityId || initialData.entityId) {
+          loadCourses(
+            initialData.activityId ? Number(initialData.activityId) : undefined,
+            initialData.entityId ? Number(initialData.entityId) : undefined
+          );
+        }
       } else {
         setValues({
           status: "active",
@@ -134,7 +150,14 @@ export function BatchFormModal({
 
       // Handle Activity change -> Reset Course
       if (field === "activityId") {
-        loadCourses(Number(val));
+        loadCourses(Number(val), prev.entityId ? Number(prev.entityId) : undefined);
+        updated.courseId = undefined;
+      }
+
+      // Handle Entity change -> Reset Course (same course name can exist under
+      // different entities, so both filters are needed to disambiguate)
+      if (field === "entityId") {
+        loadCourses(prev.activityId ? Number(prev.activityId) : undefined, Number(val));
         updated.courseId = undefined;
       }
 
@@ -226,7 +249,22 @@ export function BatchFormModal({
       name: "courseId",
       label: "Course (Link)",
       type: "select",
-      options: courses.map(c => ({ label: c.courseName, value: c.courseId }))
+      // Suspended courses are excluded from `courses` (loadCourses), but if the
+      // batch being edited is already linked to one, keep it visible (labeled)
+      // instead of silently blanking out a valid existing selection.
+      options: (() => {
+        const opts = courses.map(c => ({ label: c.courseName, value: c.courseId }));
+        if (
+          values.courseId &&
+          !opts.some(o => Number(o.value) === Number(values.courseId))
+        ) {
+          opts.push({
+            label: `${(values as any).courseName || "Current course"} (Suspended)`,
+            value: values.courseId,
+          });
+        }
+        return opts;
+      })()
     },
     {
       name: "membershipMasterId",
@@ -260,7 +298,7 @@ export function BatchFormModal({
       options: [{ label: "Active", value: "active" }, { label: "Suspended", value: "suspended" }],
       required: true
     }
-  ], [batchTypeOptions, entityOptions, activityOptions, courses, membershipOptions]);
+  ], [batchTypeOptions, entityOptions, activityOptions, courses, membershipOptions, values.courseId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>

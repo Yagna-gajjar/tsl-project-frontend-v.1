@@ -39,7 +39,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 		value: "",
 		description: "",
 		enumCase: 0,
-		status: true
+		status: "active"
 	});
 
 	const isAccountCategory = (cat: string | undefined) =>
@@ -88,7 +88,7 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
 					value: "",
 					description: "",
 					enumCase: 0,
-					status: true
+					status: "active"
 				});
 			}
 		}
@@ -261,15 +261,15 @@ export function EditEnumSheet({ isOpen, onClose, initialData, initialCategory, o
             <div className="space-y-0.5">
               <Label>Status</Label>
               <div className="text-[12px] text-muted-foreground">
-                {formData.status
+                {formData.status?.toLowerCase() === "active"
                   ? "Active (Visible in app)"
                   : "Inactive (Hidden)"}
               </div>
             </div>
             <Switch
-              checked={formData.status}
+              checked={formData.status?.toLowerCase() === "active"}
               onCheckedChange={(c) =>
-                setFormData((prev) => ({ ...prev, status: c }))
+                setFormData((prev) => ({ ...prev, status: c ? "active" : "inactive" }))
               }
             />
           </div>

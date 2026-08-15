@@ -12,6 +12,7 @@ import {
   Home,
   Menu,
   Eye,
+  Settings2,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,12 @@ const navigationItems: NavigationItem[] = [
     icon: Eye,
     submenu: null,
     href: "/setting/status",
+  },
+  {
+    name: "General Settings",
+    icon: Settings2,
+    submenu: null,
+    href: "/setting/general",
   },
 ];
 

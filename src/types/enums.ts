@@ -2,7 +2,7 @@ export interface Enums {
     id: number;
     category: string;
     value: string;
-    status: boolean;
+    status: string;
     description?: string | null;
     enumCase: number;
     createdAt?: string;
@@ -14,7 +14,7 @@ export interface EnumGroup {
     enumCase: number[];
     values: string[];
     ids: number[];
-    status: boolean[];
+    status: string[];
     description: (string | null)[];
 }
 
